@@ -26,7 +26,6 @@ bin/
 
 # Other
 eclipse/
-run/
 
 # Forge MDK stuff
 forge*changelog.txt
