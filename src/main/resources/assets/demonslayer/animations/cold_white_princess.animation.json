@@ -1,0 +1,32 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "animation.cold_white_princess.idle": {
+      "loop": true,
+      "animation_length": 4,
+      "bones": {
+        "torso": {
+          "rotation": {
+            "vector": [0, "math.sin(query.anim_time * 90) * 2.5", 0]
+          }
+        }
+      }
+    },
+    "animation.cold_white_princess.attack": {
+      "loop": true,
+      "animation_length": 2,
+      "bones": {
+        "head": {
+          "rotation": {
+            "vector": ["math.sin(query.anim_time * 180) * 2.0", 0, 0]
+          }
+        },
+        "torso": {
+          "position": {
+            "vector": [0, 0, -1]
+          }
+        }
+      }
+    }
+  }
+}

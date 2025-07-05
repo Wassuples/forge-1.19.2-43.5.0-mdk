@@ -1,0 +1,94 @@
+Demon System: Design & Implementation Plan
+This document outlines a phased approach to implementing a complete Demon race and progression system, including player transformation, NPC demons, ranks, and Blood Demon Arts.
+
+The Core Vision
+The goal is to create two distinct paths for the player: Demon Slayer or Demon. Choosing to become a Demon should be a significant, game-altering decision that offers a completely different gameplay experience with its own progression, abilities, and challenges.
+
+Phase 1: The Player as a Demon (The Foundation)
+Before we can have ranks or powerful NPCs, we need to establish what it means for the player to be a demon. This phase focuses on creating the core status effect and the initial buffs.
+
+The "Demon" Capability:
+We will create a new capability, PlayerDemon, to track everything related to a player's demonic state. It will store:
+isDemon (boolean): Is the player a demon or a human?
+demonRank (enum): The player's current rank (e.g., FODDER, LOWER_MOON_6, etc.). We will create this enum.
+bloodPoints (int): A resource gained from consuming humans or defeating demons, used for ranking up.
+This capability will be attached to the player and will persist through death and relogging.
+
+The Transformation Item: "Muzan's Blood"
+We will create a new consumable item. When a player eats it, it will set their isDemon flag to true in their capability. This is a one-way trip.
+
+Passive Buffs & Debuffs:
+We will create an event handler (LivingTickEvent) that constantly checks the player's isDemon flag.
+If true, it will apply permanent potion effects: Night Vision, Jump Boost, and a basic Regeneration I.
+We will also implement the primary weakness: burning in daylight. If the player is a demon and is exposed to the sun, they will start taking fire damage.
+
+Goal of Phase 1: A player can find and consume "Muzan's Blood" to permanently become a Demon, gaining basic supernatural abilities and the deadly sun weakness.
+
+Phase 2: Demon Progression & Ranks
+This phase focuses on the "leveling up" experience for a Demon player.
+
+The DemonRank Enum:
+We'll create a DemonRank enum with all the tiers: FODDER, LOWER_MOON_6 through LOWER_MOON_1, UPPER_MOON_6 through UPPER_MOON_1, and a final "Progenitor" rank.
+
+Gaining Power:
+We will use the LivingDeathEvent. When a Demon player kills another Demon, we will grant them bloodPoints in their PlayerDemon capability. Killing a higher-ranked Demon will award more points.
+When bloodPoints reach a certain threshold, the player's demonRank will be upgraded, and the passive buffs from Phase 1 will become stronger (e.g., Regeneration II). Unless that rank above them is one of the Moons, they can only become a moon by challenging and winning against that Moon.
+
+Goal of Phase 2: A Demon player can now grow in power by hunting, and their rank will increase, providing tangible benefits.
+
+Phase 3: NPC Demons (The Ecosystem)
+This phase populates the world with new enemies for both Demon Slayers and other Demons to fight.
+
+Base DemonEntity:
+We will create a new base entity class that all other NPC demons will extend. This class will contain shared logic, like burning in the sun and being hostile to Demon Slayers.
+
+Demon Slayers:
+Demon slayers spawn at all times of day, usually in groups. But they should be "on a mission," moving as a group towards something, maybe a demon, maybe a mountain, etc.
+Sometimes it is a lone Hashira.
+
+Fodder Demons:
+The first enemy type will be a simple, weak "Fodder Demon" that spawns naturally at night, similar to a Zombie.
+
+The Twelve Kizuki (Lower & Upper Moons):
+These will be rare, powerful boss-tier mobs. Each one will be a unique entity (LowerMoon6Entity, UpperMoon3Entity, etc.).
+They will have their own unique AI, high health, and a "Blood Demon Art" attack. They will be incredibly dangerous encounters.
+
+Battles:
+There are two types of battles:
+A) Demon VS Slayer
+B) Demon VS Demon
+Demon VS Demon battles are cases of lower ranked demons attacking higher ranked ones to gain power, like what the player does.
+Demon VS Slayer battles are battles between a group of demon slayer (or a Hashira) and a Demon. Rarely, a group of demons fights a group of Slayers, or they gang up on a Hashira.
+
+Goal of Phase 3: The world now feels more dangerous at night, with new threats for the player to face, and powerful Demon bosses to challenge for rank progression.
+
+
+Phase 4: QoL
+
+
+
+
+
+
+
+
+#### Phase 3: The Twelve Kizuki (The Bosses)
+These are the elite, rare encounters that define the top tier of demon society.
+Individual Classes: Each of the Twelve Kizuki will be its own unique entity (e.g., `LowerMoonSixEntity.java`, `UpperMoonThreeEntity.java`). They will all extend the base `DemonEntity`.
+Unique AI & Blood Demon Arts: This is the most exciting part. For each Moon, we will:
+   1.  Give them massively increased health and damage attributes.
+   2.  Create a custom AI goal for their "Blood Demon Art." This will be a special attack they use periodically (e.g., a ranged projectile, a powerful area-of-effect slam, or a unique debuff).
+Spawning: The Twelve Kizuki will not spawn naturally. They will be treated like bosses. We can make them spawn in a specific structure, or you could summon them with a special item or command. This makes finding one a major, memorable event.
+
+ Goal of this phase: Create truly terrifying and unique boss encounters that serve as the ultimate challenge for Demon Slayers and as the primary gatekeepers for a Demon player's progression to higher ranks.
+
+
+#### Phase 4: Demon Slayer NPCs & World Events
+
+Now we add the other side of the conflict.
+
+`DemonSlayerEntity.java`: We'll create a base class for a standard Demon Slayer NPC. They will be neutral to human players but will instantly attack any Demon player or NPC on sight.
+Patrol AI: As you suggested, they will be "on a mission." We can give them a special AI that makes them spawn in a small group and travel together across the landscape towards a distant point, as if they are heading to a mission objective. This will make them feel much more alive than mobs that just wander randomly.
+Spawning: We can have these patrols spawn occasionally during both day and night. Finding a Slayer patrol during the day could be a lifeline for a human player, while encountering one at night would be a death sentence for a young Demon player.
+
+Goal of this phase: The world now has two warring factions. The player will witness battles between Demon Slayers and Demons happening naturally as they explore, making the world feel like a true conflict zone.

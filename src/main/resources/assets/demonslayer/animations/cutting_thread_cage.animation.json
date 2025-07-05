@@ -1,0 +1,16 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "idle": {
+      "loop": true,
+      "animation_length": 4.0,
+      "bones": {
+        "bone": {
+          "rotation": {
+            "vector": [0, "query.anim_time * 90", 0]
+          }
+        }
+      }
+    }
+  }
+}

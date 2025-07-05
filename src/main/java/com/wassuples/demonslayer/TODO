@@ -1,0 +1,119 @@
+TODO: Add the new Sword model instead of the scuffed ahh one we have currently.
+TODO: Add Tanjiro, Zenitsu, etc. NPCs to fight and talk with.
+TODO: Add animations, particles, and motions to all forms.
+
+TODO: Bring back parry indicators for: Water11, Dead Calm; Flame4, Blooming Flame; Wind3, Clear Storm.
+
+TODO: Wind2 seems weird?
+
+TODO: Change attack damage in all forms. Make it accurately reflect the weapon held.
+TODO: Do balancing for all forms, especially the damage done.
+
+TODO: Form 9, Water. MAYBE: Slow Falling, buuuuut you can move freely
+TODO: Form 5, Water.
+
+TODO: Water7, make it work...
+
+
+TODO: Form 11, Water: Add an indicator for where, and when, you can parry.
+
+TODO: Form9, Rengoku, Flame: Breaks bedrock and replaces bedrock with blocks.
+TODO: Form5, Flame (and probably others, like Water10) keep going after unequipping the Nichirin blade.
+
+
+TODO: Gamerule to make forms more destructive.
+TODO: Make Menu Breath Bar update properly.
+TODO: Finish making the menu.
+
+TODO: Thunder4 and Thunder6 are very similar.
+TODO: Change Thunder1 to teleport instead of Dash
+
+COLDWHITEPRINCESSESFORM, THE ENTITY IS NOT RENDERING, BUT IT IS APPEARING!
+
+KNOWN ISSUES:
+- Wind2, Claws-Purifying Wind, has buggy visuals
+- Wind5 and Water4 take fall damage.
+- Some Water forms are kinda buggy now. (Specifically, Water4 and Water6)
+- Water5 and Water9 still don't exist.
+- Water7 and Water8 have janky activations.
+
+Add cooldowns
+Add in game ways to learn the forms and styles. Or at least to understand them.
+Increase parry time.
+
+Way too hard parry.
+The parry, and right click dash was smooth
+Whirlpool and Flowing dance are clunky.
+
+TODO: Swap active and inactive icons in breathing_menu_widgets.png
+
+Abilities that all players are able to use. (Dash, maybe charged jump.)
+
+
+
+
+
+
+
+
+
+
+Sword design and breathing style is seperate.
+
+Mission Requests:
+- A demon Yorichii (First sun breather). You fight the first sun breather he is the demon.
+- Kokushibo before become demon.
+- Demon castle, but ALL OF THEM ARE AFTER YOU. They are out to jump your ass. All demons, all slayers, working together for a single goal, to KILL you.
+
+
+Aura: if you have higher aura/battlewill than someone, they can rarely parry you.
+
+
+
+
+
+Water breathing: Default (Gentle!)
+    -Flower Breathing
+        -Insect breathing
+    -Serpent Breathing
+Flame Breathing: Destructive (Cool!)
+    -Love breathing: mid-to-long range (Love... Somehow?)
+Wind breathing: Long Range Projectiles (Hurts, Powerful, Inconsiderate, Hateful)
+    -Beast Breathing: FUCK IT WE BALL!!
+    -Mist Breathing: Sneaky
+Thunder Breathing: TELEPORTATION
+    -Sound breathing: explosions
+Stone Breathing: Heavy Hitter
+
+Moon Breathing: Sun Jr.
+Sun Breathing: Fuck you
+Wood Breathing: Defensive
+Frost Breathing: Offensive
+Sand Breathing: Traps
+
+
+Demon Slayer Mark:
+Unlocks when on very low health, and fighting an upper moon.
+
+
+
+
+
+After exams will be the following:
+- Missions
+- Demons
+- Bug Fixes
+Then
+- Misc. NPCs (Tamayo, Tanjiro, Zenitsu, etc.)
+Then
+- Animations
+
+Aiming for first public release to be a couple weeks after exams, when we finish Animations we finish the first version of the mod.
+
+
+
+
+
+TODO: ADD FLOWER5 Peonies of Futility.
+
+TODO: Make Hashira spawn naturally, especially in Ubuyashiki Mansion

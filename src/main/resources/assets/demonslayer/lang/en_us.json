@@ -1,0 +1,31 @@
+{
+  "item.demonslayer.nichirin_blade": "Nichirin Blade",
+  "item.demonslayer.giyu_tomioka_spawn_egg": "Giyu Tomioka Spawn Egg",
+  "item.demonslayer.shinobu_kocho_spawn_egg": "Shinobu Kocho Spawn Egg",
+  "item.demonslayer.mitsuri_kanroji_spawn_egg": "Mitsuri Kanroji Spawn Egg",
+  "item.demonslayer.obanai_iguro_spawn_egg": "Obanai Iguro Spawn Egg",
+  "item.demonslayer.sanemi_shinazugawa_spawn_egg": "Sanemi Shinazugawa Spawn Egg",
+  "item.demonslayer.gyomei_himejima_spawn_egg": "Gyomei Himejima Spawn Egg",
+  "item.demonslayer.muichiro_tokito_spawn_egg": "Muichiro Tokito Spawn Egg",
+  "item.demonslayer.kyojuro_rengoku_spawn_egg": "Kyojuro Rengoku Spawn Egg",
+  "item.demonslayer.kanae_kocho_spawn_egg": "Kanae Kocho Spawn Egg",
+  "item.demonslayer.tengen_uzui_spawn_egg": "Tengen Uzui Spawn Egg",
+  "item.demonslayer.jigoro_kuwajima_spawn_egg": "Jigoro Kuwajima Spawn Egg",
+  "item.demonslayer.muzans_blood": "Muzan's Blood",
+
+
+  "itemGroup.demonslayertab": "Demon Slayer",
+
+  "key.category.demonslayer.category": "Demon Slayer",
+  "key.demonslayer.change_form": "Change Blade Form",
+  "key.demonslayer.use_form": "Use Blade Form",
+
+  "message.demonslayer.use_form": "Used Form!",
+  "key.demonslayer.open_menu": "Open Breathing Menu",
+
+  "effect.demonslayer.wisteria_poison":  "Wisteria Poison",
+
+  "gamerule.formsGriefing": "Allow Forms Environmental Damage",
+  "gamerule.formsGriefing.description": "If true, certain breathing forms can break blocks or place fire in the world. Set to false to prevent all forms from altering terrain."
+
+}

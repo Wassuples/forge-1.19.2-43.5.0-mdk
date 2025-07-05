@@ -1,0 +1,150 @@
+{
+	"format_version": "1.12.0",
+	"minecraft:geometry": [
+		{
+			"description": {
+				"identifier": "geometry.unknown",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 3,
+				"visible_bounds_height": 3.5,
+				"visible_bounds_offset": [0, 1.25, 0]
+			},
+			"bones": [
+				{
+					"name": "bone",
+					"pivot": [0, 7, 0],
+					"cubes": [
+						{"origin": [-4, 0, -4], "size": [8, 1, 8], "uv": [0, 22]},
+						{"origin": [-5, 1, -5], "size": [10, 12, 10], "uv": [0, 0]},
+						{"origin": [-4, 13, -4], "size": [8, 1, 8], "uv": [0, 31]}
+					]
+				},
+				{
+					"name": "testicles",
+					"parent": "bone",
+					"pivot": [0, 14, 0]
+				},
+				{
+					"name": "T1",
+					"parent": "testicles",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "base",
+					"parent": "T1",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 14, -1], "size": [2, 9, 2], "uv": [32, 22]}
+					]
+				},
+				{
+					"name": "leg",
+					"parent": "T1",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 22.25, -1], "size": [2, 9, 2], "pivot": [0, 22.25, 0], "rotation": [45, 0, 0], "uv": [32, 33]}
+					]
+				},
+				{
+					"name": "toe",
+					"parent": "T1",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 28.5, -7.25], "size": [2, 9, 2], "pivot": [0, 28.5, -6.25], "rotation": [45, 0, 0], "uv": [0, 40]}
+					]
+				},
+				{
+					"name": "T2",
+					"parent": "testicles",
+					"pivot": [0, 0, 0],
+					"rotation": [0, 180, 0]
+				},
+				{
+					"name": "base2",
+					"parent": "T2",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 14, -1], "size": [2, 9, 2], "uv": [40, 0]}
+					]
+				},
+				{
+					"name": "leg2",
+					"parent": "T2",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 22.25, -1], "size": [2, 9, 2], "pivot": [0, 22.25, 0], "rotation": [45, 0, 0], "uv": [8, 40]}
+					]
+				},
+				{
+					"name": "toe2",
+					"parent": "T2",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 28.5, -7.25], "size": [2, 9, 2], "pivot": [0, 28.5, -6.25], "rotation": [45, 0, 0], "uv": [40, 11]}
+					]
+				},
+				{
+					"name": "T3",
+					"parent": "testicles",
+					"pivot": [0, 0, 0],
+					"rotation": [0, 90, 0]
+				},
+				{
+					"name": "base3",
+					"parent": "T3",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 14, -1], "size": [2, 9, 2], "uv": [16, 40]}
+					]
+				},
+				{
+					"name": "leg3",
+					"parent": "T3",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 22.25, -1], "size": [2, 9, 2], "pivot": [0, 22.25, 0], "rotation": [45, 0, 0], "uv": [40, 22]}
+					]
+				},
+				{
+					"name": "toe3",
+					"parent": "T3",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 28.5, -7.25], "size": [2, 9, 2], "pivot": [0, 28.5, -6.25], "rotation": [45, 0, 0], "uv": [24, 40]}
+					]
+				},
+				{
+					"name": "T4",
+					"parent": "testicles",
+					"pivot": [0, 0, 0],
+					"rotation": [0, -90, 0]
+				},
+				{
+					"name": "base4",
+					"parent": "T4",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 14, -1], "size": [2, 9, 2], "uv": [40, 33]}
+					]
+				},
+				{
+					"name": "leg4",
+					"parent": "T4",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 22.25, -1], "size": [2, 9, 2], "pivot": [0, 22.25, 0], "rotation": [45, 0, 0], "uv": [32, 44]}
+					]
+				},
+				{
+					"name": "toe4",
+					"parent": "T4",
+					"pivot": [0, 0, 0],
+					"cubes": [
+						{"origin": [-1, 28.5, -7.25], "size": [2, 9, 2], "pivot": [0, 28.5, -6.25], "rotation": [45, 0, 0], "uv": [40, 44]}
+					]
+				}
+			]
+		}
+	]
+}

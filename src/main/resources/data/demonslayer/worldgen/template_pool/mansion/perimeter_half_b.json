@@ -1,0 +1,15 @@
+{
+  "name": "demonslayer:mansion/perimeter_half_b",
+  "fallback": "minecraft:empty",
+  "elements": [
+    {
+      "weight": 1,
+      "element": {
+        "element_type": "minecraft:single_pool_element",
+        "projection": "rigid",
+        "location": "demonslayer:mansion_perimeter_b",
+        "processors": "minecraft:empty"
+      }
+    }
+  ]
+}
