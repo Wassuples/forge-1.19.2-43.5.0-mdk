@@ -1,25 +1,32 @@
-# eclipse
-bin
+# Ignore most of .idea, but keep useful config
+.idea/*
+!.idea/runConfigurations/
+!.idea/misc.xml
+!.idea/compiler.xml
+!.idea/modules.xml
+
+# Ignore module & workspace-specific stuff
+*.iml
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+
+# Gradle & build
+.gradle/
+build/
+out/
+
+# Eclipse stuff
+bin/
 *.launch
-.settings
-.metadata
+.settings/
+.metadata/
 .classpath
 .project
 
-# idea
-out
-*.ipr
-*.iws
-*.iml
-.idea
+# Other
+eclipse/
+run/
 
-# gradle
-build
-.gradle
-
-# other
-eclipse
-run
-
-# Files from Forge MDK
+# Forge MDK stuff
 forge*changelog.txt
