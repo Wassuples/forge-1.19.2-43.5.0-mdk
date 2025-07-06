@@ -12,10 +12,13 @@ import java.util.Map;
 import java.util.Set;
 
 public class PlayerProgression {
-    private Rank rank = Rank.CIVILIAN;
+    private Rank rank = Rank.MIZUNOTO; // Default rank changed from CIVILIAN
     private final Set<BreathingStyles> unlockedStyles = new HashSet<>();
     private final Map<BreathingStyles, Integer> styleMastery = new HashMap<>();
+
+    private final Set<BreathingForms> unlockedForms = new HashSet<>();
     private final Map<BreathingForms, Integer> formMastery = new HashMap<>();
+
     private boolean hasDodgeCharge = false;
 
     public boolean hasDodgeCharge() {
@@ -30,7 +33,6 @@ public class PlayerProgression {
         this.unlockStyle(BreathingStyles.WATER);
     }
 
-    // --- Getters and Setters ---
     public Rank getRank() { return this.rank; }
     public void setRank(Rank rank) { this.rank = rank; }
 
@@ -43,31 +45,48 @@ public class PlayerProgression {
     public int getFormMastery(BreathingForms form) { return formMastery.getOrDefault(form, 0); }
     public Map<BreathingForms, Integer> getFormMasteryMap() { return this.formMastery; }
 
-    // --- Core Logic ---
+    public boolean isFormUnlocked(BreathingForms form) { return unlockedForms.contains(form); }
+    public Set<BreathingForms> getUnlockedForms() { return this.unlockedForms; }
+
     public void unlockStyle(BreathingStyles style) {
         unlockedStyles.add(style);
         styleMastery.putIfAbsent(style, 0);
     }
 
+    public void unlockForm(BreathingForms form) {
+        unlockedForms.add(form);
+        formMastery.putIfAbsent(form, 0);
+    }
+
     public void addStyleMastery(BreathingStyles style, int amount) {
-        styleMastery.put(style, getStyleMastery(style) + amount);
+        int currentMastery = getStyleMastery(style);
+        int newMastery = Math.min(currentMastery + amount, 1000);
+        styleMastery.put(style, newMastery);
     }
 
     public void addFormMastery(BreathingForms form, int amount) {
-        formMastery.put(form, getFormMastery(form) + amount);
+        int currentMastery = getFormMastery(form);
+        int newMastery = Math.min(currentMastery + amount, 100);
+        formMastery.put(form, newMastery);
     }
 
     public void setStyleMastery(BreathingStyles style, int amount) {
-        styleMastery.put(style, Math.max(0, amount));
+        int cappedAmount = Math.min(amount, 1000);
+        styleMastery.put(style, Math.max(0, cappedAmount));
     }
 
     public void setFormMastery(BreathingForms form, int amount) {
-        formMastery.put(form, Math.max(0, amount));
+        int cappedAmount = Math.min(amount, 100);
+        formMastery.put(form, Math.max(0, cappedAmount));
     }
 
     public void setUnlockedStyles(Set<BreathingStyles> newStyles) {
         this.unlockedStyles.clear();
         this.unlockedStyles.addAll(newStyles);
+    }
+    public void setUnlockedForms(Set<BreathingForms> newForms) {
+        this.unlockedForms.clear();
+        this.unlockedForms.addAll(newForms);
     }
 
     public void setAllStyleMastery(Map<BreathingStyles, Integer> newMastery) {
@@ -84,19 +103,24 @@ public class PlayerProgression {
         this.rank = source.rank;
         this.unlockedStyles.clear();
         this.unlockedStyles.addAll(source.unlockedStyles);
+        this.unlockedForms.clear();
+        this.unlockedForms.addAll(source.unlockedForms);
         this.styleMastery.clear();
         this.styleMastery.putAll(source.styleMastery);
         this.formMastery.clear();
         this.formMastery.putAll(source.formMastery);
     }
 
-    // --- Persistence (NBT) ---
     public void saveNBTData(CompoundTag nbt) {
         nbt.putString("rank", rank.name());
 
         ListTag unlockedStylesTag = new ListTag();
         unlockedStyles.forEach(style -> unlockedStylesTag.add(StringTag.valueOf(style.name())));
         nbt.put("unlockedStyles", unlockedStylesTag);
+
+        ListTag unlockedFormsTag = new ListTag();
+        unlockedForms.forEach(form -> unlockedFormsTag.add(StringTag.valueOf(form.name())));
+        nbt.put("unlockedForms", unlockedFormsTag);
 
         CompoundTag styleMasteryTag = new CompoundTag();
         styleMastery.forEach((style, mastery) -> styleMasteryTag.putInt(style.name(), mastery));
@@ -118,6 +142,15 @@ public class PlayerProgression {
             ListTag unlockedStylesTag = nbt.getList("unlockedStyles", 8);
             unlockedStylesTag.forEach(tag -> {
                 try { unlockedStyles.add(BreathingStyles.valueOf(tag.getAsString())); }
+                catch (IllegalArgumentException ignored) {}
+            });
+        }
+
+        if (nbt.contains("unlockedForms", 9)) {
+            unlockedForms.clear();
+            ListTag unlockedFormsTag = nbt.getList("unlockedForms", 8);
+            unlockedFormsTag.forEach(tag -> {
+                try { unlockedForms.add(BreathingForms.valueOf(tag.getAsString())); }
                 catch (IllegalArgumentException ignored) {}
             });
         }

@@ -818,6 +818,7 @@ public class FormUtils {
                     .put(BreathingForms.STONE_5, ArcsOfJusticeForm::new)
                     // FLOWER
                     .put(BreathingForms.FLOWER_2, HonorableShadowPlumParry::new)
+                    .put(BreathingForms.FLOWER_5, PeoniesOfFutilityForm::new)
                     .put(BreathingForms.FLOWER_6, WhirlingPeachForm::new)
                     .put(BreathingForms.FLOWER_7, VermilionEyeForm::new)
                     // SERPENT
@@ -1658,37 +1659,24 @@ public class FormUtils {
     // --- THUNDER FORMS ---
     private static class ThunderclapAndFlashForm extends TimedForm {
         private static final int CHARGE_PAUSE_DURATION = 10;
-        private static final int DASH_DURATION_TICKS = 6;
-        private static final double DASH_SPEED = 4.5;
-        private static final float ATTACK_DAMAGE = 15.0f;
+        private static final double TELEPORT_RANGE = 27.0;
+        private static final float ATTACK_DAMAGE = 18.0f;
+        private static final float PATH_DAMAGE = 8.0f;
         private static final DustParticleOptions YELLOW_LIGHTNING = new DustParticleOptions(new Vector3f(1.0f, 0.9f, 0.2f), 1.0f);
 
-        private Vec3 dashDirection;
-
         public ThunderclapAndFlashForm(LivingEntity user, BreathingForms form) {
-            // We pass this form's total duration to the parent TimedForm.
-            // It's the dash duration + 1 tick for the slash itself.
-            super(user, form, CHARGE_PAUSE_DURATION + DASH_DURATION_TICKS + 1);
+            super(user, form, CHARGE_PAUSE_DURATION + 2);
         }
 
-        // Don't interrupt me!
         @Override public boolean isInterruptible() { return false; }
 
         @Override
         protected void onStart() {
-            // The "Thunderclap" sound effect
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THUNDER, SoundSource.PLAYERS, 1.5f, 1.2f);
-
-            // Store the direction at the start so the player can't turn mid-dash.
-            // We only care about the horizontal direction.
-            this.dashDirection = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
-
-            // Prevent the player from being knocked around during the dash.
-            applyImmobility(user, duration);
         }
 
         private void performSlash() {
-            user.setDeltaMovement(Vec3.ZERO); // Stop the player
+            user.setDeltaMovement(Vec3.ZERO);
             performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.5f);
             dealThrustDamage(user, 5.0, ATTACK_DAMAGE);
             spawnParticleArc(user, YELLOW_LIGHTNING, 3.0, 140, 40);
@@ -1696,7 +1684,7 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
-//            super.onTick(); // This important. It stops the form when the duration is up. // NEVERMIND WE ARE MANUALLY STOPPING THE FORM NOW.
+            super.onTick();
 
             if (ticksActive <= CHARGE_PAUSE_DURATION) {
                 user.setDeltaMovement(Vec3.ZERO);
@@ -1706,27 +1694,27 @@ public class FormUtils {
                     Vec3 particlePos = user.position().add(Math.random() - 0.5, user.getBbHeight() * Math.random(), Math.random() - 0.5);
                     level.sendParticles(YELLOW_LIGHTNING, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
                 }
-            } else if(ticksActive < CHARGE_PAUSE_DURATION + DASH_DURATION_TICKS) {
-                // --- The Dash Phase ---
-                if (user.isCrouching()) {
-                    performSlash();
-                    ActiveFormManager.stop(user);
-                    return;
-                }
-
-                if(user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), 1.5, 3.0f, 0.1f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), 1.5, 3.0f, 0.1f, DamageSource.mobAttack(user));
-                }
-                user.setDeltaMovement(dashDirection.scale(DASH_SPEED));
-                user.hurtMarked = true;
-
-                // Spawn a trail of lightning particles
-                Vec3 particlePos = user.position().add(Math.random() - 0.5, 1.0 + (Math.random() * 0.5), Math.random() - 0.5);
-                level.sendParticles(YELLOW_LIGHTNING, particlePos.x, particlePos.y, particlePos.z, 5, 0, 0, 0, 0);
             } else {
-                // --- The Slash Phase ---
+                Vec3 startPos = user.position();
+                Vec3 direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
+                Vec3 endPos = startPos.add(direction.scale(TELEPORT_RANGE));
+
+                AABB pathHitbox = new AABB(startPos, endPos).inflate(2.0); // A 2-block wide hitbox along the path
+                List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, pathHitbox, e -> e != user && e.isAlive());
+                for (LivingEntity target : hitTargets) {
+                    if(user instanceof ServerPlayer player) {
+                        target.hurt(DamageSource.playerAttack(player), PATH_DAMAGE);
+                    } else {
+                        target.hurt(DamageSource.mobAttack(user), PATH_DAMAGE);
+                    }
+                }
+
+                for (double i = 0; i < TELEPORT_RANGE; i += 0.5) {
+                    Vec3 particlePos = startPos.add(direction.scale(i));
+                    level.sendParticles(YELLOW_LIGHTNING, particlePos.x, particlePos.y + 1.0, particlePos.z, 5, 0.2, 0.2, 0.2, 0);
+                }
+
+                user.teleportTo(endPos.x, endPos.y, endPos.z);
                 performSlash();
                 ActiveFormManager.stop(user);
             }
@@ -1734,7 +1722,6 @@ public class FormUtils {
 
         @Override
         protected void onStop() {
-            // Clean up the effects we applied onStart.
             removeImmobility(user);
         }
     }
@@ -3423,6 +3410,42 @@ public class FormUtils {
                 spawnParticleArcInWorld(level, user.getEyePosition(), COUNTER_REACH, 140, 20, yaw, 0, ParticleTypes.FALLING_SPORE_BLOSSOM);
             }
         }
+    }
+
+    public static class PeoniesOfFutilityForm extends TimedForm {
+        private static final int NUMBER_OF_ATTACKS = 9;
+        private static final int TICKS_BETWEEN_ATTACKS = 4;
+        private static final float DAMAGE_PER_HIT = 8.0f;
+
+        private static final DustParticleOptions PEONY_PINK = new DustParticleOptions(new Vector3f(0.9f, 0.5f, 0.6f), 1.0f);
+
+        public PeoniesOfFutilityForm(LivingEntity user, BreathingForms form) {
+            super(user, form, NUMBER_OF_ATTACKS * TICKS_BETWEEN_ATTACKS);
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.AZALEA_LEAVES_FALL, SoundSource.PLAYERS, 1.0f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            if (ticksActive > 0 && ticksActive % TICKS_BETWEEN_ATTACKS == 0) {
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 1.8f);
+
+                dealDirectionalDamage(user, 5.0, DAMAGE_PER_HIT, 0.4);
+
+                float randomYawOffset = (level.random.nextFloat() - 0.5f) * 60f; // -30 to +30 degrees
+                float randomPitchOffset = (level.random.nextFloat() - 0.5f) * 20f; // -10 to +10 degrees
+
+                spawnParticleArcInWorld(level, user.getEyePosition(), 3.0, 140, 40, user.getYRot() + randomYawOffset, user.getXRot() + randomPitchOffset, PEONY_PINK);
+            }
+        }
+
+        @Override
+        protected void onStop() {}
     }
 
     public static class WhirlingPeachForm extends TimedForm {

@@ -26,6 +26,7 @@ public class PlayerDemon {
     public void setDemon(boolean demon) {
         isDemon = demon;
     }
+    public void setBloodPoints(int amount) { this.bloodPoints = amount; }
     public DemonRank getRank() {
         return rank;
     }

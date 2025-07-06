@@ -58,8 +58,6 @@ import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
@@ -68,8 +66,6 @@ import static com.wassuples.demonslayer.ranking.PlayerProgressionProvider.PLAYER
 
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID)
 public class ModEvents {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private static final Map<UUID, CompoundTag> styleDeathData = new HashMap<>();
     private static final Map<UUID, CompoundTag> progressionDeathData = new HashMap<>();
     private static final Map<UUID, CompoundTag> breathDeathData = new HashMap<>();
@@ -189,7 +185,6 @@ public class ModEvents {
         }
     }
 
-    // Helper method to sync all capabilities at once.
     private static void syncAllDataToClient(ServerPlayer player) {
         player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
             ModMessages.sendToPlayer(new PlayerStyleSyncS2CPacket(style.getForm(), style.getStyleIndex()), player);

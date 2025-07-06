@@ -1064,6 +1064,20 @@ public enum BreathingForms {
             }
         }
     },
+    FLOWER_5(BreathingStyles.FLOWER,
+            "Fifth Form: Peonies of Futility",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Fifth Form: Peonies of Futility desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
     FLOWER_6(BreathingStyles.FLOWER,
             "Sixth Form: Whirling Peach",
             InputType.PRESS,
