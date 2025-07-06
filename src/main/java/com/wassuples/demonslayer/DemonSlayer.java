@@ -88,6 +88,7 @@ public class DemonSlayer {
         event.put(ModEntityTypes.COMPASS_EFFECT.get(), CompassNeedleEntity.createAttributes().build());
         event.put(ModEntityTypes.COLD_WHITE_PRINCESS.get(), ColdWhitePrincessEntity.createAttributes().build());
         event.put(ModEntityTypes.CRYSTALLINE_DIVINE_CHILD.get(), CrystallineDivineChildEntity.createAttributes().build());
+        event.put(ModEntityTypes.BODHISATTVA.get(), BodhisattvaEntity.createAttributes().build());
 
         // HASHIRA
         event.put(ModEntityTypes.HASHIRA.get(), HashiraEntity.createAttributes().build());

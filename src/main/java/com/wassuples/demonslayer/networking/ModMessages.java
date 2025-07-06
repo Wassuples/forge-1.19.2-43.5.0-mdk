@@ -158,6 +158,12 @@ public class ModMessages {
                 .decoder(UpdateGlowDataPacket::new)
                 .consumerMainThread(UpdateGlowDataPacket::handle)
                 .add();
+
+        net.messageBuilder(BodhisattvaInputC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(BodhisattvaInputC2SPacket::new)
+                .encoder(BodhisattvaInputC2SPacket::toBytes)
+                .consumerMainThread(BodhisattvaInputC2SPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

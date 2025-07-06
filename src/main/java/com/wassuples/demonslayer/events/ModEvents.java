@@ -231,7 +231,8 @@ public class ModEvents {
     public static void onPlayerFinishUsingItem(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntity() instanceof ServerPlayer player && event.getItem().is(ModItems.MUZANS_BLOOD.get())) {
             player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                if (demon.isDemon()) {
+                if (!demon.isDemon()) {
+                    demon.setDemon(true);
                     // Apply buffs that scale with rank
                     int rankOrdinal = demon.getRank().ordinal();
                     player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));

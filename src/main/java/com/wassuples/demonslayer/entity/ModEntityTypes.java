@@ -111,6 +111,12 @@ public class ModEntityTypes {
                             .sized(0.6f, 1.8f)
                             .build("crystalline_divine_child"));
 
+    public static final RegistryObject<EntityType<BodhisattvaEntity>> BODHISATTVA =
+            ENTITY_TYPES.register("bodhisattva",
+                    () -> EntityType.Builder.of(BodhisattvaEntity::new, MobCategory.MONSTER)
+                            .sized(1f, 1f)
+                            .build("bodhisattva"));
+
 
 
     //##########################################################

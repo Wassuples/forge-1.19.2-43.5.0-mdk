@@ -10,6 +10,7 @@ import com.wassuples.demonslayer.client.gui.VignetteHudOverlay;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
+import com.wassuples.demonslayer.entity.custom.BodhisattvaEntity;
 import com.wassuples.demonslayer.entity.renderers.*;
 import com.wassuples.demonslayer.entity.renderers.demon.*;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
@@ -29,6 +30,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
@@ -67,6 +69,20 @@ public class ClientEvents {
             }
 
             LesserEyeRendererManager.tick();
+
+            if (mc.player.getVehicle() instanceof BodhisattvaEntity) {
+                // Read movement keys
+                Vec3 input = new Vec3(
+                        mc.player.input.leftImpulse, // Strafe left/right
+                        0,                          // No vertical input from player
+                        mc.player.input.forwardImpulse // Move forward/backward
+                );
+
+                boolean primaryAttack = mc.options.keyAttack.isDown();
+                boolean secondaryAttack = mc.options.keyUse.isDown();
+
+                ModMessages.sendToServer(new BodhisattvaInputC2SPacket(input, primaryAttack, secondaryAttack));
+            }
 
             if (lastSyncedStyle != -1) {
                 mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
@@ -236,6 +252,7 @@ public class ClientEvents {
             event.registerEntityRenderer(ModEntityTypes.COLD_WHITE_PRINCESS.get(), ColdWhitePrincessRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.LOTUS_SHARD.get(), LotusShardRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CRYSTALLINE_DIVINE_CHILD.get(), CrystallineDivineChildRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.BODHISATTVA.get(), BodhisattvaRenderer::new);
             // HASHIRA
             event.registerEntityRenderer(ModEntityTypes.HASHIRA.get(), HashiraRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.WATER_HASHIRA.get(), WaterHashiraRenderer::new);
