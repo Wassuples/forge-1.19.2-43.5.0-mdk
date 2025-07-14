@@ -1,7 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.mojang.authlib.GameProfile;
-import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -13,11 +12,13 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import org.jetbrains.annotations.Nullable;
@@ -36,24 +37,69 @@ public class MistCloneEntity extends Monster {
     private static final EntityDataAccessor<Boolean> IS_NPC_CLONE =
             SynchedEntityData.defineId(MistCloneEntity.class, EntityDataSerializers.BOOLEAN);
 
+    private static final EntityDataAccessor<ItemStack> DATA_HEAD_ARMOR =
+            SynchedEntityData.defineId(MistCloneEntity.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<ItemStack> DATA_CHEST_ARMOR =
+            SynchedEntityData.defineId(MistCloneEntity.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<ItemStack> DATA_LEGS_ARMOR =
+            SynchedEntityData.defineId(MistCloneEntity.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<ItemStack> DATA_FEET_ARMOR =
+            SynchedEntityData.defineId(MistCloneEntity.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<ItemStack> DATA_MAIN_HAND_ITEM =
+            SynchedEntityData.defineId(MistCloneEntity.class, EntityDataSerializers.ITEM_STACK);
+    private static final EntityDataAccessor<ItemStack> DATA_OFF_HAND_ITEM =
+            SynchedEntityData.defineId(MistCloneEntity.class, EntityDataSerializers.ITEM_STACK);
+
+
     public MistCloneEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
         this.setSilent(true);
     }
 
-    // Register the entity's attributes, like health.
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 1.0D)
+                .add(Attributes.MAX_HEALTH, 0.1D)
                 .add(Attributes.MOVEMENT_SPEED, 0.0D); // It doesn't move
     }
 
-    // --- Profile and Skin Logic ---
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(OWNER_PROFILE_TAG, new CompoundTag());
         this.entityData.define(IS_NPC_CLONE, false);
+
+        this.entityData.define(DATA_HEAD_ARMOR, ItemStack.EMPTY);
+        this.entityData.define(DATA_CHEST_ARMOR, ItemStack.EMPTY);
+        this.entityData.define(DATA_LEGS_ARMOR, ItemStack.EMPTY);
+        this.entityData.define(DATA_FEET_ARMOR, ItemStack.EMPTY);
+        this.entityData.define(DATA_MAIN_HAND_ITEM, ItemStack.EMPTY);
+        this.entityData.define(DATA_OFF_HAND_ITEM, ItemStack.EMPTY);
+    }
+
+    @Override
+    public void setItemSlot(EquipmentSlot pSlot, ItemStack pStack) {
+        super.setItemSlot(pSlot, pStack);
+        switch (pSlot) {
+            case HEAD -> this.entityData.set(DATA_HEAD_ARMOR, pStack.copy());
+            case CHEST -> this.entityData.set(DATA_CHEST_ARMOR, pStack.copy());
+            case LEGS -> this.entityData.set(DATA_LEGS_ARMOR, pStack.copy());
+            case FEET -> this.entityData.set(DATA_FEET_ARMOR, pStack.copy());
+            case MAINHAND -> this.entityData.set(DATA_MAIN_HAND_ITEM, pStack.copy());
+            case OFFHAND -> this.entityData.set(DATA_OFF_HAND_ITEM, pStack.copy());
+        }
+    }
+
+    @Override
+    public ItemStack getItemBySlot(EquipmentSlot pSlot) {
+        return switch (pSlot) {
+            case HEAD -> this.entityData.get(DATA_HEAD_ARMOR);
+            case CHEST -> this.entityData.get(DATA_CHEST_ARMOR);
+            case LEGS -> this.entityData.get(DATA_LEGS_ARMOR);
+            case FEET -> this.entityData.get(DATA_FEET_ARMOR);
+            case MAINHAND -> this.entityData.get(DATA_MAIN_HAND_ITEM);
+            case OFFHAND -> this.entityData.get(DATA_OFF_HAND_ITEM);
+            default -> super.getItemBySlot(pSlot);
+        };
     }
 
     public void setOwnerProfile(GameProfile profile) {
@@ -116,11 +162,9 @@ public class MistCloneEntity extends Monster {
         super.tick(); // Handle basic entity updates
 
         this.lifeTicks++;
-        // The mist lasts for 200 ticks (10 seconds). We'll make the clone do the same.
         if (this.lifeTicks > 200) {
-            // We call our existing die() method to trigger the "puff of smoke" effect.
             this.die(DamageSource.MAGIC);
-            return; // Stop any further processing for this tick
+            return;
         }
 
         // We only want the server to run this logic.
@@ -169,5 +213,10 @@ public class MistCloneEntity extends Monster {
         // We leave this empty on purpose.
         // This gives the entity an active AI, but no goals to execute, so it will stand still.
         // This allows its LookControl to still function.
+    }
+
+    @Override
+    protected float getDamageAfterArmorAbsorb(DamageSource pDamageSource, float pDamageAmount) {
+        return pDamageAmount;
     }
 }

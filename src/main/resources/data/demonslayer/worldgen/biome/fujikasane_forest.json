@@ -1,0 +1,48 @@
+{
+  "temperature": 0.5,
+  "downfall": 0.5,
+  "has_precipitation": true,
+  "precipitation": "rain",
+  "effects": {
+    "sky_color": 3344335,
+    "fog_color": 12638463,
+    "water_color": 4159204,
+    "water_fog_color": 329011,
+    "grass_color": 5318255,
+    "foliage_color": 7552963,
+    "particle": {
+      "options": {
+        "type": "minecraft:cherry_leaves"
+      },
+      "probability": 0.01428
+    }
+  },
+  "spawners": {
+    "monster": [
+      {
+        "type": "demonslayer:fodder_demon",
+        "weight": 95,
+        "minCount": 1,
+        "maxCount": 4
+      }
+    ]
+  },
+  "spawn_costs": {},
+  "carvers": {
+    "air": [
+      "minecraft:cave",
+      "minecraft:canyon"
+    ]
+  },
+  "features": [
+    [], [], [], [], [], [], [], [],
+    [
+      "minecraft:trees_birch_and_oak",
+      "demonslayer:trees_wisteria"
+    ],
+    [],
+    [
+      "minecraft:patch_grass_forest"
+    ]
+  ]
+}

@@ -3,11 +3,9 @@ package com.wassuples.demonslayer.util;
 import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.networking.packet.PlayerBreathSyncS2CPacket;
-import com.wassuples.demonslayer.networking.packet.PlayerDemonSyncS2CPacket;
-import com.wassuples.demonslayer.networking.packet.PlayerProgressionSyncS2CPacket;
-import com.wassuples.demonslayer.networking.packet.PlayerStyleSyncS2CPacket;
+import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -24,6 +22,14 @@ public final class ModUtils {
                     progression.getStyleMasteryMap(),
                     progression.getFormMasteryMap()
             ), player);
+        });
+    }
+
+    public static void syncMissions(ServerPlayer player) {
+        player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
+            CompoundTag nbt = new CompoundTag();
+            missions.saveNBTData(nbt);
+            ModMessages.sendToPlayer(new PlayerMissionSyncS2CPacket(nbt), player);
         });
     }
 

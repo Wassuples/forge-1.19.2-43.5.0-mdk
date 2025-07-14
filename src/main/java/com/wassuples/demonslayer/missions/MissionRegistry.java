@@ -20,31 +20,21 @@ public class MissionRegistry {
     private static final Map<ResourceLocation, Mission> MISSIONS = new HashMap<>();
 
     public static void register() {
-        // RANK UP MISSIONS
         registerMission(new Mission(
-                new ResourceLocation(DemonSlayer.MOD_ID, "rank_up_final_selection"),
-                MissionType.RANK_UP,
-                Component.literal("Rank Up: Final Selection"),
+                new ResourceLocation(DemonSlayer.MOD_ID, "story_final_selection"),
+                MissionType.STORY,
+                Component.literal("Final Selection"),
                 ImmutableList.of(
-                        Component.literal("To officially join the Demon Slayer Corps, you must survive seven nights on Mt. Fujikasane.")
+                        Component.literal("To join the Demon Slayer Corps, you must survive for seven nights on wisteria-ringed Mt. Fujikasane, a prison for captured demons."),
+                        Component.literal("Fleeing the mountain will result in failure.")
                 ),
-                ImmutableList.of(new SurviveObjective(24000 * 7)), // 7 in-game days
+                ImmutableList.of(new SurviveInBiomeObjective(new ResourceLocation(DemonSlayer.MOD_ID, "fujikasane_forest"), 24000 * 7)),
                 ImmutableList.of(
                         new RankReward(Rank.MIZUNOTO),
-                        new ItemReward(() -> ModItems.NICHIRIN_BLADE.get(), 1)
+                        new ItemReward(() -> ModItems.NICHIRIN_BLADE.get(), 1),
+                        StyleMasteryReward.current(150)
                 ),
-                Rank.MIZUNOTO // This is the rank you are trying to achieve
-        ));
-
-        // RADIANT QUESTS
-        registerMission(new Mission(
-                new ResourceLocation(DemonSlayer.MOD_ID, "radiant_kill_zombies"),
-                MissionType.RADIANT_QUEST,
-                Component.literal("Thin the Horde"),
-                ImmutableList.of(Component.literal("The undead are becoming a nuisance.")),
-                ImmutableList.of(new KillObjective(EntityType.ZOMBIE, 10)),
-                ImmutableList.of(new StyleMasteryReward(null, 25)),
-                Rank.MIZUNOTO
+                Rank.CIVILIAN
         ));
     }
 

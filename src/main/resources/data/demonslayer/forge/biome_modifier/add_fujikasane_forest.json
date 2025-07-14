@@ -1,0 +1,14 @@
+{
+  "type": "demonslayer:add_biomes",
+  "biomes": "demonslayer:fujikasane_forest",
+  "weight": 8,
+  "parameters": {
+    "temperature": [-0.2, 0.6],
+    "humidity": [0.4, 1.0],
+    "continentalness": [-1.0, 1.0],
+    "erosion": [-1.0, 1.0],
+    "weirdness": [-1.0, 1.0],
+    "depth": [0.6, 1.2],
+    "offset": 0
+  }
+}

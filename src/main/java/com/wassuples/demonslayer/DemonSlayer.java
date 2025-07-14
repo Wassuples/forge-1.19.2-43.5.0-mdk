@@ -1,8 +1,5 @@
 package com.wassuples.demonslayer;
 
-import com.google.gson.JsonSyntaxException;
-import com.mojang.blaze3d.shaders.Shader;
-import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.wassuples.demonslayer.client.gui.SleepQTEOverlay;
 import com.wassuples.demonslayer.effects.ModEffects;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
@@ -13,10 +10,8 @@ import com.wassuples.demonslayer.gamerule.ModGameRules;
 import com.wassuples.demonslayer.item.ModItems;
 import com.wassuples.demonslayer.missions.MissionRegistry;
 import com.wassuples.demonslayer.networking.ModMessages;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.ShaderInstance;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.LivingEntity;
+import com.wassuples.demonslayer.worldgen.ModBiomeModifiers;
+import com.wassuples.demonslayer.worldgen.biome.ModBiomes;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.MinecraftForge;
@@ -24,16 +19,11 @@ import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import software.bernie.geckolib3.GeckoLib;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-
-import java.io.IOException;
-
-import static com.mojang.text2speech.Narrator.LOGGER;
 
 @Mod(DemonSlayer.MOD_ID)
 public class DemonSlayer {
@@ -47,6 +37,7 @@ public class DemonSlayer {
         ModEntityTypes.register(modEventBus);
         ModEffects.register(modEventBus);
         MissionRegistry.register();
+        ModBiomeModifiers.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::onAttributeCreate);
@@ -109,6 +100,7 @@ public class DemonSlayer {
         event.put(ModEntityTypes.COMMON_DEMON.get(), CommonDemonEntity.createAttributes().build());
         event.put(ModEntityTypes.GREATER_DEMON.get(), GreaterDemonEntity.createAttributes().build());
         event.put(ModEntityTypes.ELITE_DEMON.get(), EliteDemonEntity.createAttributes().build());
+        event.put(ModEntityTypes.HAND_DEMON.get(), HandDemonEntity.createAttributes().build());
         // MOONS
         event.put(ModEntityTypes.LOWER_MOON_SIX.get(), LowerMoonSixEntity.createAttributes().build());
         event.put(ModEntityTypes.LOWER_MOON_FIVE.get(), LowerMoonFiveEntity.createAttributes().build());

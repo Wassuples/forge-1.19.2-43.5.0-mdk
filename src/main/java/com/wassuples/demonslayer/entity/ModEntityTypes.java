@@ -107,7 +107,7 @@ public class ModEntityTypes {
 
     public static final RegistryObject<EntityType<CrystallineDivineChildEntity>> CRYSTALLINE_DIVINE_CHILD =
             ENTITY_TYPES.register("crystalline_divine_child",
-                    () -> EntityType.Builder.of(CrystallineDivineChildEntity::new, MobCategory.MONSTER)
+                    () -> EntityType.Builder.<CrystallineDivineChildEntity>of(CrystallineDivineChildEntity::new, MobCategory.MONSTER)
                             .sized(0.6f, 1.8f)
                             .build("crystalline_divine_child"));
 
@@ -116,6 +116,14 @@ public class ModEntityTypes {
                     () -> EntityType.Builder.of(BodhisattvaEntity::new, MobCategory.MONSTER)
                             .sized(1f, 1f)
                             .build("bodhisattva"));
+
+    public static final RegistryObject<EntityType<ThrownNichirinEntity>> THROWN_NICHIRIN =
+            ENTITY_TYPES.register("thrown_nichirin",
+                    () -> EntityType.Builder.<ThrownNichirinEntity>of(ThrownNichirinEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(4)
+                            .updateInterval(10)
+                            .build("thrown_nichirin"));
 
 
 
@@ -147,6 +155,12 @@ public class ModEntityTypes {
             ENTITY_TYPES.register("elite_demon",
                     () -> EntityType.Builder.of(EliteDemonEntity::new, MobCategory.MONSTER)
                             .sized(0.6f, 1.8f).build(new ResourceLocation(DemonSlayer.MOD_ID, "elite_demon").toString()));
+
+    public static final RegistryObject<EntityType<HandDemonEntity>> HAND_DEMON =
+            ENTITY_TYPES.register("hand_demon",
+                    () -> EntityType.Builder.of(HandDemonEntity::new, MobCategory.MONSTER)
+                            .sized(2.0f, 3.5f) // A large entity
+                            .build("hand_demon"));
 
     //##########################################################
     //              MOONS

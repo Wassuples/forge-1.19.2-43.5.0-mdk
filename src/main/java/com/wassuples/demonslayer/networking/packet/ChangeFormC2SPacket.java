@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.networking.packet;
 
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
+import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import net.minecraft.network.FriendlyByteBuf;
@@ -33,13 +34,18 @@ public class ChangeFormC2SPacket {
             ServerPlayer player = context.getSender();
             if(player == null)return;
 
-            player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                style.nextForm();
-
-                BreathingForms newForm = style.getCurrentForms();
-                player.sendSystemMessage(Component.literal("Switched to " + newForm.getDisplayName()));
-
-                ModMessages.sendToPlayer(new PlayerStyleSyncS2CPacket(style.getForm(), style.getStyleIndex()), player);
+            player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                if (demon.isBdaModeActive()) {
+                    // --- BDA MODE IS ACTIVE ---
+                    demon.cycleDemonForm();
+                    player.sendSystemMessage(Component.literal("Switched to " + demon.getCurrentDemonForm().getDisplayName()), true);
+                } else {
+                    // --- BREATHING STYLE MODE IS ACTIVE ---
+                    player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
+                        style.nextForm();
+                        player.sendSystemMessage(Component.literal("Switched to " + style.getCurrentForms().getDisplayName()), true);
+                    });
+                }
             });
         });
         return true;

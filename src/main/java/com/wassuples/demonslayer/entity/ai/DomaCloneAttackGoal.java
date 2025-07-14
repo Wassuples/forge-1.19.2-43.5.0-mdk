@@ -1,8 +1,10 @@
 package com.wassuples.demonslayer.entity.ai;
 
 import com.wassuples.demonslayer.entity.custom.CrystallineDivineChildEntity;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.BreathingStyles;
+import com.wassuples.demonslayer.styles.DemonForms;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
@@ -51,15 +53,15 @@ public class DomaCloneAttackGoal extends Goal {
 
     private void chooseAndUseRandomForm() {
         if (this.clone.level instanceof ServerLevel serverLevel) {
-            List<BreathingForms> availableForms = Arrays.stream(BreathingForms.values())
-                    .filter(form -> form.getStyle() == BreathingStyles.CRYO
+            List<DemonForms> availableForms = Arrays.stream(DemonForms.values())
+                    .filter(form -> form.getStyle() == BloodDemonArts.CRYO
                             && form.getInputType() == BreathingForms.InputType.PRESS)
                     .collect(Collectors.toList());
 
             if (!availableForms.isEmpty()) {
-                BreathingForms formToUse = availableForms.get(this.clone.getRandom().nextInt(availableForms.size()));
+                DemonForms formToUse = availableForms.get(this.clone.getRandom().nextInt(availableForms.size()));
                 formToUse.performAction(this.clone, serverLevel);
-//                this.attackCooldown = formToUse.getCooldownTicks();
+                // this.attackCooldown = formToUse.getCooldownTicks();
             }
         }
     }

@@ -2,6 +2,7 @@ package com.wassuples.demonslayer.entity.custom;
 
 import com.mojang.authlib.GameProfile;
 import com.wassuples.demonslayer.entity.ai.DomaCloneAttackGoal;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -18,6 +19,7 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
@@ -33,27 +35,27 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
-public class CrystallineDivineChildEntity extends HashiraEntity {
+public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<CompoundTag> OWNER_PROFILE_TAG =
             SynchedEntityData.defineId(CrystallineDivineChildEntity.class, EntityDataSerializers.COMPOUND_TAG);
     private static final EntityDataAccessor<Boolean> IS_NPC_CLONE =
             SynchedEntityData.defineId(CrystallineDivineChildEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<String> DATA_BDA_STYLE =
+            SynchedEntityData.defineId(CrystallineDivineChildEntity.class, EntityDataSerializers.STRING);
+
 
     @Nullable private LivingEntity owner;
 
-    public CrystallineDivineChildEntity(EntityType<? extends HashiraEntity> pEntityType, Level pLevel) {
+    public CrystallineDivineChildEntity(EntityType<? extends CrystallineDivineChildEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
-        this.setBreathingStyle(BreathingStyles.CRYO);
+        this.setBdaStyle(BloodDemonArts.CRYO);
     }
 
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new DomaCloneAttackGoal(this, 1.0D, true));
-        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
+        super.registerGoals();
 
+        this.goalSelector.addGoal(1, new DomaCloneAttackGoal(this, 1.0D, true));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, (entity) -> !isOwner(entity)));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, true));
@@ -107,6 +109,7 @@ public class CrystallineDivineChildEntity extends HashiraEntity {
         super.defineSynchedData();
         this.entityData.define(OWNER_PROFILE_TAG, new CompoundTag());
         this.entityData.define(IS_NPC_CLONE, false);
+        this.entityData.define(DATA_BDA_STYLE, BloodDemonArts.NONE.name());
     }
 
     public void setOwnerProfile(GameProfile profile) {
@@ -118,6 +121,27 @@ public class CrystallineDivineChildEntity extends HashiraEntity {
         CompoundTag tag = this.entityData.get(OWNER_PROFILE_TAG);
         return tag.isEmpty() ? Optional.empty() : Optional.of(NbtUtils.readGameProfile(tag));
     }
+
+    public BloodDemonArts getBdaStyle() {
+        try {
+            return BloodDemonArts.valueOf(this.entityData.get(DATA_BDA_STYLE));
+        } catch (Exception e) {
+            return BloodDemonArts.NONE;
+        }
+    }
+
+    public void setBdaStyle(BloodDemonArts style) {
+        this.entityData.set(DATA_BDA_STYLE, style.name());
+    }
+
     public void setIsNpcClone(boolean isNpc) { this.entityData.set(IS_NPC_CLONE, isNpc); }
     public boolean isNpcClone() { return this.entityData.get(IS_NPC_CLONE); }
+
+    public static AttributeSupplier.Builder createAttributes() {
+        return Monster.createMonsterAttributes()
+                .add(Attributes.MAX_HEALTH, 40.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.4D)
+                .add(Attributes.ATTACK_DAMAGE, 8.0D)
+                .add(Attributes.FOLLOW_RANGE, 64.0D);
+    }
 }

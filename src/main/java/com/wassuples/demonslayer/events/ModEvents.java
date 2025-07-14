@@ -10,6 +10,7 @@ import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.effects.ForcedSleepEffect;
 import com.wassuples.demonslayer.effects.ModEffects;
+import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.HashiraEntity;
 import com.wassuples.demonslayer.entity.custom.MotherEyeEntity;
 import com.wassuples.demonslayer.entity.custom.WaterPrisonEntity;
@@ -20,9 +21,12 @@ import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.BreathingStyles;
+import com.wassuples.demonslayer.styles.DemonForms;
 import com.wassuples.demonslayer.util.FormUtils;
+import com.wassuples.demonslayer.util.ModUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
@@ -38,6 +42,7 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -275,6 +280,53 @@ public class ModEvents {
                 }
             });
 
+            if (serverPlayer.tickCount % 20 == 0) { // Check once per second
+                final ResourceLocation finalSelectionId = new ResourceLocation(DemonSlayer.MOD_ID, "story_final_selection");
+
+                serverPlayer.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
+                    if (missions.isActive(finalSelectionId)) {
+                        final ResourceLocation requiredBiome = new ResourceLocation(DemonSlayer.MOD_ID, "fujikasane_forest");
+                        final String biomeEnteredKey = "fujikasane_entered";
+                        final String bossSpawnedKey = "boss_spawned";
+
+                        Map<String, Integer> progress = missions.getProgress(finalSelectionId);
+                        ResourceLocation currentBiome = serverPlayer.level.getBiome(serverPlayer.blockPosition()).unwrapKey().get().location();
+
+                        Mission mission = MissionRegistry.getMission(finalSelectionId);
+                        if (mission == null) return;
+
+                        if (currentBiome.equals(requiredBiome)) {
+                            // --- Player is INSIDE the biome ---
+                            if (!progress.containsKey(biomeEnteredKey)) {
+                                missions.updateProgress(finalSelectionId, biomeEnteredKey, 1);
+                                serverPlayer.sendSystemMessage(Component.literal("You have entered Mt. Fujikasane. The trial begins now. Do not leave.").withStyle(ChatFormatting.DARK_PURPLE));
+                            }
+
+                            if (!progress.containsKey(bossSpawnedKey)) {
+                                int startTime = progress.getOrDefault("survive_objective", (int)serverPlayer.level.getGameTime());
+                                long timeElapsed = serverPlayer.level.getGameTime() - startTime;
+
+                                // Check if 6 days have passed
+                                if (timeElapsed >= (24000 * 6)) {
+                                    BlockPos spawnPos = serverPlayer.blockPosition().north(5);
+                                    ModEntityTypes.HAND_DEMON.get().spawn((ServerLevel)serverPlayer.level, null, null, spawnPos, MobSpawnType.EVENT, true, false);
+                                    serverPlayer.sendSystemMessage(Component.literal("A massive, grotesque demon emerges from the trees... It reeks of countless devoured slayers.").withStyle(ChatFormatting.DARK_RED));
+                                    missions.updateProgress(finalSelectionId, bossSpawnedKey, 1);
+                                }
+                            }
+                        } else {
+                            // --- Player is OUTSIDE the biome ---
+                            if (progress.containsKey(biomeEnteredKey)) {
+                                missions.abandonMission(finalSelectionId);
+                                serverPlayer.sendSystemMessage(Component.literal("You have fled Mt. Fujikasane. Your trial has ended in failure.").withStyle(ChatFormatting.RED));
+                                serverPlayer.level.playSound(null, serverPlayer.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 0.5f, 1.0f);
+                                ModUtils.syncMissions(serverPlayer);
+                            }
+                        }
+                    }
+                });
+            }
+
             if (serverPlayer.tickCount % 40 == 0) {
                 serverPlayer.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
                     Set<ResourceLocation> activeMissionIds = new HashSet<>(missions.getActiveMissionIds());
@@ -392,7 +444,7 @@ public class ModEvents {
         FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(target);
         if (activeForm != null) {
             activeForm.onHurt(event);
-            if (activeForm.getForm() == BreathingForms.DESTRUCTIVE_DEATH_1 && !event.isCanceled()) {
+            if (activeForm.getForm() == DemonForms.DESTRUCTIVE_DEATH_1 && !event.isCanceled()) {
                 if (target.level.random.nextFloat() < 0.5f) {
                     event.setCanceled(true);
                     target.level.playSound(null, target.blockPosition(), SoundEvents.ANVIL_PLACE, SoundSource.PLAYERS, 0.5f, 2.0f);
@@ -407,6 +459,21 @@ public class ModEvents {
     @SubscribeEvent
     public static void onEntityDeath(LivingDeathEvent event) {
         LivingEntity deadEntity = event.getEntity();
+
+        if (event.getSource().getEntity() instanceof ServerPlayer player) {
+            final ResourceLocation finalSelectionId = new ResourceLocation(DemonSlayer.MOD_ID, "story_final_selection");
+
+            player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
+                if (missions.isActive(finalSelectionId)) {
+                    if (event.getEntity().getType() == ModEntityTypes.HAND_DEMON.get()) {
+                        missions.updateProgress(finalSelectionId, "boss_defeated", 1);
+                        player.sendSystemMessage(Component.literal("You have vanquished the Hand Demon! Now, you must only survive the remaining time.").withStyle(ChatFormatting.GOLD));
+                        ModUtils.syncMissions(player);
+                    }
+                }
+            });
+        }
+
         if (deadEntity instanceof Player && deadEntity.getTags().contains("mist_clone")) {
             if (deadEntity.level instanceof ServerLevel serverLevel) {
                 serverLevel.sendParticles(ParticleTypes.POOF, deadEntity.getX(), deadEntity.getY(), deadEntity.getZ(),
@@ -451,18 +518,22 @@ public class ModEvents {
             return;
         }
 
-        player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-            if (style.getCurrentStyles() == BreathingStyles.DESTRUCTIVE_DEATH) {
-                ItemStack heldItem = player.getMainHandItem();
-                if (heldItem.isEmpty()) { // Unarmed
-                    event.getTarget().hurt(DamageSource.playerAttack(player), 8.0f);
-                } else { // Armed
-                    event.setCanceled(true);
-                    event.getTarget().hurt(DamageSource.playerAttack(player), 1.0f);
-                    if (player instanceof ServerPlayer sp) {
-                        sp.sendSystemMessage(Component.literal("Your movements with a weapon are clumsy.").withStyle(ChatFormatting.RED), true);
+        player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            if (demon.isDemon()) {
+                player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(bda -> {
+                    if (bda.getEquippedBda() == BloodDemonArts.DESTRUCTIVE_DEATH) {
+                        ItemStack heldItem = player.getMainHandItem();
+                        if (heldItem.isEmpty()) { // Unarmed
+                            event.getTarget().hurt(DamageSource.playerAttack(player), 8.0f);
+                        } else { // Armed
+                            event.setCanceled(true);
+                            event.getTarget().hurt(DamageSource.playerAttack(player), 1.0f);
+                            if (player instanceof ServerPlayer sp) {
+                                sp.sendSystemMessage(Component.literal("Your movements with a weapon are clumsy.").withStyle(ChatFormatting.RED), true);
+                            }
+                        }
                     }
-                }
+                });
             }
         });
 

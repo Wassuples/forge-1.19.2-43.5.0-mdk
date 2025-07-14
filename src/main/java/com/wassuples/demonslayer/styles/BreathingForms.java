@@ -1,13 +1,19 @@
 package com.wassuples.demonslayer.styles;
 
 import com.mojang.math.Vector3f;
+import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
 import com.wassuples.demonslayer.entity.custom.MistCloneEntity;
+import com.wassuples.demonslayer.entity.custom.ThrownNichirinEntity;
 import com.wassuples.demonslayer.util.FormUtils;
+import com.wassuples.demonslayer.util.ModUtils;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -15,18 +21,20 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-import java.text.Normalizer;
-
+import java.util.List;
 
 /**
  * Enum defining all breathing forms, their properties, and their execution logic.
  * The performAction method is the entry point for activating a form.
  */
-public enum BreathingForms {
+public enum BreathingForms implements IForm {
 
     // =================================================================================
     // WATER BREATHING
@@ -35,7 +43,7 @@ public enum BreathingForms {
     WATER_1(
             BreathingStyles.WATER,
             "First Form: Water Surface Slash",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -52,7 +60,7 @@ public enum BreathingForms {
     },
     WATER_2(BreathingStyles.WATER,
             "Second Form: Water Wheel",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -66,7 +74,7 @@ public enum BreathingForms {
     },
     WATER_3(BreathingStyles.WATER,
             "Third Form: Flowing Dance",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -80,7 +88,7 @@ public enum BreathingForms {
     },
     WATER_4(BreathingStyles.WATER,
             "Fourth Form: Striking Tide",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -98,7 +106,7 @@ public enum BreathingForms {
     },
     WATER_5(BreathingStyles.WATER,
             "Fifth Form: Blessed Rain After the Drought",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -107,12 +115,32 @@ public enum BreathingForms {
             false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            // Do me later...
+            LivingEntity target = FormUtils.getLookedAtEntity(user, 5.0);
+
+            if (target == null) {
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 1.8f);
+                FormUtils.spawnParticleArc(user, ParticleTypes.SPLASH, 2.0, 90, 15);
+                return;
+            }
+
+            if (target.isCrouching()) {
+                level.playSound(null, target.blockPosition(), SoundEvents.NOTE_BLOCK_CHIME, SoundSource.PLAYERS, 1.5f, 2.0f);
+                level.playSound(null, target.blockPosition(), SoundEvents.AMBIENT_CAVE, SoundSource.PLAYERS, 0.5f, 2.0f);
+
+                float trueDamage = 10000.0f;
+                DamageSource mercySource = DamageSource.playerAttack((Player)user).setMagic();
+                target.hurt(mercySource, trueDamage);
+
+                level.sendParticles(ParticleTypes.END_ROD, target.getX(), target.getEyeY(), target.getZ(), 30, 0.5, 0.5, 0.5, 0.1);
+            } else {
+                level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.7f, 1.8f);
+                user.sendSystemMessage(Component.literal("Your opponent has not yielded.").withStyle(ChatFormatting.AQUA));
+            }
         }
     },
     WATER_6(BreathingStyles.WATER,
             "Sixth Form: Whirlpool",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -126,7 +154,7 @@ public enum BreathingForms {
     },
     WATER_7(BreathingStyles.WATER,
             "Seventh Form: Drop Ripple Thrust",
-            InputType.HOLD,
+            IForm.InputType.HOLD,
             40,
             1,
             50,
@@ -143,7 +171,7 @@ public enum BreathingForms {
     },
     WATER_8(BreathingStyles.WATER,
             "Eighth Form: Waterfall Basin",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -161,7 +189,7 @@ public enum BreathingForms {
     },
     WATER_9(BreathingStyles.WATER,
             "Ninth Form: Splashing Water Flow, Turbulent",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -170,12 +198,16 @@ public enum BreathingForms {
             false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            // Do me later...
+            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.SplashingWaterFlowForm) {
+                FormUtils.ActiveFormManager.stop(user);
+            } else {
+                FormUtils.ActiveFormManager.start(user, this);
             }
+        }
     },
     WATER_10(BreathingStyles.WATER,
             "Tenth Form: Constant Flux",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             100,
@@ -194,7 +226,7 @@ public enum BreathingForms {
     },
     WATER_11(BreathingStyles.WATER,
             "Eleventh Form: Dead Calm",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             200,
@@ -213,7 +245,7 @@ public enum BreathingForms {
 
     FLAME_1(BreathingStyles.FLAME,
             "First Form: Unknowing Fire",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -227,7 +259,7 @@ public enum BreathingForms {
     },
     FLAME_2(BreathingStyles.FLAME,
             "Second Form: Rising Scorching Sun",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -246,7 +278,7 @@ public enum BreathingForms {
     },
     FLAME_3(BreathingStyles.FLAME,
             "Third Form: Blazing Universe",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -264,7 +296,7 @@ public enum BreathingForms {
     },
     FLAME_4(BreathingStyles.FLAME,
             "Fourth Form: Blooming Flame Undulation",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -278,7 +310,7 @@ public enum BreathingForms {
     },
     FLAME_5(BreathingStyles.FLAME,
             "Fifth Form: Flame Tiger",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -296,7 +328,7 @@ public enum BreathingForms {
     },
     FLAME_9(BreathingStyles.FLAME,
             "Ninth Form: Rengoku",
-            InputType.HOLD,
+            IForm.InputType.HOLD,
             80,
             1,
             50,
@@ -315,7 +347,7 @@ public enum BreathingForms {
 
     WIND_1(BreathingStyles.WIND,
             "First Form: Dust Whirlwind Cutter",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -329,7 +361,7 @@ public enum BreathingForms {
     },
     WIND_2(BreathingStyles.WIND,
             "Second Form: Claws-Purifying Wind",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -350,7 +382,7 @@ public enum BreathingForms {
     },
     WIND_3(BreathingStyles.WIND,
             "Third Form: Clear Storm Wind Tree",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -364,7 +396,7 @@ public enum BreathingForms {
     },
     WIND_4(BreathingStyles.WIND,
             "Fourth Form: Rising Dust Storm",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -378,7 +410,7 @@ public enum BreathingForms {
     },
     WIND_5(BreathingStyles.WIND,
             "Fifth Form: Cold Mountain Wind",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -392,7 +424,7 @@ public enum BreathingForms {
     },
     WIND_6(BreathingStyles.WIND,
             "Sixth Form: Black Wind Mountain Mist",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -415,7 +447,7 @@ public enum BreathingForms {
     },
     WIND_7(BreathingStyles.WIND,
             "Seventh Form: Gale, Sudden Gusts",
-            InputType.PRESS,
+            IForm.InputType.PRESS,
             0,
             1,
             50,
@@ -751,6 +783,14 @@ public enum BreathingForms {
                     } else {
                         decoy.setIsNpcClone(true);
                     }
+
+                    decoy.setItemSlot(EquipmentSlot.HEAD, user.getItemBySlot(EquipmentSlot.HEAD).copy());
+                    decoy.setItemSlot(EquipmentSlot.CHEST, user.getItemBySlot(EquipmentSlot.CHEST).copy());
+                    decoy.setItemSlot(EquipmentSlot.LEGS, user.getItemBySlot(EquipmentSlot.LEGS).copy());
+                    decoy.setItemSlot(EquipmentSlot.FEET, user.getItemBySlot(EquipmentSlot.FEET).copy());
+                    decoy.setItemSlot(EquipmentSlot.MAINHAND, user.getItemBySlot(EquipmentSlot.MAINHAND).copy());
+                    decoy.setItemSlot(EquipmentSlot.OFFHAND, user.getItemBySlot(EquipmentSlot.OFFHAND).copy());
+
                     decoy.setPos(decoyX, decoyY, decoyZ);
                     decoy.setPersistenceRequired();
                     level.addFreshEntity(decoy);
@@ -1221,561 +1261,627 @@ public enum BreathingForms {
         }
     },
     // =================================================================================
-    // BDA, Rui (Thread Manipulation)
+    // Moon Breathing
     // =================================================================================
-    THREADS_1(BreathingStyles.THREADS,
-            "Cutting Thread Cage",
+    MOON_1(BreathingStyles.MOON,
+            "First Form: Dark Moon, Evening Palace",
             InputType.PRESS,
             0,
-            0,
-            50,
-            100,
-            "Cutting Thread Cage desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    THREADS_2(BreathingStyles.THREADS,
-            "Murderous Eye Basket",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Murderous Eye Basket desc.",
-            true) {
-      @Override
-      public void performAction(LivingEntity user, ServerLevel level) {
-          FormUtils.ActiveFormManager.start(user, this);
-      }
-    },
-    THREADS_3(BreathingStyles.THREADS,
-            "Cutting Thread Rotation",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Cutting Thread Rotation desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-
-    // =================================================================================
-    // BDA, Enmu (Sleep Manip.)
-    // =================================================================================
-    SLEEP_1(BreathingStyles.SLEEP,
-            "Whispers of Forced Unconscious Hypnosis",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Whispers of Forced Unconscious Hypnosis desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    SLEEP_2(BreathingStyles.SLEEP,
-            "Eyes of Forced Unconscious Sleep",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Eyes of Forced Unconscious Sleep desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-
-    // =================================================================================
-    // BDA, Daki (Obi Sash Manip.)
-    // =================================================================================
-    SASH_1(BreathingStyles.SASH,
-            "Eight-Layered Obi Slash",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Eight-Layered Obi Slash desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-
-    // =================================================================================
-    // BDA, Gyutaro (Haemokinesis)
-    // =================================================================================
-    HAEMO_1(BreathingStyles.HAEMO,
-            "Flying Blood Sickles",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Flying Blood Sickles desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    HAEMO_2(BreathingStyles.HAEMO,
-            "Rampant Arc Rampage",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Rampant Arc Rampage desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    HAEMO_3(BreathingStyles.HAEMO,
-            "Rotating Circular Slashes",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Rotating Circular Slashes desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-
-    // =================================================================================
-    // BDA, Gyokko (Fish Scale Attacks)
-    // =================================================================================
-    FISH_1(BreathingStyles.FISH,
-            "Thousand Needle Fish Kill",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Thousand Needle Fish Kill desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    FISH_2(BreathingStyles.FISH,
-            "Water Prison Pot",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Water Prison Pot desc.",
-            true){
-        @Override
-        public void performAction(LivingEntity user,  ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    FISH_3(BreathingStyles.FISH,
-            "Octopus Vase Hell",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Octopus Vase Hell desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    FISH_4(BreathingStyles.FISH,
-            "Ten Thousand Gliding Slime-Fish",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Ten Thousand Gliding Slime-Fish desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    FISH_5(BreathingStyles.FISH,
-            "Killer Fish Scales",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Killer Fish Scales desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-
-    // =================================================================================
-    // BDA, Hantengu (Emotion Manifestation)
-    // =================================================================================
-    EMOTION_1(BreathingStyles.EMOTION,
-            "Weeping Spears",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Weeping Spears desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    EMOTION_2(BreathingStyles.EMOTION,
-            "Crazed Cry of Thunderdeath",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Crazed Cry of Thunderdeath desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    EMOTION_3(BreathingStyles.EMOTION,
-            "Countless Striking Trees",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Countless Striking Trees desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level)  {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.CountlessStrikingTreesForm) {
-                FormUtils.ActiveFormManager.stop(user);
-            } else {
-                FormUtils.ActiveFormManager.start(user, this);
-            }
-        }
-    },
-    EMOTION_4(BreathingStyles.EMOTION,
-            "Compressed Sound Waves",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Compressed Sound Waves desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-
-    // =================================================================================
-    // BDA, Akaza (Destructive Death)
-    // =================================================================================
-    DESTRUCTIVE_DEATH_1(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Compass Needle",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Compass Needle desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.CompassNeedleForm) {
-                FormUtils.ActiveFormManager.stop(user);
-            } else {
-                FormUtils.ActiveFormManager.start(user, this);
-            }
-        }
-    },
-    DESTRUCTIVE_DEATH_2(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Air Type",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Air Type desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    DESTRUCTIVE_DEATH_3(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Disorder",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Disorder desc.",
-    true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.DisorderForm) {
-                FormUtils.ActiveFormManager.stop(user);
-            } else {
-                FormUtils.ActiveFormManager.start(user, this);
-            }
-        }
-    },
-    DESTRUCTIVE_DEATH_4(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Annihilation Type",
-            InputType.HOLD,
-            80,
             1,
             50,
             100,
-            "Annihilation Type desc.",
-            true) {
+            "First Form: Dark Moon, Evening Palace desc.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    DESTRUCTIVE_DEATH_5(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Leg Type: Crown Splitter",
-            InputType.PRESS,
-            80,
-            0,
-            50,
-            100,
-            "Leg Type: Crown Splitter desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    DESTRUCTIVE_DEATH_6(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Leg Type: Explosive Flurry",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Leg Type: Explosive Flurry desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    DESTRUCTIVE_DEATH_7(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Leg Type: Flying Planet Thousand Wheels",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Leg Type: Flying Planet Thousand Wheels desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    DESTRUCTIVE_DEATH_8(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Eight-Layered Demon Core",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Eight-Layered Demon Core desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    DESTRUCTIVE_DEATH_9(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Crushing Type: Ten Thousand Leaves Flashing Willow",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Crushing Type: Ten Thousand Leaves Flashing Willow desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
-    DESTRUCTIVE_DEATH_10(BreathingStyles.DESTRUCTIVE_DEATH,
-            "Final Form: Blue Silver Chaotic Afterglow",
-            InputType.PRESS,
-            0,
-            0,
-            50,
-            100,
-            "Final Form: Blue Silver Chaotic Afterglow desc.",
-            true) {
-        @Override
-        public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
-        }
-    },
+            level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0f, 2.0f);
+            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 0.8f);
 
+            float damage = 22.0f;
+            double range = 6.0;
+            double angleThreshold = 0.0;
+            FormUtils.dealDirectionalDamage(user, range, damage, angleThreshold);
+
+            final DustParticleOptions purple = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+            final ParticleOptions silver = ParticleTypes.END_ROD;
+
+            FormUtils.spawnParticleArc(user, purple, 4.0, 160, 50, 0);
+            FormUtils.spawnParticleArc(user, silver, 4.0, 160, 20, 0);
+        }
+    },
+    MOON_2(BreathingStyles.MOON,
+            "Second Form: Pearl Flower Moongazing",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Second Form: Pearl Flower Moongazing desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_3(BreathingStyles.MOON,
+            "Third Form: Loathsome Moon, Chains",
+            InputType.PRESS,
+            1,
+            0,
+            50,
+            100,
+            "Third Form: Loathsome Moon, Chains desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SKELETON_HURT, SoundSource.PLAYERS, 1.0f, 0.8f);
+            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2f, 0.9f);
+
+            float damage = 25.0f;
+            double range = 8.0;
+            FormUtils.dealDirectionalDamage(user, range, damage, 0.4);
+
+            final DustParticleOptions purple = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.2f);
+
+            Vec3 upperArcOrigin = user.getEyePosition().add(0, 0.5, 0);
+            FormUtils.spawnParticleArcInWorld(level, upperArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
+
+            Vec3 lowerArcOrigin = user.position().add(0, user.getBbHeight() * 0.5, 0);
+            FormUtils.spawnParticleArcInWorld(level, lowerArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
+        }
+    },
+    MOON_5(BreathingStyles.MOON,
+            "Fifth Form: Moon Spirit Calamitous Eddy",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Fifth Form: Moon Spirit Calamitous Eddy desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_6(BreathingStyles.MOON,
+            "Sixth Form: Perpetual Night, Lonely Moon - Incessant",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Sixth Form: Perpetual Night, Lonely Moon - Incessant desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_7(BreathingStyles.MOON,
+            "Seventh Form: Mirror of Misfortune, Moonlit",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Seventh Form: Mirror of Misfortune, Moonlit desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_8(BreathingStyles.MOON,
+    "Eighth Form: Moon-Dragon Ringtail",
+    InputType.PRESS,
+    0,
+    1,
+    50,
+    100,
+    "Eighth Form: Moon-Dragon Ringtail desc.",
+    false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_9(BreathingStyles.MOON,
+            "Ninth Form: Waning Moonswaths",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Ninth Form: Waning Moonswaths desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_10(BreathingStyles.MOON,
+            "Tenth Form: Drilling Slashes, Moon Through Bamboo Leaves",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Tenth Form: Drilling Slashes, Moon Through Bamboo Leaves desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_14(BreathingStyles.MOON,
+            "Fourteenth Form: Catastrophe, Tenman Crescent Moon",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Fourteenth Form: Catastrophe, Tenman Crescent Moon desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    MOON_16(BreathingStyles.MOON,
+            "Sixteenth Form: Moonbow, Half Moon",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Sixteenth Form: Moonbow, Half Moon desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
     // =================================================================================
-    // BDA, Doma (Cryokinesis)
+    // Beast Breathing
     // =================================================================================
-    CRYO_1(BreathingStyles.CRYO,
-            "Frozen Lotus",
+    BEAST_1(BreathingStyles.BEAST,
+            "First Fang: Pierce",
             InputType.PRESS,
             0,
-            0,
+            1,
             50,
             100,
-            "Frozen Lotus desc.",
-            true) {
+            "First Fang: Pierce desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_CRIT, 1.2f, 1.0f);
+            level.playSound(null, user.blockPosition(), SoundEvents.HOGLIN_ATTACK, SoundSource.PLAYERS, 0.8f, 1.2f);
+
+            float damage = 18.0f;
+            double range = 4.5;
+            FormUtils.dealThrustDamage(user, range, damage);
+
+            Vec3 startPos = user.getEyePosition();
+            Vec3 lookVec = user.getLookAngle();
+            Vec3 sideVec = lookVec.cross(new Vec3(0, 1, 0)).normalize().scale(0.2);
+
+            // Calculate start/end points for two parallel lines
+            Vec3 leftBladeStart = startPos.add(sideVec);
+            Vec3 rightBladeStart = startPos.subtract(sideVec);
+            Vec3 leftBladeEnd = leftBladeStart.add(lookVec.scale(range));
+            Vec3 rightBladeEnd = rightBladeStart.add(lookVec.scale(range));
+
+            // Spawn the particle trails
+            FormUtils.spawnLineParticles(level, ParticleTypes.CRIT, leftBladeStart, leftBladeEnd, 15);
+            FormUtils.spawnLineParticles(level, ParticleTypes.CRIT, rightBladeStart, rightBladeEnd, 15);
+        }
+    },
+    BEAST_2(BreathingStyles.BEAST,
+            "Second Fang: Slice",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Second Fang: Slice desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.2f, 0.9f);
+            level.playSound(null, user.blockPosition(), SoundEvents.RAVAGER_ATTACK, SoundSource.PLAYERS, 0.7f, 1.1f);
+
+            float damage = 16.0f;
+            double range = 5.0;
+            double angleThreshold = 0.6;
+            FormUtils.dealDirectionalDamage(user, range, damage, angleThreshold);
+
+            // top-left to bottom-right
+            FormUtils.spawnParticleArc(user, ParticleTypes.CRIT, 3.0, 120, 25, 45.0f);
+            // top-right to bottom-left
+            FormUtils.spawnParticleArc(user, ParticleTypes.CRIT, 3.0, 120, 25, -45.0f);
+
+            FormUtils.spawnParticleArc(user, new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, net.minecraft.world.level.block.Blocks.DIRT.defaultBlockState()), 2.5, 120, 10);
+        }
+    },
+    // Add this to your BreathingForms.java enum
+    BEAST_3(BreathingStyles.BEAST,
+            "Third Fang: Devour",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Third Fang: Devour desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.1f, 0.8f);
+            level.playSound(null, user.blockPosition(), SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS, 0.8f, 1.3f);
+
+            float damage = 20.0f;
+            double range = 4.0;
+            double angleThreshold = 0.9;
+            FormUtils.dealDirectionalDamage(user, range, damage, angleThreshold);
+
+            Vec3 eyePos = user.getEyePosition();
+            FormUtils.spawnParticleArc(user, ParticleTypes.CRIT, 2.5, 120, 20, 90.0f);
+            FormUtils.spawnParticleArcInWorld(level, eyePos.add(0, -0.3, 0), 2.5, 120, 20, user.getYRot(), user.getXRot(), ParticleTypes.CRIT);
+        }
+    },
+    BEAST_4(BreathingStyles.BEAST,
+            "Fourth Fang: Slice 'n' Dice",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Fourth Fang: Slice 'n' Dice desc.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_2(BreathingStyles.CRYO,
-            "Barren Hanging Garden",
+    BEAST_5(BreathingStyles.BEAST,
+            "Fifth Fang: Crazy Cutting",
             InputType.PRESS,
             0,
-            0,
+            1,
             50,
             100,
-            "Barren Hanging Garden desc.",
-            true) {
+            "Fifth Fang: Crazy Cutting desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            if (user.isOnGround()) {
+                level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.8f, 1.5f);
+                user.sendSystemMessage(Component.literal("You must be in the air to use this form!").withStyle(ChatFormatting.RED));
+                return;
+            }
+
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    BEAST_6(BreathingStyles.BEAST,
+            "Sixth Fang: Palisade Bite",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Sixth Fang: Palisade Bite desc.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_3(BreathingStyles.CRYO,
-            "Freezing Clouds",
+    BEAST_7(BreathingStyles.BEAST,
+            "Seventh Form: Spatial Awareness",
             InputType.PRESS,
             0,
-            0,
+            1,
             50,
             100,
-            "Freezing Clouds desc.",
-            true) {
+            "Seventh Form: Spatial Awareness desc.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_4(BreathingStyles.CRYO,
-            "Lotus Vines",
+    BEAST_8(BreathingStyles.BEAST,
+            "Eighth Form: Explosive Rush",
             InputType.PRESS,
             0,
-            0,
+            1,
             50,
             100,
-            "Lotus Vines desc.",
-            true) {
+            "Eighth Form: Explosive Rush desc.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_5(BreathingStyles.CRYO,
-            "Cold White Princesses",
+    BEAST_9(BreathingStyles.BEAST,
+            "Ninth Fang: Extending Bendy Slash",
             InputType.PRESS,
             0,
-            0,
+            1,
             50,
             100,
-            "Cold White Princesses desc.",
-            true) {
+            "Ninth Fang: Extending Bendy Slash desc.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_6(BreathingStyles.CRYO,
-            "Wintry Icicles",
+    BEAST_10(BreathingStyles.BEAST,
+            "Tenth Fang: Whirling Fangs",
             InputType.PRESS,
             0,
-            0,
+            1,
             50,
             100,
-            "Wintry Icicles desc.",
-            true) {
+            "Tenth Fang: Whirling Fangs desc.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_7(BreathingStyles.CRYO,
-            "Scattering Lotuses",
+    BEAST_11(BreathingStyles.BEAST,
+            "Eleventh Fang: Sudden Throwing Strike",
             InputType.PRESS,
             0,
-            0,
+            1,
             50,
             100,
-            "Scattering Lotuses desc.",
-            true) {
+            "Eleventh Fang: Sudden Throwing Strike desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.2f, 1.0f);
+            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.5f);
+
+            Vec3 lookVec = user.getLookAngle();
+            Vec3 sideVec = lookVec.cross(new Vec3(0, 1, 0)).normalize().scale(0.3);
+
+            ThrownNichirinEntity blade1 = new ThrownNichirinEntity(level, user);
+            blade1.shoot(lookVec.x - sideVec.x, lookVec.y, lookVec.z - sideVec.z, 2.0f, 2.0f);
+            level.addFreshEntity(blade1);
+
+            ThrownNichirinEntity blade2 = new ThrownNichirinEntity(level, user);
+            blade2.shoot(lookVec.x + sideVec.x, lookVec.y, lookVec.z + sideVec.z, 2.0f, 2.0f);
+            level.addFreshEntity(blade2);
+        }
+    },
+    // =================================================================================
+    // Sun Breathing (Hinokami Kagura)
+    // =================================================================================
+    // In your BreathingForms.java enum, add this new form:
+    SUN_1(BreathingStyles.SUN,
+            "Dance",
+            InputType.PRESS,
+            0,
+            100,
+            50,
+            100,
+            "The most fundamental slash, from which all other techniques are born. A single, perfect vertical slash that shatters all defenses.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.5f);
+            level.playSound(null, user.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.5f, 1.0f);
+
+            double range = 6.0;
+            AABB attackAABB = user.getBoundingBox().expandTowards(user.getLookAngle().scale(range)).inflate(1.5, 1.5, 1.5);
+            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB, e ->
+                    e != user && e.isAlive() && user.hasLineOfSight(e));
+
+            float baseDamage = 35.0f;
+            float parryShatterBonus = 20.0f;
+
+            DamageSource sunSource = DamageSource.playerAttack((Player)user).setMagic();
+
+            for (LivingEntity target : targets) {
+                FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(target);
+                if (activeForm instanceof FormUtils.ParryForm) {
+                    target.hurt(sunSource, baseDamage + parryShatterBonus);
+                    FormUtils.ActiveFormManager.stop(target);
+
+                    level.playSound(null, target.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 1.0f);
+                    level.sendParticles(ParticleTypes.LAVA, target.getX(), target.getEyeY(), target.getZ(), 30, 0.5, 0.5, 0.5, 0.0);
+                } else {
+                    target.hurt(sunSource, baseDamage);
+                }
+
+                if (target.isBlocking()) {
+                    if (target instanceof Player p) {
+                        p.getCooldowns().addCooldown(p.getUseItem().getItem(), 100);
+                    }
+                    target.stopUsingItem();
+                }
+            }
+
+            final DustParticleOptions redHot = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+            final ParticleOptions embers = ParticleTypes.LAVA;
+
+            FormUtils.spawnParticleArc(user, redHot, 3.5, 160, 60, 90.0f);
+            FormUtils.spawnParticleArc(user, embers, 3.5, 160, 30, 90.0f);
+        }
+    },
+    SUN_2(BreathingStyles.SUN,
+            "Clear Blue Sky",
+            InputType.PRESS,
+            0,
+            120,
+            50,
+            100,
+            "The user spins their body, releasing a 360° slash that purifies the battlefield.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_8(BreathingStyles.CRYO,
-            "Crystalline Divine Child",
+    SUN_3(BreathingStyles.SUN,
+            "Raging Sun",
+            InputType.PRESS,
+            0,
+            130,
+            0,
+            0,
+            "Unleash two consecutive 360-degree slashes that incinerate incoming attacks.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_4(BreathingStyles.SUN,
+            "Burning Bones, Summer Sun",
+            InputType.PRESS,
+            1,
+            140,
+            50,
+            400,
+            "A spiraling slash that creates a defensive vortex to intercept frontal attacks.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_5(BreathingStyles.SUN,
+            "Setting Sun Transformation",
+            InputType.PRESS,
+            0,
+            130,
+            0,
+            0,
+            "A graceful backflip into the air to unleash a devastating horizontal slash below.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_6(BreathingStyles.SUN,
+            "Solar Heat Haze",
+            InputType.PRESS,
+            0,
+            120,
+            0,
+            0,
+            "Dash forward, masking the true length of your blade in a heat haze to land a surprising long-range strike.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_7(BreathingStyles.SUN,
+            "Beneficent Radiance",
+            InputType.PRESS,
+            0,
+            140,
+            50,
+            100,
+            "Spiral into the air while performing a swirling upward slash to strike the target.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_8(BreathingStyles.SUN,
+            "Sunflower Thrust",
             InputType.HOLD,
-            20*6,
-            0,
+            30,
+            150,
             50,
             100,
-            "Crystalline Divine Child desc.",
-            true) {
+            "A devastating thrust that blooms with solar energy upon impact.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
-    CRYO_9(BreathingStyles.CRYO,
-            "Rime — Water Lily Bodhisattva",
-            InputType.PRESS,
+    SUN_9(BreathingStyles.SUN,
+            "Sun Halo Dragon Head Dance",
+            IForm.InputType.PRESS,
             0,
-            0,
+            150,
             50,
             100,
-            "Rime — Water Lily Bodhisattva desc.",
-            true) {
+            "Unleash a continuous, flowing attack in the form of a solar dragon.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.SunHaloDragonForm) {
+                FormUtils.ActiveFormManager.stop(user);
+            } else {
+                FormUtils.ActiveFormManager.start(user, this);
+            }
+        }
+    },
+    SUN_10(BreathingStyles.SUN,
+            "Fire Wheel",
+            InputType.PRESS,
+            0,
+            150,
+            50,
+            100,
+            "Fire Wheel desc.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_11(BreathingStyles.SUN,
+            "Fake Rainbow",
+            IForm.InputType.PRESS,
+            0,
+            80,
+            50,
+            100,
+            "Perform a high-speed dash that creates afterimages to confuse enemies.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_12(BreathingStyles.SUN,
+            "Flame Dance",
+            IForm.InputType.PRESS,
+            0,
+            150,
+            50,
+            100,
+            "A two-strike combo starting with a vertical slash, followed by a horizontal one.",
+            false) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            FormUtils.ActiveFormManager.start(user, this);
+        }
+    },
+    SUN_13(BreathingStyles.SUN,
+            "Thirteenth Form",
+            InputType.HOLD,
+            40,
+            200,
+            50,
+            100,
+            "Continuously perform all twelve forms in rapid succession.",
+            false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1787,12 +1893,9 @@ public enum BreathingForms {
     // =================================================================================
     // Enum Boilerplate
     // =================================================================================
-
-    public enum InputType { PRESS, HOLD }
-
     private final BreathingStyles style;
     private final String displayName;
-    private final InputType inputType;
+    private final IForm.InputType inputType;
     private final int chargeTicks;
     private final int breathCost;
     private final int styleMasteryToUnlock;
@@ -1800,7 +1903,7 @@ public enum BreathingForms {
     private final String description;
     private final Boolean isBDA;
 
-    BreathingForms(BreathingStyles style, String displayName, InputType inputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, Boolean isBDA) {
+    BreathingForms(BreathingStyles style, String displayName, IForm.InputType inputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, Boolean isBDA) {
         this.style = style;
         this.displayName = displayName;
         this.inputType = inputType;
@@ -1814,7 +1917,7 @@ public enum BreathingForms {
 
     public BreathingStyles getStyle() { return style; }
     public String getDisplayName() { return displayName; }
-    public InputType getInputType() { return inputType; }
+    public IForm.InputType getInputType() { return inputType; }
     public int getChargeTicks() { return chargeTicks; }
     public int getBreathCost() { return breathCost; }
     public int getStyleMasteryToUnlock() { return styleMasteryToUnlock; }

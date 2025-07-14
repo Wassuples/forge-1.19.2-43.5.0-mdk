@@ -13,6 +13,7 @@ import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
 import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.BreathingForms;
+import com.wassuples.demonslayer.styles.DemonForms;
 import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
@@ -259,16 +260,12 @@ public class CompassNeedleHandler {
     }
 
     private static boolean isCompassFormActive(Player player) {
-        // This is a client-side check, so we can use FormUtils
-        if (player.level.isClientSide) {
-            FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(player);
-            return activeForm != null && activeForm.getForm() == BreathingForms.DESTRUCTIVE_DEATH_1;
-        }
+        FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(player);
 
-        // Keep original logic for server-side checks
-        return player.getCapability(PlayerStyleProvider.PLAYER_STYLE).map(style ->
-                style.getCurrentForms() == BreathingForms.DESTRUCTIVE_DEATH_1
-        ).orElse(false);
+        if (activeForm == null) {
+            return false;
+        }
+        return activeForm.getForm() == DemonForms.DESTRUCTIVE_DEATH_1;
     }
 
     private static boolean getDodgeCharge(Player player) {

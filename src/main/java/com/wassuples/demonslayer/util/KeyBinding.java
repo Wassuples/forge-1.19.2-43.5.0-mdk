@@ -20,4 +20,7 @@ public class KeyBinding {
     public static final KeyMapping OPEN_MENU_KEY = new KeyMapping(KEY_OPEN_MENU, KeyConflictContext.IN_GAME,
             InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, KEY_GATEGORY_DEMONSLAYER);
 
+    public static final KeyMapping BDA_TOGGLE_KEY = new KeyMapping("key.demonslayer.bda_toggle", KeyConflictContext.IN_GAME,
+            InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, KEY_GATEGORY_DEMONSLAYER);
+
 }

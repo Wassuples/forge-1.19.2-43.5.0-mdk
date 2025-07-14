@@ -21,6 +21,12 @@ public class PlayerMissions {
         return activeMissions.containsKey(missionId);
     }
 
+    public void updateProgress(ResourceLocation missionId, String key, int value) {
+        if (isActive(missionId)) {
+            activeMissions.get(missionId).put(key, value);
+        }
+    }
+
     public void acceptMission(Mission mission, ServerPlayer player) {
         if (!isActive(mission.id()) && !hasCompleted(mission.id())) {
             Map<String, Integer> progress = new HashMap<>();

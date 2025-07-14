@@ -164,6 +164,18 @@ public class ModMessages {
                 .encoder(BodhisattvaInputC2SPacket::toBytes)
                 .consumerMainThread(BodhisattvaInputC2SPacket::handle)
                 .add();
+
+        net.messageBuilder(ToggleBdaModeC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(ToggleBdaModeC2SPacket::toBytes)
+                .decoder(ToggleBdaModeC2SPacket::new)
+                .consumerMainThread(ToggleBdaModeC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(PerformAirJumpC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .encoder(PerformAirJumpC2SPacket::toBytes)
+                .decoder(PerformAirJumpC2SPacket::new)
+                .consumerMainThread(PerformAirJumpC2SPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

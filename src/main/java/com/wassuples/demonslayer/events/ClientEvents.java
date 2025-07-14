@@ -21,6 +21,7 @@ import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.BreathingStyles;
+import com.wassuples.demonslayer.util.FormUtils;
 import com.wassuples.demonslayer.util.KeyBinding;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -50,6 +51,8 @@ public class ClientEvents {
         private static boolean useKeyHeld = false;
         private static int useKeyHoldTime = 0;
         public static boolean isVignetteActive = false;
+        private static boolean canAirJump = true;
+        private static boolean wasJumping = false;
         private static final List<Entity> tempGlowers = new ArrayList<>();
         private static final ResourceLocation VIGNETTE_TEXTURE =
                 new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/vignette.png");
@@ -96,6 +99,10 @@ public class ClientEvents {
                 ModMessages.sendToServer(new ChangeFormC2SPacket());
             }
 
+            if (KeyBinding.BDA_TOGGLE_KEY.consumeClick()) {
+                ModMessages.sendToServer(new ToggleBdaModeC2SPacket());
+            }
+
             if (KeyBinding.OPEN_MENU_KEY.consumeClick()) {
                 if (mc.screen == null) {
                     mc.setScreen(new BreathingMenuScreen());
@@ -124,6 +131,28 @@ public class ClientEvents {
                     useKeyHoldTime = 0;
                 }
             });
+
+            FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(mc.player);
+            boolean isFormActive = activeForm != null && activeForm.getForm() == BreathingForms.WATER_9;
+
+            if (isFormActive) {
+                if (mc.player.isOnGround()) {
+                    canAirJump = true;
+                }
+
+                boolean isCurrentlyJumping = mc.player.getDeltaMovement().y > 0;
+
+                if (wasJumping && !isCurrentlyJumping && !mc.player.isOnGround() && canAirJump) {
+                    if (mc.options.keyJump.isDown()) {
+                        canAirJump = false;
+                        ModMessages.sendToServer(new PerformAirJumpC2SPacket());
+                    }
+                }
+                wasJumping = isCurrentlyJumping;
+            } else {
+                canAirJump = true;
+                wasJumping = false;
+            }
         }
 
         @SubscribeEvent
@@ -253,6 +282,7 @@ public class ClientEvents {
             event.registerEntityRenderer(ModEntityTypes.LOTUS_SHARD.get(), LotusShardRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CRYSTALLINE_DIVINE_CHILD.get(), CrystallineDivineChildRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.BODHISATTVA.get(), BodhisattvaRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.THROWN_NICHIRIN.get(), ThrownNichirinRenderer::new);
             // HASHIRA
             event.registerEntityRenderer(ModEntityTypes.HASHIRA.get(), HashiraRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.WATER_HASHIRA.get(), WaterHashiraRenderer::new);
@@ -272,6 +302,7 @@ public class ClientEvents {
             event.registerEntityRenderer(ModEntityTypes.COMMON_DEMON.get(), CommonDemonRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.GREATER_DEMON.get(), GreaterDemonRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.ELITE_DEMON.get(), EliteDemonRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.HAND_DEMON.get(), HandDemonRenderer::new);
             // MOONS
             event.registerEntityRenderer(ModEntityTypes.LOWER_MOON_SIX.get(), LowerMoonSixRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.LOWER_MOON_FIVE.get(), LowerMoonFiveRenderer::new);

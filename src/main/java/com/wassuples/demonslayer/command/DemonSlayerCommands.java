@@ -14,6 +14,7 @@ import com.wassuples.demonslayer.missions.MissionRegistry;
 import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import com.wassuples.demonslayer.util.ModUtils;
@@ -64,7 +65,8 @@ public class DemonSlayerCommands {
             SharedSuggestionProvider.suggest(Arrays.stream(Rank.values()).map(Enum::name).map(String::toLowerCase), builder.suggest("max"));
     private static final SuggestionProvider<CommandSourceStack> SUGGEST_DEMON_RANK_MAX = (ctx, builder) ->
             SharedSuggestionProvider.suggest(Arrays.stream(DemonRank.values()).map(Enum::name).map(String::toLowerCase), builder.suggest("max"));
-
+    private static final SuggestionProvider<CommandSourceStack> BDA_SUGGESTIONS = (ctx, builder) ->
+            SharedSuggestionProvider.suggest(Arrays.stream(BloodDemonArts.values()).map(s -> s.name().toLowerCase()), builder);
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("demonslayer")
@@ -101,9 +103,11 @@ public class DemonSlayerCommands {
                                         .then(Commands.literal("rank").then(Commands.argument("rank_or_max", StringArgumentType.word()).suggests(SUGGEST_DEMON_RANK_MAX)
                                                 .executes(ctx -> setPlayerDemonRank(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"), StringArgumentType.getString(ctx, "rank_or_max")))))
                                         .then(Commands.literal("blood").then(Commands.argument("amount", StringArgumentType.word())
-                                                .executes(ctx -> setPlayerDemonBlood(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"), StringArgumentType.getString(ctx, "amount"))))))
+                                                .executes(ctx -> setPlayerDemonBlood(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"), StringArgumentType.getString(ctx, "amount")))))
+                                        .then(Commands.literal("set_bda").then(Commands.argument("bda_name", StringArgumentType.word()).suggests(BDA_SUGGESTIONS)
+                                                .executes(ctx -> setPlayerBda(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"), StringArgumentType.getString(ctx, "bda_name"))))))
+                                )
                         )
-                )
 
                 .then(Commands.literal("list")
                         .then(Commands.literal("styles").executes(context -> listStyles(context.getSource())))
@@ -120,10 +124,7 @@ public class DemonSlayerCommands {
                                 .then(Commands.literal("style").then(Commands.argument("style_or_all", StringArgumentType.word()).suggests(SUGGEST_STYLE_ALL)
                                         .executes(ctx -> unlockPlayerStyle(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"), StringArgumentType.getString(ctx, "style_or_all")))))
                                 .then(Commands.literal("form").then(Commands.argument("form_or_all", StringArgumentType.word()).suggests(SUGGEST_FORM_ALL)
-                                        .executes(ctx -> unlockPlayerForm(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"), StringArgumentType.getString(ctx, "form_or_all")))))
-                        )
-                )
-        );
+                                        .executes(ctx -> unlockPlayerForm(ctx.getSource(), EntityArgument.getPlayer(ctx, "target"), StringArgumentType.getString(ctx, "form_or_all"))))))));
     }
 
     // --- GET METHODS ---
@@ -178,6 +179,25 @@ public class DemonSlayerCommands {
         target.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression ->
                 source.sendSuccess(Component.literal(target.getDisplayName().getString() + "'s rank is ").append(progression.getRank().getDisplayName()), true));
         return 1;
+    }
+
+    private static int setPlayerBda(CommandSourceStack source, ServerPlayer target, String bdaName) {
+        try {
+            BloodDemonArts newBda = BloodDemonArts.valueOf(bdaName.toUpperCase());
+            target.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                if (!demon.isDemon()) {
+                    source.sendFailure(Component.literal(target.getDisplayName().getString() + " is not a demon."));
+                    return;
+                }
+                demon.setEquippedBda(newBda);
+                source.sendSuccess(Component.literal("Set " + target.getDisplayName().getString() + "'s BDA to " + newBda.getDisplayName()), true);
+                ModUtils.syncDemon(target);
+            });
+            return 1;
+        } catch (IllegalArgumentException e) {
+            source.sendFailure(Component.literal("Invalid BDA name: " + bdaName));
+            return 0;
+        }
     }
 
     private static int getPlayerMissions(CommandSourceStack source, ServerPlayer target) {

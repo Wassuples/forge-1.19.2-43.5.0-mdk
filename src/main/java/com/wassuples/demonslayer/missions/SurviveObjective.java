@@ -8,15 +8,23 @@ import java.util.Map;
 public record SurviveObjective(int durationTicks) implements MissionObjective {
     @Override
     public Component getDescription() {
-        // 20 ticks = 1 second. 24000 ticks = 1 day
+        // 20 ticks = 1 second. 24000 ticks = 1 day.
         int days = durationTicks / 24000;
-        return Component.literal("Survive for " + days + " day(s)");
+        String dayString = days > 1 ? " days" : " day";
+        return Component.literal("Survive for " + days + dayString);
     }
 
     @Override
     public boolean isComplete(ServerPlayer player, Map<String, Integer> progress) {
-        // The check for this will be handled by the PlayerMissions capability
-        return false; // This is checked by a different logic path
+        // --- THIS IS THE FIX ---
+        // Get the GameTime when the mission started, which was stored when the mission was accepted.
+        int startTime = progress.getOrDefault(getProgressKey(), (int)player.level.getGameTime());
+
+        // Get the current GameTime.
+        long currentTime = player.level.getGameTime();
+
+        // If the difference is greater than or equal to the required duration, the objective is complete.
+        return (currentTime - startTime) >= durationTicks;
     }
 
     @Override

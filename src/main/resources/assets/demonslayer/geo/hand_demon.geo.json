@@ -1,0 +1,21 @@
+{
+  "format_version": "1.12.0",
+  "minecraft:geometry": [
+    {
+      "description": {
+        "identifier": "geometry.hand_demon",
+        "texture_width": 128,
+        "texture_height": 128,
+        "visible_bounds_width": 6,
+        "visible_bounds_height": 5,
+        "visible_bounds_offset": [0, 2, 0]
+      },
+      "bones": [
+        {"name": "body", "pivot": [0, 24, 0], "cubes": [{"origin": [-12, 0, -12], "size": [24, 32, 24], "uv": [0, 0]}]},
+        {"name": "head", "parent": "body", "pivot": [0, 32, 0], "cubes": [{"origin": [-4, 32, -4], "size": [8, 8, 8], "uv": [0, 56]}]},
+        {"name": "left_arm", "parent": "body", "pivot": [12, 28, 0], "cubes": [{"origin": [12, -4, -2], "size": [8, 32, 4], "uv": [80, 56]}]},
+        {"name": "right_arm", "parent": "body", "pivot": [-12, 28, 0], "cubes": [{"origin": [-20, -4, -2], "size": [8, 32, 4], "uv": [80, 56], "mirror": true}]}
+      ]
+    }
+  ]
+}

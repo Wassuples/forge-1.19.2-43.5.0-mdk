@@ -437,8 +437,9 @@ public class BreathingMenuScreen extends Screen {
                             RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
                             final int ICONS_PER_COLUMN = 12;
                             final int ICON_GRID_V_OFFSET = 64;
-                            int iconU = (currentStyle.ordinal() / ICONS_PER_COLUMN) * 16;
-                            int iconV = ICON_GRID_V_OFFSET + ((currentStyle.ordinal() % ICONS_PER_COLUMN) * 16);
+                            int styleIndex = Math.max(0, currentStyle.ordinal() - 1);
+                            int iconU = (styleIndex / ICONS_PER_COLUMN) * 16;
+                            int iconV = ICON_GRID_V_OFFSET + ((styleIndex % ICONS_PER_COLUMN) * 16);
                             this.blit(poseStack, styleTextXOffset + this.font.width(currentStyle.getDisplayName()) + 3, styleY - 4, iconU, iconV, 16, 16);
 
                             int barX = infoX;
@@ -525,8 +526,9 @@ public class BreathingMenuScreen extends Screen {
 
                 final int ICONS_PER_COLUMN = 12;
                 final int ICON_GRID_V_OFFSET = 64;
-                int iconU = (style.ordinal() / ICONS_PER_COLUMN) * 16;
-                int iconV = ICON_GRID_V_OFFSET + ((style.ordinal() % ICONS_PER_COLUMN) * 16);
+                int styleIndex = Math.max(0, style.ordinal() - 1);
+                int iconU = (styleIndex / ICONS_PER_COLUMN) * 16;
+                int iconV = ICON_GRID_V_OFFSET + ((styleIndex % ICONS_PER_COLUMN) * 16);
                 this.blit(poseStack, x, y, iconU, iconV, 16, 16);
 
                 RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);

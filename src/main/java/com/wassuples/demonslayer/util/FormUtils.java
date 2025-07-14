@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.mojang.math.Quaternion;
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.DemonSlayer;
+import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
@@ -16,8 +17,7 @@ import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
-import com.wassuples.demonslayer.styles.BreathingForms;
-import com.wassuples.demonslayer.styles.BreathingStyles;
+import com.wassuples.demonslayer.styles.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
 import net.minecraft.core.BlockPos;
@@ -54,12 +54,16 @@ import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.PacketDistributor;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.awt.*;
 import java.util.*;
+import java.util.List;
 import java.util.function.BiFunction;
+
+import static com.wassuples.demonslayer.styles.BloodDemonArts.THREADS;
+import static com.wassuples.demonslayer.styles.BreathingForms.*;
 
 public class FormUtils {
 
@@ -71,17 +75,23 @@ public class FormUtils {
      * Deals damage in a cone in front of the player.
      */
     public static void dealDirectionalDamage(LivingEntity user, double range, float damage, double angleThreshold) {
+        if (isMoonBdaActive(user)) {
+            damage *= 1.3f; // 30% more damage
+            range *= 1.2f;  // 20% more range
+        }
+
         ServerLevel level = (ServerLevel) user.getLevel();
         Vec3 lookVec = user.getLookAngle().normalize();
         AABB attackAABB = user.getBoundingBox().inflate(range);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB, entity ->
                 entity != user && entity.isAlive() && user.hasLineOfSight(entity));
 
+
         for (LivingEntity target : targets) {
             Vec3 toTarget = target.position().subtract(user.position()).normalize();
             double dot = lookVec.dot(toTarget);
             if (dot > angleThreshold) {
-                if(user instanceof Player player) {
+                if (user instanceof Player player) {
                     target.hurt(DamageSource.playerAttack(player), damage);
                 } else {
                     target.hurt(DamageSource.mobAttack(user), damage);
@@ -96,11 +106,16 @@ public class FormUtils {
      * Deals damage in a cone in a specific direction, defined by yaw.
      */
     public static void dealDirectionalDamageInYaw(LivingEntity user, double range, float damage, float knockback, float yaw) {
+        if (isMoonBdaActive(user)) {
+            damage *= 1.3f; // 30% more damage
+            range *= 1.2f;  // 20% more range
+        }
+
         Vec3 eyePos = user.getEyePosition();
-        // Calculate a look vector from the given yaw
         float f = (float) Math.toRadians(-yaw);
         float f1 = (float) Math.toRadians(-user.getXRot());
         Vec3 lookVec = new Vec3(Mth.sin(f) * Mth.cos(f1), -Mth.sin(f1), Mth.cos(f) * Mth.cos(f1));
+
 
         for (int i = 0; i < 8; ++i) { // Check multiple points for better accuracy
             Vec3 targetPos = eyePos.add(lookVec.scale(range * i / 8.0));
@@ -109,7 +124,7 @@ public class FormUtils {
                     !entity.is(user) && entity.isAlive() && user.hasLineOfSight(entity));
 
             for (LivingEntity target : targets) {
-                if(user instanceof Player player) {
+                if (user instanceof Player player) {
                     target.hurt(DamageSource.playerAttack(player), damage);
                 } else {
                     target.hurt(DamageSource.mobAttack(user), damage);
@@ -123,10 +138,16 @@ public class FormUtils {
      * Deals damage to all entities within a radius around the player.
      */
     public static void dealAOEDamage(LivingEntity user, Vec3 centerPos, double range, float damage, float knockbackStrength, DamageSource damageSource) {
+        if (isMoonBdaActive(user)) {
+            damage *= 1.3f; // 30% more damage
+            range *= 1.2f;  // 20% more range
+        }
+
         ServerLevel level = (ServerLevel) user.getLevel();
         AABB attackAABB = new AABB(centerPos, centerPos).inflate(range);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB, entity ->
                 entity != user && entity.isAlive());
+
 
         for (LivingEntity target : targets) {
             target.hurt(damageSource, damage);
@@ -143,9 +164,16 @@ public class FormUtils {
      * Deals damage to all entities within a vertical column.
      */
     public static void dealVerticalColumnDamage(LivingEntity user, Vec3 bottomCenter, double radius, double height, float damage, DamageSource damageSource) {
+        if (isMoonBdaActive(user)) {
+            damage *= 1.3f; // 30% more damage
+            radius *= 1.2f;
+            height *= 1.2f;
+        }
+
         ServerLevel level = (ServerLevel) user.getLevel();
         AABB damageZone = new AABB(bottomCenter, bottomCenter).inflate(radius, 0, radius).expandTowards(0, height, 0);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageZone, e -> e != user && e.isAlive());
+
 
         for (LivingEntity target : targets) {
             // Using lightningBolt damage source is very thematic for Thunder Breathing.
@@ -157,13 +185,19 @@ public class FormUtils {
      * Deals damage in a straight line (a thrust).
      */
     public static void dealThrustDamage(LivingEntity user, double range, float damage) {
+        if (isMoonBdaActive(user)) {
+            damage *= 1.3f; // 30% more damage
+            range *= 1.2f;  // 20% more range
+        }
+
         ServerLevel level = (ServerLevel) user.getLevel();
         Vec3 start = user.getEyePosition();
         Vec3 direction = user.getLookAngle().normalize();
         Vec3 end = start.add(direction.scale(range));
         AABB lineAABB = new AABB(start, end).inflate(1.0);
 
-        if(user instanceof Player player) {
+
+        if (user instanceof Player player) {
             List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, lineAABB, entity ->
                     entity != player && entity.isAlive() && isEntityInLineOfSight(player, entity, lineAABB));
 
@@ -177,7 +211,7 @@ public class FormUtils {
             List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, lineAABB, entity ->
                     entity != user && entity.isAlive() && user.hasLineOfSight(entity));
 
-            for(LivingEntity target : targets) {
+            for (LivingEntity target : targets) {
                 target.hurt(DamageSource.mobAttack(user), damage);
                 Vec3 knockback = direction.scale(0.5);
                 target.push(knockback.x, 0.1, knockback.z);
@@ -189,13 +223,18 @@ public class FormUtils {
      * Deals damage and sets entities on fire along a vector path.
      */
     public static void dealLineDamage(LivingEntity user, Vec3 startPos, Vec3 endPos, float damage, int fireSeconds) {
+        if (isMoonBdaActive(user)) {
+            damage *= 1.3f; // 30% more damage
+        }
+
         ServerLevel level = (ServerLevel) user.getLevel();
         AABB damageAABB = new AABB(startPos, endPos).inflate(2.0);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageAABB, entity ->
                 entity != user && entity.isAlive());
 
+
         for (LivingEntity target : targets) {
-            if(user instanceof Player player) {
+            if (user instanceof Player player) {
                 target.hurt(DamageSource.playerAttack(player), damage);
             } else {
                 target.hurt(DamageSource.mobAttack(user), damage);
@@ -210,10 +249,16 @@ public class FormUtils {
      * Deals damage in multiple arcs, simulating claws.
      */
     public static void dealClawDamage(LivingEntity user, float damage, double range, int clawCount, double spreadAngle, float knockback) {
+        if (isMoonBdaActive(user)) {
+            damage *= 1.3f; // 30% more damage
+            range *= 1.2f;  // 20% more range
+        }
+
         ServerLevel level = (ServerLevel) user.getLevel();
         Vec3 playerPos = user.position();
         float yawRad = -user.getYRot() * ((float) Math.PI / 180F);
         Vec3 horizontalDir = new Vec3(Math.sin(yawRad), 0, Math.cos(yawRad)).normalize();
+
 
         for (int clawIndex = 0; clawIndex < clawCount; clawIndex++) {
             double angleOffset = -(spreadAngle / 2) + (clawIndex * (spreadAngle / (clawCount - 1)));
@@ -232,7 +277,7 @@ public class FormUtils {
                 List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageBox, entity -> entity != user && entity.isAlive());
 
                 for (LivingEntity target : targets) {
-                    if(user instanceof Player player) {
+                    if (user instanceof Player player) {
                         if (target.hurt(DamageSource.playerAttack(player), damage)) {
                             Vec3 knockbackDir = target.position().subtract(playerPos).normalize();
                             target.push(knockbackDir.x * knockback, 0.4, knockbackDir.z * knockback);
@@ -278,17 +323,32 @@ public class FormUtils {
     }
 
     public static void performDemonAttack(LivingEntity user) {
-        user.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-            BreathingStyles currentStyle = style.getCurrentStyles();
+        // First, check if the user is actually a demon
+        user.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            if (!demon.isDemon()) return;
 
-            ParticleOptions particle = switch (currentStyle) {
-                case THREADS -> ParticleTypes.SPIT;
-                default -> ParticleTypes.SWEEP_ATTACK;
-            };
+            // If they are a demon, get their EQUIPPED BDA from the new BDA capability
+            user.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(bda -> {
+                BloodDemonArts currentBda = bda.getEquippedBda();
 
-            dealDirectionalDamage(user, 3.0, 4.0f, 0.7);
-            spawnParticleArc(user, particle, 2.0, 120, 20);
+                ParticleOptions particle = switch (currentBda) {
+                    case THREADS -> ParticleTypes.SPIT;
+                    case SASH -> new DustParticleOptions(new Vector3f(0.9f, 0.4f, 0.8f), 1.0f);
+                    case HAEMO -> new DustParticleOptions(new Vector3f(0.7f, 0.1f, 0.1f), 1.0f);
+                    case CRYO -> ParticleTypes.SNOWFLAKE;
+                    default -> ParticleTypes.SWEEP_ATTACK;
+                };
+
+                dealDirectionalDamage(user, 3.0, 4.0f, 0.7);
+                spawnParticleArc(user, particle, 2.0, 120, 20);
+            });
         });
+    }
+
+    private static boolean isMoonBdaActive(LivingEntity user) {
+        return user.getCapability(PlayerDemonProvider.PLAYER_DEMON)
+                .map(demon -> demon.getEquippedBda() == BloodDemonArts.CRESCENT)
+                .orElse(false);
     }
 
     // =================================================================================
@@ -321,18 +381,23 @@ public class FormUtils {
         // Create a quaternion for the roll rotation around the look vector
         Quaternion rollQuat = new Quaternion(new Vector3f(lookVec), rollDegrees, true);
 
+        if (isMoonBdaActive(user)) {
+            final DustParticleOptions moonParticle = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+            spawnParticleArcInWorld(level, user.getEyePosition(), radius * 1.1, arcDegrees, particleCount / 3, rollDegrees + 15f, 0f, moonParticle);
+        }
+
         for (int i = 0; i <= particleCount; i++) {
-            double progress = (double)i / particleCount;
+            double progress = (double) i / particleCount;
             double angle = Math.toRadians(-(arcDegrees / 2) + (arcDegrees * progress));
 
             // 1. Start with the forward vector
             Vec3 particleVec = lookVec;
 
             // 2. Rotate it sideways for the arc
-            particleVec = particleVec.yRot((float)angle);
+            particleVec = particleVec.yRot((float) angle);
 
             // 3. Apply the roll rotation using the quaternion
-            Vector3f tempVec = new Vector3f((float)particleVec.x, (float)particleVec.y, (float)particleVec.z);
+            Vector3f tempVec = new Vector3f((float) particleVec.x, (float) particleVec.y, (float) particleVec.z);
             tempVec.transform(rollQuat);
             particleVec = new Vec3(tempVec.x(), tempVec.y(), tempVec.z());
 
@@ -415,6 +480,21 @@ public class FormUtils {
         }
     }
 
+    public static void spawnHeartShape(ServerLevel level, LivingEntity user, Vec3 targetCenter, double size, int particleCount) {
+        Vec3 lookVec = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
+        Vec3 sideVec = lookVec.cross(new Vec3(0, 1, 0)).normalize();
+
+        for (int i = 0; i < particleCount; i++) {
+            double t = 2 * Math.PI * i / particleCount;
+            double x_shape = size * 16 * Math.pow(Math.sin(t), 3);
+            double z_shape = size * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t));
+
+            Vec3 offset = sideVec.scale(x_shape * 0.1).add(lookVec.scale(z_shape * -0.1));
+            Vec3 particlePos = targetCenter.add(offset).add(0, 0.2, 0);
+            level.sendParticles(ParticleTypes.HEART, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
+        }
+    }
+
     /**
      * Creates a vortex particle effect at a location, pulling inwards.
      */
@@ -439,7 +519,7 @@ public class FormUtils {
     /**
      * Carves a trench in the ground, setting it on fire.
      */
-    public static void carveFieryTrench(ServerLevel level, Vec3 startPos, Vec3 endPos,  int width, int depth) {
+    public static void carveFieryTrench(ServerLevel level, Vec3 startPos, Vec3 endPos, int width, int depth) {
         if (!level.getGameRules().getBoolean(ModGameRules.RULE_FORMS_GRIEFING)) {
             return;
         }
@@ -458,7 +538,7 @@ public class FormUtils {
                 for (int z = -radius; z <= radius; z++) {
                     BlockPos groundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, centerPos.offset(x, 0, z));
 
-                    for(int d = 1; d <= depth; d++) {
+                    for (int d = 1; d <= depth; d++) {
                         BlockPos currentTrenchPos = groundPos.below(d);
                         BlockState currentState = level.getBlockState(currentTrenchPos);
 
@@ -481,7 +561,9 @@ public class FormUtils {
                     BlockPos pos1 = groundPos.below();
                     BlockPos pos2 = groundPos.below(2);
 
-                    if(level.getBlockState(pos1).is(Blocks.BEDROCK)) { continue; }
+                    if (level.getBlockState(pos1).is(Blocks.BEDROCK)) {
+                        continue;
+                    }
                     if (!level.getBlockState(pos1).isAir()) {
                         level.setBlock(pos1, Blocks.AIR.defaultBlockState(), 3);
                     }
@@ -608,15 +690,15 @@ public class FormUtils {
      */
     @Nullable
     public static LivingEntity getLookedAtEntity(LivingEntity user, double range) {
-        List<Entity> entities = user.level.getEntities(user, user.getBoundingBox().expandTowards(user.getLookAngle().scale(range)).inflate(1.0D), e -> e instanceof  LivingEntity && !e.isSpectator());
+        List<Entity> entities = user.level.getEntities(user, user.getBoundingBox().expandTowards(user.getLookAngle().scale(range)).inflate(1.0D), e -> e instanceof LivingEntity && !e.isSpectator());
         LivingEntity closestEntity = null;
         double closestDist = Double.MAX_VALUE;
 
         Vec3 eyePos = user.getEyePosition();
-        for(Entity entity : entities)  {
+        for (Entity entity : entities) {
             if (entity instanceof LivingEntity livingTarget) {
                 double dist = livingTarget.getEyePosition().distanceToSqr(eyePos);
-                if(dist < closestDist && user.hasLineOfSight(livingTarget)) {
+                if (dist < closestDist && user.hasLineOfSight(livingTarget)) {
                     closestDist = dist;
                     closestEntity = livingTarget;
                 }
@@ -656,19 +738,19 @@ public class FormUtils {
     @Mod.EventBusSubscriber(modid = "demonslayer", bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ActiveFormManager {
         private static final Map<UUID, ActiveForm> ACTIVE_FORMS = new HashMap<>();
-        private static final Map<BreathingForms, BiFunction<LivingEntity, BreathingForms, ActiveForm>> FORM_FACTORIES;
+        private static final Map<IForm, BiFunction<LivingEntity, IForm, ActiveForm>> FORM_FACTORIES;
         public static final UUID KNOCKBACK_IMMUNITY_UUID = UUID.fromString("d8a6a6dc-34d3-4e42-8c19-3c871343399b");
 
         // --- Manager Public API ---
 
-        public static void start(LivingEntity user, BreathingForms form) {
+        public static void start(LivingEntity user, IForm form) {
             // Prevent starting a new form if one is already active that shouldn't be interrupted.
             if (ACTIVE_FORMS.containsKey(user.getUUID()) && !ACTIVE_FORMS.get(user.getUUID()).isInterruptible()) {
                 return;
             }
             stop(user); // Stop any previous form
 
-            BiFunction<LivingEntity, BreathingForms, ActiveForm> factory = FORM_FACTORIES.get(form);
+            BiFunction<LivingEntity, IForm, ActiveForm> factory = FORM_FACTORIES.get(form);
             if (factory != null) {
                 ActiveForm activeForm = factory.apply(user, form);
                 ACTIVE_FORMS.put(user.getUUID(), activeForm);
@@ -683,7 +765,7 @@ public class FormUtils {
             }
         }
 
-        public static void startCharge(LivingEntity user, BreathingForms form) {
+        public static void startCharge(LivingEntity user, IForm form) {
             if (form.getInputType() != BreathingForms.InputType.HOLD) return;
             start(user, form);
         }
@@ -760,13 +842,14 @@ public class FormUtils {
         // --- Static Initializer for Form Factories ---
 
         static {
-            FORM_FACTORIES = new ImmutableMap.Builder<BreathingForms, BiFunction<LivingEntity, BreathingForms, ActiveForm>>()
+            FORM_FACTORIES = new ImmutableMap.Builder<IForm, BiFunction<LivingEntity, IForm, ActiveForm>>()
                     // WATER
                     .put(BreathingForms.WATER_2, WaterWheelForm::new)
                     .put(BreathingForms.WATER_3, FlowingDanceForm::new)
                     .put(BreathingForms.WATER_6, WhirlpoolForm::new)
                     .put(BreathingForms.WATER_8, WaterfallBasinForm::new)
                     .put(BreathingForms.WATER_10, ConstantFluxForm::new)
+                    .put(BreathingForms.WATER_9, SplashingWaterFlowForm::new)
                     .put(BreathingForms.WATER_11, DeadCalmParry::new)
                     // FLAME
                     .put(BreathingForms.FLAME_1, UnknowingFireForm::new)
@@ -825,51 +908,82 @@ public class FormUtils {
                     .put(BreathingForms.SERPENT_2, VenomFangsForm::new)
                     .put(BreathingForms.SERPENT_3, CoilChokeForm::new)
                     .put(BreathingForms.SERPENT_5, SlitheringSerpentForm::new)
+                    // MOON
+                    .put(BreathingForms.MOON_2, PearlFlowerMoongazingForm::new)
+                    .put(BreathingForms.MOON_5, CalamitousEddyForm::new)
+                    .put(BreathingForms.MOON_6, PerpetualNightForm::new)
+                    .put(BreathingForms.MOON_7, MirrorOfMisfortuneForm::new)
+                    .put(BreathingForms.MOON_8, MoonDragonRingtailForm::new)
+                    .put(BreathingForms.MOON_9, WaningMoonswathsForm::new)
+                    .put(BreathingForms.MOON_10, DrillingSlashesForm::new)
+                    .put(BreathingForms.MOON_14, CatastropheForm::new)
+                    .put(BreathingForms.MOON_16, MoonbowForm::new)
+                    // BEAST BREATHING
+                    .put(BreathingForms.BEAST_4, SliceNDiceForm::new)
+                    .put(BreathingForms.BEAST_5, CrazyCuttingForm::new)
+                    .put(BreathingForms.BEAST_6, PalisadeBiteForm::new)
+                    .put(BreathingForms.BEAST_7, SpatialAwarenessForm::new)
+                    .put(BreathingForms.BEAST_8, ExplosiveRushForm::new)
+                    .put(BreathingForms.BEAST_9, ExtendingBendySlashForm::new)
+                    .put(BreathingForms.BEAST_10, WhirlingFangsForm::new)
                     // BDA, Rui
-                    .put(BreathingForms.THREADS_1, CuttingThreadCageForm::new)
-                    .put(BreathingForms.THREADS_2, MurderousEyeBasketForm::new)
-                    .put(BreathingForms.THREADS_3, CuttingThreadRotationForm::new)
+                    .put(DemonForms.THREADS_1, CuttingThreadCageForm::new)
+                    .put(DemonForms.THREADS_2, MurderousEyeBasketForm::new)
+                    .put(DemonForms.THREADS_3, CuttingThreadRotationForm::new)
                     // BDA, Enmu
-                    .put(BreathingForms.SLEEP_1, WhispersHypnosisForm::new)
-                    .put(BreathingForms.SLEEP_2, EyesOfSleepForm::new)
+                    .put(DemonForms.SLEEP_1, WhispersHypnosisForm::new)
+                    .put(DemonForms.SLEEP_2, EyesOfSleepForm::new)
                     // BDA, Daki
-                    .put(BreathingForms.SASH_1, EightLayeredObiSlashForm::new)
+                    .put(DemonForms.SASH_1, EightLayeredObiSlashForm::new)
                     // BDA, Gyutaro
-                    .put(BreathingForms.HAEMO_1, FlyingBloodSicklesForm::new)
-                    .put(BreathingForms.HAEMO_2, RampantArcRampageParry::new)
-                    .put(BreathingForms.HAEMO_3, RotatingCircularSlashesForm::new)
+                    .put(DemonForms.HAEMO_1, FlyingBloodSicklesForm::new)
+                    .put(DemonForms.HAEMO_2, RampantArcRampageParry::new)
+                    .put(DemonForms.HAEMO_3, RotatingCircularSlashesForm::new)
                     // BDA, Gyokko
-                    .put(BreathingForms.FISH_1, ThousandNeedleFishKillForm::new)
-                    .put(BreathingForms.FISH_2, WaterPrisonPotForm::new)
-                    .put(BreathingForms.FISH_3, OctopusVaseHellForm::new)
-                    .put(BreathingForms.FISH_4, TenThousandFishBarrageForm::new)
-                    .put(BreathingForms.FISH_5, KillerFishScalesForm::new)
+                    .put(DemonForms.FISH_1, ThousandNeedleFishKillForm::new)
+                    .put(DemonForms.FISH_2, WaterPrisonPotForm::new)
+                    .put(DemonForms.FISH_3, OctopusVaseHellForm::new)
+                    .put(DemonForms.FISH_4, TenThousandFishBarrageForm::new)
+                    .put(DemonForms.FISH_5, KillerFishScalesForm::new)
                     // BDA, Hantengu
-                    .put(BreathingForms.EMOTION_1, WeepingSpearsForm::new)
-                    .put(BreathingForms.EMOTION_2, CrazedCryOfThunderdeathForm::new)
-                    .put(BreathingForms.EMOTION_3, CountlessStrikingTreesForm::new)
-                    .put(BreathingForms.EMOTION_4, CompressedSoundWavesForm::new)
+                    .put(DemonForms.EMOTION_1, WeepingSpearsForm::new)
+                    .put(DemonForms.EMOTION_2, CrazedCryOfThunderdeathForm::new)
+                    .put(DemonForms.EMOTION_3, CountlessStrikingTreesForm::new)
+                    .put(DemonForms.EMOTION_4, CompressedSoundWavesForm::new)
                     // BDA, Akaza
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_1, CompassNeedleForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_2, AirTypeForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_3, DisorderForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_4, AnnihilationTypeForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_5, CrownSplitterForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_6, ExplosiveFlurryForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_7, FlyingPlanetThousandWheelsForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_8, EightLayeredDemonCoreForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_9, TenThousandLeavesWillowForm::new)
-                    .put(BreathingForms.DESTRUCTIVE_DEATH_10, FinalFormChaoticAfterglowForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_1, CompassNeedleForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_2, AirTypeForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_3, DisorderForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_4, AnnihilationTypeForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_5, CrownSplitterForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_6, ExplosiveFlurryForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_7, FlyingPlanetThousandWheelsForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_8, EightLayeredDemonCoreForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_9, TenThousandLeavesWillowForm::new)
+                    .put(DemonForms.DESTRUCTIVE_DEATH_10, FinalFormChaoticAfterglowForm::new)
                     // BDA, Doma
-                    .put(BreathingForms.CRYO_1, FrozenLotusForm::new)
-                    .put(BreathingForms.CRYO_2, BarrenHangingGardenForm::new)
-                    .put(BreathingForms.CRYO_3, FreezingCloudsForm::new)
-                    .put(BreathingForms.CRYO_4, LotusVinesForm::new)
-                    .put(BreathingForms.CRYO_5, ColdWhitePrincessesForm::new)
-                    .put(BreathingForms.CRYO_6, WintryIciclesForm::new)
-                    .put(BreathingForms.CRYO_7, ScatteringLotusesForm::new)
-                    .put(BreathingForms.CRYO_8, CrystallineDivineChildForm::new)
-                    .put(BreathingForms.CRYO_9, RimeBodhisattvaForm::new)
+                    .put(DemonForms.CRYO_1, FrozenLotusForm::new)
+                    .put(DemonForms.CRYO_2, BarrenHangingGardenForm::new)
+                    .put(DemonForms.CRYO_3, FreezingCloudsForm::new)
+                    .put(DemonForms.CRYO_4, LotusVinesForm::new)
+                    .put(DemonForms.CRYO_5, ColdWhitePrincessesForm::new)
+                    .put(DemonForms.CRYO_6, WintryIciclesForm::new)
+                    .put(DemonForms.CRYO_7, ScatteringLotusesForm::new)
+                    .put(DemonForms.CRYO_8, CrystallineDivineChildForm::new)
+                    .put(DemonForms.CRYO_9, RimeBodhisattvaForm::new)
+                    // HINOKAMI KAGURA, SUN
+                    .put(SUN_2, ClearBlueSkyForm::new)
+                    .put(SUN_3, RagingSunForm::new)
+                    .put(BreathingForms.SUN_4, BurningBonesForm::new)
+                    .put(BreathingForms.SUN_5, SettingSunForm::new)
+                    .put(BreathingForms.SUN_6, SolarHeatHazeForm::new)
+                    .put(BreathingForms.SUN_7, BeneficentRadianceForm::new)
+                    .put(BreathingForms.SUN_8, SunflowerThrustForm::new)
+                    .put(BreathingForms.SUN_9, SunHaloDragonForm::new)
+                    .put(BreathingForms.SUN_10, FireWheelForm::new)
+                    .put(BreathingForms.SUN_11, FakeRainbowForm::new)
+                    .put(BreathingForms.SUN_12, FlameDanceForm::new)
+                    .put(BreathingForms.SUN_13, ThirteenthForm::new)
                     .build();
         }
     }
@@ -882,11 +996,11 @@ public class FormUtils {
     public static abstract class ActiveForm {
         protected final LivingEntity user;
         protected final ServerLevel level;
-        protected final BreathingForms form;
+        protected final IForm form;
         protected final int startTick;
         protected int ticksActive;
 
-        public ActiveForm(LivingEntity user, BreathingForms form) {
+        public ActiveForm(LivingEntity user, IForm form) {
             this.user = user;
             this.level = (ServerLevel) user.getLevel();
             this.form = form;
@@ -895,7 +1009,7 @@ public class FormUtils {
         }
 
         public final void tick() {
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 boolean isDemon = player.getCapability(PlayerDemonProvider.PLAYER_DEMON)
                         .map(PlayerDemon::isDemon)
                         .orElse(false);
@@ -917,20 +1031,34 @@ public class FormUtils {
         }
 
         // --- Methods to be overridden by implementations ---
-        protected void onStart() {}
+        protected void onStart() {
+        }
+
         protected abstract void onTick();
-        protected void onStop() {}
-        public void onHurt(LivingHurtEvent event) {}
-        public boolean isInterruptible() { return true; }
-        public BreathingForms getForm() { return form; }
+
+        protected void onStop() {
+        }
+
+        public void onHurt(LivingHurtEvent event) {
+        }
+
+        public boolean isInterruptible() {
+            return true;
+        }
+
+        public IForm getForm() {
+            return form;
+        }
     }
 
     public static abstract class TimedForm extends ActiveForm {
         protected final int duration;
-        public TimedForm(LivingEntity user, BreathingForms form, int durationTicks) {
+
+        public TimedForm(LivingEntity user, IForm form, int durationTicks) {
             super(user, form);
             this.duration = durationTicks;
         }
+
         @Override
         protected void onTick() {
             if (ticksActive >= duration) {
@@ -940,7 +1068,7 @@ public class FormUtils {
     }
 
     public static abstract class ParryForm extends TimedForm {
-        public ParryForm(LivingEntity user, BreathingForms form, int parryWindow) {
+        public ParryForm(LivingEntity user, IForm form, int parryWindow) {
             super(user, form, parryWindow);
         }
 
@@ -962,11 +1090,11 @@ public class FormUtils {
     }
 
     public static abstract class ChargeableForm extends ActiveForm {
-        protected final int chargeGoal;
+        protected int chargeGoal;
         protected int chargeTicks = 0;
         protected boolean released = false;
 
-        public ChargeableForm(LivingEntity user, BreathingForms form) {
+        public ChargeableForm(LivingEntity user, IForm form) {
             super(user, form);
             this.chargeGoal = form.getChargeTicks();
         }
@@ -1003,9 +1131,13 @@ public class FormUtils {
         }
 
         protected abstract void onChargeStart();
+
         protected abstract void onChargingTick();
+
         protected abstract void onChargeRelease(boolean fullyCharged);
+
         protected abstract void onReleaseTick();
+
         protected abstract void onChargeEnd();
     }
 
@@ -1016,7 +1148,7 @@ public class FormUtils {
 
     // --- WATER FORMS ---
     public static class WaterWheelForm extends ActiveForm {
-        public WaterWheelForm(LivingEntity user, BreathingForms form) {
+        public WaterWheelForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
@@ -1045,7 +1177,7 @@ public class FormUtils {
                     level.sendParticles(ParticleTypes.BUBBLE, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0.05);
                 }
             }
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), 5.0, 8.0f, 0.5f, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), 5.0, 8.0f, 0.5f, DamageSource.mobAttack(user));
@@ -1059,11 +1191,15 @@ public class FormUtils {
     }
 
     public static class FlowingDanceForm extends TimedForm {
-        public FlowingDanceForm(LivingEntity user, BreathingForms form) { super(user, form, 50); }
+        public FlowingDanceForm(LivingEntity user, IForm form) {
+            super(user, form, 50);
+        }
+
         @Override
         protected void onStart() {
             performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.2f);
         }
+
         @Override
         protected void onTick() {
             super.onTick(); // Handles timeout
@@ -1077,8 +1213,15 @@ public class FormUtils {
 
     public static class WhirlpoolForm extends TimedForm {
         private float startYaw;
-        public WhirlpoolForm(LivingEntity user, BreathingForms form) { super(user, form, 30); }
-        @Override public boolean isInterruptible() { return false; }
+
+        public WhirlpoolForm(LivingEntity user, IForm form) {
+            super(user, form, 30);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -1088,6 +1231,7 @@ public class FormUtils {
             level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_SPLASH, SoundSource.PLAYERS, 1.0f, 1.0f);
             applyImmobility(user, duration);
         }
+
         @Override
         protected void onTick() {
             super.onTick();
@@ -1097,18 +1241,28 @@ public class FormUtils {
             user.setYHeadRot(newYaw);
 
             spawnParticleArc(user, ParticleTypes.SPLASH, 2.5, 360, 20);
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), 3.0, 3.0f, 1.2f, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), 3.0, 3.0f, 1.2f, DamageSource.mobAttack(user));
             }
         }
-        @Override protected void onStop() { removeImmobility(user); }
+
+        @Override
+        protected void onStop() {
+            removeImmobility(user);
+        }
     }
 
     private static class WaterfallBasinForm extends ActiveForm {
-        public WaterfallBasinForm(LivingEntity user, BreathingForms form) { super(user, form); }
-        @Override public boolean isInterruptible() { return false; }
+        public WaterfallBasinForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onTick() {
@@ -1118,7 +1272,7 @@ public class FormUtils {
                 double radius = Mth.clamp(2.0 + fallDistance * 0.15, 2.0, 10.0);
                 float knockback = 0.5f + fallDistance * 0.05f;
 
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), radius, damage, knockback, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, user.position(), radius, damage, knockback, DamageSource.mobAttack(user));
@@ -1127,7 +1281,7 @@ public class FormUtils {
                 level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, user.getX(), user.getY(), user.getZ(), 1, 0, 0, 0, 0);
 
                 final DustParticleOptions waterMist = new DustParticleOptions(new Vector3f(0.3f, 0.8f, 1.0f), 1.2f);
-                int particleCount = (int)(40 * radius); // More particles for a bigger splash
+                int particleCount = (int) (40 * radius); // More particles for a bigger splash
 
                 for (int i = 0; i < particleCount; i++) {
                     // Splash particles that fly outwards from the impact point
@@ -1152,12 +1306,16 @@ public class FormUtils {
 
     public static class ConstantFluxForm extends ActiveForm {
         private static final DustParticleOptions BLUE_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.7f, 1.0f), 1.2f);
-        public ConstantFluxForm(LivingEntity user, BreathingForms form) { super(user, form); }
+
+        public ConstantFluxForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
 
         @Override
         protected void onStart() {
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_1, SoundSource.PLAYERS, 1.0f, 1.0f);
         }
+
         @Override
         protected void onTick() {
             if (!user.isSprinting()) {
@@ -1184,6 +1342,7 @@ public class FormUtils {
                 level.sendParticles(BLUE_DUST, user.getX() + xOffset, user.getY() + yOffset, user.getZ() + zOffset, 1, 0, 0, 0, 0);
             }
         }
+
         @Override
         protected void onStop() {
             user.removeEffect(MobEffects.MOVEMENT_SPEED);
@@ -1191,8 +1350,59 @@ public class FormUtils {
         }
     }
 
+    public static class SplashingWaterFlowForm extends ActiveForm {
+        private static final int BREATH_COST_PER_TICK = 1;
+
+        public SplashingWaterFlowForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return true;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_1, SoundSource.PLAYERS, 0.8f, 1.5f);
+        }
+
+        @Override
+        protected void onTick() {
+            if (ticksActive > 0 && ticksActive % 20 == 0) {
+                user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
+                    if (breath.getBreath() >= BREATH_COST_PER_TICK) {
+                        breath.subBreath(BREATH_COST_PER_TICK);
+                    } else {
+                        ActiveFormManager.stop(user);
+                    }
+                });
+            }
+
+            if (!level.isClientSide && user.isSprinting()) {
+                BlockPos userPos = user.blockPosition();
+                BlockState iceState = Blocks.FROSTED_ICE.defaultBlockState();
+                int radius = 2;
+
+                for (BlockPos blockPos : BlockPos.betweenClosed(userPos.offset(-radius, -1, -radius), userPos.offset(radius, -1, radius))) {
+                    if (level.getBlockState(blockPos).is(Blocks.WATER) && level.isEmptyBlock(blockPos.above())) {
+                        level.setBlockAndUpdate(blockPos, iceState);
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected void onStop() {
+            level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_3, SoundSource.PLAYERS, 0.8f, 1.0f);
+        }
+    }
+
     private static class DeadCalmParry extends ParryForm {
-        public DeadCalmParry(LivingEntity user, BreathingForms form) { super(user, form, 30); }
+        public DeadCalmParry(LivingEntity user, IForm form) {
+            super(user, form, 30);
+        }
+
         @Override
         protected void onParrySuccess(Entity attacker) {
             applyImmobility(user, 10);
@@ -1202,7 +1412,11 @@ public class FormUtils {
                 living.knockback(1.0, user.getX() - living.getX(), user.getZ() - living.getZ());
             }
         }
-        @Override protected void onStop() { removeImmobility(user); }
+
+        @Override
+        protected void onStop() {
+            removeImmobility(user);
+        }
     }
 
     // --- FLAME FORMS ---
@@ -1210,15 +1424,22 @@ public class FormUtils {
         private final Vec3 direction;
         private static final int DASH_DURATION = 8;
         private static final int SLASH_DELAY = 3;
-        public UnknowingFireForm(LivingEntity user, BreathingForms form) {
+
+        public UnknowingFireForm(LivingEntity user, IForm form) {
             super(user, form, DASH_DURATION + SLASH_DELAY + 2);
             this.direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
         }
-        @Override public boolean isInterruptible() { return false; }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
         @Override
         protected void onStart() {
             level.playSound(null, user.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.0f, 1.5f);
         }
+
         @Override
         protected void onTick() {
             super.onTick();
@@ -1227,17 +1448,16 @@ public class FormUtils {
                 user.hurtMarked = true;
                 level.sendParticles(ParticleTypes.SMOKE, user.getX(), user.getY() + 1, user.getZ(), 2, 0, 0, 0, 0.1);
 
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), 1.5, 2.0f, 0.1f, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, user.position(), 1.5, 2.0f, 0.1f, DamageSource.mobAttack(user));
                 }
-            }
-                else if (ticksActive == DASH_DURATION) {
+            } else if (ticksActive == DASH_DURATION) {
                 user.setDeltaMovement(Vec3.ZERO);
                 user.hurtMarked = true;
             } else if (ticksActive == DASH_DURATION + SLASH_DELAY) {
-                float yaw = (float)(Mth.atan2(direction.z, direction.x) * (180D / Math.PI)) - 90.0F;
+                float yaw = (float) (Mth.atan2(direction.z, direction.x) * (180D / Math.PI)) - 90.0F;
                 user.setYRot(yaw);
                 user.setYHeadRot(yaw);
                 performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.0f);
@@ -1248,17 +1468,25 @@ public class FormUtils {
     }
 
     private static class BlazingUniverseForm extends ActiveForm {
-        public BlazingUniverseForm(LivingEntity user, BreathingForms form) { super(user, form); }
-        @Override public boolean isInterruptible() { return false; }
+        public BlazingUniverseForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
         @Override
         protected void onStart() {
             level.playSound(null, user.blockPosition(), SoundEvents.GHAST_SHOOT, SoundSource.PLAYERS, 0.7f, 1.5f);
         }
+
         @Override
         protected void onTick() {
             user.setDeltaMovement(user.getDeltaMovement().add(0, -0.2, 0)); // a bit more gravity
             if (user.isOnGround()) {
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), 4.0, 10.0f, 0.8f, DamageSource.playerAttack(player));
                     level.playSound(null, player.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.2f);
                     level.sendParticles(ParticleTypes.LAVA, player.getX(), player.getY() + 0.5, player.getZ(), 50, 2.0, 0.5, 2.0, 0);
@@ -1276,12 +1504,15 @@ public class FormUtils {
     }
 
     private static class FlameUndulationParry extends ParryForm {
-        public FlameUndulationParry(LivingEntity user, BreathingForms form) { super(user, form, 30); }
+        public FlameUndulationParry(LivingEntity user, IForm form) {
+            super(user, form, 30);
+        }
+
         @Override
         protected void onParrySuccess(Entity attacker) {
             applyImmobility(user, 10);
             performGenericAttack(user, SoundEvents.GENERIC_EXPLODE, 1.0f, 1.0f);
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), 4.0, 10.0f, 0.8f, DamageSource.playerAttack(player));
                 spawnParticleArc(player, ParticleTypes.FLAME, 4.0, 360, 60);
                 level.sendParticles(ParticleTypes.LAVA, player.getX(), player.getY() + 0.5, player.getZ(), 20, 1.5, 0.5, 1.5, 0);
@@ -1291,20 +1522,29 @@ public class FormUtils {
                 level.sendParticles(ParticleTypes.LAVA, user.getX(), user.getY() + 0.5, user.getZ(), 20, 1.5, 0.5, 1.5, 0);
             }
         }
-        @Override protected void onStop() { removeImmobility(user); }
+
+        @Override
+        protected void onStop() {
+            removeImmobility(user);
+        }
     }
 
     public static class FlameTigerForm extends ActiveForm {
         private static final DustParticleOptions ORANGE_DUST = new DustParticleOptions(new Vector3f(1.0f, 0.5f, 0.0f), 1.0f);
         private static final DustParticleOptions BLACK_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.1f, 0.1f), 1.2f);
-        public FlameTigerForm(LivingEntity user, BreathingForms form) { super(user, form); }
 
-        @Override protected void onStart() {
+        public FlameTigerForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        protected void onStart() {
             level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 0.8f, 1.5f);
         }
+
         @Override
         protected void onTick() {
-            if (!user.isSprinting()) {
+            if (!user.isSprinting() || (user instanceof Player player && !isPlayerHoldingNichirin(player))) {
                 ActiveFormManager.stop(user);
                 return;
             }
@@ -1316,7 +1556,7 @@ public class FormUtils {
 
             if (ticksActive % 15 == 0) {
                 float damage = 3.0f + (ticksActive / 50f);
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), 2.5, damage, 0.2f, DamageSource.playerAttack(player));
                     level.playSound(null, player.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 0.5f, 1.5f);
                 } else {
@@ -1334,6 +1574,7 @@ public class FormUtils {
                 level.sendParticles(i % 4 == 0 ? BLACK_DUST : ORANGE_DUST, user.getX() + r_x, user.getY() + yOffset, user.getZ() + r_z, 1, 0, 0, 0, 0);
             }
         }
+
         @Override
         protected void onStop() {
             user.removeEffect(MobEffects.MOVEMENT_SPEED);
@@ -1348,12 +1589,20 @@ public class FormUtils {
         private Vec3 direction, prevPos;
         private int releaseTicks = 0;
 
-        public RengokuForm(LivingEntity user, BreathingForms form) { super(user, form); }
-        @Override public boolean isInterruptible() { return false; }
+        public RengokuForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
         @Override
         protected void onChargeStart() {
             level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.5f, 0.5f);
         }
+
         @Override
         protected void onChargingTick() {
             float progress = (float) chargeTicks / chargeGoal;
@@ -1373,9 +1622,10 @@ public class FormUtils {
                 level.playSound(null, user.blockPosition(), SoundEvents.BEACON_AMBIENT, SoundSource.PLAYERS, 0.5f + progress, 1.0f + progress);
             }
         }
+
         @Override
         protected void onChargeRelease(boolean fullyCharged) {
-            if(fullyCharged) {
+            if (fullyCharged) {
                 level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0f, 0.8f);
                 level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 2.0f, 1.2f);
                 this.direction = user.getLookAngle();
@@ -1384,6 +1634,7 @@ public class FormUtils {
                 ActiveFormManager.stop(user);
             }
         }
+
         @Override
         protected void onReleaseTick() {
             if (releaseTicks < DASH_DURATION) {
@@ -1399,6 +1650,7 @@ public class FormUtils {
                 ActiveFormManager.stop(user);
             }
         }
+
         @Override
         protected void onChargeEnd() {
             level.playSound(null, user.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 1.0f, 0.8f);
@@ -1412,22 +1664,28 @@ public class FormUtils {
         private static final DustParticleOptions WIND_DUST = new DustParticleOptions(new Vector3f(0.8f, 1.0f, 0.8f), 1.0f);
         private static final DustParticleOptions GREEN_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.6f, 0.2f), 1.0f);
         private final Vec3 direction;
-        public DustWhirlwindCutterForm(LivingEntity user, BreathingForms form) {
+
+        public DustWhirlwindCutterForm(LivingEntity user, IForm form) {
             super(user, form, 10);
             this.direction = Vec3.directionFromRotation(0, user.getYRot()).normalize();
         }
-        @Override public boolean isInterruptible() { return false; }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
             level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 1.2f);
         }
+
         @Override
         protected void onTick() {
             super.onTick();
             user.setDeltaMovement(direction.scale(1.8));
             user.hurtMarked = true;
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), 2.5, 5.0f, 0.4f, DamageSource.playerAttack(player));
                 spawnCycloneParticles(level, WIND_DUST, GREEN_DUST, player.position().add(0, 1.1, 0), 2.0, 2.2, 8, ticksActive);
             } else {
@@ -1435,6 +1693,7 @@ public class FormUtils {
                 spawnCycloneParticles(level, WIND_DUST, GREEN_DUST, user.position().add(0, 1.1, 0), 2.0, 2.2, 8, ticksActive);
             }
         }
+
         @Override
         protected void onStop() {
             performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f, 1.5f);
@@ -1442,7 +1701,9 @@ public class FormUtils {
     }
 
     private static class ClearStormWindTreeParry extends ParryForm {
-        public ClearStormWindTreeParry(LivingEntity user, BreathingForms form) { super(user, form, 30); }
+        public ClearStormWindTreeParry(LivingEntity user, IForm form) {
+            super(user, form, 30);
+        }
 
         @Override
         protected void onParrySuccess(Entity attacker) {
@@ -1452,7 +1713,7 @@ public class FormUtils {
             if (attacker instanceof LivingEntity living) {
                 living.knockback(2.5F, user.getX() - living.getX(), user.getZ() - living.getZ());
             }
-            for(int i = 0; i < 100; i++) {
+            for (int i = 0; i < 100; i++) {
                 double angle = Math.random() * 2 * Math.PI;
                 double radius = Math.random() * 3.0;
                 double x = user.getX() + Math.cos(angle) * radius;
@@ -1465,7 +1726,10 @@ public class FormUtils {
 
     private static class RisingDustStormForm extends TimedForm {
         private static final DustParticleOptions GREEN_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.1f), 1.5f);
-        public RisingDustStormForm(LivingEntity user, BreathingForms form) { super(user, form, 80); }
+
+        public RisingDustStormForm(LivingEntity user, IForm form) {
+            super(user, form, 80);
+        }
 
         @Override
         protected void onStart() {
@@ -1473,17 +1737,19 @@ public class FormUtils {
             user.hurtMarked = true;
             performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.0f);
         }
+
         @Override
         protected void onTick() {
             super.onTick();
             BlockPos stormCenter = user.blockPosition();
-            double radius = 4.0; double height = 15.0;
+            double radius = 4.0;
+            double height = 15.0;
             AABB damageZone = new AABB(stormCenter).expandTowards(0, height, 0).inflate(radius, 0, radius);
 
             if (ticksActive % 10 == 0) {
                 List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageZone, e -> e != user && e.isAlive());
                 for (LivingEntity target : targets) {
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         target.hurt(DamageSource.playerAttack(player), 6.0f);
                     } else {
                         target.hurt(DamageSource.mobAttack(user), 6.0f);
@@ -1498,55 +1764,73 @@ public class FormUtils {
 
     private static class ColdMountainWindForm extends TimedForm {
         private static final DustParticleOptions ICE_DUST = new DustParticleOptions(new Vector3f(0.7f, 0.9f, 1.0f), 1.0f);
-        public ColdMountainWindForm(LivingEntity user, BreathingForms form) { super(user, form, 60); }
+
+        public ColdMountainWindForm(LivingEntity user, IForm form) {
+            super(user, form, 60);
+        }
 
         @Override
         protected void onStart() {
-
             user.setDeltaMovement(user.getDeltaMovement().add(0, 2.5, 0));
             user.hurtMarked = true;
             performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.5f);
         }
+
         @Override
         protected void onTick() {
             super.onTick();
-            BlockPos playerPos = user.blockPosition();
-            double radius = 5.0; double depth = 15.0;
-            AABB damageZone = new AABB(playerPos).inflate(radius, 0, radius).move(0, -depth, 0);
+
+            Vec3 stormCenter = user.position();
+            double radius = 5.0;
+            double height = 15.0;
+
+            AABB damageZone = new AABB(stormCenter.x - radius, stormCenter.y - height, stormCenter.z - radius,
+                    stormCenter.x + radius, stormCenter.y, stormCenter.z + radius);
+
+            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageZone, e -> e != user && e.isAlive());
+            float damagePerTick = 1.5f;
+
+            for (LivingEntity target : targets) {
+                if (user instanceof ServerPlayer player) {
+                    target.hurt(DamageSource.playerAttack(player), damagePerTick);
+                } else {
+                    target.hurt(DamageSource.mobAttack(user), damagePerTick);
+                }
+                target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
+                target.push(0, -0.8, 0);
+            }
 
             if (ticksActive % 10 == 0) {
-                List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageZone, e -> e != user && e.isAlive());
-                for (LivingEntity target : targets) {
-                    if(user instanceof  ServerPlayer player) {
-                        target.hurt(DamageSource.playerAttack(player), 8.0f);
-                    } else {
-                        target.hurt(DamageSource.mobAttack(user), 8.0f);
-                    }
-                    target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 1));
-                    target.push(0, -1.5, 0);
-                }
-                level.playSound(null, playerPos, SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 1.2f);
+                level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 1.2f);
             }
-            spawnCycloneParticles(level, ICE_DUST, ParticleTypes.SNOWFLAKE, user.position().add(0,-depth/2, 0), radius, depth, 25, -ticksActive);
+
+            spawnCycloneParticles(level, ICE_DUST, ParticleTypes.SNOWFLAKE, user.position().add(0, -height / 2.0, 0), radius, height, 25, -ticksActive);
         }
     }
 
     private static class GaleSuddenGustsForm extends ActiveForm {
-        public GaleSuddenGustsForm(LivingEntity user, BreathingForms form) { super(user, form); }
-        @Override public boolean isInterruptible() { return false; }
+        public GaleSuddenGustsForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
             level.playSound(null, user.blockPosition(), SoundEvents.GHAST_SHOOT, SoundSource.PLAYERS, 1.0f, 1.5f);
             pushPlayer(user, 5.0, false);
         }
+
         @Override
         protected void onTick() {
             if (user.isOnGround() || user.horizontalCollision) {
                 ActiveFormManager.stop(user);
                 return;
             }
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), 3.5, 2.0f, 1.2f, DamageSource.playerAttack(player));
                 spawnParticleArc(player, ParticleTypes.SWEEP_ATTACK, 3.5, 360, 5);
             } else {
@@ -1554,8 +1838,13 @@ public class FormUtils {
                 spawnParticleArc(user, ParticleTypes.SWEEP_ATTACK, 3.5, 360, 5);
             }
             if (ticksActive % 8 == 0) {
-                level.playSound(null, user.blockPosition(), SoundEvents.ELYTRA_FLYING, SoundSource.PLAYERS, 0.6f, 1.8f);
+                level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 0.8f, 1.8f);
             }
+        }
+
+        @Override
+        protected void onStop() {
+            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_WEAK, SoundSource.PLAYERS, 1.0f, 1.0f);
         }
     }
 
@@ -1563,11 +1852,14 @@ public class FormUtils {
         private Vec3 pos, vel;
         private static final DustParticleOptions GREEN_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.1f), 0.8f);
 
-        public PrimaryGaleSlashForm(LivingEntity user, BreathingForms form) {
+        public PrimaryGaleSlashForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
-        @Override public boolean isInterruptible() { return false; }
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -1581,33 +1873,33 @@ public class FormUtils {
         @Override
         protected void onTick() {
             // --- Projectile Simulation ---
-                if (ticksActive > 40) {
-                    ActiveFormManager.stop(user);
-                    return;
-                }
+            if (ticksActive > 40) {
+                ActiveFormManager.stop(user);
+                return;
+            }
 
-                Vec3 nextPos = pos.add(vel);
-                vel = vel.add(0, -0.05, 0);
-                AABB checkZone = new AABB(pos, nextPos).inflate(1.5);
-                List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, checkZone, e -> e != user && e.isAlive());
+            Vec3 nextPos = pos.add(vel);
+            vel = vel.add(0, -0.05, 0);
+            AABB checkZone = new AABB(pos, nextPos).inflate(1.5);
+            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, checkZone, e -> e != user && e.isAlive());
 
-                if (!targets.isEmpty() || !level.getBlockState(new BlockPos(nextPos)).isAir()) {
-                    LivingEntity hitTarget = targets.isEmpty() ? null : targets.get(0);
-                    if (hitTarget != null) {
-                        if(user instanceof ServerPlayer player) {
-                            hitTarget.hurt(DamageSource.playerAttack(player), 25.0f);
-                        } else {
-                            hitTarget.hurt(DamageSource.mobAttack(user), 25.0f);
-                        }
+            if (!targets.isEmpty() || !level.getBlockState(new BlockPos(nextPos)).isAir()) {
+                LivingEntity hitTarget = targets.isEmpty() ? null : targets.get(0);
+                if (hitTarget != null) {
+                    if (user instanceof ServerPlayer player) {
+                        hitTarget.hurt(DamageSource.playerAttack(player), 25.0f);
+                    } else {
+                        hitTarget.hurt(DamageSource.mobAttack(user), 25.0f);
                     }
-                    level.playSound(null, new BlockPos(nextPos), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.5f);
-                    level.sendParticles(ParticleTypes.EXPLOSION, nextPos.x, nextPos.y, nextPos.z, 1, 0, 0, 0, 0);
-
-                    ActiveFormManager.stop(user);
-                } else {
-                    pos = nextPos;
-                    spawnCycloneParticles(level, GREEN_DUST, ParticleTypes.CLOUD, pos, 1.2, 0, 25, ticksActive * 10);
                 }
+                level.playSound(null, new BlockPos(nextPos), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.5f);
+                level.sendParticles(ParticleTypes.EXPLOSION, nextPos.x, nextPos.y, nextPos.z, 1, 0, 0, 0, 0);
+
+                ActiveFormManager.stop(user);
+            } else {
+                pos = nextPos;
+                spawnCycloneParticles(level, GREEN_DUST, ParticleTypes.CLOUD, pos, 1.2, 0, 25, ticksActive * 10);
+            }
         }
     }
 
@@ -1615,12 +1907,15 @@ public class FormUtils {
         private final BlockPos targetPos;
         private static final int VORTEX_DURATION = 20;
 
-        public IdatenTyphoonForm(LivingEntity user, BreathingForms form) {
+        public IdatenTyphoonForm(LivingEntity user, IForm form) {
             super(user, form);
             this.targetPos = user.blockPosition();
         }
 
-        @Override public boolean isInterruptible() { return false; }
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -1643,7 +1938,7 @@ public class FormUtils {
                 spawnVortexParticles(level, targetPos, radius, 50, ticksActive);
             } else if (ticksActive == VORTEX_DURATION + 1) {
                 // Explosion logic...
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, Vec3.atCenterOf(targetPos), 10.0, 40.0f, 2.0f, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, Vec3.atCenterOf(targetPos), 10.0, 40.0f, 2.0f, DamageSource.mobAttack(user));
@@ -1664,11 +1959,14 @@ public class FormUtils {
         private static final float PATH_DAMAGE = 8.0f;
         private static final DustParticleOptions YELLOW_LIGHTNING = new DustParticleOptions(new Vector3f(1.0f, 0.9f, 0.2f), 1.0f);
 
-        public ThunderclapAndFlashForm(LivingEntity user, BreathingForms form) {
+        public ThunderclapAndFlashForm(LivingEntity user, IForm form) {
             super(user, form, CHARGE_PAUSE_DURATION + 2);
         }
 
-        @Override public boolean isInterruptible() { return false; }
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -1702,7 +2000,7 @@ public class FormUtils {
                 AABB pathHitbox = new AABB(startPos, endPos).inflate(2.0); // A 2-block wide hitbox along the path
                 List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, pathHitbox, e -> e != user && e.isAlive());
                 for (LivingEntity target : hitTargets) {
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         target.hurt(DamageSource.playerAttack(player), PATH_DAMAGE);
                     } else {
                         target.hurt(DamageSource.mobAttack(user), PATH_DAMAGE);
@@ -1732,7 +2030,7 @@ public class FormUtils {
         private static final float DAMAGE_PER_SLASH = 12.0f;
         private static final DustParticleOptions YELLOW_LIGHTNING = new DustParticleOptions(new Vector3f(1.0f, 0.9f, 0.2f), 1.0f);
 
-        public RiceSpiritForm(LivingEntity user, BreathingForms form) {
+        public RiceSpiritForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_SLASHES * TICKS_BETWEEN_SLASHES);
         }
 
@@ -1769,12 +2067,14 @@ public class FormUtils {
 
         private LivingEntity target;
 
-        public ThunderSwarmForm(LivingEntity user, BreathingForms form) {
+        public ThunderSwarmForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_DASHES * TICKS_PER_PHASE);
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -1833,13 +2133,13 @@ public class FormUtils {
         private static final float DAMAGE_PER_BOLT = 7.0f;
         private static final DustParticleOptions YELLOW_LIGHTNING = new DustParticleOptions(new Vector3f(1.0f, 0.9f, 0.2f), 1.0f);
 
-        public DistantThunderForm(LivingEntity user, BreathingForms form) {
+        public DistantThunderForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
         @Override
         protected void onStart() {
-            applyImmobility(user,  this.duration + 5);
+            applyImmobility(user, this.duration + 5);
             level.playSound(null, user.blockPosition(), SoundEvents.BEACON_POWER_SELECT, SoundSource.PLAYERS, 1.0f, 1.5f);
         }
 
@@ -1882,7 +2182,7 @@ public class FormUtils {
 
         private LivingEntity target;
 
-        public RumbleAndFlashForm(LivingEntity user, BreathingForms form) {
+        public RumbleAndFlashForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -1941,13 +2241,15 @@ public class FormUtils {
 
         private final Vec3 dashDirection;
 
-        public HonoikazuchiNoKamiForm(LivingEntity user, BreathingForms form) {
+        public HonoikazuchiNoKamiForm(LivingEntity user, IForm form) {
             super(user, form, CHARGE_PAUSE_DURATION + DASH_DURATION_TICKS + 1);
             this.dashDirection = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -1974,13 +2276,12 @@ public class FormUtils {
 
                 for (int i = 0; i < 10; i++) {
                     double angle = (ticksActive * 0.5) + (i * (Math.PI / 5.0));
-                    double radius = 2.5 - (ticksActive / (double)CHARGE_PAUSE_DURATION * 2.5); // Radius shrinks to zero
+                    double radius = 2.5 - (ticksActive / (double) CHARGE_PAUSE_DURATION * 2.5); // Radius shrinks to zero
                     Vec3 offset = new Vec3(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
                     Vec3 particlePos = user.position().add(offset).add(0, user.getBbHeight() / 2.0, 0);
                     level.sendParticles(DRAGON_PARTICLE, particlePos.x, particlePos.y, particlePos.z, 1, -offset.x * 0.1, -offset.y * 0.1, -offset.z * 0.1, 0);
                 }
-            }
-            else if (ticksActive < CHARGE_PAUSE_DURATION + DASH_DURATION_TICKS) {
+            } else if (ticksActive < CHARGE_PAUSE_DURATION + DASH_DURATION_TICKS) {
                 if (user.isCrouching()) {
                     performSlash();
                     ActiveFormManager.stop(user);
@@ -1989,7 +2290,7 @@ public class FormUtils {
 
                 user.setDeltaMovement(dashDirection.scale(DASH_SPEED));
                 user.hurtMarked = true;
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), 2.0, DASH_DAMAGE, 0.2f, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, user.position(), 2.0, DASH_DAMAGE, 0.2f, DamageSource.mobAttack(user));
@@ -2012,8 +2313,7 @@ public class FormUtils {
                     Vec3 particlePos = user.position().add(offset).add(0, 1, 0).subtract(dashDirection.scale(i * 0.5));
                     level.sendParticles(DRAGON_PARTICLE, particlePos.x, particlePos.y, particlePos.z, 2, 0, 0, 0, 0);
                 }
-            }
-            else {
+            } else {
                 performSlash();
                 ActiveFormManager.stop(user);
             }
@@ -2032,7 +2332,7 @@ public class FormUtils {
         private static final float DAMAGE_PER_SLASH = 4.0f; // Total damage = 32
         private static final DustParticleOptions DENSE_MIST = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.5f);
 
-        public EightLayeredMistForm(LivingEntity user, BreathingForms form) {
+        public EightLayeredMistForm(LivingEntity user, IForm form) {
             // Total duration is 8 slashes * 3 ticks each = 24 ticks (~1.2 seconds)
             super(user, form, NUMBER_OF_SLASHES * TICKS_BETWEEN_SLASHES);
         }
@@ -2062,7 +2362,7 @@ public class FormUtils {
     public static class ScatteringMistParry extends ParryForm {
         private static final DustParticleOptions DENSE_MIST = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.5f);
 
-        public ScatteringMistParry(LivingEntity user, BreathingForms form) {
+        public ScatteringMistParry(LivingEntity user, IForm form) {
             super(user, form, 30); // A 1-second parry window
         }
 
@@ -2071,7 +2371,7 @@ public class FormUtils {
             // --- Offensive Circular Slash ---
             performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.5f);
             // Damage and strongly knock back nearby enemies
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), 4.0, 7.0f, 1.5f, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), 4.0, 7.0f, 1.5f, DamageSource.mobAttack(user));
@@ -2113,7 +2413,7 @@ public class FormUtils {
         private final Vec3 startPos;
         private final Vec3 endPos;
 
-        public ShiftingFlowSlashForm(LivingEntity user, BreathingForms form) {
+        public ShiftingFlowSlashForm(LivingEntity user, IForm form) {
             super(user, form, PAUSE_DURATION + DASH_DURATION);
             this.target = getLookedAtEntity(user, TARGETING_RANGE);
             this.startPos = user.position();
@@ -2129,7 +2429,9 @@ public class FormUtils {
         }
 
         @Override
-        public boolean isInterruptible() { return true; }
+        public boolean isInterruptible() {
+            return true;
+        }
 
         @Override
         protected void onStart() {
@@ -2160,13 +2462,13 @@ public class FormUtils {
                 double sineOffset = S_CURVE_AMPLITUDE * Math.sin(sineAngle);
                 Vec3 curvePos = straightPos.add(sideDir.scale(sineOffset));
                 user.setPos(curvePos.x, curvePos.y, curvePos.z);
-                Vec3 nextCurvePos = startPos.lerp(endPos, Math.min((double)(dashTicks + 1) / DASH_DURATION, 1.0)).add(sideDir.scale(S_CURVE_AMPLITUDE * Math.sin(Math.min((double)(dashTicks + 1) / DASH_DURATION, 1.0) * Math.PI * 2.0)));
+                Vec3 nextCurvePos = startPos.lerp(endPos, Math.min((double) (dashTicks + 1) / DASH_DURATION, 1.0)).add(sideDir.scale(S_CURVE_AMPLITUDE * Math.sin(Math.min((double) (dashTicks + 1) / DASH_DURATION, 1.0) * Math.PI * 2.0)));
                 Vec3 velocityHint = nextCurvePos.subtract(curvePos);
                 user.setDeltaMovement(velocityHint);
                 user.hurtMarked = true;
 //                user.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(user));
 
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), 2.0, 2.0f, 0.1f, DamageSource.playerAttack(player));
                     level.sendParticles(DENSE_MIST, player.getX(), player.getY() + 1, player.getZ(), 2, 0, 0, 0, 0);
                 } else {
@@ -2196,14 +2498,16 @@ public class FormUtils {
         private final Vec3 startPos;
         private final Vec3 endPos;
 
-        public SeaOfCloudsForm(LivingEntity user, BreathingForms form) {
+        public SeaOfCloudsForm(LivingEntity user, IForm form) {
             super(user, form, DASH_DURATION);
             this.startPos = user.position();
             this.endPos = this.startPos.add(user.getLookAngle().scale(DASH_DISTANCE));
         }
 
         @Override
-        public boolean isInterruptible() { return true; }
+        public boolean isInterruptible() {
+            return true;
+        }
 
         @Override
         protected void onStart() {
@@ -2224,7 +2528,7 @@ public class FormUtils {
 
             user.setPos(currentCurvePos.x, currentCurvePos.y, currentCurvePos.z);
 
-            double nextDashProgress = Math.min((double)(ticksActive + 1) / DASH_DURATION, 1.0);
+            double nextDashProgress = Math.min((double) (ticksActive + 1) / DASH_DURATION, 1.0);
             Vec3 nextStraightPos = startPos.lerp(endPos, nextDashProgress);
             double nextZigzagOffset = ZIGZAG_AMPLITUDE * Math.signum(Math.sin(nextDashProgress * Math.PI * ZIGZAG_FREQUENCY));
             Vec3 nextCurvePos = nextStraightPos.add(sideDir.scale(nextZigzagOffset));
@@ -2234,14 +2538,14 @@ public class FormUtils {
             user.hurtMarked = true;
 //            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
 
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.mobAttack(user));
             }
             if (ticksActive > 0 && ticksActive % 2 == 0) {
                 BlindingMistCloudEntity cloud = ModEntityTypes.BLINDING_MIST_CLOUD.get().create(level);
-                if(cloud != null) {
+                if (cloud != null) {
                     cloud.setOwner(user);
                     cloud.setPos(user.position());
                     cloud.setParticle(ParticleTypes.CLOUD);
@@ -2263,7 +2567,7 @@ public class FormUtils {
         private static final float DAMAGE_PER_TICK = 2.0f;
         private static final DustParticleOptions DENSE_MIST = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.5f);
 
-        public LunarDispersingMist(LivingEntity user, BreathingForms form) {
+        public LunarDispersingMist(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -2283,7 +2587,7 @@ public class FormUtils {
 
             // --- Continuous AOE Barrage ---
             // Deal damage every tick to all nearby enemies.
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.2f, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.2f, DamageSource.mobAttack(user));
@@ -2317,7 +2621,7 @@ public class FormUtils {
         private static final double SLAM_RADIUS = 15.0;
         private static final float SLAM_KNOCKBACK = 1.8f;
 
-        public RoarForm(LivingEntity user, BreathingForms form) {
+        public RoarForm(LivingEntity user, IForm form) {
             super(user, form, SLAM_DELAY + 5);
         }
 
@@ -2341,7 +2645,7 @@ public class FormUtils {
             }
             if (ticksActive == SLAM_DELAY) {
                 // Damage and Sound logic (now uses the new 10-block radius)
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), SLAM_RADIUS, SLAM_DAMAGE, SLAM_KNOCKBACK, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, user.position(), SLAM_RADIUS, SLAM_DAMAGE, SLAM_KNOCKBACK, DamageSource.mobAttack(user));
@@ -2381,12 +2685,14 @@ public class FormUtils {
 
         private float rotationAngle = 0;
 
-        public ResoundingSlashesForm(LivingEntity user, BreathingForms form) {
+        public ResoundingSlashesForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
         @Override
-        public boolean isInterruptible() { return true; }
+        public boolean isInterruptible() {
+            return true;
+        }
 
         @Override
         protected void onStart() {
@@ -2409,7 +2715,7 @@ public class FormUtils {
 
             if (ticksActive % DAMAGE_TICK_RATE == 0) {
                 level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.5f);
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user));
@@ -2440,7 +2746,7 @@ public class FormUtils {
 
         private float rotationAngle = 0;
 
-        public StringPerformanceForm(LivingEntity user, BreathingForms form) {
+        public StringPerformanceForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -2463,7 +2769,7 @@ public class FormUtils {
             Vec3 lookVec = user.getLookAngle();
             user.setDeltaMovement(lookVec.x * FORWARD_SPEED, user.getDeltaMovement().y, lookVec.z * FORWARD_SPEED);
             user.hurtMarked = true;
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user));
@@ -2504,7 +2810,7 @@ public class FormUtils {
         private static final DustParticleOptions PINK_SPARK = new DustParticleOptions(new Vector3f(1.0f, 0.6f, 0.9f), 1.0f);
         private static final DustParticleOptions GREEN_SPARK = new DustParticleOptions(new Vector3f(0.6f, 1.0f, 0.6f), 1.0f);
 
-        public ShiversOfFirstLoveForm(LivingEntity user, BreathingForms form) {
+        public ShiversOfFirstLoveForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_SLASHES * TICKS_BETWEEN_SLASHES);
         }
 
@@ -2540,8 +2846,8 @@ public class FormUtils {
         private Vec3 whipTipPos;
         private boolean hasHit = false;
 
-        public LovePangsForm(LivingEntity user, BreathingForms form) {
-            super(user, form, (int)(MAX_RANGE / WHIP_SPEED));
+        public LovePangsForm(LivingEntity user, IForm form) {
+            super(user, form, (int) (MAX_RANGE / WHIP_SPEED));
             this.direction = user.getLookAngle();
             this.whipTipPos = user.getEyePosition();
         }
@@ -2570,7 +2876,7 @@ public class FormUtils {
                 this.hasHit = true;
                 LivingEntity hitTarget = potentialTargets.get(0);
                 for (int i = 0; i < HIT_COUNT; i++) {
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         hitTarget.hurt(DamageSource.playerAttack(player), DAMAGE_PER_HIT);
                     } else {
                         hitTarget.hurt(DamageSource.mobAttack(user), DAMAGE_PER_HIT);
@@ -2587,14 +2893,14 @@ public class FormUtils {
     }
 
     public static class CatloveShowerForm extends TimedForm {
-        private static final int SLASH_DELAY = 5; // The slashes trigger 0.25 seconds into the leap
+        private static final int SLASH_DELAY = 5;
         private static final float LEAP_STRENGTH = 0.9f;
         private static final float DAMAGE = 18.0f;
         private static final double RADIUS = 6.0;
         private static final float KNOCKBACK = 0.7f;
         private static final DustParticleOptions PINK_SPARK = new DustParticleOptions(new Vector3f(1.0f, 0.6f, 0.9f), 1.0f);
 
-        public CatloveShowerForm(LivingEntity user, BreathingForms form) {
+        public CatloveShowerForm(LivingEntity user, IForm form) {
             super(user, form, 20);
         }
 
@@ -2610,19 +2916,15 @@ public class FormUtils {
             super.onTick();
             if (ticksActive == SLASH_DELAY) {
                 level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 1.5f, 1.8f);
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user));
                 }
 
-                level.sendParticles(ParticleTypes.HEART, user.getX(), user.getY() + 1, user.getZ(), 30, RADIUS / 2, RADIUS / 2, RADIUS / 2, 0.1);
-
-                Vec3 center = user.getEyePosition();
-                spawnParticleArcInWorld(level, center, RADIUS * 0.8, 70, 20, user.getYRot() + 0, 45, PINK_SPARK); // Forward
-                spawnParticleArcInWorld(level, center, RADIUS * 0.8, 70, 20, user.getYRot() + 90, 45, PINK_SPARK); // Left
-                spawnParticleArcInWorld(level, center, RADIUS * 0.8, 70, 20, user.getYRot() + 180, 45, PINK_SPARK); // Back
-                spawnParticleArcInWorld(level, center, RADIUS * 0.8, 70, 20, user.getYRot() + 270, 45, PINK_SPARK); // Right
+                BlockPos groundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, user.blockPosition());
+                Vec3 groundTarget = Vec3.atBottomCenterOf(groundPos);
+                spawnHeartShape(level, user, groundTarget, 4.0, 100);
             }
         }
     }
@@ -2641,7 +2943,7 @@ public class FormUtils {
 
         private final Vec3 tornadoCenter;
 
-        public SwayingLoveWildclawForm(LivingEntity user, BreathingForms form) {
+        public SwayingLoveWildclawForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             BlockHitResult hitResult = (BlockHitResult) user.pick(MAX_RANGE, 0, false);
 
@@ -2671,7 +2973,7 @@ public class FormUtils {
             if (this.tornadoCenter == null) return;
 
             if (ticksActive % DAMAGE_TICK_RATE == 0) {
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealVerticalColumnDamage(player, this.tornadoCenter, TORNADO_RADIUS, TORNADO_HEIGHT, DAMAGE_PER_PULSE, DamageSource.playerAttack(player));
                 } else {
                     dealVerticalColumnDamage(user, this.tornadoCenter, TORNADO_RADIUS, TORNADO_HEIGHT, DAMAGE_PER_PULSE, DamageSource.mobAttack(user));
@@ -2700,7 +3002,8 @@ public class FormUtils {
     }
 
     public static class CatLeggedWindsForm extends TimedForm {
-        private enum Phase { OUTWARD, INWARD }
+        private enum Phase {OUTWARD, INWARD}
+
         private static final double MAX_RANGE = 10.0;
         private static final double WHIP_SPEED = 2.0; // The speed in blocks per tick
         private static final float DAMAGE = 9.0f;
@@ -2712,8 +3015,8 @@ public class FormUtils {
         private Vec3 whipTipPos;
         private final List<UUID> hitInPhase = new ArrayList<>();
 
-        public CatLeggedWindsForm(LivingEntity user, BreathingForms form) {
-            super(user, form, (int)(MAX_RANGE / WHIP_SPEED) * 2);
+        public CatLeggedWindsForm(LivingEntity user, IForm form) {
+            super(user, form, (int) (MAX_RANGE / WHIP_SPEED) * 2);
             this.direction = user.getLookAngle();
             this.whipTipPos = user.getEyePosition();
         }
@@ -2748,7 +3051,7 @@ public class FormUtils {
                     e -> e != user && e.isAlive() && !hitInPhase.contains(e.getUUID()));
 
             for (LivingEntity target : potentialTargets) {
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     target.hurt(DamageSource.playerAttack(player), DAMAGE);
                 } else {
                     target.hurt(DamageSource.mobAttack(user), DAMAGE);
@@ -2774,7 +3077,7 @@ public class FormUtils {
         private final Vec3 direction;
         private boolean hasHit = false;
 
-        public ButterflyDanceCapriceForm(LivingEntity user, BreathingForms form) {
+        public ButterflyDanceCapriceForm(LivingEntity user, IForm form) {
             super(user, form, DASH_DURATION);
             this.direction = user.getLookAngle();
         }
@@ -2810,7 +3113,7 @@ public class FormUtils {
                     this.hasHit = true;
                     LivingEntity hitTarget = potentialTargets.get(0);
 
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         hitTarget.hurt(DamageSource.playerAttack(player), STING_DAMAGE);
                     } else {
                         hitTarget.hurt(DamageSource.mobAttack(user), STING_DAMAGE);
@@ -2828,7 +3131,8 @@ public class FormUtils {
     }
 
     public static class BeeStingFlutterForm extends TimedForm {
-        private enum Phase { DASHING, RECOILING }
+        private enum Phase {DASHING, RECOILING}
+
         private static final int DURATION = 10;
         private static final double DASH_SPEED = 3.0;
         private static final double RECOIL_STRENGTH = 1.5;
@@ -2840,13 +3144,15 @@ public class FormUtils {
         private Phase currentPhase = Phase.DASHING;
         private final Vec3 direction;
 
-        public BeeStingFlutterForm(LivingEntity user, BreathingForms form) {
+        public BeeStingFlutterForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             this.direction = user.getLookAngle();
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -2871,7 +3177,7 @@ public class FormUtils {
                     if (!potentialTargets.isEmpty()) {
                         LivingEntity hitTarget = potentialTargets.get(0);
 
-                        if(user instanceof ServerPlayer player) {
+                        if (user instanceof ServerPlayer player) {
                             hitTarget.hurt(DamageSource.playerAttack(player), STING_DAMAGE);
                         } else {
                             hitTarget.hurt(DamageSource.mobAttack(user), STING_DAMAGE);
@@ -2910,7 +3216,7 @@ public class FormUtils {
         // --- State ---
         private int strikeIndex = 0;
 
-        public DragonflyDanceForm(LivingEntity user, BreathingForms form) {
+        public DragonflyDanceForm(LivingEntity user, IForm form) {
             super(user, form, STRIKES * TICKS_PER_STRIKE + 2);
         }
 
@@ -2940,14 +3246,14 @@ public class FormUtils {
                 );
                 user.swing(InteractionHand.MAIN_HAND);
 
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, strikePos, 0.8, DAMAGE_PER_STRIKE, 0.1f, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, strikePos, 0.8, DAMAGE_PER_STRIKE, 0.1f, DamageSource.mobAttack(user));
                 }
                 List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, new AABB(strikePos, strikePos).inflate(0.8));
-                for(LivingEntity target : hitTargets) {
-                    if(target != user) {
+                for (LivingEntity target : hitTargets) {
+                    if (target != user) {
                         target.addEffect(new MobEffectInstance(ModEffects.WISTERIA_POISON.get(), POISON_DURATION, POISON_AMPLIFIER));
                     }
                 }
@@ -2976,14 +3282,16 @@ public class FormUtils {
         private final Vec3 endPos;
         private boolean hasHit = false;
 
-        public CentipedeDanceForm(LivingEntity user, BreathingForms form) {
+        public CentipedeDanceForm(LivingEntity user, IForm form) {
             super(user, form, DASH_DURATION);
             this.startPos = user.position();
             this.endPos = this.startPos.add(user.getLookAngle().scale(DASH_DISTANCE));
         }
 
         @Override
-        public boolean isInterruptible() { return true; }
+        public boolean isInterruptible() {
+            return true;
+        }
 
         @Override
         protected void onStart() {
@@ -3002,7 +3310,7 @@ public class FormUtils {
             double zigzagOffset = ZIGZAG_AMPLITUDE * Math.sin(dashProgress * Math.PI * ZIGZAG_FREQUENCY);
             Vec3 currentCurvePos = straightPos.add(sideDir.scale(zigzagOffset));
 
-            double nextDashProgress = Math.min((double)(ticksActive + 1) / DASH_DURATION, 1.0);
+            double nextDashProgress = Math.min((double) (ticksActive + 1) / DASH_DURATION, 1.0);
             Vec3 nextStraightPos = startPos.lerp(endPos, nextDashProgress);
             double nextZigzagOffset = ZIGZAG_AMPLITUDE * Math.sin(nextDashProgress * Math.PI * ZIGZAG_FREQUENCY);
             Vec3 nextCurvePos = nextStraightPos.add(sideDir.scale(nextZigzagOffset));
@@ -3023,7 +3331,7 @@ public class FormUtils {
                 this.hasHit = true;
                 LivingEntity hitTarget = potentialTargets.get(0);
 
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     hitTarget.hurt(DamageSource.playerAttack(player), FINISHER_DAMAGE);
                 } else {
                     hitTarget.hurt(DamageSource.mobAttack(user), FINISHER_DAMAGE);
@@ -3050,8 +3358,8 @@ public class FormUtils {
         private Vec3 drillCenterPos;
         private float rotationAngle = 0;
 
-        public SerpentiniteBipolarForm(LivingEntity user, BreathingForms form) {
-            super(user, form, (int)(MAX_RANGE / TRAVEL_SPEED));
+        public SerpentiniteBipolarForm(LivingEntity user, IForm form) {
+            super(user, form, (int) (MAX_RANGE / TRAVEL_SPEED));
             this.direction = user.getLookAngle();
             this.drillCenterPos = user.getEyePosition();
         }
@@ -3071,7 +3379,7 @@ public class FormUtils {
             List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, hitBox, e -> e != user && e.isAlive());
 
             for (LivingEntity target : hitTargets) {
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     target.hurt(DamageSource.playerAttack(player), DAMAGE_PER_TICK);
                 } else {
                     target.hurt(DamageSource.mobAttack(user), DAMAGE_PER_TICK);
@@ -3093,7 +3401,8 @@ public class FormUtils {
     }
 
     public static class UpperSmashForm extends ActiveForm {
-        private enum Phase { LAUNCHING, WAITING, SMASHING }
+        private enum Phase {LAUNCHING, WAITING, SMASHING}
+
         private static final int LAUNCH_DURATION = 10; // 0.5s for the pincer to fly out
         private static final int WAIT_DURATION = 8;    // ~0.4s pause
         private static final int SMASH_DURATION = 4;   // ~0.2s for the final smash
@@ -3110,7 +3419,7 @@ public class FormUtils {
         private Vec3 flailPos;
         private int phaseTicks = 0;
 
-        public UpperSmashForm(LivingEntity user, BreathingForms form) {
+        public UpperSmashForm(LivingEntity user, IForm form) {
             super(user, form);
             this.direction = user.getLookAngle();
             this.axePos = user.getEyePosition();
@@ -3118,7 +3427,9 @@ public class FormUtils {
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -3164,7 +3475,7 @@ public class FormUtils {
                     this.flailPos = this.flailPos.add(smashDirection.scale(smashSpeed));
 
                     if (this.phaseTicks >= SMASH_DURATION) {
-                        if(user instanceof ServerPlayer player) {
+                        if (user instanceof ServerPlayer player) {
                             dealAOEDamage(player, smashCenter, SMASH_RADIUS, SMASH_DAMAGE, 1.5f, DamageSource.playerAttack(player));
                         } else {
                             dealAOEDamage(user, smashCenter, SMASH_RADIUS, SMASH_DAMAGE, 1.5f, DamageSource.mobAttack(user));
@@ -3189,7 +3500,7 @@ public class FormUtils {
         private static final DustParticleOptions CHAIN_PARTICLE = new DustParticleOptions(new Vector3f(0.4f, 0.4f, 0.4f), 1.0f);
         private float rotationAngle = 0;
 
-        public StoneSkinParry(LivingEntity user, BreathingForms form) {
+        public StoneSkinParry(LivingEntity user, IForm form) {
             super(user, form, PARRY_WINDOW);
         }
 
@@ -3220,7 +3531,7 @@ public class FormUtils {
             level.playSound(null, user.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.2f, 1.0f);
             level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.8f);
 
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK, DamageSource.mobAttack(user));
@@ -3229,7 +3540,7 @@ public class FormUtils {
             if (!groundState.isAir()) {
                 level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, groundState), user.getX(), user.getY() + 0.2, user.getZ(), 100, COUNTER_RADIUS * 0.8, 0.2, COUNTER_RADIUS * 0.8, 0.2);
             }
-            level.sendParticles(ParticleTypes.SONIC_BOOM, user.getX(), user.getY() + 0.5, user.getZ(), 1, 0,0,0,0);
+            level.sendParticles(ParticleTypes.SONIC_BOOM, user.getX(), user.getY() + 0.5, user.getZ(), 1, 0, 0, 0, 0);
         }
     }
 
@@ -3242,7 +3553,7 @@ public class FormUtils {
 
         private final List<UUID> hitEntities = new ArrayList<>();
 
-        public VolcanicRockForm(LivingEntity user, BreathingForms form) {
+        public VolcanicRockForm(LivingEntity user, IForm form) {
             super(user, form, SWING_DURATION);
         }
 
@@ -3269,8 +3580,8 @@ public class FormUtils {
             List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, damageZone,
                     e -> e != user && e.isAlive() && !hitEntities.contains(e.getUUID()));
 
-            for(LivingEntity target : potentialTargets) {
-                if(user instanceof ServerPlayer player) {
+            for (LivingEntity target : potentialTargets) {
+                if (user instanceof ServerPlayer player) {
                     target.hurt(DamageSource.playerAttack(player), DAMAGE);
                 } else {
                     target.hurt(DamageSource.mobAttack(user), DAMAGE);
@@ -3303,10 +3614,10 @@ public class FormUtils {
         private boolean axeHasHit = false;
         private boolean flailHasHit = false;
 
-        public ArcsOfJusticeForm(LivingEntity user, BreathingForms form) {
+        public ArcsOfJusticeForm(LivingEntity user, IForm form) {
             super(user, form, FLAIL_IMPACT_TICK + 5);
-            this.axeStartPos = user.getEyePosition().add(user.getLookAngle().cross(new Vec3(0,1,0)).normalize().scale(1.5));
-            this.flailStartPos = user.getEyePosition().add(user.getLookAngle().cross(new Vec3(0,1,0)).normalize().scale(-1.5));
+            this.axeStartPos = user.getEyePosition().add(user.getLookAngle().cross(new Vec3(0, 1, 0)).normalize().scale(1.5));
+            this.flailStartPos = user.getEyePosition().add(user.getLookAngle().cross(new Vec3(0, 1, 0)).normalize().scale(-1.5));
 
             this.target = getLookedAtEntity(user, MAX_RANGE);
             if (this.target != null) {
@@ -3338,19 +3649,19 @@ public class FormUtils {
             // Axe travels faster in a direct line
             double axeProgress = Math.min((double) ticksActive / AXE_IMPACT_TICK, 1.0);
             Vec3 currentAxePos = this.axeStartPos.lerp(this.destinationPoint, axeProgress);
-            level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DEEPSLATE.defaultBlockState()), currentAxePos.x, currentAxePos.y, currentAxePos.z, 2, 0,0,0,0);
+            level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.DEEPSLATE.defaultBlockState()), currentAxePos.x, currentAxePos.y, currentAxePos.z, 2, 0, 0, 0, 0);
 
             // Flail travels slower in a wider arc
             double flailProgress = Math.min((double) ticksActive / FLAIL_IMPACT_TICK, 1.0);
             Vec3 flailPathCenter = this.flailStartPos.lerp(this.destinationPoint, flailProgress);
             double arcHeight = Math.sin(flailProgress * Math.PI) * 3.0; // The arc goes 3 blocks high at its peak
             Vec3 currentFlailPos = flailPathCenter.add(0, arcHeight, 0);
-            level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.IRON_BLOCK.defaultBlockState()), currentFlailPos.x, currentFlailPos.y, currentFlailPos.z, 2, 0,0,0,0);
+            level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.IRON_BLOCK.defaultBlockState()), currentFlailPos.x, currentFlailPos.y, currentFlailPos.z, 2, 0, 0, 0, 0);
 
             // Axe Impact
             if (!axeHasHit && ticksActive >= AXE_IMPACT_TICK) {
                 axeHasHit = true;
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, this.destinationPoint, IMPACT_RADIUS, AXE_DAMAGE, 0.5f, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, this.destinationPoint, IMPACT_RADIUS, AXE_DAMAGE, 0.5f, DamageSource.mobAttack(user));
@@ -3361,7 +3672,7 @@ public class FormUtils {
             // Flail Impact
             if (!flailHasHit && ticksActive >= FLAIL_IMPACT_TICK) {
                 flailHasHit = true;
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, this.destinationPoint, IMPACT_RADIUS * 1.5, FLAIL_DAMAGE, 1.0f, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, this.destinationPoint, IMPACT_RADIUS * 1.5, FLAIL_DAMAGE, 1.0f, DamageSource.mobAttack(user));
@@ -3377,7 +3688,8 @@ public class FormUtils {
         private static final int PARRY_WINDOW = 20; // 1 second parry window
         private static final float COUNTER_DAMAGE = 15.0f;
         private static final double COUNTER_REACH = 5.0;
-        public HonorableShadowPlumParry(LivingEntity user, BreathingForms form) {
+
+        public HonorableShadowPlumParry(LivingEntity user, IForm form) {
             super(user, form, PARRY_WINDOW);
         }
 
@@ -3419,7 +3731,7 @@ public class FormUtils {
 
         private static final DustParticleOptions PEONY_PINK = new DustParticleOptions(new Vector3f(0.9f, 0.5f, 0.6f), 1.0f);
 
-        public PeoniesOfFutilityForm(LivingEntity user, BreathingForms form) {
+        public PeoniesOfFutilityForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_ATTACKS * TICKS_BETWEEN_ATTACKS);
         }
 
@@ -3445,7 +3757,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onStop() {}
+        protected void onStop() {
+        }
     }
 
     public static class WhirlingPeachForm extends TimedForm {
@@ -3461,7 +3774,7 @@ public class FormUtils {
 
         private final float startYaw;
 
-        public WhirlingPeachForm(LivingEntity user, BreathingForms form) {
+        public WhirlingPeachForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             this.startYaw = user.getYRot();
         }
@@ -3482,7 +3795,7 @@ public class FormUtils {
             float newYaw = this.startYaw + (ticksActive * ROTATION_SPEED);
             user.setYRot(newYaw);
             user.setYHeadRot(newYaw);
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.mobAttack(user));
@@ -3513,11 +3826,14 @@ public class FormUtils {
         private static final int SLOWNESS_AMP = 3;   // Slowness IV
         private static final int FATIGUE_AMP = 3;    // Mining Fatigue IV
 
-        public VermilionEyeForm(LivingEntity user, BreathingForms form) {
+        public VermilionEyeForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
-        @Override public boolean isInterruptible() { return false; }
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -3527,7 +3843,7 @@ public class FormUtils {
             level.playSound(null, user.blockPosition(), SoundEvents.CONDUIT_ACTIVATE, SoundSource.PLAYERS, 1.0f, 1.0f);
             level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 0.8f, 1.2f);
 
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 ModMessages.sendToPlayer(new VignetteS2CPacket(true), player);
             }
         }
@@ -3553,7 +3869,7 @@ public class FormUtils {
             user.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, BURNOUT_DURATION, 0, false, false, true));
             user.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, BURNOUT_DURATION, 1, false, false, true));
 
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 ModMessages.sendToPlayer(new VignetteS2CPacket(false), player);
             }
         }
@@ -3572,13 +3888,15 @@ public class FormUtils {
         @Nullable
         private final LivingEntity target;
 
-        public VenomFangsForm(LivingEntity user, BreathingForms form) {
+        public VenomFangsForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             this.target = getLookedAtEntity(user, 12.0);
         }
 
         @Override
-        public boolean isInterruptible() { return true; }
+        public boolean isInterruptible() {
+            return true;
+        }
 
         @Override
         protected void onStart() {
@@ -3609,7 +3927,7 @@ public class FormUtils {
 
                 if (ticksActive == SLASH_DELAY) {
                     performGenericAttack(user, SoundEvents.BEE_STING, 1.2f, 1.0f);
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         target.hurt(DamageSource.playerAttack(player), STAB_DAMAGE);
                     } else {
                         target.hurt(DamageSource.mobAttack(user), STAB_DAMAGE);
@@ -3641,7 +3959,7 @@ public class FormUtils {
         private final Vec3 startPos;
         private final Vec3 direction;
 
-        public CoilChokeForm(LivingEntity user, BreathingForms form) {
+        public CoilChokeForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             this.target = getLookedAtEntity(user, 10.0);
             this.startPos = user.position();
@@ -3698,7 +4016,7 @@ public class FormUtils {
             } else {
                 // --- UNTARGETED "COILING SERPENT DASH" (With Smooth Movement) ---
                 double progress = (double) ticksActive / DURATION;
-                double nextProgress = Math.min((double)(ticksActive + 1) / DURATION, 1.0);
+                double nextProgress = Math.min((double) (ticksActive + 1) / DURATION, 1.0);
 
                 // --- 2. Hybrid Movement Logic (Same pattern as ShiftingFlowSlash) ---
                 // Calculate IDEAL position for CURRENT tick
@@ -3727,7 +4045,7 @@ public class FormUtils {
 
             // --- Shared Damage and Visuals (Unchanged) ---
             if (ticksActive % DAMAGE_TICK_RATE == 0) {
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), 3.0, DAMAGE_PER_PULSE, 0.2f, DamageSource.playerAttack(player));
                 } else {
                     dealAOEDamage(user, user.position(), 3.0, DAMAGE_PER_PULSE, 0.2f, DamageSource.mobAttack(user));
@@ -3757,7 +4075,7 @@ public class FormUtils {
         private final Vec3 direction;
         private float currentAngle;
 
-        public SlitheringSerpentForm(LivingEntity user, BreathingForms form) {
+        public SlitheringSerpentForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             this.startPos = user.position();
             this.direction = user.getLookAngle();
@@ -3777,7 +4095,7 @@ public class FormUtils {
             Vec3 currentCurvePos = forwardPos.add(offset);
             user.setPos(currentCurvePos.x, currentCurvePos.y, currentCurvePos.z);
 
-            double nextProgress = Math.min((double)(ticksActive + 1) / DURATION, 1.0);
+            double nextProgress = Math.min((double) (ticksActive + 1) / DURATION, 1.0);
             Vec3 nextForwardPos = this.startPos.add(this.direction.scale(nextProgress * DASH_DISTANCE));
             double nextCoilRadius = COIL_START_RADIUS * (1.0 - nextProgress);
             double nextAngleRad = Math.toRadians(this.currentAngle + COIL_ROTATION_SPEED);
@@ -3789,7 +4107,7 @@ public class FormUtils {
             user.hurtMarked = true;
 //            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
 
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, player.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.playerAttack(player));
             } else {
                 dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.mobAttack(user));
@@ -3801,11 +4119,907 @@ public class FormUtils {
         }
     }
 
+
+    // -- MOON FORMS --
+    public static class PearlFlowerMoongazingForm extends TimedForm {
+        // --- CONSTANTS FOR TIMING ---
+        private static final int X_SLASH_TICK = 3;
+        private static final int H_SLASH_TICK = 7;
+        private static final float SLASH_DAMAGE = 12.0f;
+
+        private static final DustParticleOptions PEARL_WHITE = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 1.0f), 1.0f);
+        private static final ParticleOptions SILVER_SPARKLE = ParticleTypes.END_ROD;
+
+        public PearlFlowerMoongazingForm(LivingEntity user, IForm form) {
+            super(user, form, H_SLASH_TICK + 5);
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_CHIME, SoundSource.PLAYERS, 1.5f, 2.0f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            if (this.ticksActive == X_SLASH_TICK) {
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 1.9f);
+
+                dealDirectionalDamage(user, 5.0, SLASH_DAMAGE, 0.6);
+                spawnParticleArc(user, PEARL_WHITE, 3.5, 120, 30, 45.0f);
+                dealDirectionalDamage(user, 5.0, SLASH_DAMAGE, 0.6);
+                spawnParticleArc(user, PEARL_WHITE, 3.5, 120, 30, -45.0f);
+            }
+
+            if (this.ticksActive == H_SLASH_TICK) {
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.9f, 1.8f);
+
+                dealDirectionalDamage(user, 5.0, SLASH_DAMAGE, 0.6);
+                spawnParticleArc(user, SILVER_SPARKLE, 3.8, 160, 40, 90.0f);
+            }
+        }
+    }
+
+    public static class CalamitousEddyForm extends TimedForm {
+        private static final int DURATION = 80;
+        private static final double VORTEX_RADIUS = 7.0;
+        private static final float DAMAGE_PER_TICK = 2.0f;
+        private static final double PULL_STRENGTH = 0.07;
+
+        private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+
+        public CalamitousEddyForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            applyImmobility(user, DURATION + 5);
+            level.playSound(null, user.blockPosition(), SoundEvents.CONDUIT_AMBIENT, SoundSource.PLAYERS, 1.5f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            AABB vortexBox = user.getBoundingBox().inflate(VORTEX_RADIUS);
+            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, vortexBox, e -> e != user && e.isAlive());
+
+            for (LivingEntity target : targets) {
+                if (ticksActive % 5 == 0) {
+                    if (user instanceof Player player) {
+                        target.hurt(DamageSource.playerAttack(player), DAMAGE_PER_TICK);
+                    } else {
+                        target.hurt(DamageSource.mobAttack(user), DAMAGE_PER_TICK);
+                    }
+                }
+                Vec3 pushVector = target.position().subtract(user.position()).normalize().scale(PULL_STRENGTH);
+                target.setDeltaMovement(target.getDeltaMovement().add(pushVector));
+            }
+            float rotation1 = (float) (ticksActive * 12);
+            float rotation2 = (float) (ticksActive * -15);
+            float rotation3 = (float) (ticksActive * 9);
+
+            spawnParticleArcInWorld(level, user.position().add(0, 1.2, 0), VORTEX_RADIUS, 360, 20, rotation1, 0, PURPLE_SLASH);
+            spawnParticleArcInWorld(level, user.position().add(0, 1.2, 0), VORTEX_RADIUS, 360, 20, rotation2, 45, PURPLE_SLASH);
+            spawnParticleArcInWorld(level, user.position().add(0, 1.2, 0), VORTEX_RADIUS, 360, 20, rotation3, -45, PURPLE_SLASH);
+        }
+
+        @Override
+        protected void onStop() {
+            removeImmobility(user);
+            level.playSound(null, user.blockPosition(), SoundEvents.CONDUIT_DEACTIVATE, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
+    }
+
+    public static class PerpetualNightForm extends TimedForm {
+        private static final int DURATION = 100;
+        private static final double MAX_RANGE = 20.0;
+        private static final double STORM_RADIUS = 5.0;
+        private static final float DAMAGE_PER_TICK = 4.0f;
+
+        private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+        private static final ParticleOptions SILVER_SPARKLE = ParticleTypes.CRIT;
+
+        private final Vec3 stormCenter;
+
+        public PerpetualNightForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+
+            BlockHitResult hitResult = (BlockHitResult) user.pick(MAX_RANGE, 0, false);
+            if (hitResult.getType() == HitResult.Type.MISS) {
+                Vec3 endPoint = user.getEyePosition().add(user.getLookAngle().scale(MAX_RANGE));
+                this.stormCenter = Vec3.atBottomCenterOf(level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(endPoint)));
+            } else {
+                this.stormCenter = Vec3.atCenterOf(hitResult.getBlockPos());
+            }
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, this.stormCenter.x, this.stormCenter.y, this.stormCenter.z, SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.0f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            if (ticksActive % 8 == 0) {
+                dealAOEDamage(user, this.stormCenter, STORM_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.mobAttack(user));
+                level.playSound(null, this.stormCenter.x, this.stormCenter.y, this.stormCenter.z, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 2.0f);
+            }
+
+            spawnCycloneParticles(level, PURPLE_SLASH, SILVER_SPARKLE, this.stormCenter.add(0, 1, 0), STORM_RADIUS, 4.0, 10, ticksActive);
+
+            if (ticksActive % 3 == 0) {
+                Vec3 randomCenter = this.stormCenter.add(
+                        (level.random.nextDouble() - 0.5) * STORM_RADIUS * 2,
+                        level.random.nextDouble() * 4.0,
+                        (level.random.nextDouble() - 0.5) * STORM_RADIUS * 2
+                );
+                float randomYaw = level.random.nextFloat() * 360;
+                float randomPitch = -90 + level.random.nextFloat() * 180;
+
+                spawnParticleArcInWorld(level, randomCenter, 2.5, 140, 15, randomYaw, randomPitch, PURPLE_SLASH);
+            }
+        }
+    }
+
+    public static class MirrorOfMisfortuneForm extends TimedForm {
+        private static final int DURATION = 40;
+        private static final double MAX_RANGE = 30.0;
+        private static final double START_WIDTH = 4.0;
+        private static final double END_WIDTH = 14.0;
+
+        private static final float BASE_DAMAGE_PER_TICK = 1.5f;
+        private static final float DAMAGE_RAMP_PER_TICK = 0.1f;
+        private static final double PUSH_SPEED = MAX_RANGE / DURATION;
+
+        private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.2f);
+        private final Vec3 direction;
+
+        public MirrorOfMisfortuneForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            this.direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SHOOT, SoundSource.PLAYERS, 1.2f, 0.9f);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 0.7f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            double progress = (double) this.ticksActive / DURATION;
+            double currentDistance = MAX_RANGE * progress;
+            double currentWidth = Mth.lerp(progress, START_WIDTH, END_WIDTH);
+            Vec3 waveCenter = user.position().add(this.direction.scale(currentDistance));
+
+            AABB damageBox = new AABB(waveCenter, waveCenter).inflate(currentWidth, 3.0, currentWidth);
+            List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, damageBox, e -> e != user && e.isAlive());
+
+            float currentDamage = BASE_DAMAGE_PER_TICK + (this.ticksActive * DAMAGE_RAMP_PER_TICK);
+
+            for (LivingEntity target : potentialTargets) {
+                if (user instanceof Player player) {
+                    target.hurt(DamageSource.playerAttack(player), currentDamage);
+                } else {
+                    target.hurt(DamageSource.mobAttack(user), currentDamage);
+                }
+
+                Vec3 pushVector = this.direction.scale(PUSH_SPEED);
+                target.setDeltaMovement(pushVector.x, 0.1, pushVector.z);
+                target.hurtMarked = true;
+            }
+
+            spawnParticleArcInWorld(level, waveCenter.add(0, 1.5, 0), currentWidth, 120, (int) (currentWidth * 5), user.getYRot(), 0, PURPLE_SLASH);
+            for (int i = 0; i < 3; i++) {
+                Vec3 randomPos = waveCenter.add(
+                        (level.random.nextDouble() - 0.5) * currentWidth * 2,
+                        (level.random.nextDouble() - 0.5) * 3.0,
+                        (level.random.nextDouble() - 0.5) * currentWidth * 2
+                );
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK, randomPos.x, randomPos.y, randomPos.z, 1, 0, 0, 0, 0);
+            }
+        }
+    }
+
+    public static class MoonDragonRingtailForm extends TimedForm {
+        private static final int DURATION = 40;
+        private static final double MAX_RANGE = 35.0;
+        private static final double SLASH_WIDTH = 4.0;
+        private static final float DAMAGE = 45.0f;
+        private static final float KNOCKBACK = 1.2f;
+
+        private static final double WEAVE_AMPLITUDE = 6.0;
+        private static final double WEAVE_FREQUENCY = 1.5;
+
+        private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.5f);
+
+        private final Vec3 startPos;
+        private final Vec3 direction;
+        private final Vec3 sideVector;
+        private final Set<UUID> hitEntities = new HashSet<>();
+
+        public MoonDragonRingtailForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            this.startPos = user.position();
+            this.direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
+            this.sideVector = this.direction.cross(new Vec3(0, 1, 0)).normalize();
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_HURT, SoundSource.PLAYERS, 1.5f, 1.0f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            double progress = (double) this.ticksActive / DURATION;
+            Vec3 forwardPoint = this.startPos.add(this.direction.scale(progress * MAX_RANGE));
+
+            double weaveOffset = Math.sin(progress * Math.PI * WEAVE_FREQUENCY) * WEAVE_AMPLITUDE;
+            Vec3 slashCenter = forwardPoint.add(this.sideVector.scale(weaveOffset));
+
+            AABB damageBox = new AABB(slashCenter, slashCenter).inflate(SLASH_WIDTH, SLASH_WIDTH, SLASH_WIDTH);
+            List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, damageBox,
+                    e -> e != user && e.isAlive() && !this.hitEntities.contains(e.getUUID()));
+
+            for (LivingEntity target : potentialTargets) {
+                if (user instanceof Player player) {
+                    target.hurt(DamageSource.playerAttack(player), DAMAGE);
+                } else {
+                    target.hurt(DamageSource.mobAttack(user), DAMAGE);
+                }
+                target.knockback(KNOCKBACK, -direction.x, -direction.z);
+                this.hitEntities.add(target.getUUID());
+            }
+            spawnParticleArcInWorld(level, slashCenter.add(0, 2.0, 0), 4.0, 180, 40, user.getYRot(), 90, PURPLE_SLASH);
+        }
+    }
+
+    public static class WaningMoonswathsForm extends TimedForm {
+        private static final int NUMBER_OF_STRIKES = 5;
+        private static final int TICKS_PER_STRIKE = 6;
+        private static final float DAMAGE = 16.0f;
+        private static final double DISTANCE_FROM_TARGET = 3.5;
+        private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+
+        @Nullable
+        private final LivingEntity target;
+
+        public WaningMoonswathsForm(LivingEntity user, IForm form) {
+            super(user, form, NUMBER_OF_STRIKES * TICKS_PER_STRIKE);
+            this.target = getLookedAtEntity(user, 20.0);
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.ENDERMAN_TELEPORT, SoundSource.PLAYERS, 1.0f, 1.8f);
+        }
+
+        @Override
+        public void onTick() {
+            super.onTick();
+
+            if (ticksActive > 0 && ticksActive % TICKS_PER_STRIKE == 0) {
+                Vec3 teleportDestination;
+                Vec3 startPos = user.position();
+
+                if (this.target != null && this.target.isAlive() && this.target.distanceTo(user) < 32.0) {
+                    Vec3 randomDir = new Vec3(level.random.nextGaussian(), level.random.nextGaussian(), level.random.nextGaussian()).normalize();
+                    teleportDestination = target.getEyePosition().add(randomDir.scale(DISTANCE_FROM_TARGET));
+
+                } else {
+                    Vec3 forwardDir = user.getLookAngle();
+                    Vec3 randomOffset = new Vec3(level.random.nextDouble() - 0.5, level.random.nextDouble() - 0.5, level.random.nextDouble() - 0.5).normalize().scale(2.0);
+                    Vec3 randomDir = forwardDir.add(randomOffset).normalize();
+                    teleportDestination = user.position().add(randomDir.scale(DISTANCE_FROM_TARGET * 1.5));
+                }
+
+                level.sendParticles(ParticleTypes.PORTAL, startPos.x, startPos.y + 1, startPos.z, 40, 0.5, 0.5, 0.5, 0.5);
+
+                BlockPos teleportPosBlock = new BlockPos(teleportDestination);
+                if (!level.getBlockState(teleportPosBlock).isAir() || !level.getBlockState(teleportPosBlock.above()).isAir()) {
+                    teleportDestination = Vec3.atBottomCenterOf(level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, teleportPosBlock));
+                }
+                user.teleportTo(teleportDestination.x, teleportDestination.y, teleportDestination.z);
+
+                if (this.target != null && this.target.isAlive()) {
+                    user.lookAt(EntityAnchorArgument.Anchor.EYES, this.target.getEyePosition());
+                }
+
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.8f);
+                dealDirectionalDamage(user, 5.0, DAMAGE, 0.8);
+                spawnParticleArc(user, PURPLE_SLASH, 4.0, 140, 30);
+            }
+        }
+    }
+
+    public static class DrillingSlashesForm extends TimedForm {
+        private static final int DURATION = 30;
+        private static final double MAX_RANGE = 30.0;
+        private static final double SAW_RADIUS = 2.0;
+        private static final float DAMAGE_PER_TICK = 5.0f;
+        private static final double SPREAD = 2.5;
+
+        private static final DustParticleOptions PURPLE_SAW = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+
+        private final Vec3 startPos;
+        private final Vec3 direction;
+        private final Vec3 sideVector;
+        private final Set<UUID> hitEntitiesThisTick = new HashSet<>();
+
+        public DrillingSlashesForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            this.startPos = user.getEyePosition();
+            this.direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
+            this.sideVector = this.direction.cross(new Vec3(0, 1, 0)).normalize();
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.PLAYERS, 1.5f, 0.8f);
+            level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_2, SoundSource.PLAYERS, 1.0f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+            this.hitEntitiesThisTick.clear();
+
+            double progress = (double) this.ticksActive / DURATION;
+            double currentDistance = MAX_RANGE * progress;
+            Vec3 forwardPoint = this.startPos.add(this.direction.scale(currentDistance));
+
+            Vec3 centerSawPos = forwardPoint;
+            Vec3 leftSawPos = forwardPoint.add(this.sideVector.scale(SPREAD));
+            Vec3 rightSawPos = forwardPoint.add(this.sideVector.scale(-SPREAD));
+
+            processSaw(centerSawPos, this.ticksActive * 20);
+            processSaw(leftSawPos, this.ticksActive * 20 + 120);
+            processSaw(rightSawPos, this.ticksActive * 20 - 120);
+        }
+
+        private void processSaw(Vec3 center, float rotation) {
+            AABB damageBox = new AABB(center, center).inflate(SAW_RADIUS);
+            List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, damageBox,
+                    e -> e != user && e.isAlive() && !this.hitEntitiesThisTick.contains(e.getUUID()));
+
+            for (LivingEntity target : potentialTargets) {
+                if (user instanceof Player player) {
+                    target.hurt(DamageSource.playerAttack(player), DAMAGE_PER_TICK);
+                } else {
+                    target.hurt(DamageSource.mobAttack(user), DAMAGE_PER_TICK);
+                }
+                this.hitEntitiesThisTick.add(target.getUUID());
+            }
+            spawnParticleArcInWorld(level, center, SAW_RADIUS, 360, 20, user.getYRot(), 90, PURPLE_SAW);
+            spawnParticleArcInWorld(level, center, SAW_RADIUS, 360, 10, user.getYRot(), 90, ParticleTypes.CRIT);
+        }
+    }
+
+    public static class CatastropheForm extends TimedForm {
+        private static final int DURATION = 30;
+        private static final double MAX_RADIUS = 20.0;
+        private static final float DAMAGE = 40.0f;
+        private static final float KNOCKBACK = 2.0f;
+
+        private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.5f);
+        private final Set<UUID> hitEntities = new HashSet<>();
+
+        public CatastropheForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 1.5f, 1.0f);
+            level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.8f);
+            applyImmobility(user, 10);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            double progress = (double) this.ticksActive / DURATION;
+            double currentRadius = MAX_RADIUS * progress;
+            double previousRadius = MAX_RADIUS * ((double) (this.ticksActive - 1) / DURATION);
+
+            AABB searchBox = user.getBoundingBox().inflate(currentRadius);
+            List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, searchBox,
+                    e -> e != user && e.isAlive() && !this.hitEntities.contains(e.getUUID()));
+
+            for (LivingEntity target : potentialTargets) {
+                double distanceToUser = target.distanceTo(user);
+                if (distanceToUser <= currentRadius && distanceToUser > previousRadius) {
+                    if (user instanceof Player player) {
+                        target.hurt(DamageSource.playerAttack(player).setExplosion(), DAMAGE);
+                    } else {
+                        target.hurt(DamageSource.mobAttack(user).setExplosion(), DAMAGE);
+                    }
+
+                    Vec3 knockbackDir = target.position().subtract(user.position()).normalize();
+                    target.knockback(KNOCKBACK, knockbackDir.x, knockbackDir.z);
+                    this.hitEntities.add(target.getUUID());
+                }
+            }
+
+            for (int i = 0; i < 20; i++) {
+                Vec3 randomDir = new Vec3(level.random.nextGaussian(), level.random.nextGaussian(), level.random.nextGaussian()).normalize();
+                Vec3 particlePos = user.position().add(randomDir.scale(currentRadius));
+
+                float randomYaw = level.random.nextFloat() * 360;
+                float randomPitch = -90 + level.random.nextFloat() * 180;
+                spawnParticleArcInWorld(level, particlePos, 1.5 + progress * 2.0, 120, 10, randomYaw, randomPitch, PURPLE_SLASH);
+            }
+        }
+    }
+
+    public static class MoonbowForm extends TimedForm {
+        private static final int TELEGRAPH_DURATION = 30;
+        private static final int DESCENT_DURATION = 20;
+        private static final double MAX_RANGE = 40.0;
+        private static final double BOMBARDMENT_RADIUS = 10.0;
+        private static final double IMPACT_RADIUS = 3.5;
+        private static final float DAMAGE = 45.0f;
+        private static final float KNOCKBACK = 2.5f;
+
+        private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 2.0f);
+
+        private final List<Vec3> impactPoints = new ArrayList<>();
+        private boolean impactsTriggered = false;
+
+        public MoonbowForm(LivingEntity user, IForm form) {
+            super(user, form, TELEGRAPH_DURATION + DESCENT_DURATION);
+            BlockHitResult hitResult = (BlockHitResult) user.pick(MAX_RANGE, 0, false);
+            Vec3 centerPoint;
+            if (hitResult.getType() == HitResult.Type.MISS) {
+                Vec3 endPoint = user.getEyePosition().add(user.getLookAngle().scale(MAX_RANGE));
+                centerPoint = Vec3.atBottomCenterOf(level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(endPoint)));
+            } else {
+                centerPoint = Vec3.atCenterOf(hitResult.getBlockPos());
+            }
+
+            for (int i = 0; i < 6; i++) {
+                double angle = (2 * Math.PI / 6) * i;
+                double distance = BOMBARDMENT_RADIUS * (0.5 + level.random.nextDouble() * 0.5);
+                Vec3 offset = new Vec3(Math.cos(angle) * distance, 0, Math.sin(angle) * distance);
+                impactPoints.add(Vec3.atBottomCenterOf(level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(centerPoint.add(offset)))));
+            }
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+            int currentTick = this.ticksActive;
+
+            if (currentTick <= TELEGRAPH_DURATION + DESCENT_DURATION) {
+                for (Vec3 impactPoint : this.impactPoints) {
+                    if (currentTick <= TELEGRAPH_DURATION) {
+                        spawnParticleArcInWorld(level, impactPoint.add(0, 0.2, 0), IMPACT_RADIUS, 360, 10, 0, 90, ParticleTypes.SOUL_FIRE_FLAME);
+                    }
+
+                    if (currentTick > TELEGRAPH_DURATION) {
+                        double descentProgress = (double) (currentTick - TELEGRAPH_DURATION) / DESCENT_DURATION;
+                        Vec3 skyPos = impactPoint.add(0, 25, 0);
+
+                        Vec3 particlePos = skyPos.lerp(impactPoint, descentProgress);
+                        level.sendParticles(PURPLE_SLASH, particlePos.x, particlePos.y, particlePos.z, 3, 0.1, 0.1, 0.1, 0.0);
+                    }
+                }
+            }
+
+            if (currentTick == TELEGRAPH_DURATION + DESCENT_DURATION && !this.impactsTriggered) {
+                this.impactsTriggered = true;
+
+                for (Vec3 impactPoint : this.impactPoints) {
+                    level.playSound(null, impactPoint.x, impactPoint.y, impactPoint.z, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 2.0f, 0.8f);
+
+                    level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impactPoint.x, impactPoint.y, impactPoint.z, 1, 0, 0, 0, 0);
+                    dealAOEDamage(user, impactPoint, IMPACT_RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user).setExplosion());
+                    destroyBlocksInRadius(level, new BlockPos(impactPoint), IMPACT_RADIUS, 4, false, user);
+                }
+            }
+        }
+    }
+
+    // -- Beast Breathing --
+    public static class SliceNDiceForm extends TimedForm {
+        private static final int NUMBER_OF_HITS = 4;
+        private static final int TICKS_PER_HIT = 6; // A very fast combo
+        private static final float DAMAGE_PER_HIT = 9.0f;
+        private static final double ADVANCE_SPEED = 0.6;
+
+        public SliceNDiceForm(LivingEntity user, IForm form) {
+            super(user, form, NUMBER_OF_HITS * TICKS_PER_HIT);
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.HOGLIN_ANGRY, SoundSource.PLAYERS, 1.0f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            if (ticksActive > 0 && ticksActive % TICKS_PER_HIT == 0) {
+                Vec3 forward = user.getLookAngle().scale(ADVANCE_SPEED);
+                user.setDeltaMovement(forward.x, 0, forward.z);
+                user.hurtMarked = true;
+
+                performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.5f);
+
+                dealDirectionalDamage(user, 5.0, DAMAGE_PER_HIT, 0.7);
+
+                float roll = (ticksActive / TICKS_PER_HIT) % 2 == 0 ? 45.0f : -45.0f;
+
+                spawnParticleArc(user, ParticleTypes.CRIT, 3.0, 140, 20, roll);
+                Vec3 sideOffset = user.getLookAngle().cross(new Vec3(0, 1, 0)).normalize().scale(0.5);
+                spawnParticleArcInWorld(level, user.getEyePosition().add(sideOffset), 3.0, 140, 20, user.getYRot(), user.getXRot() - roll, ParticleTypes.CRIT);
+            }
+        }
+    }
+
+    public static class CrazyCuttingForm extends TimedForm {
+        private static final int DURATION = 30;
+        private static final double AOE_RADIUS = 4.5;
+        private static final float DAMAGE_PER_TICK = 3.0f;
+        private static final float KNOCKBACK = 0.4f;
+
+        public CrazyCuttingForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS, 1.0f, 1.4f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            user.setDeltaMovement(user.getDeltaMovement().multiply(1.0, 0.0, 1.0));
+            user.hurtMarked = true;
+
+            if (ticksActive % 3 == 0) {
+                dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, KNOCKBACK, DamageSource.mobAttack(user));
+            }
+
+            if (ticksActive % 2 == 0) {
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 1.8f);
+
+                float randomYaw = level.random.nextFloat() * 360;
+                float randomPitch = -90 + level.random.nextFloat() * 180;
+
+                spawnParticleArcInWorld(level, user.getEyePosition(), AOE_RADIUS * 0.8, 140, 15, randomYaw, randomPitch, ParticleTypes.CRIT);
+            }
+        }
+    }
+
+    public static class PalisadeBiteForm extends TimedForm {
+        private static final int DURATION = 12;
+        private static final double ATTACK_RANGE = 10.0;
+        private static final double BITE_WIDTH = 3.0;
+        private static final float DAMAGE_PER_TICK = 4.0f;
+
+        private final Vec3 targetPoint;
+
+        public PalisadeBiteForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            LivingEntity targetEntity = getLookedAtEntity(user, ATTACK_RANGE);
+
+            if (targetEntity != null) {
+                this.targetPoint = targetEntity.getEyePosition();
+            } else {
+                this.targetPoint = user.getEyePosition().add(user.getLookAngle().scale(ATTACK_RANGE));
+            }
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.PISTON_CONTRACT, SoundSource.PLAYERS, 1.0f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            double progress = (double) this.ticksActive / DURATION;
+            double currentWidth = BITE_WIDTH * (1.0 - progress);
+
+            Vec3 sideDir = user.getLookAngle().cross(new Vec3(0, 1, 0)).normalize();
+
+            Vec3 leftSlashPos = this.targetPoint.add(sideDir.scale(currentWidth));
+            Vec3 rightSlashPos = this.targetPoint.add(sideDir.scale(-currentWidth));
+
+            level.sendParticles(ParticleTypes.CRIT, leftSlashPos.x, leftSlashPos.y, leftSlashPos.z, 5, 0.1, 0.1, 0.1, 0.1);
+            level.sendParticles(ParticleTypes.CRIT, rightSlashPos.x, rightSlashPos.y, rightSlashPos.z, 5, 0.1, 0.1, 0.1, 0.1);
+
+            AABB biteZone = new AABB(leftSlashPos, rightSlashPos).inflate(1.5);
+            List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, biteZone, e -> e != user && e.isAlive());
+
+            for (LivingEntity hitTarget : hitTargets) {
+                if (user instanceof ServerPlayer player) {
+                    hitTarget.hurt(DamageSource.playerAttack(player), DAMAGE_PER_TICK);
+                } else {
+                    hitTarget.hurt(DamageSource.mobAttack(user), DAMAGE_PER_TICK);
+                }
+            }
+        }
+    }
+
+    public static class SpatialAwarenessForm extends ActiveForm {
+        private static final double SENSE_RADIUS = 128.0;
+        private static final int RESCAN_INTERVAL = 20; // Rescans every second
+
+        private Set<LivingEntity> currentTargets;
+        private int rescanTimer = 0;
+
+        public SpatialAwarenessForm(LivingEntity user, IForm form) {
+            super(user, form);
+            this.currentTargets = new HashSet<>();
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            if (!level.isClientSide && user instanceof ServerPlayer player) {
+                level.playSound(null, user.blockPosition(), SoundEvents.HOGLIN_ANGRY, SoundSource.PLAYERS, 1.0f, 1.0f);
+                updateTargets(player);
+            }
+        }
+
+        @Override
+        protected void onStop() {
+            if (!level.isClientSide && user instanceof ServerPlayer player) {
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_BREATH, SoundSource.PLAYERS, 1.0f, 1.0f);
+                if (this.currentTargets != null) {
+                    for (LivingEntity target : this.currentTargets) {
+                        if (target.isAlive()) {
+                            target.getCapability(GlowCapabilityProvider.GLOW_CAPABILITY).ifPresent(cap -> {
+                                if (cap.hasExclusiveViewer() && cap.getExclusiveViewer().equals(player.getUUID())) {
+                                    cap.clear();
+                                    ModMessages.sendToClients(new UpdateGlowDataPacket(target.getId(), "", false, null));
+                                }
+                            });
+                        }
+                    }
+                }
+            }
+        }
+
+        @Override
+        protected void onTick() {
+            if (level.isClientSide || !(user instanceof ServerPlayer player)) {
+                return;
+            }
+
+            rescanTimer++;
+            if (rescanTimer >= RESCAN_INTERVAL) {
+                rescanTimer = 0;
+                updateTargets(player);
+            }
+        }
+
+        private void updateTargets(ServerPlayer player) {
+            Set<LivingEntity> newTargets = new HashSet<>(level.getEntitiesOfClass(LivingEntity.class,
+                    player.getBoundingBox().inflate(SENSE_RADIUS),
+                    entity -> entity != player && entity.isAlive()));
+
+            Set<LivingEntity> targetsToAdd = new HashSet<>(newTargets);
+            targetsToAdd.removeAll(this.currentTargets);
+
+            String glowColor = "#A52A2A";
+            for (LivingEntity target : targetsToAdd) {
+                target.getCapability(GlowCapabilityProvider.GLOW_CAPABILITY).ifPresent(cap -> {
+                    cap.setGlowColor(glowColor);
+                    cap.setExclusiveViewer(player.getUUID());
+                    cap.setGlowing(true);
+                    ModMessages.sendToClients(new UpdateGlowDataPacket(target.getId(), glowColor, true, player.getUUID()));
+                });
+            }
+
+            Set<LivingEntity> targetsToRemove = new HashSet<>(this.currentTargets);
+            targetsToRemove.removeAll(newTargets);
+
+            for (LivingEntity target : targetsToRemove) {
+                if (target.isAlive()) {
+                    target.getCapability(GlowCapabilityProvider.GLOW_CAPABILITY).ifPresent(cap -> {
+                        if (cap.hasExclusiveViewer() && cap.getExclusiveViewer().equals(player.getUUID())) {
+                            cap.clear();
+                            ModMessages.sendToClients(new UpdateGlowDataPacket(target.getId(), "", false, null));
+                        }
+                    });
+                }
+            }
+            this.currentTargets = newTargets;
+        }
+    }
+
+    public static class ExplosiveRushForm extends TimedForm {
+        private static final int DURATION = 20;
+        private static final double DASH_SPEED = 2.5;
+        private static final float DAMAGE_PER_TICK = 3.0f;
+        private static final double DAMAGE_RADIUS = 2.5;
+
+        private final Vec3 direction;
+
+        public ExplosiveRushForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            this.direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.RAVAGER_ATTACK, SoundSource.PLAYERS, 1.2f, 1.0f);
+            user.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION + 5, 4, false, false, true));
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            user.setDeltaMovement(this.direction.scale(DASH_SPEED));
+            user.hurtMarked = true;
+
+            if (user instanceof ServerPlayer player) {
+                dealAOEDamage(player, player.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.playerAttack(player));
+            } else {
+                dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.mobAttack(user));
+            }
+
+            level.sendParticles(ParticleTypes.POOF, user.getX(), user.getY() + 1, user.getZ(), 5, 0.5, 0.5, 0.5, 0.1);
+            level.sendParticles(ParticleTypes.CRIT, user.getX(), user.getY() + 1, user.getZ(), 10, 0.5, 0.5, 0.5, 0.2);
+
+        }
+
+        @Override
+        protected void onStop() {
+            user.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+        }
+    }
+
+    public static class ExtendingBendySlashForm extends ChargeableForm {
+        private static final int WIND_UP_DURATION = 10;
+        private static final double ATTACK_RANGE = 9.0;
+        private static final float DAMAGE = 28.0f;
+
+        public ExtendingBendySlashForm(LivingEntity user, IForm form) {
+            super(user, form);
+            this.chargeGoal = WIND_UP_DURATION;
+        }
+
+        @Override
+        protected void onChargeStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.SKELETON_HURT, SoundSource.PLAYERS, 1.0f, 0.8f);
+        }
+
+        @Override
+        protected void onChargingTick() {
+            level.sendParticles(ParticleTypes.CRIT, user.getRandomX(0.8), user.getRandomY(), user.getRandomZ(0.8), 5, 0.1, 0.1, 0.1, 0.1);
+        }
+
+        @Override
+        protected void onChargeRelease(boolean fullyCharged) {
+            if (fullyCharged) {
+                performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.5f, 1.8f);
+                dealDirectionalDamage(user, ATTACK_RANGE, DAMAGE, 0.85);
+                spawnParticleArc(user, ParticleTypes.CRIT, ATTACK_RANGE, 90, 40);
+            }
+            ActiveFormManager.stop(user);
+        }
+
+        @Override
+        protected void onReleaseTick() {
+        }
+
+        @Override
+        protected void onChargeEnd() {
+        }
+    }
+
+    public static class WhirlingFangsForm extends ActiveForm {
+        private static final double DEFENSE_RADIUS = 3.0;
+        private static final float DAMAGE_PER_TICK = 2.5f;
+        private static final int BREATH_COST_PER_TICK = 1;
+
+        private float rotationAngle = 0;
+
+        public WhirlingFangsForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return true;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.GRINDSTONE_USE, SoundSource.PLAYERS, 1.0f, 1.5f);
+        }
+
+        @Override
+        protected void onTick() {
+            if (ticksActive % 4 == 0) {
+                user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
+                    if (breath.getBreath() >= BREATH_COST_PER_TICK) {
+                        breath.subBreath(BREATH_COST_PER_TICK);
+                    } else {
+                        ActiveFormManager.stop(user);
+                    }
+                });
+            }
+
+            AABB defenseBox = user.getBoundingBox().inflate(DEFENSE_RADIUS);
+            List<Projectile> projectiles = level.getEntitiesOfClass(Projectile.class, defenseBox,
+                    p -> p.getOwner() != user && !(p.getOwner() instanceof TamableAnimal tamable && tamable.getOwner() == user));
+
+            for (Projectile projectile : projectiles) {
+                level.playSound(null, projectile.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 2.0f);
+                level.sendParticles(ParticleTypes.CRIT, projectile.getX(), projectile.getY(), projectile.getZ(), 15, 0.2, 0.2, 0.2, 0.5);
+                projectile.discard();
+            }
+
+            if (ticksActive % 5 == 0) {
+                if (user instanceof ServerPlayer player) {
+                    dealAOEDamage(player, player.position(), DEFENSE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.playerAttack(player));
+                } else {
+                    dealAOEDamage(user, user.position(), DEFENSE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.mobAttack(user));
+                }
+            }
+
+            this.rotationAngle += 50.0f;
+            spawnParticleArcInWorld(level, user.getEyePosition(), DEFENSE_RADIUS - 0.5, 160, 10, this.rotationAngle, 0, ParticleTypes.SWEEP_ATTACK);
+            spawnParticleArcInWorld(level, user.getEyePosition(), DEFENSE_RADIUS - 0.5, 160, 10, -this.rotationAngle, 0, ParticleTypes.CRIT);
+        }
+    }
+
+
     // -- BDA, Rui ---
     public static class CuttingThreadCageForm extends TimedForm {
         private static final int DURATION = 5; // A very short form, as the cage does the work
 
-        public CuttingThreadCageForm(LivingEntity user, BreathingForms form) {
+        public CuttingThreadCageForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -3843,7 +5057,7 @@ public class FormUtils {
     }
 
     public static class CuttingThreadRotationForm extends TimedForm {
-        public CuttingThreadRotationForm(LivingEntity user, BreathingForms form) {
+        public CuttingThreadRotationForm(LivingEntity user, IForm form) {
             super(user, form, 5);
         }
 
@@ -3870,7 +5084,7 @@ public class FormUtils {
     }
 
     public static class MurderousEyeBasketForm extends ActiveForm {
-        private enum Phase { FORMATION, TRAPPED, CONTRACTION }
+        private enum Phase {FORMATION, TRAPPED, CONTRACTION}
 
         // --- Constants ---
         private static final int FORMATION_DURATION = 40; // 2 seconds to weave
@@ -3894,7 +5108,7 @@ public class FormUtils {
         private final AABB cageAABB;
 
 
-        public MurderousEyeBasketForm(LivingEntity user, BreathingForms form) {
+        public MurderousEyeBasketForm(LivingEntity user, IForm form) {
             super(user, form);
 
             Vec3 targetPos = null;
@@ -4017,7 +5231,7 @@ public class FormUtils {
                 AABB shrinkingAABB = new AABB(this.cageCenter, this.cageCenter).inflate(currentRadius, CAGE_HEIGHT, currentRadius);
                 List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, shrinkingAABB, e -> e != user && e.isAlive());
 
-                for(LivingEntity target : targets) {
+                for (LivingEntity target : targets) {
                     target.hurt(DamageSource.MAGIC, damage);
                 }
                 level.playSound(null, cageCenter.x, cageCenter.y, cageCenter.z, SoundEvents.GRINDSTONE_USE, SoundSource.PLAYERS, 1.0f, 1.0f + progress);
@@ -4048,7 +5262,7 @@ public class FormUtils {
         private static final int SLEEP_DURATION = 1200;
         private static final double MAX_RANGE = 16.0;
 
-        public WhispersHypnosisForm(LivingEntity user, BreathingForms form) {
+        public WhispersHypnosisForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
@@ -4086,18 +5300,21 @@ public class FormUtils {
         }
 
         @Override
-        protected void onTick() { }
+        protected void onTick() {
+        }
     }
 
     public static class EyesOfSleepForm extends ActiveForm {
         private static final double MAX_SPAWN_RANGE = 20.0;
 
-        public EyesOfSleepForm(LivingEntity user, BreathingForms form) {
+        public EyesOfSleepForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -4123,7 +5340,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onTick() {  }
+        protected void onTick() {
+        }
     }
 
     // -- BDA, Daki --
@@ -4137,7 +5355,7 @@ public class FormUtils {
         private static final DustParticleOptions OBI_PATTERN = new DustParticleOptions(new Vector3f(0.1f, 0.1f, 0.1f), 1.2f);
 
 
-        public EightLayeredObiSlashForm(LivingEntity user, BreathingForms form) {
+        public EightLayeredObiSlashForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_SLASHES * TICKS_BETWEEN_SLASHES);
         }
 
@@ -4180,7 +5398,7 @@ public class FormUtils {
         private static final int TICKS_BETWEEN_SICKLES = 3;
         private final LivingEntity target;
 
-        public FlyingBloodSicklesForm(LivingEntity user, BreathingForms form) {
+        public FlyingBloodSicklesForm(LivingEntity user, IForm form) {
             super(user, form, SICKLE_COUNT * TICKS_BETWEEN_SICKLES);
             this.target = getLookedAtEntity(user, 32.0);
         }
@@ -4220,7 +5438,7 @@ public class FormUtils {
 
         private float rotation = 0;
 
-        public RampantArcRampageParry(LivingEntity user, BreathingForms form) {
+        public RampantArcRampageParry(LivingEntity user, IForm form) {
             super(user, form, PARRY_WINDOW);
         }
 
@@ -4267,7 +5485,7 @@ public class FormUtils {
         private float rotation = 0;
         private final List<UUID> hitEntities = new ArrayList<>();
 
-        public RotatingCircularSlashesForm(LivingEntity user, BreathingForms form) {
+        public RotatingCircularSlashesForm(LivingEntity user, IForm form) {
             super(user, form, WAVE_DURATION);
         }
 
@@ -4322,7 +5540,7 @@ public class FormUtils {
         private static final int FISH_COUNT = 3;
         private static final double SPAWN_RADIUS = 3.0;
 
-        public ThousandNeedleFishKillForm(LivingEntity user, BreathingForms form) {
+        public ThousandNeedleFishKillForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
@@ -4354,12 +5572,14 @@ public class FormUtils {
     public static class WaterPrisonPotForm extends ActiveForm {
         private static final double MAX_RANGE = 25.0;
 
-        public WaterPrisonPotForm(LivingEntity user, BreathingForms form) {
+        public WaterPrisonPotForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -4380,19 +5600,23 @@ public class FormUtils {
             }
             ActiveFormManager.stop(user);
         }
+
         @Override
-        protected void onTick() { }
+        protected void onTick() {
+        }
     }
 
     public static class OctopusVaseHellForm extends ActiveForm {
         private static final double MAX_SPAWN_RANGE = 20.0;
 
-        public OctopusVaseHellForm(LivingEntity user, BreathingForms form) {
+        public OctopusVaseHellForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -4415,7 +5639,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onTick() { }
+        protected void onTick() {
+        }
     }
 
     public static class TenThousandFishBarrageForm extends ActiveForm {
@@ -4423,11 +5648,15 @@ public class FormUtils {
         private static final double RANGE = 25.0;
         private static final double IMPACT_RADIUS = 2.0;
 
-        public TenThousandFishBarrageForm(LivingEntity user, BreathingForms form) {
+        public TenThousandFishBarrageForm(LivingEntity user, IForm form) {
             super(user, form);
         }
+
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
+
         @Override
         protected void onStart() {
             Vec3 targetPoint;
@@ -4460,8 +5689,10 @@ public class FormUtils {
             }
             ActiveFormManager.stop(user);
         }
+
         @Override
-        protected void onTick() { }
+        protected void onTick() {
+        }
     }
 
     public static class KillerFishScalesForm extends TimedForm {
@@ -4477,7 +5708,7 @@ public class FormUtils {
         private int bouncesLeft;
         private int dashTicks;
 
-        public KillerFishScalesForm(LivingEntity user, BreathingForms form) {
+        public KillerFishScalesForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             this.bouncesLeft = MAX_BOUNCES;
             this.dashTicks = 0;
@@ -4517,7 +5748,7 @@ public class FormUtils {
                 user.teleportTo(this.currentTarget.getX(), this.currentTarget.getY(), this.currentTarget.getZ());
                 dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_HIT, 0.8f, DamageSource.mobAttack(user));
                 level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.8f);
-                level.sendParticles(ParticleTypes.EXPLOSION, user.getX(), user.getY(), user.getZ(), 1, 0,0,0,0);
+                level.sendParticles(ParticleTypes.EXPLOSION, user.getX(), user.getY(), user.getZ(), 1, 0, 0, 0, 0);
                 this.bouncesLeft--;
 
                 List<LivingEntity> potentialNextTargets = level.getEntitiesOfClass(LivingEntity.class,
@@ -4545,12 +5776,14 @@ public class FormUtils {
         private static final int SPEAR_COUNT = 6;
         private static final float SPREAD = 3.0f;
 
-        public WeepingSpearsForm(LivingEntity user, BreathingForms form) {
+        public WeepingSpearsForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -4569,7 +5802,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onTick() { }
+        protected void onTick() {
+        }
     }
 
     public static class CrazedCryOfThunderdeathForm extends ActiveForm {
@@ -4581,7 +5815,7 @@ public class FormUtils {
         private boolean soundWaveFired = false;
         private final Vec3 arenaCenter;
 
-        public CrazedCryOfThunderdeathForm(LivingEntity user, BreathingForms form) {
+        public CrazedCryOfThunderdeathForm(LivingEntity user, IForm form) {
             super(user, form);
             this.arenaCenter = user.position().add(user.getLookAngle().scale(ARENA_RADIUS));
         }
@@ -4617,11 +5851,11 @@ public class FormUtils {
             if (!soundWaveFired && ticksActive >= WIND_UP_TICKS) {
                 soundWaveFired = true;
                 level.playSound(null, arenaCenter.x, arenaCenter.y, arenaCenter.z, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.HOSTILE, 3.0f, 0.8f);
-                level.sendParticles(ParticleTypes.SONIC_BOOM, arenaCenter.x, arenaCenter.y, arenaCenter.z, 1, 0,0,0,0);
+                level.sendParticles(ParticleTypes.SONIC_BOOM, arenaCenter.x, arenaCenter.y, arenaCenter.z, 1, 0, 0, 0, 0);
 
                 List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, new AABB(arenaCenter, arenaCenter).inflate(ARENA_RADIUS));
-                for(LivingEntity target : targets) {
-                    if(target != user) {
+                for (LivingEntity target : targets) {
+                    if (target != user) {
                         target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 4));
                         target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 2));
                         target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 120, 0));
@@ -4642,7 +5876,7 @@ public class FormUtils {
                 }
             }
         }
-        
+
         @Override
         protected void onStop() {
             removeImmobility(user);
@@ -4655,7 +5889,7 @@ public class FormUtils {
         private static final double DAMAGE_RADIUS = 3.0;
         private static final float DAMAGE = 18.0f;
 
-        public CountlessStrikingTreesForm(LivingEntity user, BreathingForms form) {
+        public CountlessStrikingTreesForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
@@ -4674,7 +5908,7 @@ public class FormUtils {
                 Vec3 strikeTargetPos;
                 List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class,
                         user.getBoundingBox().inflate(AOE_RADIUS),
-                        e -> e != user && e.isAlive() && !(e instanceof Player && ((Player)e).isCreative()));
+                        e -> e != user && e.isAlive() && !(e instanceof Player && ((Player) e).isCreative()));
 
                 if (!potentialTargets.isEmpty()) {
                     LivingEntity randomTarget = potentialTargets.get(level.random.nextInt(potentialTargets.size()));
@@ -4702,7 +5936,7 @@ public class FormUtils {
                 double motionY = 0.5 + level.random.nextDouble() * 0.5;
                 level.sendParticles(woodParticle, position.x, position.y, position.z, 3, 0.8, 1.5, 0.8, motionY);
             }
-            level.sendParticles(ParticleTypes.EXPLOSION, position.x, position.y + 1.0, position.z, 1, 0,0,0,0);
+            level.sendParticles(ParticleTypes.EXPLOSION, position.x, position.y + 1.0, position.z, 1, 0, 0, 0, 0);
             dealAOEDamage(user, position, DAMAGE_RADIUS, DAMAGE, 1.5f, DamageSource.mobAttack(user));
         }
 
@@ -4716,12 +5950,14 @@ public class FormUtils {
         private static final double MAX_RANGE = 30.0;
         private static final int KNOCKOUT_DURATION = 140; // 7 seconds
 
-        public CompressedSoundWavesForm(LivingEntity user, BreathingForms form) {
+        public CompressedSoundWavesForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -4743,7 +5979,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onTick() { }
+        protected void onTick() {
+        }
     }
 
 
@@ -4752,11 +5989,15 @@ public class FormUtils {
         private Set<LivingEntity> currentTargets;
         private int rescanTimer = 0;
 
-        public CompassNeedleForm(LivingEntity user, BreathingForms form) {
+        public CompassNeedleForm(LivingEntity user, IForm form) {
             super(user, form);
             this.currentTargets = new HashSet<>();
         }
-        @Override public boolean isInterruptible() { return false; }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -4849,9 +6090,9 @@ public class FormUtils {
         private Vec3 currentPos;
         private final List<UUID> hitEntities = new ArrayList<>();
 
-        public AirTypeForm(LivingEntity user, BreathingForms form) {
+        public AirTypeForm(LivingEntity user, IForm form) {
             // The duration is calculated based on how long it takes to travel the max range
-            super(user, form, (int)(MAX_RANGE / TRAVEL_SPEED));
+            super(user, form, (int) (MAX_RANGE / TRAVEL_SPEED));
             this.direction = user.getLookAngle();
             this.currentPos = user.getEyePosition(); // Start from the player's eyes
         }
@@ -4903,12 +6144,14 @@ public class FormUtils {
         private static final double CONE_ANGLE_COS = Math.cos(Math.toRadians(CONE_ANGLE_DEGREES));
         private final Set<UUID> knockedBackEntities = new HashSet<>();
 
-        public DisorderForm(LivingEntity user, BreathingForms form) {
+        public DisorderForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
         @Override
-        public boolean isInterruptible() { return false; }
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -4964,8 +6207,8 @@ public class FormUtils {
         private Vec3 getRandomPointInCone(LivingEntity entity, double maxRange, double angleDegrees) {
             Vec3 lookDir = entity.getLookAngle();
             Vec3 startPos = entity.getEyePosition();
-            float randomYawOffset = (float) (level.random.nextDouble() - 0.5) * 2 * (float)angleDegrees;
-            float randomPitchOffset = (float) (level.random.nextDouble() - 0.5) * 2 * (float)angleDegrees;
+            float randomYawOffset = (float) (level.random.nextDouble() - 0.5) * 2 * (float) angleDegrees;
+            float randomPitchOffset = (float) (level.random.nextDouble() - 0.5) * 2 * (float) angleDegrees;
             Vec3 randomDir = lookDir.yRot((float) Math.toRadians(randomYawOffset)).xRot((float) Math.toRadians(randomPitchOffset));
             double randomDist = level.random.nextDouble() * maxRange;
             return startPos.add(randomDir.scale(randomDist));
@@ -4984,8 +6227,14 @@ public class FormUtils {
         private Vec3 direction;
         private int releaseTicks = 0;
 
-        public AnnihilationTypeForm(LivingEntity user, BreathingForms form) { super(user, form); }
-        @Override public boolean isInterruptible() { return false; }
+        public AnnihilationTypeForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onChargeStart() {
@@ -5045,7 +6294,7 @@ public class FormUtils {
         }
 
         private void triggerExplosion(Vec3 position) {
-            if(user instanceof ServerPlayer player) {
+            if (user instanceof ServerPlayer player) {
                 dealAOEDamage(player, position, IMPACT_RADIUS, IMPACT_DAMAGE, 3.0f, DamageSource.playerAttack(player).setExplosion());
             } else {
                 dealAOEDamage(user, position, IMPACT_RADIUS, IMPACT_DAMAGE, 3.0f, DamageSource.mobAttack(user).setExplosion());
@@ -5068,7 +6317,7 @@ public class FormUtils {
         private boolean isLunge = false;
         private Vec3 lungeDirection;
 
-        public CrownSplitterForm(LivingEntity user, BreathingForms form) {
+        public CrownSplitterForm(LivingEntity user, IForm form) {
             super(user, form, 10);
         }
 
@@ -5082,7 +6331,7 @@ public class FormUtils {
                 level.playSound(null, target.blockPosition(), SoundEvents.WARDEN_ATTACK_IMPACT, SoundSource.PLAYERS, 1.2f, 1.2f);
 
                 Vec3 strikePos = target.position().subtract(user.getLookAngle().scale(1.5));
-                double groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, (int)strikePos.x, (int)strikePos.z);
+                double groundY = level.getHeight(Heightmap.Types.MOTION_BLOCKING, (int) strikePos.x, (int) strikePos.z);
                 user.teleportTo(strikePos.x, groundY, strikePos.z);
 
                 if (user instanceof ServerPlayer player) {
@@ -5143,7 +6392,7 @@ public class FormUtils {
 
         private static final DustParticleOptions AFTERIMAGE_PARTICLE = new DustParticleOptions(new Vector3f(0.4f, 0.6f, 1.0f), 0.8f);
 
-        public ExplosiveFlurryForm(LivingEntity user, BreathingForms form) {
+        public ExplosiveFlurryForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_KICKS * TICKS_BETWEEN_KICKS);
         }
 
@@ -5168,9 +6417,9 @@ public class FormUtils {
             if (target != null) {
                 level.playSound(null, target.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.5f, 1.0f);
                 level.playSound(null, target.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.2f);
-                level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, target.getX(), target.getEyeY(), target.getZ(), 1, 0,0,0,0);
+                level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, target.getX(), target.getEyeY(), target.getZ(), 1, 0, 0, 0, 0);
 
-                if(user instanceof ServerPlayer player) {
+                if (user instanceof ServerPlayer player) {
                     target.hurt(DamageSource.playerAttack(player), FINAL_KICK_DAMAGE);
                 } else {
                     target.hurt(DamageSource.mobAttack(user), FINAL_KICK_DAMAGE);
@@ -5205,7 +6454,7 @@ public class FormUtils {
         private static final DustParticleOptions VORTEX_PARTICLE = new DustParticleOptions(new Vector3f(0.4f, 0.6f, 1.0f), 1.0f);
         private final Set<UUID> hitEntities = new HashSet<>();
 
-        public FlyingPlanetThousandWheelsForm(LivingEntity user, BreathingForms form) {
+        public FlyingPlanetThousandWheelsForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -5226,9 +6475,9 @@ public class FormUtils {
                     .add(0, currentHeight, 0);
 
             double particleRadius = 1.0 + (ATTACK_RADIUS * progress * 0.5);
-            spawnParticleArcInWorld(level, attackCenter, particleRadius, 360, 20, (float)(progress * 180), 90, VORTEX_PARTICLE);
+            spawnParticleArcInWorld(level, attackCenter, particleRadius, 360, 20, (float) (progress * 180), 90, VORTEX_PARTICLE);
             if (ticksActive % 4 == 0) {
-                level.sendParticles(ParticleTypes.SWEEP_ATTACK, attackCenter.x, attackCenter.y, attackCenter.z, 1, 0,0,0,0);
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK, attackCenter.x, attackCenter.y, attackCenter.z, 1, 0, 0, 0, 0);
             }
 
             AABB hitBox = new AABB(attackCenter, attackCenter).inflate(ATTACK_RADIUS, 1.0, ATTACK_RADIUS);
@@ -5240,7 +6489,7 @@ public class FormUtils {
                 double dotProduct = user.getLookAngle().dot(directionToTarget);
 
                 if (dotProduct > 0) {
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         target.hurt(DamageSource.playerAttack(player), DAMAGE);
                     } else {
                         target.hurt(DamageSource.mobAttack(user), DAMAGE);
@@ -5267,7 +6516,7 @@ public class FormUtils {
         private static final double CONE_ANGLE_DEGREES = 40.0;
         private static final double CONE_ANGLE_COS = Math.cos(Math.toRadians(CONE_ANGLE_DEGREES));
 
-        public EightLayeredDemonCoreForm(LivingEntity user, BreathingForms form) {
+        public EightLayeredDemonCoreForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_PUNCHES * TICKS_BETWEEN_PUNCHES);
         }
 
@@ -5336,7 +6585,7 @@ public class FormUtils {
 
         private final Set<UUID> hitEntities = new HashSet<>();
 
-        public TenThousandLeavesWillowForm(LivingEntity user, BreathingForms form) {
+        public TenThousandLeavesWillowForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -5365,7 +6614,7 @@ public class FormUtils {
                 double distanceToUser = target.distanceTo(user);
 
                 if (distanceToUser <= currentRadius && distanceToUser > previousRadius) {
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         target.hurt(DamageSource.playerAttack(player).setExplosion(), DAMAGE);
                     } else {
                         target.hurt(DamageSource.mobAttack(user).setExplosion(), DAMAGE);
@@ -5383,7 +6632,7 @@ public class FormUtils {
                 groundState = Blocks.STONE.defaultBlockState();
             }
             spawnParticleArcInWorld(level, user.position(), currentRadius, 360, 40, 0, 0, new BlockParticleOption(ParticleTypes.BLOCK, groundState));
-            if(ticksActive % 4 == 0) {
+            if (ticksActive % 4 == 0) {
                 spawnParticleArcInWorld(level, user.position(), currentRadius, 360, 5, 0, 0, ParticleTypes.SWEEP_ATTACK);
             }
         }
@@ -5402,7 +6651,7 @@ public class FormUtils {
         private static final DustParticleOptions BLUE_PARTICLE = new DustParticleOptions(new Vector3f(0.4f, 0.8f, 1.0f), 1.0f);
         private static final DustParticleOptions SILVER_PARTICLE = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.95f), 1.0f);
 
-        public FinalFormChaoticAfterglowForm(LivingEntity user, BreathingForms form) {
+        public FinalFormChaoticAfterglowForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -5419,12 +6668,12 @@ public class FormUtils {
             super.onTick();
 
             if (ticksActive < DURATION - 5) {
-                double progress = (double)ticksActive / (DURATION - 5);
+                double progress = (double) ticksActive / (DURATION - 5);
                 double radius = 5.0 * (1.0 - progress);
                 for (int i = 0; i < 20; i++) {
                     double angle = (level.random.nextDouble() * 2 * Math.PI);
                     Vec3 offset = new Vec3(Math.cos(angle), (level.random.nextDouble() - 0.5) * 4.0, Math.sin(angle)).scale(radius);
-                    level.sendParticles(level.random.nextBoolean() ? BLUE_PARTICLE : SILVER_PARTICLE, user.getX() + offset.x, user.getY() + 1.0, user.getZ() + offset.z, 1, 0,0,0,0);
+                    level.sendParticles(level.random.nextBoolean() ? BLUE_PARTICLE : SILVER_PARTICLE, user.getX() + offset.x, user.getY() + 1.0, user.getZ() + offset.z, 1, 0, 0, 0, 0);
                 }
             }
 
@@ -5449,8 +6698,8 @@ public class FormUtils {
                     }
                 }
 
-                level.sendParticles(ParticleTypes.FLASH, user.getX(), user.getEyeY(), user.getZ(), 1, 0,0,0,0);
-                level.sendParticles(ParticleTypes.SONIC_BOOM, user.getX(), user.getEyeY(), user.getZ(), 5, 0,0,0,0);
+                level.sendParticles(ParticleTypes.FLASH, user.getX(), user.getEyeY(), user.getZ(), 1, 0, 0, 0, 0);
+                level.sendParticles(ParticleTypes.SONIC_BOOM, user.getX(), user.getEyeY(), user.getZ(), 5, 0, 0, 0, 0);
             }
         }
 
@@ -5473,7 +6722,7 @@ public class FormUtils {
         private static final int CHILL_DURATION = 80; // 4 seconds of slowness
         private static final int CHILL_AMPLIFIER = 2; // Slowness III
 
-        public FrozenLotusForm(LivingEntity user, BreathingForms form) {
+        public FrozenLotusForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -5518,7 +6767,7 @@ public class FormUtils {
                 double angle = (2 * Math.PI / 6) * i;
                 for (double r = 0.5; r <= 1.5; r += 0.2) {
                     Vec3 petalPos = center.add(new Vec3(Math.cos(angle) * r, 0.2 + (r * 0.2), Math.sin(angle) * r));
-                    level.sendParticles(ParticleTypes.END_ROD, petalPos.x, petalPos.y, petalPos.z, 1, 0,0,0,0);
+                    level.sendParticles(ParticleTypes.END_ROD, petalPos.x, petalPos.y, petalPos.z, 1, 0, 0, 0, 0);
                 }
             }
         }
@@ -5526,7 +6775,7 @@ public class FormUtils {
         private Vec3 getRandomPointInCone(LivingEntity entity, double maxRange, double angleDegrees) {
             Vec3 lookDir = entity.getLookAngle();
             Vec3 startPos = entity.getEyePosition();
-            float randomYawOffset = (float) (level.random.nextDouble() - 0.5) * 2 * (float)angleDegrees;
+            float randomYawOffset = (float) (level.random.nextDouble() - 0.5) * 2 * (float) angleDegrees;
             Vec3 randomDir = lookDir.yRot((float) Math.toRadians(randomYawOffset));
             double randomDist = 1.0 + (level.random.nextDouble() * (maxRange - 1.0));
             return startPos.add(randomDir.scale(randomDist));
@@ -5548,7 +6797,7 @@ public class FormUtils {
         private static final int CHILL_DURATION = 60; // 3 seconds of slowness
         private static final int CHILL_AMPLIFIER = 1; // Slowness II
 
-        public BarrenHangingGardenForm(LivingEntity user, BreathingForms form) {
+        public BarrenHangingGardenForm(LivingEntity user, IForm form) {
             super(user, form, NUMBER_OF_WAVES * TICKS_BETWEEN_WAVES);
         }
 
@@ -5585,7 +6834,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onStop() {}
+        protected void onStop() {
+        }
     }
 
     public static class FreezingCloudsForm extends TimedForm {
@@ -5600,7 +6850,7 @@ public class FormUtils {
 
         private final Set<UUID> hitEntities = new HashSet<>();
 
-        public FreezingCloudsForm(LivingEntity user, BreathingForms form) {
+        public FreezingCloudsForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
         }
 
@@ -5636,9 +6886,9 @@ public class FormUtils {
             List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, hitBox,
                     e -> e != user && e.isAlive() && !hitEntities.contains(e.getUUID()));
 
-            for(LivingEntity target : potentialTargets) {
+            for (LivingEntity target : potentialTargets) {
                 if (target.distanceToSqr(cloudCenter) < (CLOUD_WIDTH * CLOUD_WIDTH)) {
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         target.hurt(DamageSource.playerAttack(player), DAMAGE);
                     } else {
                         target.hurt(DamageSource.mobAttack(user), DAMAGE);
@@ -5655,7 +6905,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onStop() {}
+        protected void onStop() {
+        }
     }
 
     public static class LotusVinesForm extends TimedForm {
@@ -5671,7 +6922,7 @@ public class FormUtils {
         private final Vec3 startPoint;
         private boolean hasBloomed = false;
 
-        public LotusVinesForm(LivingEntity user, BreathingForms form) {
+        public LotusVinesForm(LivingEntity user, IForm form) {
             super(user, form, VINE_TRAVEL_DURATION + GARDEN_LINGER_DURATION);
             this.startPoint = user.position();
 
@@ -5718,7 +6969,7 @@ public class FormUtils {
                     Vec3 sideDir = targetPoint.subtract(startPoint).cross(new Vec3(0, 1, 0)).normalize();
                     Vec3 particlePos = vinePath.add(sideDir.scale(weave_offset));
 
-                    level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y + 0.2, particlePos.z, 1, 0,0,0,0);
+                    level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y + 0.2, particlePos.z, 1, 0, 0, 0, 0);
                 }
 
             } else {
@@ -5741,7 +6992,7 @@ public class FormUtils {
                 for (LivingEntity target : targetsInGarden) {
                     target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, SLOWNESS_AMPLIFIER));
                     if (ticksActive % 10 == 0) {
-                        if(user instanceof ServerPlayer player) {
+                        if (user instanceof ServerPlayer player) {
                             target.hurt(DamageSource.playerAttack(player), DAMAGE_PER_TICK);
                         } else {
                             target.hurt(DamageSource.mobAttack(user), DAMAGE_PER_TICK);
@@ -5755,7 +7006,7 @@ public class FormUtils {
                             0.5 + level.random.nextDouble(),
                             (level.random.nextDouble() - 0.5) * (GARDEN_RADIUS * 2)
                     ));
-                    level.sendParticles(ParticleTypes.WHITE_ASH, mistPos.x, mistPos.y, mistPos.z, 1,0,0,0,0);
+                    level.sendParticles(ParticleTypes.WHITE_ASH, mistPos.x, mistPos.y, mistPos.z, 1, 0, 0, 0, 0);
                 }
             }
         }
@@ -5765,7 +7016,7 @@ public class FormUtils {
                 double angle = (2 * Math.PI / 6) * i;
                 for (double r = 0.5; r <= 1.5; r += 0.2) {
                     Vec3 petalPos = center.add(new Vec3(Math.cos(angle) * r, 0.2 + (r * 0.2), Math.sin(angle) * r));
-                    level.sendParticles(ParticleTypes.END_ROD, petalPos.x, petalPos.y, petalPos.z, 1, 0,0,0,0);
+                    level.sendParticles(ParticleTypes.END_ROD, petalPos.x, petalPos.y, petalPos.z, 1, 0, 0, 0, 0);
                 }
             }
         }
@@ -5774,7 +7025,7 @@ public class FormUtils {
     public static class ColdWhitePrincessesForm extends ActiveForm {
         private static final double SPAWN_DISTANCE = 4.0;
 
-        public ColdWhitePrincessesForm(LivingEntity user, BreathingForms form) {
+        public ColdWhitePrincessesForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
@@ -5805,7 +7056,8 @@ public class FormUtils {
         }
 
         @Override
-        protected void onTick() { }
+        protected void onTick() {
+        }
     }
 
     public static class WintryIciclesForm extends TimedForm {
@@ -5815,7 +7067,7 @@ public class FormUtils {
         private static final float DAMAGE = 35.0f;
         private final Vec3 targetPoint;
 
-        public WintryIciclesForm(LivingEntity user, BreathingForms form) {
+        public WintryIciclesForm(LivingEntity user, IForm form) {
             super(user, form, TELEGRAPH_DURATION + 10);
 
             BlockHitResult hitResult = (BlockHitResult) user.pick(MAX_RANGE, 0, false);
@@ -5840,7 +7092,7 @@ public class FormUtils {
                 double angle = (ticksActive * 0.4);
                 double radius = IMPACT_RADIUS * 0.8;
                 Vec3 particlePos = targetPoint.add(new Vec3(Math.cos(angle) * radius, 0.2, Math.sin(angle) * radius));
-                level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 2, 0,0,0,0);
+                level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 2, 0, 0, 0, 0);
             }
 
             if (ticksActive == TELEGRAPH_DURATION) {
@@ -5860,7 +7112,7 @@ public class FormUtils {
                 List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, eruptionBox, e -> e != user && e.isAlive());
 
                 for (LivingEntity target : targets) {
-                    if(user instanceof ServerPlayer player) {
+                    if (user instanceof ServerPlayer player) {
                         target.hurt(DamageSource.playerAttack(player), DAMAGE);
                     } else {
                         target.hurt(DamageSource.mobAttack(user), DAMAGE);
@@ -5888,7 +7140,7 @@ public class FormUtils {
         private static final float SPREAD = 12.0f; // Higher number = wider spread
         private static final float PROJECTILE_SPEED = 2.0f;
 
-        public ScatteringLotusesForm(LivingEntity user, BreathingForms form) {
+        public ScatteringLotusesForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
@@ -5898,29 +7150,33 @@ public class FormUtils {
             level.playSound(null, user.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 1.0f);
 
             for (int i = 0; i < PROJECTILE_COUNT; i++) {
-                 LotusShardProjectileEntity shard = new LotusShardProjectileEntity(level, user);
-                 Vec3 lookAngle = user.getLookAngle();
+                LotusShardProjectileEntity shard = new LotusShardProjectileEntity(level, user);
+                Vec3 lookAngle = user.getLookAngle();
 
-                 shard.shoot(lookAngle.x, lookAngle.y, lookAngle.z, PROJECTILE_SPEED, SPREAD);
-                 level.addFreshEntity(shard);
+                shard.shoot(lookAngle.x, lookAngle.y, lookAngle.z, PROJECTILE_SPEED, SPREAD);
+                level.addFreshEntity(shard);
             }
 
             ActiveFormManager.stop(user);
         }
 
         @Override
-        protected void onTick() {}
+        protected void onTick() {
+        }
     }
 
     public static class CrystallineDivineChildForm extends ChargeableForm {
         private static final int CLONE_CHARGE_TIME = 20; // 1s/clone
         private static final int MAX_CLONES = 6;
 
-        public CrystallineDivineChildForm(LivingEntity user, BreathingForms form) {
+        public CrystallineDivineChildForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
-        @Override public boolean isInterruptible() { return false; }
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onChargeStart() {
@@ -5975,20 +7231,28 @@ public class FormUtils {
             for (int i = 0; i < 3; i++) {
                 double angle = (2 * Math.PI / 3) * i + (user.tickCount * 0.1);
                 Vec3 petalPos = center.add(new Vec3(Math.cos(angle) * 0.5, 0.2, Math.sin(angle) * 0.5));
-                level.sendParticles(ParticleTypes.END_ROD, petalPos.x, petalPos.y, petalPos.z, 1, 0,0,0,0);
+                level.sendParticles(ParticleTypes.END_ROD, petalPos.x, petalPos.y, petalPos.z, 1, 0, 0, 0, 0);
             }
         }
 
-        @Override protected void onReleaseTick() { }
-        @Override protected void onChargeEnd() { }
+        @Override
+        protected void onReleaseTick() {
+        }
+
+        @Override
+        protected void onChargeEnd() {
+        }
     }
 
     public static class RimeBodhisattvaForm extends ActiveForm {
-        public RimeBodhisattvaForm(LivingEntity user, BreathingForms form) {
+        public RimeBodhisattvaForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
-        @Override public boolean isInterruptible() { return false; }
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
 
         @Override
         protected void onStart() {
@@ -6018,9 +7282,803 @@ public class FormUtils {
             user.removeEffect(MobEffects.DAMAGE_RESISTANCE);
         }
 
-        @Override protected void onTick() {}
+        @Override
+        protected void onTick() {
+        }
     }
 
+    // -- Sun Breathing, Hinokami Kagura --
+    public static class ClearBlueSkyForm extends TimedForm {
+        private static final int DURATION = 20;
+        private static final double MAX_RADIUS = 15.0;
+        private static final float DAMAGE = 40.0f;
+        private static final float KNOCKBACK = 1.8f;
+
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+        private final Set<UUID> hitEntities = new HashSet<>();
+
+        public ClearBlueSkyForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.BELL_BLOCK, SoundSource.PLAYERS, 2.0f, 0.5f);
+            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_HURT, SoundSource.PLAYERS, 1.0f, 1.0f);
+
+            user.setYRot(user.getYRot() + 360f);
+            user.hurtMarked = true;
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            double progress = (double) this.ticksActive / DURATION;
+            double currentRadius = MAX_RADIUS * progress;
+            double previousRadius = MAX_RADIUS * ((double) (this.ticksActive - 1) / DURATION);
+
+            AABB searchBox = user.getBoundingBox().inflate(currentRadius);
+
+            List<Entity> potentialTargets = level.getEntities(user, searchBox,
+                    e -> e.isAlive() && !e.is(user) && !this.hitEntities.contains(e.getUUID()));
+
+            for (Entity target : potentialTargets) {
+                double distanceToUser = target.distanceTo(user);
+
+                if (distanceToUser <= currentRadius && distanceToUser > previousRadius) {
+                    if (target instanceof ThrownNichirinEntity ||
+                            target instanceof LotusShardProjectileEntity ||
+                            target instanceof BloodSickleProjectileEntity ||
+                            target instanceof BlindingMistCloudEntity ||
+                            target instanceof CuttingThreadCageEntity ||
+                            target instanceof KillerGoldfishEntity ||
+                            target instanceof MistCloneEntity ||
+                            target instanceof PoisonNeedleProjectileEntity ||
+                            target instanceof ThreadWheelEntity ||
+                            target instanceof WeepingSpearProjectileEntity ||
+                            target instanceof WaterPrisonEntity) {
+                        level.sendParticles(ParticleTypes.LAVA, target.getX(), target.getY(), target.getZ(), 10, 0.2, 0.2, 0.2, 0.0);
+                        target.discard();
+                        continue;
+                    }
+
+                    if (target instanceof LivingEntity livingTarget) {
+                        if (user instanceof Player player) {
+                            livingTarget.hurt(DamageSource.playerAttack(player).setMagic(), DAMAGE);
+                        } else {
+                            livingTarget.hurt(DamageSource.mobAttack(user).setMagic(), DAMAGE);
+                        }
+
+                        Vec3 knockbackDir = livingTarget.position().subtract(user.position()).normalize();
+                        livingTarget.knockback(KNOCKBACK, knockbackDir.x, knockbackDir.z);
+                        this.hitEntities.add(target.getUUID());
+                    }
+                }
+            }
+
+            spawnParticleArcInWorld(level, user.position().add(0, 0.2, 0), currentRadius, 360, 60, 0, 0, RED_HOT);
+        }
+    }
+
+    public static class RagingSunForm extends TimedForm {
+        private static final int DURATION = 20;
+        private static final int FIRST_SLASH_TICK = 2;
+        private static final int SECOND_SLASH_TICK = 8;
+
+        private static final float SLASH_DAMAGE = 25.0f;
+        private static final float RETALIATION_DAMAGE = 50.0f;
+
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+
+        public RagingSunForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.5f, 0.8f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            if (ticksActive == FIRST_SLASH_TICK) {
+                performSlash(4.0);
+            }
+            if (ticksActive == SECOND_SLASH_TICK) {
+                performSlash(7.0);
+            }
+
+            AABB defenseBox = user.getBoundingBox().inflate(3.0);
+            List<Projectile> projectiles = level.getEntitiesOfClass(Projectile.class, defenseBox,
+                    p -> p.getOwner() != user && !(p.getOwner() instanceof TamableAnimal tamable && tamable.getOwner() == user));
+
+            for (Projectile projectile : projectiles) {
+                level.playSound(null, projectile.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 1.0f, 1.5f);
+                level.sendParticles(ParticleTypes.FLAME, projectile.getX(), projectile.getY(), projectile.getZ(), 20, 0.1, 0.1, 0.1, 0.1);
+                projectile.discard();
+            }
+        }
+
+        private void performSlash(double radius) {
+            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 0.9f);
+            dealAOEDamage(user, user.position(), radius, SLASH_DAMAGE, 0.8f, DamageSource.playerAttack((Player) user).setIsFire());
+            spawnParticleArcInWorld(level, user.position().add(0, 1.0, 0), radius, 360, (int) (radius * 10), 0, 0, RED_HOT);
+        }
+
+        @Override
+        public void onHurt(LivingHurtEvent event) {
+            if (event.getSource().getDirectEntity() instanceof LivingEntity attacker) {
+                attacker.hurt(DamageSource.playerAttack((Player) user).setIsFire(), RETALIATION_DAMAGE);
+                attacker.setSecondsOnFire(10);
+                level.playSound(null, attacker.blockPosition(), SoundEvents.GENERIC_BURN, SoundSource.PLAYERS, 1.5f, 1.0f);
+                level.sendParticles(ParticleTypes.LAVA, attacker.getX(), attacker.getEyeY(), attacker.getZ(), 30, 0.4, 0.4, 0.4, 1.0);
+            }
+        }
+    }
+
+    public static class BurningBonesForm extends TimedForm {
+        private static final int DURATION = 30;
+        private static final double TRAVEL_SPEED = 0.5;
+        private static final double VORTEX_RADIUS = 3.0;
+        private static final float DAMAGE_PER_TICK = 4.0f;
+
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+
+        private final Vec3 direction;
+        private Vec3 vortexCenter;
+
+        public BurningBonesForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            this.direction = user.getLookAngle();
+            this.vortexCenter = user.getEyePosition().add(direction.scale(1.5));
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.5f, 1.0f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            this.vortexCenter = this.vortexCenter.add(this.direction.scale(TRAVEL_SPEED));
+
+            AABB defenseBox = new AABB(this.vortexCenter, this.vortexCenter).inflate(VORTEX_RADIUS);
+            List<Projectile> projectiles = level.getEntitiesOfClass(Projectile.class, defenseBox,
+                    p -> p.getOwner() != user && !(p.getOwner() instanceof TamableAnimal tamable && tamable.getOwner() == user));
+
+            for (Projectile projectile : projectiles) {
+                level.playSound(null, projectile.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 1.0f, 1.5f);
+                level.sendParticles(ParticleTypes.FLAME, projectile.getX(), projectile.getY(), projectile.getZ(), 20, 0.1, 0.1, 0.1, 0.1);
+                projectile.discard();
+            }
+
+            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, defenseBox, e -> e != user && e.isAlive());
+            for (LivingEntity target : targets) {
+                if (user instanceof Player player) {
+                    target.hurt(DamageSource.playerAttack(player).setIsFire(), DAMAGE_PER_TICK);
+                } else {
+                    target.hurt(DamageSource.mobAttack(user).setIsFire(), DAMAGE_PER_TICK);
+                }
+                target.setDeltaMovement(this.direction.scale(TRAVEL_SPEED * 1.1));
+                target.hurtMarked = true;
+            }
+
+            float rotation = this.ticksActive * 30;
+            spawnParticleArcInWorld(level, this.vortexCenter, VORTEX_RADIUS, 360, 30, user.getYRot(), 90 + rotation, RED_HOT);
+            spawnParticleArcInWorld(level, this.vortexCenter, VORTEX_RADIUS, 360, 30, user.getYRot(), 90 - rotation, ParticleTypes.LAVA);
+        }
+    }
+
+    public static class SettingSunForm extends TimedForm {
+        private static final int DURATION = 25;
+        private static final int SLASH_TICK = 10;
+        private static final float LEAP_STRENGTH_UP = 1.2f;
+        private static final float LEAP_STRENGTH_BACK = 1.5f;
+
+        private static final float DAMAGE = 45.0f;
+        private static final double IMPACT_RADIUS = 6.0;
+        private static final float KNOCKBACK = 1.0f;
+
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+
+        private boolean hasSlashed = false;
+        private final Vec3 impactCenter;
+
+        public SettingSunForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            this.impactCenter = user.position();
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            Vec3 backward = user.getLookAngle().scale(-1);
+            Vec3 leap = new Vec3(backward.x * LEAP_STRENGTH_BACK, LEAP_STRENGTH_UP, backward.z * LEAP_STRENGTH_BACK);
+            user.setDeltaMovement(user.getDeltaMovement().add(leap));
+            user.hurtMarked = true;
+
+            user.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION, 5, false, false, true));
+            level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 1.5f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            if (ticksActive >= SLASH_TICK && !hasSlashed) {
+                hasSlashed = true;
+
+                level.playSound(null, this.impactCenter.x, this.impactCenter.y, this.impactCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.5f, 1.0f);
+                spawnParticleArcInWorld(level, this.impactCenter.add(0, 0.2, 0), IMPACT_RADIUS, 360, 80, 0, 0, RED_HOT);
+                dealAOEDamage(user, this.impactCenter, IMPACT_RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack((Player) user).setExplosion());
+            }
+        }
+
+        @Override
+        protected void onStop() {
+            user.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+        }
+    }
+
+    public static class SolarHeatHazeForm extends TimedForm {
+        private static final int DURATION = 15;
+        private static final double DASH_SPEED = 1.8;
+        private static final float DAMAGE = 38.0f;
+
+        private static final ParticleOptions HEAT_HAZE = ParticleTypes.WHITE_ASH;
+
+        private final Set<UUID> hitEntities = new HashSet<>();
+
+        public SolarHeatHazeForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.8f, 2.0f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            Vec3 direction = user.getLookAngle();
+            user.setDeltaMovement(direction.x * DASH_SPEED, 0.1, direction.z * DASH_SPEED);
+            user.hurtMarked = true;
+
+            FormUtils.spawnParticleArc(user, ParticleTypes.FLAME, 4.0, 90, 20);
+            level.sendParticles(HEAT_HAZE, user.getX(), user.getEyeY(), user.getZ(), 2, 0.5, 0.5, 0.5, 0.01);
+
+            AABB impactBox = user.getBoundingBox().inflate(1.5);
+            List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, impactBox,
+                    e -> e != user && e.isAlive() && !this.hitEntities.contains(e.getUUID()));
+
+            for (LivingEntity target : potentialTargets) {
+                if (user instanceof Player player) {
+                    target.hurt(DamageSource.playerAttack(player), DAMAGE);
+                } else {
+                    target.hurt(DamageSource.mobAttack(user), DAMAGE);
+                }
+                this.hitEntities.add(target.getUUID());
+
+                level.playSound(null, target.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 1.2f, 1.5f);
+                level.sendParticles(ParticleTypes.LAVA, target.getX(), target.getEyeY(), target.getZ(), 20, 0.3, 0.3, 0.3, 0);
+            }
+        }
+
+        @Override
+        protected void onStop() {}
+    }
+
+    public static class BeneficentRadianceForm extends TimedForm {
+        private static final int DURATION = 25;
+        private static final double ASCENT_SPEED = 1.2;
+        private static final double VORTEX_RADIUS = 3.5;
+        private static final float DAMAGE_PER_TICK = 5.0f;
+
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+
+        public BeneficentRadianceForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        public boolean isInterruptible() {
+            return false;
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.FIREWORK_ROCKET_LAUNCH, SoundSource.PLAYERS, 1.5f, 1.0f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            user.setDeltaMovement(0, ASCENT_SPEED, 0);
+            user.hurtMarked = true;
+            user.fallDistance = 0;
+
+            AABB damageZone = user.getBoundingBox().inflate(VORTEX_RADIUS, 0, VORTEX_RADIUS);
+            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageZone, e -> e != user && e.isAlive());
+
+            for (LivingEntity target : targets) {
+                // Deal damage
+                if (user instanceof Player player) {
+                    target.hurt(DamageSource.playerAttack(player).setIsFire(), DAMAGE_PER_TICK);
+                } else {
+                    target.hurt(DamageSource.mobAttack(user).setIsFire(), DAMAGE_PER_TICK);
+                }
+                Vec3 pullVector = user.position().subtract(target.position()).normalize().scale(0.5);
+                target.setDeltaMovement(pullVector.x, user.getDeltaMovement().y, pullVector.z);
+                target.hurtMarked = true;
+            }
+
+            // Visuals
+            float rotation = this.ticksActive * 40;
+            spawnParticleArcInWorld(level, user.position().add(0, 1.0, 0), VORTEX_RADIUS, 360, 20, rotation, 90, RED_HOT);
+            spawnParticleArcInWorld(level, user.position().add(0, 1.0, 0), VORTEX_RADIUS, 360, 10, -rotation, 90, ParticleTypes.LAVA);
+        }
+    }
+
+    public static class SunflowerThrustForm extends ChargeableForm {
+        private static final int DASH_DURATION = 8;
+        private static final double DASH_SPEED = 3.0;
+        private static final float THRUST_DAMAGE = 25.0f;
+        private static final float BLOOM_BASE_DAMAGE = 15.0f;
+        private static final float BLOOM_CHARGE_BONUS = 30.0f;
+        private static final double BLOOM_RADIUS = 3.0;
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+
+        private Vec3 direction;
+        private int releaseTicks = 0;
+        private boolean hasHit = false;
+
+        public SunflowerThrustForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override public boolean isInterruptible() { return false; }
+
+        @Override
+        protected void onChargeStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.8f, 1.5f);
+        }
+
+        @Override
+        protected void onChargingTick() {
+            Vec3 swordTip = user.getEyePosition().add(user.getLookAngle().scale(1.5));
+            level.sendParticles(ParticleTypes.LAVA, swordTip.x, swordTip.y, swordTip.z, 2, 0.1, 0.1, 0.1, 0);
+        }
+
+        @Override
+        protected void onChargeRelease(boolean fullyCharged) {
+            if (fullyCharged) {
+                this.direction = user.getLookAngle();
+                level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.5f, 1.2f);
+            } else {
+                ActiveFormManager.stop(user);
+            }
+        }
+
+        @Override
+        protected void onReleaseTick() {
+            if (this.hasHit) return;
+
+            if (releaseTicks < DASH_DURATION) {
+                releaseTicks++;
+                user.setDeltaMovement(direction.scale(DASH_SPEED));
+                user.hurtMarked = true;
+                level.sendParticles(ParticleTypes.FLAME, user.getX(), user.getY() + 1, user.getZ(), 5, 0.1, 0.1, 0.1, 0.01);
+
+                AABB impactBox = user.getBoundingBox().inflate(1.2).move(direction);
+                List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, impactBox, e -> e != user && e.isAlive());
+
+                if (!hitTargets.isEmpty()) {
+                    this.hasHit = true;
+                    triggerImpact(hitTargets.get(0));
+                    ActiveFormManager.stop(user);
+                }
+            } else {
+                ActiveFormManager.stop(user);
+            }
+        }
+
+        private void triggerImpact(LivingEntity primaryTarget) {
+            DamageSource damageSource = (user instanceof Player p) ? DamageSource.playerAttack(p) : DamageSource.mobAttack(user);
+            primaryTarget.hurt(damageSource, THRUST_DAMAGE);
+
+            float bloomDamage = BLOOM_BASE_DAMAGE + (this.chargeTicks >= this.chargeGoal ? BLOOM_CHARGE_BONUS : 0);
+            Vec3 bloomCenter = primaryTarget.position();
+
+            dealAOEDamage(user, bloomCenter, BLOOM_RADIUS, bloomDamage, 1.0f, damageSource.setExplosion());
+
+            level.playSound(null, bloomCenter.x, bloomCenter.y, bloomCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.2f, 1.0f);
+            for (int i = 0; i < 360; i += 20) {
+                Vec3 dir = Vec3.directionFromRotation(0, i);
+                spawnLineParticles(level, RED_HOT, bloomCenter, bloomCenter.add(dir.scale(BLOOM_RADIUS)), 5);
+            }
+        }
+
+        @Override protected void onChargeEnd() {}
+    }
+
+    public static class SunHaloDragonForm extends ActiveForm {
+        private static final int BREATH_COST_PER_TICK = 2;
+        private static final float DAMAGE_PER_TICK = 5.0f;
+        private static final double DRAGON_BODY_RADIUS = 2.5;
+
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+        private static final ParticleOptions EMBERS = ParticleTypes.LAVA;
+
+        private final Deque<Vec3> trailPositions = new ArrayDeque<>();
+        private static final int TRAIL_LENGTH = 30;
+
+        public SunHaloDragonForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 1.2f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            if (ticksActive % 10 == 0) {
+                user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
+                    if (breath.getBreath() >= BREATH_COST_PER_TICK) {
+                        breath.subBreath(BREATH_COST_PER_TICK);
+                    } else {
+                        ActiveFormManager.stop(user);
+                    }
+                });
+            }
+
+            this.trailPositions.add(user.position());
+            if (this.trailPositions.size() > TRAIL_LENGTH) {
+                this.trailPositions.removeFirst();
+            }
+
+            Set<LivingEntity> hitThisTick = new HashSet<>();
+            AABB headAABB = user.getBoundingBox().inflate(DRAGON_BODY_RADIUS);
+            List<LivingEntity> headTargets = level.getEntitiesOfClass(LivingEntity.class, headAABB, e -> e != user && e.isAlive());
+            hitThisTick.addAll(headTargets);
+
+            for (Vec3 trailPos : this.trailPositions) {
+                AABB bodyAABB = new AABB(trailPos, trailPos).inflate(DRAGON_BODY_RADIUS);
+                List<LivingEntity> bodyTargets = level.getEntitiesOfClass(LivingEntity.class, bodyAABB, e -> e != user && e.isAlive());
+                hitThisTick.addAll(bodyTargets);
+            }
+
+            DamageSource damageSource = (user instanceof Player p) ? DamageSource.playerAttack(p).setIsFire() : DamageSource.mobAttack(user).setIsFire();
+            for (LivingEntity target : hitThisTick) {
+                target.hurt(damageSource, DAMAGE_PER_TICK);
+            }
+
+            for (Vec3 pos : this.trailPositions) {
+                level.sendParticles(RED_HOT, pos.x, pos.y + 1.0, pos.z, 2, 0.5, 0.5, 0.5, 0.0);
+                if (level.random.nextFloat() < 0.2f) {
+                    level.sendParticles(EMBERS, pos.x, pos.y + 1.0, pos.z, 1, 0.5, 0.5, 0.5, 0.0);
+                }
+            }
+        }
+
+        @Override
+        protected void onStop() {
+            level.playSound(null, user.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 1.0f, 1.0f);
+        }
+    }
+
+    public static class FireWheelForm extends TimedForm {
+        private static final int DURATION = 30;
+        private static final int SLASH_TICK = 12;
+        private static final float LEAP_STRENGTH_UP = 1.3f;
+        private static final float LEAP_STRENGTH_BACK = 1.0f;
+        private static final float DAMAGE = 50.0f;
+        private static final double IMPACT_RADIUS = 5.0;
+        private static final float KNOCKBACK = 1.5f;
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+
+        private boolean hasSlashed = false;
+        private final Vec3 impactCenter;
+
+        public FireWheelForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+            this.impactCenter = user.position();
+        }
+
+        @Override public boolean isInterruptible() { return false; }
+
+        @Override
+        protected void onStart() {
+            Vec3 backward = user.getLookAngle().scale(-1);
+            Vec3 leap = new Vec3(backward.x * LEAP_STRENGTH_BACK, LEAP_STRENGTH_UP, backward.z * LEAP_STRENGTH_BACK);
+            user.setDeltaMovement(user.getDeltaMovement().add(leap));
+            user.hurtMarked = true;
+            user.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION, 5, false, false, true));
+            level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.2f, 1.2f);
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            float rotation = this.ticksActive * 45;
+            spawnParticleArcInWorld(level, user.position().add(0, 1.0, 0), 2.0, 360, 20, user.getYRot(), 90 + rotation, RED_HOT);
+
+            if (ticksActive >= SLASH_TICK && !this.hasSlashed) {
+                this.hasSlashed = true;
+
+                level.playSound(null, this.impactCenter.x, this.impactCenter.y, this.impactCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.8f, 0.9f);
+                spawnParticleArcInWorld(level, this.impactCenter.add(0, 1.0, 0), IMPACT_RADIUS, 180, 60, user.getYRot(), 90, ParticleTypes.LAVA);
+
+                DamageSource damageSource = (user instanceof Player p) ? DamageSource.playerAttack(p).setExplosion() : DamageSource.mobAttack(user).setExplosion();
+                dealAOEDamage(user, this.impactCenter, IMPACT_RADIUS, DAMAGE, KNOCKBACK, damageSource);
+
+                ActiveFormManager.stop(user);
+            }
+        }
+
+        @Override
+        protected void onStop() {
+            user.removeEffect(MobEffects.DAMAGE_RESISTANCE);
+        }
+    }
+
+    public static class FakeRainbowForm extends TimedForm {
+        private static final int DURATION = 10;
+        private static final double DASH_SPEED = 2.0;
+        private static final int AFTERIMAGE_COUNT = 3;
+
+        public FakeRainbowForm(LivingEntity user, IForm form) {
+            super(user, form, DURATION);
+        }
+
+        @Override
+        public boolean isInterruptible() { return true; }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.5f, 2.0f);
+
+            AABB searchBox = user.getBoundingBox().inflate(32.0);
+            List<Mob> targetingMobs = level.getEntitiesOfClass(Mob.class, searchBox, mob -> mob.getTarget() == user);
+            for (Mob mob : targetingMobs) {
+                mob.setTarget(null);
+            }
+        }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            Vec3 moveDir = new Vec3(user.getDeltaMovement().x, 0, user.getDeltaMovement().z);
+            if (moveDir.lengthSqr() < 0.01) { // If standing still, dash backwards
+                moveDir = user.getLookAngle().scale(-1);
+            }
+            Vec3 dashVec = moveDir.normalize().scale(DASH_SPEED);
+            user.setDeltaMovement(dashVec.x, 0.2, dashVec.z);
+            user.hurtMarked = true;
+
+            if (ticksActive % 2 == 0) {
+                // Leave a trail of afterimages
+                if (ticksActive < DURATION - 2) {
+                    spawnAfterimage();
+                }
+
+                for (int i = 0; i < 7; i++) {
+                    float hue = (float)i / 7.0f;
+                    Color color = Color.getHSBColor(hue, 0.9f, 1.0f);
+                    DustParticleOptions particle = new DustParticleOptions(new Vector3f(color.getRed()/255f, color.getGreen()/255f, color.getBlue()/255f), 1.0f);
+                    level.sendParticles(particle, user.getRandomX(0.5), user.getRandomY(), user.getRandomZ(0.5), 1, 0,0,0,0);
+                }
+            }
+        }
+
+        private void spawnAfterimage() {
+            MistCloneEntity decoy = ModEntityTypes.MIST_CLONE.get().create(level);
+            if (decoy != null) {
+                if(user instanceof Player player) {
+                    decoy.setOwnerProfile(player.getGameProfile());
+                } else {
+                    decoy.setIsNpcClone(true);
+                }
+
+                for (EquipmentSlot slot : EquipmentSlot.values()) {
+                    decoy.setItemSlot(slot, user.getItemBySlot(slot).copy());
+                }
+
+                decoy.setPos(user.position());
+                decoy.setYRot(user.getYRot());
+                decoy.setPersistenceRequired();
+                level.addFreshEntity(decoy);
+            }
+        }
+    }
+
+    public static class FlameDanceForm extends TimedForm {
+        private static final int VERTICAL_SLASH_TICK = 4;
+        private static final int HORIZONTAL_SLASH_TICK = 10;
+
+        private static final float VERTICAL_DAMAGE = 20.0f;
+        private static final float HORIZONTAL_DAMAGE = 35.0f;
+        private static final float VERTICAL_KNOCKBACK = 1.2f;
+
+        private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
+
+        public FlameDanceForm(LivingEntity user, IForm form) {
+            super(user, form, HORIZONTAL_SLASH_TICK + 5);
+        }
+
+        @Override
+        public boolean isInterruptible() { return false; }
+
+        @Override
+        protected void onTick() {
+            super.onTick();
+
+            if (this.ticksActive == VERTICAL_SLASH_TICK) {
+                level.playSound(null, user.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.2f, 1.0f);
+
+                dealDirectionalDamage(user, 5.0, VERTICAL_DAMAGE, 0.9);
+                spawnParticleArc(user, RED_HOT, 4.0, 160, 40, 90.0f);
+            }
+
+            if (this.ticksActive == HORIZONTAL_SLASH_TICK) {
+                level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.8f);
+
+                dealAOEDamage(user, user.position(), 6.0, HORIZONTAL_DAMAGE, 0.5f, DamageSource.playerAttack((Player)user).setIsFire());
+                spawnParticleArcInWorld(level, user.position().add(0, 1.2, 0), 6.0, 360, 80, 0, 90, RED_HOT);
+            }
+        }
+    }
+
+    public static class ThirteenthForm extends ActiveForm {
+        private static final int BREATH_DRAIN_PER_SECOND = 30;
+        private static final float DAMAGE_RAMP_PER_HIT = 1.5f;
+        private static final int TOTAL_FORMS = 12;
+
+        private int currentFormIndex = 0;
+        private int ticksInCurrentForm = 0;
+
+        private static final int[] FORM_DURATIONS = {
+                10, // Dance
+                20, // Clear Blue Sky
+                20, // Raging Sun
+                30, // Burning Bones
+                25, // Setting Sun
+                15, // Solar Heat Haze
+                25, // Beneficent Radiance
+                40, // Sunflower Thrust (chargeable, so we give it more time)
+                40, // Dragon Dance
+                30, // Fire Wheel
+                10, // Fake Rainbow
+                20  // Flame Dance
+        };
+
+        private static final List<IForm> SUN_FORMS = Arrays.asList(
+                SUN_1, SUN_2, SUN_3,
+                BreathingForms.SUN_4, BreathingForms.SUN_5, BreathingForms.SUN_6,
+                BreathingForms.SUN_7, BreathingForms.SUN_8, BreathingForms.SUN_9,
+                BreathingForms.SUN_10, BreathingForms.SUN_11, BreathingForms.SUN_12
+        );
+
+        public ThirteenthForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override
+        public boolean isInterruptible() { return true; }
+
+        @Override
+        protected void onStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 2.0f, 1.0f);
+            executeFormLogic(0);
+        }
+
+        @Override
+        protected void onTick() {
+            user.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20, 2));
+            user.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20, 1));
+
+            if (ticksActive % 20 == 0) {
+                user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
+                    if (breath.getBreath() < BREATH_DRAIN_PER_SECOND) {
+                        ActiveFormManager.stop(user);
+                    } else {
+                        breath.subBreath(BREATH_DRAIN_PER_SECOND);
+                    }
+                });
+            }
+
+            ticksInCurrentForm++;
+            executeFormLogic(currentFormIndex);
+
+            if (ticksInCurrentForm >= FORM_DURATIONS[currentFormIndex]) {
+                currentFormIndex++;
+                ticksInCurrentForm = 0;
+
+                if (currentFormIndex >= TOTAL_FORMS) {
+                    ActiveFormManager.stop(user);
+                }
+            }
+        }
+
+        private void executeFormLogic(int formIndex) {
+            float damage = 10.0f + (formIndex * DAMAGE_RAMP_PER_HIT);
+
+            switch (formIndex) {
+                case 0: // Dance
+                    if (ticksInCurrentForm == 1) {
+                        SUN_1.performAction(user, level);
+                    }
+                    break;
+                case 1: // Clear Blue Sky
+                    new ClearBlueSkyForm(user, SUN_2).onTick();
+                    break;
+                case 2: // Raging Sun
+                    new RagingSunForm(user, SUN_3).onTick();
+                    break;
+                case 3: // Burning Bones
+                    new BurningBonesForm(user, SUN_4).onTick();
+                    break;
+                case 4: // Setting Sun
+                    new SettingSunForm(user, SUN_5).onTick();
+                    break;
+                case 5: // Solar Heat Haze
+                    new SolarHeatHazeForm(user, SUN_6).onTick();
+                    break;
+                case 6: // Beneficent Radiance
+                    new BeneficentRadianceForm(user, SUN_7).onTick();
+                    break;
+                case 7: // Sunflower Thrust
+                    if (ticksInCurrentForm == 1) {
+                        SunflowerThrustForm form = new SunflowerThrustForm(user, SUN_8);
+                        form.onChargeRelease(true);
+                        form.onReleaseTick();
+                    }
+                    break;
+                case 8: // Dragon Dance
+                    new SunHaloDragonForm(user, SUN_9).onTick();
+                    break;
+                case 9: // Fire Wheel
+                    new FireWheelForm(user, SUN_10).onTick();
+                    break;
+                case 10: // Fake Rainbow
+                    new FakeRainbowForm(user, SUN_11).onTick();
+                    break;
+                case 11: // Flame Dance
+                    new FlameDanceForm(user, SUN_12).onTick();
+                    break;
+            }
+        }
+    }
 
 
 
@@ -6030,7 +8088,7 @@ public class FormUtils {
     @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, value = Dist.CLIENT)
     @OnlyIn(Dist.CLIENT)
     public static class Client {
-        private static final Map<BreathingForms, BiFunction<Level, Vec3, Void>> INDICATOR_ACTIONS = new ImmutableMap.Builder<BreathingForms, BiFunction<Level, Vec3, Void>>()
+        private static final Map<IForm, BiFunction<Level, Vec3, Void>> INDICATOR_ACTIONS = new ImmutableMap.Builder<IForm, BiFunction<Level, Vec3, Void>>()
                 .put(BreathingForms.WATER_11, Client::showWaterIndicator)
                 .put(BreathingForms.FLAME_4, Client::showFlameIndicator)
                 .put(BreathingForms.WIND_3, Client::showWindIndicator)
@@ -6038,7 +8096,7 @@ public class FormUtils {
                 .put(BreathingForms.STONE_3, Client::showStoneIndicator)
                 .put(BreathingForms.FLOWER_2, Client::showFlowerIndicator)
                 // BDA
-                .put(BreathingForms.HAEMO_2, Client::showHaemoIndicator)
+                .put(DemonForms.HAEMO_2, Client::showHaemoIndicator)
                 .build();
 
         @SubscribeEvent
@@ -6062,7 +8120,7 @@ public class FormUtils {
             });
         }
 
-        private static void checkThreatAndShowIndicator(Player player, Entity threat, BreathingForms form) {
+        private static void checkThreatAndShowIndicator(Player player, Entity threat, IForm form) {
             Vec3 indicatorPos = null;
 
             if (threat instanceof Projectile projectile) {
@@ -6087,7 +8145,7 @@ public class FormUtils {
                 }
             }
 
-            if(indicatorPos != null) {
+            if (indicatorPos != null) {
                 INDICATOR_ACTIONS.get(form).apply(player.level, indicatorPos);
             }
         }

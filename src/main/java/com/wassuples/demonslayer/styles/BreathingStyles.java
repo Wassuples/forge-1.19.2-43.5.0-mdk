@@ -3,6 +3,7 @@ package com.wassuples.demonslayer.styles;
 import net.minecraft.ChatFormatting;
 
 public enum BreathingStyles {
+    NONE("NONE"),
     WIND("Wind Breathing"),
     INSECT("Insect Breathing"),
     STONE("Stone Breathing"),
@@ -20,15 +21,6 @@ public enum BreathingStyles {
     WOOD("Wood Breathing"),
     FROST("Frost Breathing"),
     SAND("Sand Breathing"),
-    // BDA
-    THREADS("Thread Manipulation"),
-    SLEEP("Sleep Manipulation"),
-    SASH("Obi Sash Manipulation"),
-    HAEMO("Haemokinesis"),
-    FISH("Fish Scale Attacks"),
-    EMOTION("Emotion Manifestation"),
-    DESTRUCTIVE_DEATH("Destructive Death"),
-    CRYO("Cryokinesis")
     ;
 
     private final String displayName;

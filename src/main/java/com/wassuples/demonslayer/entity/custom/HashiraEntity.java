@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ai.HashiraAttackGoal;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.nbt.CompoundTag;
@@ -21,7 +22,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-public class HashiraEntity extends PathfinderMob {
+public class HashiraEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<Integer> DATA_BREATHING_STYLE =
             SynchedEntityData.defineId(HashiraEntity.class, EntityDataSerializers.INT);
 
@@ -74,17 +75,8 @@ public class HashiraEntity extends PathfinderMob {
     protected void registerGoals() {
         super.registerGoals();
 
-        // Non-combat AI (lowest priority)
-        this.goalSelector.addGoal(0, new FloatGoal(this)); // Swim if in water
-        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 1.0D)); // Walk around
-        this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 8.0F)); // Look at nearby players
-        this.goalSelector.addGoal(7, new RandomLookAroundGoal(this)); // Look around when idle
-
-        // Combat AI
-        this.goalSelector.addGoal(1, new HashiraAttackGoal(this, 1.0D, true)); // Our custom attack goal
-
-        // Targeting AI (what to attack)
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this)); // Attack whatever hurt it
+        this.goalSelector.addGoal(1, new HashiraAttackGoal(this, 1.0D, true));
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Monster.class, true));
     }
 
