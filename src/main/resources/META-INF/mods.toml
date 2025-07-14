@@ -24,9 +24,17 @@ versionRange="${minecraft_version_range}"
 ordering="NONE"
 side="BOTH"
 
-#[[dependencies."${mod_id}"]]
-#modId="playeranimator"
-#mandatory=true
-#versionRange="[0.2.0,)"
-#ordering="NONE"
-#side="BOTH"
+[[dependencies."${mod_id}"]]
+modId="playeranimator"
+mandatory=true
+versionRange="[0.2.0,)"
+ordering="NONE"
+side="BOTH"
+
+
+[[dependencies."${mod_id}"]]
+modId="terrablender"
+mandatory=true
+versionRange="[2.0.1,)"
+ordering="AFTER"
+side="BOTH"

@@ -10,8 +10,10 @@ import com.wassuples.demonslayer.gamerule.ModGameRules;
 import com.wassuples.demonslayer.item.ModItems;
 import com.wassuples.demonslayer.missions.MissionRegistry;
 import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.worldgen.ModBiomeModifiers;
 import com.wassuples.demonslayer.worldgen.biome.ModBiomes;
+import com.wassuples.demonslayer.worldgen.terrablender.ModOverworldRegion;
+import com.wassuples.demonslayer.worldgen.terrablender.ModTerraBlender;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.common.MinecraftForge;
@@ -24,6 +26,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import software.bernie.geckolib3.GeckoLib;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import terrablender.api.Regions;
 
 @Mod(DemonSlayer.MOD_ID)
 public class DemonSlayer {
@@ -37,10 +40,12 @@ public class DemonSlayer {
         ModEntityTypes.register(modEventBus);
         ModEffects.register(modEventBus);
         MissionRegistry.register();
-        ModBiomeModifiers.register(modEventBus);
+
+        ModBiomes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::onAttributeCreate);
+        modEventBus.addListener(this::registerTerraBlender);
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(ModEvents.class);
@@ -58,6 +63,12 @@ public class DemonSlayer {
         });
 
         ModMessages.register();
+    }
+
+    private void registerTerraBlender(final FMLCommonSetupEvent event) {
+        event.enqueueWork(() -> {
+            Regions.register(new ModOverworldRegion(new ResourceLocation(MOD_ID, "overworld"), 5));
+        });
     }
 
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
