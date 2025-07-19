@@ -55,6 +55,11 @@ public class UseFormC2SPacket {
 
                     BreathingForms currentForm = style.getCurrentForms();
 
+                    // Prevent HOLD forms from activating via simple press
+                    if (currentForm.getInputType() == BreathingForms.InputType.HOLD) {
+                        return;
+                    }
+
                     // Check 1: Must hold a Nichirin Sword
                     boolean isHoldingNichirin = player.getMainHandItem().getItem() instanceof NichirinSwordItem ||
                             player.getOffhandItem().getItem() instanceof NichirinSwordItem;

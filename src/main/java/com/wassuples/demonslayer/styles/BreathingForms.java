@@ -30,10 +30,6 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
-/**
- * Enum defining all breathing forms, their properties, and their execution logic.
- * The performAction method is the entry point for activating a form.
- */
 public enum BreathingForms implements IForm {
 
     // =================================================================================
@@ -163,10 +159,7 @@ public enum BreathingForms implements IForm {
             false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            // Doesn't have ActiveForm class, because it is very simple.
-            FormUtils.performGenericAttack(user, SoundEvents.GENERIC_SPLASH, 1.0f, 1.0f);
-            FormUtils.dealThrustDamage(user, 8.0, 20.0f);
-            FormUtils.spawnLineParticles(level, ParticleTypes.SPLASH, user.getEyePosition(), user.getEyePosition().add(user.getLookAngle().scale(8.0)), 30);
+            FormUtils.ActiveFormManager.start(user, this);
         }
     },
     WATER_8(BreathingStyles.WATER,
@@ -370,14 +363,12 @@ public enum BreathingForms implements IForm {
             false) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            // Doesn't have ActiveForm class, because it is very simple.
             FormUtils.performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.4f);
             user.setDeltaMovement(user.getDeltaMovement().add(0, 0.6, 0));
             user.hurtMarked = true;
 
             final DustParticleOptions greenDust = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.1f), 1.0f);
-            FormUtils.spawnParticleArc(user, greenDust, 3, 120, 40);
-            FormUtils.dealClawDamage(user, 8.0f, 6.0, 4, 90.0, 0.7f);
+            FormUtils.dealClawDamage(user, greenDust, 8.0f, 6.0, 4, 90.0, 0.7f);
         }
     },
     WIND_3(BreathingStyles.WIND,

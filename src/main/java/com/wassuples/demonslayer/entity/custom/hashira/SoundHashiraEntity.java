@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class SoundHashiraEntity extends HashiraEntity {
-    public SoundHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public SoundHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.SOUND);
     }

@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class MistHashiraEntity extends HashiraEntity {
-    public MistHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public MistHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.MIST);
     }

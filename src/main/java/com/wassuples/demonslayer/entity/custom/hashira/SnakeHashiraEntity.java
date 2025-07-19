@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class SnakeHashiraEntity extends HashiraEntity {
-    public SnakeHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public SnakeHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.SERPENT);
     }

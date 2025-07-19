@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class ThunderHashiraEntity extends HashiraEntity {
-    public ThunderHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public ThunderHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.THUNDER);
     }

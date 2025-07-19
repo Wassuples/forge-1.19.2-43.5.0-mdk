@@ -21,10 +21,6 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
@@ -59,6 +55,25 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, (entity) -> !isOwner(entity)));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, true));
+    }
+
+    @Override
+    public @Nullable BreathingStyles getBreathingStyle() {
+        return null;
+    }
+
+    @Override
+    public @Nullable BloodDemonArts getDemonArt() {
+        try {
+            BloodDemonArts art = BloodDemonArts.valueOf(this.entityData.get(DATA_BDA_STYLE));
+            return art == BloodDemonArts.NONE ? null : art;
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    public void setBdaStyle(BloodDemonArts style) {
+        this.entityData.set(DATA_BDA_STYLE, style.name());
     }
 
     @Override
@@ -120,18 +135,6 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
     public Optional<GameProfile> getOwnerProfile() {
         CompoundTag tag = this.entityData.get(OWNER_PROFILE_TAG);
         return tag.isEmpty() ? Optional.empty() : Optional.of(NbtUtils.readGameProfile(tag));
-    }
-
-    public BloodDemonArts getBdaStyle() {
-        try {
-            return BloodDemonArts.valueOf(this.entityData.get(DATA_BDA_STYLE));
-        } catch (Exception e) {
-            return BloodDemonArts.NONE;
-        }
-    }
-
-    public void setBdaStyle(BloodDemonArts style) {
-        this.entityData.set(DATA_BDA_STYLE, style.name());
     }
 
     public void setIsNpcClone(boolean isNpc) { this.entityData.set(IS_NPC_CLONE, isNpc); }

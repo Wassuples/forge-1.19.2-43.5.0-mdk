@@ -45,8 +45,8 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 20.0D) // Give them 20 health
-                .add(Attributes.MOVEMENT_SPEED, 0.0D); // They don't move
+                .add(Attributes.MAX_HEALTH, 20.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.0D);
     }
 
     @Override

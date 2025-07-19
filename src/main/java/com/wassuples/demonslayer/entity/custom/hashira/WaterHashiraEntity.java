@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class WaterHashiraEntity extends HashiraEntity {
-    public WaterHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public WaterHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.WATER);
     }

@@ -2,6 +2,7 @@ package com.wassuples.demonslayer.entity.custom.demon;
 
 import com.wassuples.demonslayer.demon.DemonRank;
 import com.wassuples.demonslayer.entity.custom.DemonEntity;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -10,7 +11,7 @@ import net.minecraft.world.level.Level;
 
 public class LowerMoonSixEntity extends DemonEntity {
 
-    public LowerMoonSixEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
+    public LowerMoonSixEntity(EntityType<? extends DemonEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
         this.setDemonRank(DemonRank.LOWER_MOON_6);
     }

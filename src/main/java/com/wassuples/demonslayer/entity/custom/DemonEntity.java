@@ -1,7 +1,9 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.demon.DemonRank;
-import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.entity.ai.FormUserAttackGoal;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
+import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -12,32 +14,30 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.ServerLevelAccessor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
+import javax.annotation.Nullable;
 
-public abstract class DemonEntity extends Monster {
-    private static final Logger LOGGER = LogManager.getLogger();
-    // Data tracker to sync the demon's rank
+public abstract class DemonEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<Integer> DATA_DEMON_RANK =
             SynchedEntityData.defineId(DemonEntity.class, EntityDataSerializers.INT);
 
-    protected DemonEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
+    private static final EntityDataAccessor<Integer> DATA_DEMON_BDA =
+            SynchedEntityData.defineId(DemonEntity.class, EntityDataSerializers.INT);
+
+    private static final EntityDataAccessor<Integer> DATA_BREATHING_STYLE =
+            SynchedEntityData.defineId(DemonEntity.class, EntityDataSerializers.INT);
+
+
+    protected DemonEntity(EntityType<? extends AbstractFormUsingEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
-    // --- BASE ATTRIBUTES ---
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.FOLLOW_RANGE, 35.0D)
@@ -46,46 +46,39 @@ public abstract class DemonEntity extends Monster {
                 .add(Attributes.ARMOR, 2.0D);
     }
 
-    // --- AI GOALS ---
     @Override
     protected void registerGoals() {
-        this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.0D, false));
-        this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0D));
-        this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
+        super.registerGoals();
 
-        // Targeting AI
+        this.goalSelector.addGoal(1, new FormUserAttackGoal(this, 1.0D, true));
+
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        // Target any player.
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
-        // Target any Hashira
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, HashiraEntity.class, true));
     }
 
-    // --- CORE DEMON LOGIC ---
     @Override
     public void aiStep() {
-        // This makes the demon burn in daylight
-        if (this.isAlive() && !this.level.isClientSide) {
-            boolean isSunValid = this.level.isDay() && this.level.canSeeSky(this.blockPosition());
-            if (isSunValid) {
+        if (this.isAlive() && this.level.isDay() && !this.level.isClientSide()) {
+            if (this.level.canSeeSky(this.blockPosition())) {
                 this.setSecondsOnFire(8);
             }
         }
         super.aiStep();
     }
 
-    // --- RANK DATA ---
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
         this.entityData.define(DATA_DEMON_RANK, DemonRank.FODDER.ordinal());
+        this.entityData.define(DATA_DEMON_BDA, BloodDemonArts.NONE.ordinal());
     }
 
     @Override
     public void addAdditionalSaveData(CompoundTag pCompound) {
         super.addAdditionalSaveData(pCompound);
         pCompound.putInt("DemonRank", this.getDemonRank().ordinal());
+        pCompound.putInt("DemonBDA", this.getDemonArt().ordinal());
     }
 
     @Override
@@ -94,6 +87,17 @@ public abstract class DemonEntity extends Monster {
         if (pCompound.contains("DemonRank")) {
             this.setDemonRank(DemonRank.values()[pCompound.getInt("DemonRank")]);
         }
+        if (pCompound.contains("DemonBDA")) {
+            this.setDemonArt(BloodDemonArts.values()[pCompound.getInt("DemonBDA")]);
+        }
+    }
+
+    @Nullable @Override public BreathingStyles getBreathingStyle() {
+        return null;
+    }
+
+    @Nullable @Override public BloodDemonArts getDemonArt() {
+        return BloodDemonArts.values()[this.entityData.get(DATA_DEMON_BDA)];
     }
 
     public DemonRank getDemonRank() {
@@ -104,8 +108,12 @@ public abstract class DemonEntity extends Monster {
         this.entityData.set(DATA_DEMON_RANK, rank.ordinal());
     }
 
+    public void setDemonArt(BloodDemonArts bda) {
+        this.entityData.set(DATA_DEMON_BDA, bda.ordinal());
+    }
+
     public static <T extends DemonEntity> boolean canSpawn(EntityType<T> pEntityType, ServerLevelAccessor pLevel, MobSpawnType pSpawnType, BlockPos pPos, RandomSource pRandom) {
-        boolean isSolidGround = !(pLevel.getBlockState(pPos.below()).isAir());
+        boolean isSolidGround = !pLevel.getBlockState(pPos.below()).isAir();
 
         float time = pLevel.getTimeOfDay(1.0F);
         boolean isNightTime = time > 0.25F && time < 0.75F;

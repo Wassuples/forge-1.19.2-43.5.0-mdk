@@ -12,6 +12,9 @@
   "item.demonslayer.tengen_uzui_spawn_egg": "Tengen Uzui Spawn Egg",
   "item.demonslayer.jigoro_kuwajima_spawn_egg": "Jigoro Kuwajima Spawn Egg",
   "item.demonslayer.muzans_blood": "Muzan's Blood",
+  "item.demonslayer.wisteria_log": "Wisteria Log",
+
+  "block.demonslayer.wisteria_log": "Wisteria Log",
 
 
   "itemGroup.demonslayertab": "Demon Slayer",
@@ -19,6 +22,7 @@
   "key.category.demonslayer.category": "Demon Slayer",
   "key.demonslayer.change_form": "Change Blade Form",
   "key.demonslayer.use_form": "Use Blade Form",
+  "key.demonslayer.bda_toggle": "Toggle BDAs",
 
   "message.demonslayer.use_form": "Used Form!",
   "key.demonslayer.open_menu": "Open Breathing Menu",

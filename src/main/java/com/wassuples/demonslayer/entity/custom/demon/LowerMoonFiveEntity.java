@@ -2,6 +2,7 @@ package com.wassuples.demonslayer.entity.custom.demon;
 
 import com.wassuples.demonslayer.demon.DemonRank;
 import com.wassuples.demonslayer.entity.custom.DemonEntity;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -10,12 +11,12 @@ import net.minecraft.world.level.Level;
 
 public class LowerMoonFiveEntity extends DemonEntity {
 
-    public LowerMoonFiveEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
+    public LowerMoonFiveEntity(EntityType<? extends DemonEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
-        this.setDemonRank(DemonRank.LOWER_MOON_6);
+        this.setDemonRank(DemonRank.LOWER_MOON_5);
+        this.setDemonArt(BloodDemonArts.THREADS);
     }
 
-    // These are boss-level stats
     public static AttributeSupplier.Builder createAttributes() {
         return DemonEntity.createAttributes()
                 .add(Attributes.MAX_HEALTH, 300.0D) // Very high health
@@ -28,5 +29,6 @@ public class LowerMoonFiveEntity extends DemonEntity {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        // Add specific goals for Lower Moon Five later.
     }
 }

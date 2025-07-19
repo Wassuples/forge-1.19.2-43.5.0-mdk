@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class FlowerHashiraEntity extends HashiraEntity {
-    public FlowerHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public FlowerHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.FLOWER);
     }

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column_horizontal",
+  "textures": {
+    "end": "demonslayer:block/wisteria_log_side",
+    "side": "demonslayer:block/wisteria_log_top"
+  }
+}

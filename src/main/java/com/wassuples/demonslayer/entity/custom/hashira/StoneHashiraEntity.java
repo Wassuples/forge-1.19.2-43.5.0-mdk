@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class StoneHashiraEntity extends HashiraEntity {
-    public StoneHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public StoneHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.STONE);
     }

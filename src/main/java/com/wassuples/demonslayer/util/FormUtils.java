@@ -248,7 +248,7 @@ public class FormUtils {
     /**
      * Deals damage in multiple arcs, simulating claws.
      */
-    public static void dealClawDamage(LivingEntity user, float damage, double range, int clawCount, double spreadAngle, float knockback) {
+    public static void dealClawDamage(LivingEntity user, ParticleOptions particle,  float damage, double range, int clawCount, double spreadAngle, float knockback) {
         if (isMoonBdaActive(user)) {
             damage *= 1.3f; // 30% more damage
             range *= 1.2f;  // 20% more range
@@ -272,6 +272,8 @@ public class FormUtils {
                 Vec3 linePoint = user.getEyePosition().lerp(arcEnd, progress);
                 double arcHeight = Math.sin(progress * Math.PI) * 3.0;
                 Vec3 currentPoint = linePoint.add(0, arcHeight, 0);
+
+                level.sendParticles(particle, currentPoint.x, currentPoint.y, currentPoint.z, 1, 0, 0, 0, 0);
 
                 AABB damageBox = new AABB(currentPoint, currentPoint).inflate(1.8);
                 List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageBox, entity -> entity != user && entity.isAlive());
@@ -744,24 +746,38 @@ public class FormUtils {
         // --- Manager Public API ---
 
         public static void start(LivingEntity user, IForm form) {
-            // Prevent starting a new form if one is already active that shouldn't be interrupted.
-            if (ACTIVE_FORMS.containsKey(user.getUUID()) && !ACTIVE_FORMS.get(user.getUUID()).isInterruptible()) {
-                return;
+            System.out.println("[DEBUG] ==> Attempting to START form: " + form.getDisplayName());
+            if (ACTIVE_FORMS.containsKey(user.getUUID())) {
+                ActiveForm existingForm = ACTIVE_FORMS.get(user.getUUID());
+                System.out.println("[DEBUG] Found existing form: " + existingForm.getForm().getDisplayName() + ", Interruptible: " + existingForm.isInterruptible());
+                if (!existingForm.isInterruptible()) {
+                    System.out.println("[DEBUG] BLOCKED: Existing form is not interruptible.");
+                    return;
+                }
             }
-            stop(user); // Stop any previous form
+            stop(user);
 
             BiFunction<LivingEntity, IForm, ActiveForm> factory = FORM_FACTORIES.get(form);
             if (factory != null) {
                 ActiveForm activeForm = factory.apply(user, form);
                 ACTIVE_FORMS.put(user.getUUID(), activeForm);
+                System.out.println("[DEBUG] Successfully STARTED and MAPPED form: " + form.getDisplayName());
                 activeForm.onStart();
+            } else {
+                System.out.println("[DEBUG] ERROR: No factory found for form: " + form.getDisplayName());
             }
         }
 
         public static void stop(LivingEntity user) {
             ActiveForm form = ACTIVE_FORMS.remove(user.getUUID());
             if (form != null) {
+                System.out.println("[DEBUG] ==> Attempting to STOP and REMOVE form: " + form.getForm().getDisplayName());
                 form.onStop();
+                System.out.println("[DEBUG] Successfully STOPPED form: " + form.getForm().getDisplayName());
+
+                if (user instanceof ServerPlayer player) {
+                    ModMessages.sendToPlayer(new StopFormS2CPacket(), player);
+                }
             }
         }
 
@@ -770,10 +786,19 @@ public class FormUtils {
             start(user, form);
         }
 
-        public static void releaseCharge(LivingEntity user, boolean wasFullyCharged) {
+        public static void releaseCharge(LivingEntity user) {
             ActiveForm activeForm = ACTIVE_FORMS.get(user.getUUID());
-            if (activeForm instanceof ChargeableForm chargeable) {
-                chargeable.release(wasFullyCharged);
+            if (activeForm != null) {
+                System.out.println("[DEBUG] ==> Attempting to RELEASE charge for active form: " + activeForm.getForm().getDisplayName());
+                if (activeForm instanceof ChargeableForm chargeable) {
+                    boolean wasFullyCharged = chargeable.chargeTicks >= chargeable.chargeGoal;
+                    System.out.println("[DEBUG] Charge was " + (wasFullyCharged ? "SUCCESSFUL" : "INCOMPLETE"));
+                    chargeable.release(wasFullyCharged);
+                } else {
+                    System.out.println("[DEBUG] ERROR: Active form is not a ChargeableForm!");
+                }
+            } else {
+                System.out.println("[DEBUG] ERROR: releaseCharge() called, but no active form was found.");
             }
         }
 
@@ -847,6 +872,7 @@ public class FormUtils {
                     .put(BreathingForms.WATER_2, WaterWheelForm::new)
                     .put(BreathingForms.WATER_3, FlowingDanceForm::new)
                     .put(BreathingForms.WATER_6, WhirlpoolForm::new)
+                    .put(BreathingForms.WATER_7, WaterThrustForm::new)
                     .put(BreathingForms.WATER_8, WaterfallBasinForm::new)
                     .put(BreathingForms.WATER_10, ConstantFluxForm::new)
                     .put(BreathingForms.WATER_9, SplashingWaterFlowForm::new)
@@ -1093,11 +1119,14 @@ public class FormUtils {
         protected int chargeGoal;
         protected int chargeTicks = 0;
         protected boolean released = false;
+        private int stopTick = -1;
 
         public ChargeableForm(LivingEntity user, IForm form) {
             super(user, form);
             this.chargeGoal = form.getChargeTicks();
         }
+
+        protected abstract int getReleaseDuration();
 
         @Override
         protected void onStart() {
@@ -1107,6 +1136,11 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
+            if (stopTick != -1 && user.tickCount >= stopTick) {
+                ActiveFormManager.stop(user);
+                return;
+            }
+
             if (!released) {
                 if (chargeTicks < chargeGoal) {
                     chargeTicks++;
@@ -1124,20 +1158,23 @@ public class FormUtils {
         }
 
         public void release(boolean wasFullyCharged) {
+            if (this.released) return;
             this.released = true;
-            this.ticksActive = 0; // Reset ticks for the release phase
+            this.ticksActive = 0;
             user.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
             onChargeRelease(wasFullyCharged);
+
+            if (getReleaseDuration() <= 0) {
+                ActiveFormManager.stop(user);
+            } else {
+                this.stopTick = user.tickCount + getReleaseDuration();
+            }
         }
 
         protected abstract void onChargeStart();
-
         protected abstract void onChargingTick();
-
         protected abstract void onChargeRelease(boolean fullyCharged);
-
         protected abstract void onReleaseTick();
-
         protected abstract void onChargeEnd();
     }
 
@@ -1251,6 +1288,38 @@ public class FormUtils {
         @Override
         protected void onStop() {
             removeImmobility(user);
+        }
+    }
+
+    private static class WaterThrustForm extends ChargeableForm {
+        public WaterThrustForm(LivingEntity user, IForm form) {
+            super(user, form);
+        }
+
+        @Override protected int getReleaseDuration() {
+            return 0;
+        }
+        @Override protected void onChargeRelease(boolean fullyCharged) {
+            if (fullyCharged) {
+                performGenericAttack(user, SoundEvents.GENERIC_SPLASH, 1.0f, 1.0f);
+                dealThrustDamage(user, 8.0, 20.0f);
+                spawnLineParticles(level, ParticleTypes.SPLASH, user.getEyePosition(), user.getEyePosition().add(user.getLookAngle().scale(8.0)), 30);
+            }
+        }
+
+        @Override protected void onChargeStart() {
+            level.playSound(null, user.blockPosition(), SoundEvents.AMBIENT_UNDERWATER_ENTER, SoundSource.PLAYERS, 0.5f, 1.5f);
+        }
+        @Override protected void onChargingTick() {
+            Vec3 swordTipPos = user.getEyePosition().add(user.getLookAngle().scale(1.2));
+            level.sendParticles(ParticleTypes.BUBBLE, swordTipPos.x, swordTipPos.y, swordTipPos.z, 1, 0, 0, 0, 0);
+        }
+        @Override protected void onReleaseTick() {}
+        @Override protected void onChargeEnd() {
+            if (!this.released) {
+                level.playSound(null, user.blockPosition(), SoundEvents.FIRE_EXTINGUISH, SoundSource.PLAYERS, 0.8f, 1.2f);
+                level.sendParticles(ParticleTypes.POOF, user.getX(), user.getY() + 1, user.getZ(), 5, 0.1, 0.1, 0.1, 0.05);
+            }
         }
     }
 
@@ -1587,14 +1656,15 @@ public class FormUtils {
     private static class RengokuForm extends ChargeableForm {
         private static final int DASH_DURATION = 20;
         private Vec3 direction, prevPos;
-        private int releaseTicks = 0;
 
         public RengokuForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
-        @Override
-        public boolean isInterruptible() {
+        @Override protected int getReleaseDuration() {
+            return DASH_DURATION;
+        }
+        @Override public boolean isInterruptible() {
             return false;
         }
 
@@ -1637,18 +1707,13 @@ public class FormUtils {
 
         @Override
         protected void onReleaseTick() {
-            if (releaseTicks < DASH_DURATION) {
-                releaseTicks++;
-                user.setDeltaMovement(direction.scale(3.5));
-                user.hurtMarked = true;
+            user.setDeltaMovement(direction.scale(3.5));
+            user.hurtMarked = true;
 
-                Vec3 currentPos = user.position();
-                dealLineDamage(user, prevPos, currentPos, 35.0f, 10);
-                carveFieryTrench(level, prevPos, currentPos, 3, 2);
-                this.prevPos = currentPos;
-            } else {
-                ActiveFormManager.stop(user);
-            }
+            Vec3 currentPos = user.position();
+            dealLineDamage(user, prevPos, currentPos, 35.0f, 10);
+            carveFieryTrench(level, prevPos, currentPos, 3, 2);
+            this.prevPos = currentPos;
         }
 
         @Override
@@ -1958,9 +2023,11 @@ public class FormUtils {
         private static final float ATTACK_DAMAGE = 18.0f;
         private static final float PATH_DAMAGE = 8.0f;
         private static final DustParticleOptions YELLOW_LIGHTNING = new DustParticleOptions(new Vector3f(1.0f, 0.9f, 0.2f), 1.0f);
+        private final Vec3 direction;
 
         public ThunderclapAndFlashForm(LivingEntity user, IForm form) {
             super(user, form, CHARGE_PAUSE_DURATION + 2);
+            this.direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
         }
 
         @Override
@@ -1994,10 +2061,9 @@ public class FormUtils {
                 }
             } else {
                 Vec3 startPos = user.position();
-                Vec3 direction = new Vec3(user.getLookAngle().x, 0, user.getLookAngle().z).normalize();
-                Vec3 endPos = startPos.add(direction.scale(TELEPORT_RANGE));
+                Vec3 endPos = startPos.add(this.direction.scale(TELEPORT_RANGE));
 
-                AABB pathHitbox = new AABB(startPos, endPos).inflate(2.0); // A 2-block wide hitbox along the path
+                AABB pathHitbox = new AABB(startPos, endPos).inflate(2.0);
                 List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, pathHitbox, e -> e != user && e.isAlive());
                 for (LivingEntity target : hitTargets) {
                     if (user instanceof ServerPlayer player) {
@@ -2008,7 +2074,7 @@ public class FormUtils {
                 }
 
                 for (double i = 0; i < TELEPORT_RANGE; i += 0.5) {
-                    Vec3 particlePos = startPos.add(direction.scale(i));
+                    Vec3 particlePos = startPos.add(this.direction.scale(i));
                     level.sendParticles(YELLOW_LIGHTNING, particlePos.x, particlePos.y + 1.0, particlePos.z, 5, 0.2, 0.2, 0.2, 0);
                 }
 
@@ -2234,7 +2300,7 @@ public class FormUtils {
     public static class HonoikazuchiNoKamiForm extends TimedForm {
         private static final int CHARGE_PAUSE_DURATION = 15;
         private static final int DASH_DURATION_TICKS = 10;
-        private static final double DASH_SPEED = 64.0; // a stack
+        private static final double DASH_SPEED = 5.0;
         private static final float DASH_DAMAGE = 10.0f;
         private static final float FINAL_ATTACK_DAMAGE = 40.0f;
         private static final DustParticleOptions DRAGON_PARTICLE = new DustParticleOptions(new Vector3f(1.0f, 1.0f, 0.4f), 1.5f);
@@ -2260,7 +2326,6 @@ public class FormUtils {
         }
 
         private void performSlash() {
-            // The final, devastating slash
             user.setDeltaMovement(Vec3.ZERO);
             performGenericAttack(user, SoundEvents.GENERIC_EXPLODE, 1.2f, 1.5f);
             dealThrustDamage(user, 6.0, FINAL_ATTACK_DAMAGE);
@@ -2288,8 +2353,10 @@ public class FormUtils {
                     return;
                 }
 
-                user.setDeltaMovement(dashDirection.scale(DASH_SPEED));
+                Vec3 newPos = user.position().add(this.dashDirection.scale(DASH_SPEED));
+                user.teleportTo(newPos.x, newPos.y, newPos.z);
                 user.hurtMarked = true;
+
                 if (user instanceof ServerPlayer player) {
                     dealAOEDamage(player, player.position(), 2.0, DASH_DAMAGE, 0.2f, DamageSource.playerAttack(player));
                 } else {
@@ -4925,7 +4992,11 @@ public class FormUtils {
 
         public ExtendingBendySlashForm(LivingEntity user, IForm form) {
             super(user, form);
-            this.chargeGoal = WIND_UP_DURATION;
+        }
+
+        @Override
+        protected int getReleaseDuration() {
+            return 0;
         }
 
         @Override
@@ -4945,7 +5016,6 @@ public class FormUtils {
                 dealDirectionalDamage(user, ATTACK_RANGE, DAMAGE, 0.85);
                 spawnParticleArc(user, ParticleTypes.CRIT, ATTACK_RANGE, 90, 40);
             }
-            ActiveFormManager.stop(user);
         }
 
         @Override
@@ -6216,8 +6286,8 @@ public class FormUtils {
     }
 
     private static class AnnihilationTypeForm extends ChargeableForm {
-        private static final int DASH_DURATION = 15; // Shorter, faster dash than Rengoku
-        private static final double DASH_SPEED = 4.0;   // Faster than Rengoku's 3.5
+        private static final int DASH_DURATION = 15; // faster dash than Rengoku
+        private static final double DASH_SPEED = 4.0;   // Faster than Rengoku's
         private static final float IMPACT_DAMAGE = 60.0f;
         private static final double IMPACT_RADIUS = 7.0;
 
@@ -6225,10 +6295,14 @@ public class FormUtils {
         private static final DustParticleOptions PURPLE_AURA = new DustParticleOptions(new Vector3f(0.6f, 0.2f, 1.0f), 1.2f);
 
         private Vec3 direction;
-        private int releaseTicks = 0;
 
         public AnnihilationTypeForm(LivingEntity user, IForm form) {
             super(user, form);
+        }
+
+        @Override
+        protected int getReleaseDuration() {
+            return DASH_DURATION;
         }
 
         @Override
@@ -6269,21 +6343,17 @@ public class FormUtils {
 
         @Override
         protected void onReleaseTick() {
-            if (releaseTicks < DASH_DURATION) {
-                releaseTicks++;
-                user.setDeltaMovement(direction.scale(DASH_SPEED));
-                user.hurtMarked = true;
+            user.setDeltaMovement(direction.scale(DASH_SPEED));
+            user.hurtMarked = true;
 
-                AABB impactBox = user.getBoundingBox().inflate(1.0).move(direction.scale(1.5));
-                List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, impactBox, e -> e != user && e.isAlive());
+            AABB impactBox = user.getBoundingBox().inflate(1.0).move(direction.scale(1.5));
+            List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, impactBox, e -> e != user && e.isAlive());
 
-                if (!hitTargets.isEmpty()) {
-                    triggerExplosion(hitTargets.get(0).position());
-                    ActiveFormManager.stop(user);
-                }
-            } else {
-                triggerExplosion(user.position());
+            if (!hitTargets.isEmpty()) {
+                triggerExplosion(hitTargets.get(0).position());
                 ActiveFormManager.stop(user);
+            } else if (ticksActive >= getReleaseDuration() -1) {
+                triggerExplosion(user.position());
             }
         }
 
@@ -7174,6 +7244,11 @@ public class FormUtils {
         }
 
         @Override
+        protected int getReleaseDuration() {
+            return 0;
+        }
+
+        @Override
         public boolean isInterruptible() {
             return false;
         }
@@ -7570,7 +7645,7 @@ public class FormUtils {
             user.setDeltaMovement(direction.x * DASH_SPEED, 0.1, direction.z * DASH_SPEED);
             user.hurtMarked = true;
 
-            FormUtils.spawnParticleArc(user, ParticleTypes.FLAME, 4.0, 90, 20);
+            spawnParticleArc(user, ParticleTypes.FLAME, 4.0, 90, 20);
             level.sendParticles(HEAT_HAZE, user.getX(), user.getEyeY(), user.getZ(), 2, 0.5, 0.5, 0.5, 0.01);
 
             AABB impactBox = user.getBoundingBox().inflate(1.5);
@@ -7656,13 +7731,15 @@ public class FormUtils {
         private static final DustParticleOptions RED_HOT = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
 
         private Vec3 direction;
-        private int releaseTicks = 0;
         private boolean hasHit = false;
 
         public SunflowerThrustForm(LivingEntity user, IForm form) {
             super(user, form);
         }
 
+        @Override protected int getReleaseDuration() {
+            return DASH_DURATION;
+        }
         @Override public boolean isInterruptible() { return false; }
 
         @Override
@@ -7690,21 +7767,18 @@ public class FormUtils {
         protected void onReleaseTick() {
             if (this.hasHit) return;
 
-            if (releaseTicks < DASH_DURATION) {
-                releaseTicks++;
-                user.setDeltaMovement(direction.scale(DASH_SPEED));
-                user.hurtMarked = true;
-                level.sendParticles(ParticleTypes.FLAME, user.getX(), user.getY() + 1, user.getZ(), 5, 0.1, 0.1, 0.1, 0.01);
+            user.setDeltaMovement(direction.scale(DASH_SPEED));
+            user.hurtMarked = true;
+            level.sendParticles(ParticleTypes.FLAME, user.getX(), user.getY() + 1, user.getZ(), 5, 0.1, 0.1, 0.1, 0.01);
 
-                AABB impactBox = user.getBoundingBox().inflate(1.2).move(direction);
-                List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, impactBox, e -> e != user && e.isAlive());
+            AABB impactBox = user.getBoundingBox().inflate(1.2).move(direction);
+            List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, impactBox, e -> e != user && e.isAlive());
 
-                if (!hitTargets.isEmpty()) {
-                    this.hasHit = true;
-                    triggerImpact(hitTargets.get(0));
-                    ActiveFormManager.stop(user);
-                }
-            } else {
+            if (!hitTargets.isEmpty()) {
+                this.hasHit = true;
+                triggerImpact(hitTargets.get(0));
+                ActiveFormManager.stop(user);
+            } else if(ticksActive >= getReleaseDuration() -1) {
                 ActiveFormManager.stop(user);
             }
         }
@@ -7961,21 +8035,20 @@ public class FormUtils {
 
     public static class ThirteenthForm extends ActiveForm {
         private static final int BREATH_DRAIN_PER_SECOND = 30;
-        private static final float DAMAGE_RAMP_PER_HIT = 1.5f;
         private static final int TOTAL_FORMS = 12;
 
         private int currentFormIndex = 0;
         private int ticksInCurrentForm = 0;
 
         private static final int[] FORM_DURATIONS = {
-                10, // Dance
+                5, // Dance
                 20, // Clear Blue Sky
                 20, // Raging Sun
                 30, // Burning Bones
                 25, // Setting Sun
                 15, // Solar Heat Haze
                 25, // Beneficent Radiance
-                40, // Sunflower Thrust (chargeable, so we give it more time)
+                40, // Sunflower Thrust
                 40, // Dragon Dance
                 30, // Fire Wheel
                 10, // Fake Rainbow
@@ -7983,10 +8056,7 @@ public class FormUtils {
         };
 
         private static final List<IForm> SUN_FORMS = Arrays.asList(
-                SUN_1, SUN_2, SUN_3,
-                BreathingForms.SUN_4, BreathingForms.SUN_5, BreathingForms.SUN_6,
-                BreathingForms.SUN_7, BreathingForms.SUN_8, BreathingForms.SUN_9,
-                BreathingForms.SUN_10, BreathingForms.SUN_11, BreathingForms.SUN_12
+                SUN_1, SUN_2, SUN_3, SUN_4, SUN_5, SUN_6, SUN_7, SUN_8, SUN_9, SUN_10, SUN_11, SUN_12
         );
 
         public ThirteenthForm(LivingEntity user, IForm form) {
@@ -8006,6 +8076,8 @@ public class FormUtils {
         protected void onTick() {
             user.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 20, 2));
             user.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 20, 1));
+            user.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20, 2));
+            user.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 20, 1));
 
             if (ticksActive % 20 == 0) {
                 user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
@@ -8031,8 +8103,6 @@ public class FormUtils {
         }
 
         private void executeFormLogic(int formIndex) {
-            float damage = 10.0f + (formIndex * DAMAGE_RAMP_PER_HIT);
-
             switch (formIndex) {
                 case 0: // Dance
                     if (ticksInCurrentForm == 1) {

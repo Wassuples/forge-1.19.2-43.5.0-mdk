@@ -28,6 +28,7 @@ public class ModItems {
                     .food(new FoodProperties.Builder().alwaysEat().effect(() -> new MobEffectInstance(MobEffects.CONFUSION, 200, 1), 1.0F).build())));
 
 
+
     public static final RegistryObject<Item> WATER_HASHIRA_SPAWN_EGG = ITEMS.register("giyu_tomioka_spawn_egg",
             () -> new ForgeSpawnEggItem(ModEntityTypes.WATER_HASHIRA, 0x1A2A4C, 0x4D82C6, // Deep Blue & Water Blue
                     new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));

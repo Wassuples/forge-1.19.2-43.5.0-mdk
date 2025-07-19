@@ -9,12 +9,8 @@ import com.wassuples.demonslayer.client.gui.SleepQTEHandler;
 import com.wassuples.demonslayer.client.gui.VignetteHudOverlay;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
-import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.BodhisattvaEntity;
-import com.wassuples.demonslayer.entity.renderers.*;
-import com.wassuples.demonslayer.entity.renderers.demon.*;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
-import com.wassuples.demonslayer.entity.renderers.hashira.*;
 import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.networking.ModMessages;
@@ -26,7 +22,6 @@ import com.wassuples.demonslayer.util.KeyBinding;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
-import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -46,6 +41,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientEvents {
+    private static boolean isChargeFormActive = false;
+    public static boolean isChargeFormActive() {
+        return isChargeFormActive;
+    }
+    public static void setChargeFormActive(boolean active) {
+        isChargeFormActive = active;
+    }
+
+
     @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, value = Dist.CLIENT)
     public static class ClientForgeEvents {
         private static boolean useKeyHeld = false;
@@ -74,7 +78,6 @@ public class ClientEvents {
             LesserEyeRendererManager.tick();
 
             if (mc.player.getVehicle() instanceof BodhisattvaEntity) {
-                // Read movement keys
                 Vec3 input = new Vec3(
                         mc.player.input.leftImpulse, // Strafe left/right
                         0,                          // No vertical input from player
@@ -109,50 +112,56 @@ public class ClientEvents {
                 }
             }
 
-            mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                BreathingForms currentForm = style.getCurrentForms();
-                if (KeyBinding.USE_KEY.isDown()) {
-                    if (!useKeyHeld) {
-                        useKeyHeld = true;
-                        if (currentForm.getInputType() == BreathingForms.InputType.HOLD) {
-                            ModMessages.sendToServer(new ChargeFormC2SPacket(ChargeFormC2SPacket.ChargeType.START));
-                        }
+            if (KeyBinding.USE_KEY.isDown()) {
+                if (!useKeyHeld) {
+                    useKeyHeld = true;
+
+                    if (!isChargeFormActive()) {
+                        mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
+                            BreathingForms currentForm = style.getCurrentForms();
+                            if (currentForm.getInputType() == BreathingForms.InputType.HOLD) {
+                                setChargeFormActive(true);
+                                ModMessages.sendToServer(new ChargeFormC2SPacket(ChargeFormC2SPacket.ChargeType.START));
+                            }
+                        });
                     }
-                    useKeyHoldTime++;
-                } else {
-                    if (useKeyHeld) {
+                }
+            } else {
+                if (useKeyHeld) {
+                    mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
+                        BreathingForms currentForm = style.getCurrentForms();
                         if (currentForm.getInputType() == BreathingForms.InputType.PRESS) {
                             ModMessages.sendToServer(new UseFormC2SPacket());
                         } else if (currentForm.getInputType() == BreathingForms.InputType.HOLD) {
-                            ModMessages.sendToServer(new ChargeFormC2SPacket(ChargeFormC2SPacket.ChargeType.RELEASE, useKeyHoldTime));
+                            if (isChargeFormActive()) {
+                                ModMessages.sendToServer(new ChargeFormC2SPacket(ChargeFormC2SPacket.ChargeType.RELEASE));
+                            }
+                        }
+                    });
+                }
+                useKeyHeld = false;
+            }
+
+            mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
+                if(style.getCurrentForms() == BreathingForms.WATER_9) {
+                    if (mc.player.isOnGround()) {
+                        canAirJump = true;
+                    }
+
+                    boolean isCurrentlyJumping = mc.player.getDeltaMovement().y > 0;
+
+                    if (wasJumping && !isCurrentlyJumping && !mc.player.isOnGround() && canAirJump) {
+                        if (mc.options.keyJump.isDown()) {
+                            canAirJump = false;
+                            ModMessages.sendToServer(new PerformAirJumpC2SPacket());
                         }
                     }
-                    useKeyHeld = false;
-                    useKeyHoldTime = 0;
+                    wasJumping = isCurrentlyJumping;
+                } else {
+                    canAirJump = true;
+                    wasJumping = false;
                 }
             });
-
-            FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(mc.player);
-            boolean isFormActive = activeForm != null && activeForm.getForm() == BreathingForms.WATER_9;
-
-            if (isFormActive) {
-                if (mc.player.isOnGround()) {
-                    canAirJump = true;
-                }
-
-                boolean isCurrentlyJumping = mc.player.getDeltaMovement().y > 0;
-
-                if (wasJumping && !isCurrentlyJumping && !mc.player.isOnGround() && canAirJump) {
-                    if (mc.options.keyJump.isDown()) {
-                        canAirJump = false;
-                        ModMessages.sendToServer(new PerformAirJumpC2SPacket());
-                    }
-                }
-                wasJumping = isCurrentlyJumping;
-            } else {
-                canAirJump = true;
-                wasJumping = false;
-            }
         }
 
         @SubscribeEvent
@@ -258,56 +267,8 @@ public class ClientEvents {
 
         @SubscribeEvent
         public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
-            // We register our overlay here.
-            // The key "breath" is a unique ID for our overlay.
-            // We want it to render just above the player's health bar.
             event.registerAbove(VanillaGuiOverlay.PLAYER_HEALTH.id(), "breath", BreathHudOverlay.HUD_BREATH);
             event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "vignette", VignetteHudOverlay.HUD_VIGNETTE);
-        }
-
-        @SubscribeEvent
-        public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
-            // MISC.
-            event.registerEntityRenderer(ModEntityTypes.BLINDING_MIST_CLOUD.get(), NoopRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.MIST_CLONE.get(), MistCloneRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.MOTHER_EYE.get(), MotherEyeRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.BLOOD_SICKLE.get(), BloodSickleRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.KILLER_GOLDFISH.get(), KillerGoldfishRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.POISON_NEEDLE.get(), PoisonNeedleRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.WATER_PRISON_POT.get(), WaterPrisonPotRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.OCTOPUS_POT.get(), OctopusPotRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.WEEPING_SPEAR.get(), WeepingSpearRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.COMPASS_EFFECT.get(), CompassNeedleRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.COLD_WHITE_PRINCESS.get(), ColdWhitePrincessRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.LOTUS_SHARD.get(), LotusShardRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.CRYSTALLINE_DIVINE_CHILD.get(), CrystallineDivineChildRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.BODHISATTVA.get(), BodhisattvaRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.THROWN_NICHIRIN.get(), ThrownNichirinRenderer::new);
-            // HASHIRA
-            event.registerEntityRenderer(ModEntityTypes.HASHIRA.get(), HashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.WATER_HASHIRA.get(), WaterHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.INSECT_HASHIRA.get(), InsectHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.LOVE_HASHIRA.get(), LoveHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.SNAKE_HASHIRA.get(), SnakeHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.WIND_HASHIRA.get(), WindHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.STONE_HASHIRA.get(), StoneHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.MIST_HASHIRA.get(), MistHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.FLAME_HASHIRA.get(), FlameHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.FLOWER_HASHIRA.get(), FlowerHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.SOUND_HASHIRA.get(), SoundHashiraRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.THUNDER_HASHIRA.get(), ThunderHashiraRenderer::new);
-            // DEMONS
-            event.registerEntityRenderer(ModEntityTypes.FODDER_DEMON.get(), FodderDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.LOWLY_DEMON.get(), LowlyDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.COMMON_DEMON.get(), CommonDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.GREATER_DEMON.get(), GreaterDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.ELITE_DEMON.get(), EliteDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.HAND_DEMON.get(), HandDemonRenderer::new);
-            // MOONS
-            event.registerEntityRenderer(ModEntityTypes.LOWER_MOON_SIX.get(), LowerMoonSixRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.LOWER_MOON_FIVE.get(), LowerMoonFiveRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.CUTTING_THREAD_CAGE.get(), CuttingThreadCageRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.THREAD_WHEEL.get(), ThreadWheelRenderer::new);
         }
     }
 

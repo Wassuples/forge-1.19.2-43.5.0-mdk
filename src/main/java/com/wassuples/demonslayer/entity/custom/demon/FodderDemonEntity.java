@@ -9,7 +9,7 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.level.Level;
 
 public class FodderDemonEntity extends DemonEntity {
-    public FodderDemonEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
+    public FodderDemonEntity(EntityType<? extends DemonEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
         this.setDemonRank(DemonRank.FODDER);
     }

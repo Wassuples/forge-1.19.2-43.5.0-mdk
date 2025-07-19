@@ -12,7 +12,7 @@ import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 public class FlameHashiraEntity extends HashiraEntity {
-    public FlameHashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level level) {
+    public FlameHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);
         this.setBreathingStyle(BreathingStyles.FLAME);
     }

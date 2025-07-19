@@ -176,6 +176,12 @@ public class ModMessages {
                 .decoder(PerformAirJumpC2SPacket::new)
                 .consumerMainThread(PerformAirJumpC2SPacket::handle)
                 .add();
+
+        net.messageBuilder(StopFormS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(StopFormS2CPacket::new)
+                .encoder(StopFormS2CPacket::toBytes)
+                .consumerMainThread(StopFormS2CPacket::handle)
+                .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {

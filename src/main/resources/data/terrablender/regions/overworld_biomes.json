@@ -1,0 +1,16 @@
+{
+  "vanilla_biomes": {
+    "mesa": {
+      "biomes": [
+        {
+          "biome": "demonslayer:fujikasane_plateau",
+          "weight": 5
+        },
+        {
+          "biome": "demonslayer:fujikasane_slopes",
+          "weight": 3
+        }
+      ]
+    }
+  }
+}

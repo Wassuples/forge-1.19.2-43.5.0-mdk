@@ -34,51 +34,45 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class BreathingMenuScreen extends Screen {
-    // --- GUI TEXTURES ---
+    private static final float GUI_SCALE = 1.5f;
+
     private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/breathing_menu_background.png");
     private static final ResourceLocation WIDGETS_TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/breathing_menu_widgets.png");
 
-    // --- WINDOW ---
-    private final int windowWidth = 256;
-    private final int windowHeight = 166;
+    private final int windowWidth = (int) (256 * GUI_SCALE);
+    private final int windowHeight = (int) (166 * GUI_SCALE);
 
-    // --- PLAYER ---
-    private final int playerModelXOffset = 51;
-    private final int playerModelYOffset = 150;
-    private final int playerModelScale = 55;
+    private final int playerModelXOffset = (int) (51 * GUI_SCALE);
+    private final int playerModelYOffset = (int) (150 * GUI_SCALE);
+    private final int playerModelScale = (int) (55 * GUI_SCALE);
 
-    // --- Info ---
-    private final int infoPanelXOffset = 95;
-    private final int infoPanelYOffset = 45;
-    private final int infoPanelLineSpacing = 15;
+    private final int infoPanelXOffset = (int) (95 * GUI_SCALE);
+    private final int infoPanelYOffset = (int) (45 * GUI_SCALE);
+    private final int infoPanelLineSpacing = (int) (15 * GUI_SCALE);
 
-    // --- Breath Bar ---
-    private final int breathBarYOffset = 95;
+    private final int breathBarYOffset = (int) (95 * GUI_SCALE);
     private final int breathBarHeight = 12;
 
-    //  --- tabs ---
-    private final int tabXStart = 10;
-    private final int tabYStart = 5;
-    private final int tabXSpacing = 22;
+    private final int tabXStart = (int) (10 * GUI_SCALE);
+    private final int tabYStart = (int) (5 * GUI_SCALE);
+    private final int tabXSpacing = (int) (22 * GUI_SCALE);
 
-    // --- TEXT ---
     private final int textColor = 0xCCCCCC;
     private final int goldColor = 0xFFD700;
     private final int redColor = 0xFF5555;
     private final int grayColor = 0xAAAAAA;
 
-    // --- SKILL TREE STUFF ---
     private final int MASTERY_MAX = 1000;
     private final int skillIconSize = 16;
     private final int skillMasteryBarWidth = 32;
     private final int skillMasteryBarHeight = 4;
     private final int subWindowXOffset = 8;
     private final int subWindowYOffset = 30;
-    private final int subWindowWidth = 240;
-    private final int subWindowHeight = 128;
+    private final int subWindowWidth = (int) (240 * GUI_SCALE);
+    private final int subWindowHeight = (int) (128 * GUI_SCALE);
 
-    private final float skillTreeContentWidth = 700;
-    private final float skillTreeContentHeight = 210;
+    private final float skillTreeContentWidth = 700 * GUI_SCALE;
+    private final float skillTreeContentHeight = 210 * GUI_SCALE;
     private final float skillTreeContentCenterX = 220f;
     private final float skillTreeContentCenterY = 105f;
 
@@ -86,14 +80,12 @@ public class BreathingMenuScreen extends Screen {
     private double skillTreePanY = 0;
     private double skillTreeZoom = 1.0;
 
-    // --- MOVE LIST STUFF ---
     private List<BreathingForms> formsForSelectedStyle;
     private BreathingForms selectedForm = null;
     private double moveListScroll = 0.0;
     private final int moveListEntryHeight = 12;
     private int selectedFormIndex = -1;
 
-    // --- MISSION LIST STUFF ---
     private List<Object> displayList = new ArrayList<>();
     private List<Mission> activeMissions = new ArrayList<>();
     private List<Mission> availableMissions = new ArrayList<>();
@@ -177,8 +169,8 @@ public class BreathingMenuScreen extends Screen {
             this.prepareMissionsList();
         }));
         this.switchStyleButton = this.addRenderableWidget(new Button(
-                leftPos + windowWidth - 92, // Top-right corner of the window
-                topPos + 34,
+                leftPos + windowWidth - 92,
+                topPos + 5,
                 80, 20,
                 Component.literal("Switch Style"),
                 (button) -> {
@@ -699,8 +691,8 @@ public class BreathingMenuScreen extends Screen {
 
         int subWindowX = leftPos + 8;
         int subWindowY = topPos + 30;
-        int subWindowWidth = 240;
-        int subWindowHeight = 128;
+        int subWindowWidth = (int) (240 * GUI_SCALE);
+        int subWindowHeight = (int) (128 * GUI_SCALE);
 
         fill(poseStack, subWindowX, subWindowY, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
 
@@ -708,8 +700,9 @@ public class BreathingMenuScreen extends Screen {
         RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
         final int ICONS_PER_COLUMN = 12;
         final int ICON_GRID_V_OFFSET = 64;
-        int iconU = (selectedStyleForMoveList.ordinal() / ICONS_PER_COLUMN) * 16;
-        int iconV = ICON_GRID_V_OFFSET + ((selectedStyleForMoveList.ordinal() % ICONS_PER_COLUMN) * 16);
+        int styleIndex = Math.max(0, selectedStyleForMoveList.ordinal() - 1);
+        int iconU = (styleIndex / ICONS_PER_COLUMN) * 16;
+        int iconV = ICON_GRID_V_OFFSET + ((styleIndex % ICONS_PER_COLUMN) * 16);
         this.blit(poseStack, subWindowX + 4, subWindowY + 4, iconU, iconV, 16, 16);
         this.font.draw(poseStack, selectedStyleForMoveList.getDisplayName(), subWindowX + 24, subWindowY + 9, textColor);
 
@@ -729,7 +722,7 @@ public class BreathingMenuScreen extends Screen {
                 int entryY = listY + (i * moveListEntryHeight) - (int)moveListScroll;
 
                 if (entryY + moveListEntryHeight >= listY && entryY <= listY + listHeight) {
-                    boolean isSelected = (i == selectedDisplayIndex);
+                    boolean isSelected = (i == selectedFormIndex);
                     boolean isUnlocked = progression.getStyleMastery(form.getStyle()) >= form.getStyleMasteryToUnlock();
 
                     if (isSelected) {

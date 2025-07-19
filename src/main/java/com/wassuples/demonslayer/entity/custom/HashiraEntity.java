@@ -1,43 +1,37 @@
 package com.wassuples.demonslayer.entity.custom;
 
-import com.wassuples.demonslayer.entity.ai.HashiraAttackGoal;
+import com.wassuples.demonslayer.entity.ai.FormUserAttackGoal;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.ai.goal.FloatGoal;
-import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
-import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
-import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
+
+import javax.annotation.Nullable;
 
 public class HashiraEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<Integer> DATA_BREATHING_STYLE =
             SynchedEntityData.defineId(HashiraEntity.class, EntityDataSerializers.INT);
 
-    public HashiraEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {
+    public HashiraEntity(EntityType<? extends AbstractFormUsingEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
     }
 
-    // This is where we define the base stats for the Hashira.
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
-                .add(Attributes.MAX_HEALTH, 200.0D) // Very high health
-                .add(Attributes.MOVEMENT_SPEED, 0.8D) // Faster than a normal mob
-                .add(Attributes.ATTACK_DAMAGE, 10.0D) // Strong base attack
+                .add(Attributes.MAX_HEALTH, 200.0D)
+                .add(Attributes.MOVEMENT_SPEED, 0.8D)
+                .add(Attributes.ATTACK_DAMAGE, 10.0D)
                 .add(Attributes.ARMOR, 10.0D)
-                .add(Attributes.FOLLOW_RANGE, 128.0D); // Natural armor
+                .add(Attributes.FOLLOW_RANGE, 128.0D);
     }
 
     @Override
@@ -63,32 +57,24 @@ public class HashiraEntity extends AbstractFormUsingEntity {
         }
     }
 
-    public BreathingStyles getBreathingStyle() {
-        return BreathingStyles.values()[this.entityData.get(DATA_BREATHING_STYLE)];
-    }
-
-    public void setBreathingStyle(BreathingStyles style) {
-        this.entityData.set(DATA_BREATHING_STYLE, style.ordinal());
-    }
-
     @Override
     protected void registerGoals() {
         super.registerGoals();
 
-        this.goalSelector.addGoal(1, new HashiraAttackGoal(this, 1.0D, true));
+        this.goalSelector.addGoal(1, new FormUserAttackGoal(this, 1.0D, true));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(4, new NearestAttackableTargetGoal<>(this, Monster.class, true));
     }
 
-    @Override
-    public void tick() {
-        super.tick();
+    @Nullable @Override public BreathingStyles getBreathingStyle() {
+        return BreathingStyles.values()[this.entityData.get(DATA_BREATHING_STYLE)];
+    }
 
-        if (!this.level.isClientSide()) {
-            FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(this);
-            if (activeForm != null) {
-                activeForm.tick();
-            }
-        }
+    @Nullable @Override public BloodDemonArts getDemonArt() {
+        return null;
+    }
+
+    public void setBreathingStyle(BreathingStyles style) {
+        this.entityData.set(DATA_BREATHING_STYLE, style.ordinal());
     }
 }

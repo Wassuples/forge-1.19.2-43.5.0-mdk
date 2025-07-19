@@ -177,6 +177,60 @@ public class ModEntityTypes {
                             .sized(0.6f, 1.7f) // Same size as a player
                             .build("lower_moon_five"));
 
+    public static final RegistryObject<EntityType<LowerMoonFourEntity>> LOWER_MOON_FOUR =
+            ENTITY_TYPES.register("lower_moon_four",
+                    () -> EntityType.Builder.of(LowerMoonFourEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("lower_moon_four"));
+
+    public static final RegistryObject<EntityType<LowerMoonThreeEntity>> LOWER_MOON_THREE =
+            ENTITY_TYPES.register("lower_moon_three",
+                    () -> EntityType.Builder.of(LowerMoonThreeEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("lower_moon_three"));
+
+    public static final RegistryObject<EntityType<LowerMoonTwoEntity>> LOWER_MOON_TWO =
+            ENTITY_TYPES.register("lower_moon_two",
+                    () -> EntityType.Builder.of(LowerMoonTwoEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("lower_moon_two"));
+
+    public static final RegistryObject<EntityType<LowerMoonOneEntity>> LOWER_MOON_ONE =
+            ENTITY_TYPES.register("lower_moon_one",
+                    () -> EntityType.Builder.of(LowerMoonOneEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f) // Same size as a player
+                            .build("lower_moon_one"));
+
+    public static final RegistryObject<EntityType<UpperMoonFiveEntity>> UPPER_MOON_FIVE =
+            ENTITY_TYPES.register("upper_moon_five",
+                    () -> EntityType.Builder.of(UpperMoonFiveEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("upper_moon_five"));
+
+    public static final RegistryObject<EntityType<UpperMoonFourEntity>> UPPER_MOON_FOUR =
+            ENTITY_TYPES.register("upper_moon_four",
+                    () -> EntityType.Builder.of(UpperMoonFourEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("upper_moon_four"));
+
+    public static final RegistryObject<EntityType<UpperMoonThreeEntity>> UPPER_MOON_THREE =
+            ENTITY_TYPES.register("upper_moon_three",
+                    () -> EntityType.Builder.of(UpperMoonThreeEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("upper_moon_three"));
+
+    public static final RegistryObject<EntityType<UpperMoonTwoEntity>> UPPER_MOON_TWO =
+            ENTITY_TYPES.register("upper_moon_two",
+                    () -> EntityType.Builder.of(UpperMoonTwoEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("upper_moon_two"));
+
+    public static final RegistryObject<EntityType<UpperMoonOneEntity>> UPPER_MOON_ONE =
+            ENTITY_TYPES.register("upper_moon_one",
+                    () -> EntityType.Builder.of(UpperMoonOneEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.7f)
+                            .build("upper_moon_one"));
+
     //##########################################################
     //              HASHIRA
     //##########################################################
