@@ -12,8 +12,10 @@ import com.wassuples.demonslayer.missions.*;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.AbandonMissionC2SPacket;
 import com.wassuples.demonslayer.networking.packet.AcceptMissionC2SPacket;
+import com.wassuples.demonslayer.networking.packet.EquipBdaC2SPacket;
 import com.wassuples.demonslayer.networking.packet.SwitchStyleC2SPacket;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.ChatFormatting;
@@ -96,15 +98,22 @@ public class BreathingMenuScreen extends Screen {
     private Button acceptMissionButton;
     private Button abandonMissionButton;
 
-    private enum Tab { PROFILE, SKILL_TREE, MOVE_LIST, MISSIONS }
+    private List<BloodDemonArts> availableBdas = new ArrayList<>();
+    private BloodDemonArts selectedBda = null;
+    private double bdaListScroll = 0.0;
+    private int selectedBdaIndex = -1;
+
+    private enum Tab { PROFILE, SKILL_TREE, MOVE_LIST, MISSIONS, BDA }
     private Tab currentTab = Tab.PROFILE;
 
     private BreathingStyles selectedStyleForMoveList = null;
 
     private TabButton profileButton;
+    private TabButton bdaButton;
     private TabButton stylesButton;
     private TabButton missionsButton;
     private Button switchStyleButton;
+    private Button equipBdaButton;
 
     private static final Map<BreathingStyles, Vec2> STYLE_POSITIONS = new ImmutableMap.Builder<BreathingStyles, Vec2>()
             // TIER 0 (ROOT)
@@ -168,6 +177,10 @@ public class BreathingMenuScreen extends Screen {
             this.currentTab = Tab.MISSIONS;
             this.prepareMissionsList();
         }));
+        this.bdaButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 3), topPos + tabYStart, 60, (button) -> {
+            this.currentTab = Tab.BDA;
+            this.prepareBdaList();
+        }));
         this.switchStyleButton = this.addRenderableWidget(new Button(
                 leftPos + windowWidth - 92,
                 topPos + 5,
@@ -176,6 +189,17 @@ public class BreathingMenuScreen extends Screen {
                 (button) -> {
                     if (this.selectedStyleForMoveList != null) {
                         ModMessages.sendToServer(new SwitchStyleC2SPacket(this.selectedStyleForMoveList.ordinal()));
+                    }
+                }
+        ));
+        this.equipBdaButton = this.addRenderableWidget(new Button(
+                leftPos + windowWidth - 92,
+                topPos + 5,
+                80, 20,
+                Component.literal("Equip BDA"),
+                (button) -> {
+                    if (this.selectedBda != null) {
+                        ModMessages.sendToServer(new EquipBdaC2SPacket(this.selectedBda));
                     }
                 }
         ));
@@ -205,9 +229,18 @@ public class BreathingMenuScreen extends Screen {
 
         this.prepareMoveList();
         this.prepareMissionsList();
+        this.prepareBdaList();
+
+        this.bdaButton.visible = false;
+        if (this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                this.bdaButton.visible = demon.isDemon();
+            });
+        }
 
         this.acceptMissionButton.visible = false;
         this.switchStyleButton.visible = false;
+        this.equipBdaButton.visible = false;
     }
 
     @Override
@@ -223,6 +256,7 @@ public class BreathingMenuScreen extends Screen {
         this.profileButton.isActive = (this.currentTab == Tab.PROFILE);
         this.stylesButton.isActive = (this.currentTab == Tab.SKILL_TREE);
         this.missionsButton.isActive = (this.currentTab == Tab.MISSIONS);
+        this.bdaButton.isActive = (this.currentTab == Tab.BDA);
 
         if(this.currentTab == Tab.MISSIONS) {
             boolean missionIsActive = this.selectedMission != null && this.activeMissions.contains(this.selectedMission);
@@ -236,9 +270,15 @@ public class BreathingMenuScreen extends Screen {
         }
 
         this.switchStyleButton.visible = (this.currentTab == Tab.MOVE_LIST);
+        this.equipBdaButton.visible = (this.currentTab == Tab.BDA);
         if (this.switchStyleButton.visible && this.minecraft != null && this.minecraft.player != null) {
             this.minecraft.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
                 this.switchStyleButton.active = style.getCurrentStyles() != this.selectedStyleForMoveList;
+            });
+        }
+        if (this.equipBdaButton.visible && this.minecraft != null && this.minecraft.player != null) {
+            this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                this.equipBdaButton.active = demon.getEquippedBda() != this.selectedBda && this.selectedBda != BloodDemonArts.NONE;
             });
         }
 
@@ -249,6 +289,7 @@ public class BreathingMenuScreen extends Screen {
             case SKILL_TREE -> renderSkillTreeTab(poseStack, x, y);
             case MOVE_LIST -> renderMoveListTab(poseStack, x, y, mouseX, mouseY);
             case MISSIONS -> renderMissionsTab(poseStack, x, y, mouseX, mouseY);
+            case BDA -> renderBdaTab(poseStack, x, y, mouseX, mouseY);
         }
         switch (this.currentTab) {
             case PROFILE -> renderBreathTooltip(poseStack, x, y, mouseX, mouseY);
@@ -664,6 +705,25 @@ public class BreathingMenuScreen extends Screen {
                 }
             }
         }
+        if (this.currentTab == Tab.BDA && this.availableBdas != null) {
+            int leftPos = (this.width - this.windowWidth) / 2;
+            int topPos = (this.height - this.windowHeight) / 2;
+            int subWindowX = leftPos + 8;
+            int listY = topPos + 30 + 28;
+            int listWidth = 100;
+            int listHeight = 128 - 32;
+
+            if (pMouseX >= subWindowX && pMouseX < subWindowX + listWidth && pMouseY >= listY && pMouseY < listY + listHeight) {
+                int clickedIndex = (int)((pMouseY - listY + bdaListScroll) / moveListEntryHeight);
+
+                if (clickedIndex >= 0 && clickedIndex < availableBdas.size()) {
+                    this.selectedBdaIndex = clickedIndex;
+                    this.selectedBda = availableBdas.get(clickedIndex);
+                    return true;
+                }
+            }
+        }
+
         return super.mouseClicked(pMouseX, pMouseY, pButton);
     }
 
@@ -684,6 +744,19 @@ public class BreathingMenuScreen extends Screen {
             this.selectedForm = null;
         }
         this.moveListScroll = 0; // Reset scroll on style change
+    }
+
+    private void prepareBdaList() {
+        this.availableBdas = java.util.Arrays.stream(BloodDemonArts.values()).collect(Collectors.toList());
+
+        if (!this.availableBdas.isEmpty()) {
+            this.selectedBdaIndex = 0;
+            this.selectedBda = this.availableBdas.get(0);
+        } else {
+            this.selectedBdaIndex = -1;
+            this.selectedBda = null;
+        }
+        this.bdaListScroll = 0;
     }
 
     private void renderMoveListTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
@@ -778,6 +851,54 @@ public class BreathingMenuScreen extends Screen {
         }
     }
 
+    private void renderBdaTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
+        if (this.minecraft == null) return;
+
+        int subWindowX = leftPos + 8;
+        int subWindowY = topPos + 30;
+        int subWindowWidth = (int) (240 * GUI_SCALE);
+        int subWindowHeight = (int) (128 * GUI_SCALE);
+
+        fill(poseStack, subWindowX, subWindowY, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
+
+        // --- HEADER ---
+        this.font.draw(poseStack, "Blood Demon Arts", subWindowX + 5, subWindowY + 9, goldColor);
+
+        // Define panel areas
+        int listWidth = 100;
+        int detailX = subWindowX + listWidth + 5;
+        int listY = subWindowY + 28;
+        int listHeight = subWindowHeight - 32;
+
+        // --- LEFT PANEL: BDA LIST ---
+        RenderSystem.enableScissor((int)(subWindowX * minecraft.getWindow().getGuiScale()), (int)((this.height - (listY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
+
+        for (int i = 0; i < availableBdas.size(); i++) {
+            BloodDemonArts bda = availableBdas.get(i);
+            int entryY = listY + (i * moveListEntryHeight) - (int)bdaListScroll;
+
+            if (entryY + moveListEntryHeight >= listY && entryY <= listY + listHeight) {
+                boolean isSelected = (i == selectedBdaIndex);
+                if (isSelected) {
+                    fill(poseStack, subWindowX, entryY, subWindowX + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
+                }
+                this.font.draw(poseStack, bda.getDisplayName(), subWindowX + 5, entryY + 2, textColor);
+            }
+        }
+        RenderSystem.disableScissor();
+
+        // --- RIGHT PANEL: DETAIL VIEW ---
+        if (selectedBda != null) {
+            int yOffset = subWindowY + 28;
+            this.font.drawWordWrap(Component.literal(selectedBda.getDisplayName()), detailX, yOffset, subWindowWidth - listWidth - 10, goldColor);
+            yOffset += this.font.wordWrapHeight(selectedBda.getDisplayName(), subWindowWidth - listWidth - 10) + 4;
+            fill(poseStack, detailX, yOffset - 2, detailX + subWindowWidth - listWidth - 15, yOffset - 1, grayColor);
+
+            // You can add descriptions for BDAs later if you want
+            this.font.drawWordWrap(selectedBda.getDescription(), detailX, yOffset, subWindowWidth - listWidth - 10, textColor);
+        }
+    }
+
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if (this.currentTab == Tab.MOVE_LIST && formsForSelectedStyle != null && !formsForSelectedStyle.isEmpty()) {
@@ -818,6 +939,19 @@ public class BreathingMenuScreen extends Screen {
                 return true;
             }
         }
+        if (this.currentTab == Tab.BDA && availableBdas != null && !availableBdas.isEmpty()) {
+            if (pKeyCode == GLFW.GLFW_KEY_DOWN) {
+                this.selectedBdaIndex = Math.min(this.selectedBdaIndex + 1, availableBdas.size() - 1);
+                this.selectedBda = availableBdas.get(this.selectedBdaIndex);
+                this.ensureBdaIsVisible();
+                return true;
+            } else if (pKeyCode == GLFW.GLFW_KEY_UP) {
+                this.selectedBdaIndex = Math.max(this.selectedBdaIndex - 1, 0);
+                this.selectedBda = availableBdas.get(this.selectedBdaIndex);
+                this.ensureBdaIsVisible();
+                return true;
+            }
+        }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 
@@ -842,6 +976,18 @@ public class BreathingMenuScreen extends Screen {
             this.moveListScroll = itemTopY;
         } else if (itemBottomY > this.moveListScroll + listHeight) {
             this.moveListScroll = itemBottomY - listHeight;
+        }
+    }
+
+    private void ensureBdaIsVisible() {
+        int listHeight = 128 - 32;
+        int itemTopY = this.selectedBdaIndex * this.moveListEntryHeight;
+        int itemBottomY = itemTopY + this.moveListEntryHeight;
+
+        if (itemTopY < this.bdaListScroll) {
+            this.bdaListScroll = itemTopY;
+        } else if (itemBottomY > this.bdaListScroll + listHeight) {
+            this.bdaListScroll = itemBottomY - listHeight;
         }
     }
 
@@ -886,7 +1032,12 @@ public class BreathingMenuScreen extends Screen {
             this.missionListScroll = Mth.clamp(this.missionListScroll - (pDelta * 10), 0, maxScroll);
             return true;
         }
-        return super.mouseScrolled(pMouseX, pMouseY, pDelta);
+        if (this.currentTab == Tab.BDA && this.availableBdas != null) {
+            int maxScroll = Math.max(0, (availableBdas.size() * moveListEntryHeight) - (128 - 32));
+            this.bdaListScroll = Mth.clamp(this.bdaListScroll - (pDelta * 10), 0, maxScroll);
+            return true;
+        }
+            return super.mouseScrolled(pMouseX, pMouseY, pDelta);
     }
 
     private void drawConnectingLine(PoseStack poseStack, Vec2 pos1, Vec2 pos2) {

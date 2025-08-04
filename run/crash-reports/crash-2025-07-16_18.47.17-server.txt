@@ -1,0 +1,306 @@
+---- Minecraft Crash Report ----
+// I let you down. Sorry :(
+
+Time: 2025-07-16 18:47:17
+Description: Feature placement
+
+java.lang.IllegalArgumentException: Cannot set property EnumProperty{name=axis, clazz=class net.minecraft.core.Direction$Axis, values=[x, y, z]} as it does not exist in Block{minecraft:air}
+	at net.minecraft.world.level.block.state.StateHolder.setValue(StateHolder.java:117) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.FancyTrunkPlacer.lambda$makeLimb$1(FancyTrunkPlacer.java:119) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacer.placeLog(TrunkPlacer.java:73) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.FancyTrunkPlacer.makeLimb(FancyTrunkPlacer.java:119) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.FancyTrunkPlacer.placeTrunk(FancyTrunkPlacer.java:90) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.TreeFeature.doPlace(TreeFeature.java:95) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.TreeFeature.place(TreeFeature.java:154) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.Feature.place(Feature.java:154) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.ConfiguredFeature.place(ConfiguredFeature.java:27) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.placement.PlacedFeature.lambda$placeWithContext$4(PlacedFeature.java:56) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183) ~[?:?] {}
+	at java.util.stream.IntPipeline$1$1.accept(IntPipeline.java:180) ~[?:?] {}
+	at java.util.stream.Streams$RangeIntSpliterator.forEachRemaining(Streams.java:104) ~[?:?] {}
+	at java.util.Spliterator$OfInt.forEachRemaining(Spliterator.java:711) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:150) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:173) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[?:?] {}
+	at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:150) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:173) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[?:?] {}
+	at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[?:?] {}
+	at net.minecraft.world.level.levelgen.placement.PlacedFeature.placeWithContext(PlacedFeature.java:55) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.placement.PlacedFeature.placeWithBiomeCheck(PlacedFeature.java:44) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.chunk.ChunkGenerator.applyBiomeDecoration(ChunkGenerator.java:466) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.chunk.ChunkStatus.lambda$static$12(ChunkStatus.java:145) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.world.level.chunk.ChunkStatus.generate(ChunkStatus.java:292) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$25(ChunkMap.java:621) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at com.mojang.datafixers.util.Either$Left.map(Either.java:38) ~[datafixerupper-5.0.28.jar%23106!/:?] {}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$27(ChunkMap.java:619) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1150) ~[?:?] {}
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482) ~[?:?] {}
+	at net.minecraft.server.level.ChunkTaskPriorityQueueSorter.lambda$message$1(ChunkTaskPriorityQueueSorter.java:62) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollTask(ProcessorMailbox.java:91) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollUntil(ProcessorMailbox.java:146) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.run(ProcessorMailbox.java:102) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1395) ~[?:?] {}
+	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622) ~[?:?] {}
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165) ~[?:?] {}
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- Head --
+Thread: Server thread
+Suspected Mods: NONE
+Stacktrace:
+	at net.minecraft.world.level.block.state.StateHolder.setValue(StateHolder.java:117) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.FancyTrunkPlacer.lambda$makeLimb$1(FancyTrunkPlacer.java:119) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.TrunkPlacer.placeLog(TrunkPlacer.java:73) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.FancyTrunkPlacer.makeLimb(FancyTrunkPlacer.java:119) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.trunkplacers.FancyTrunkPlacer.placeTrunk(FancyTrunkPlacer.java:90) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.TreeFeature.doPlace(TreeFeature.java:95) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.TreeFeature.place(TreeFeature.java:154) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.Feature.place(Feature.java:154) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.feature.ConfiguredFeature.place(ConfiguredFeature.java:27) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.placement.PlacedFeature.lambda$placeWithContext$4(PlacedFeature.java:56) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$Head.forEach(ReferencePipeline.java:762) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:183) ~[?:?] {}
+	at java.util.stream.IntPipeline$1$1.accept(IntPipeline.java:180) ~[?:?] {}
+	at java.util.stream.Streams$RangeIntSpliterator.forEachRemaining(Streams.java:104) ~[?:?] {}
+	at java.util.Spliterator$OfInt.forEachRemaining(Spliterator.java:711) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:150) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:173) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[?:?] {}
+	at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[?:?] {}
+	at java.util.stream.ReferencePipeline$7$1.accept(ReferencePipeline.java:276) ~[?:?] {}
+	at java.util.stream.Streams$StreamBuilderImpl.forEachRemaining(Streams.java:411) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:509) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:150) ~[?:?] {}
+	at java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:173) ~[?:?] {}
+	at java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234) ~[?:?] {}
+	at java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596) ~[?:?] {}
+	at net.minecraft.world.level.levelgen.placement.PlacedFeature.placeWithContext(PlacedFeature.java:55) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.levelgen.placement.PlacedFeature.placeWithBiomeCheck(PlacedFeature.java:44) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.chunk.ChunkGenerator.applyBiomeDecoration(ChunkGenerator.java:466) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.chunk.ChunkStatus.lambda$static$12(ChunkStatus.java:145) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.world.level.chunk.ChunkStatus.generate(ChunkStatus.java:292) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$25(ChunkMap.java:621) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at com.mojang.datafixers.util.Either$Left.map(Either.java:38) ~[datafixerupper-5.0.28.jar%23106!/:?] {}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$27(ChunkMap.java:619) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1150) ~[?:?] {}
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482) ~[?:?] {}
+	at net.minecraft.server.level.ChunkTaskPriorityQueueSorter.lambda$message$1(ChunkTaskPriorityQueueSorter.java:62) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollTask(ProcessorMailbox.java:91) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollUntil(ProcessorMailbox.java:146) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.run(ProcessorMailbox.java:102) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+-- Feature --
+Details:
+	Description: ResourceKey[minecraft:worldgen/placed_feature / demonslayer:trees_fujikasane_base]
+Stacktrace:
+	at net.minecraft.world.level.chunk.ChunkGenerator.applyBiomeDecoration(ChunkGenerator.java:466) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.chunk.ChunkStatus.lambda$static$12(ChunkStatus.java:145) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.world.level.chunk.ChunkStatus.generate(ChunkStatus.java:292) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$25(ChunkMap.java:621) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at com.mojang.datafixers.util.Either$Left.map(Either.java:38) ~[datafixerupper-5.0.28.jar%23106!/:?] {}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$27(ChunkMap.java:619) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1150) ~[?:?] {}
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482) ~[?:?] {}
+	at net.minecraft.server.level.ChunkTaskPriorityQueueSorter.lambda$message$1(ChunkTaskPriorityQueueSorter.java:62) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollTask(ProcessorMailbox.java:91) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollUntil(ProcessorMailbox.java:146) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.run(ProcessorMailbox.java:102) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1395) ~[?:?] {}
+	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622) ~[?:?] {}
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165) ~[?:?] {}
+
+
+-- Generation --
+Details:
+	CenterX: -14
+	CenterZ: 8
+	Seed: -3431356065736942105
+Stacktrace:
+	at net.minecraft.world.level.chunk.ChunkGenerator.applyBiomeDecoration(ChunkGenerator.java:466) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.world.level.chunk.ChunkStatus.lambda$static$12(ChunkStatus.java:145) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.world.level.chunk.ChunkStatus.generate(ChunkStatus.java:292) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$25(ChunkMap.java:621) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at com.mojang.datafixers.util.Either$Left.map(Either.java:38) ~[datafixerupper-5.0.28.jar%23106!/:?] {}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$27(ChunkMap.java:619) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1150) ~[?:?] {}
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482) ~[?:?] {}
+	at net.minecraft.server.level.ChunkTaskPriorityQueueSorter.lambda$message$1(ChunkTaskPriorityQueueSorter.java:62) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollTask(ProcessorMailbox.java:91) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollUntil(ProcessorMailbox.java:146) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.run(ProcessorMailbox.java:102) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1395) ~[?:?] {}
+	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622) ~[?:?] {}
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165) ~[?:?] {}
+
+
+-- Chunk to be generated --
+Details:
+	Location: -14,8
+	Position hash: 38654705650
+	Generator: net.minecraft.world.level.levelgen.NoiseBasedChunkGenerator@531f3792
+Stacktrace:
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$25(ChunkMap.java:621) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at com.mojang.datafixers.util.Either$Left.map(Either.java:38) ~[datafixerupper-5.0.28.jar%23106!/:?] {}
+	at net.minecraft.server.level.ChunkMap.lambda$scheduleChunkGeneration$27(ChunkMap.java:619) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.CompletableFuture$UniCompose.tryFire(CompletableFuture.java:1150) ~[?:?] {}
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482) ~[?:?] {}
+	at net.minecraft.server.level.ChunkTaskPriorityQueueSorter.lambda$message$1(ChunkTaskPriorityQueueSorter.java:62) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollTask(ProcessorMailbox.java:91) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.pollUntil(ProcessorMailbox.java:146) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at net.minecraft.util.thread.ProcessorMailbox.run(ProcessorMailbox.java:102) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading}
+	at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1395) ~[?:?] {}
+	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655) ~[?:?] {}
+	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622) ~[?:?] {}
+	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165) ~[?:?] {}
+
+
+-- Affected level --
+Details:
+	All players: 1 total; [ServerPlayer['Dev'/226, l='ServerLevel[New World]', x=-30.50, y=64.00, z=-88.50]]
+	Chunk stats: 2600
+	Level dimension: minecraft:overworld
+	Level spawn location: World: (-32,64,-80), Section: (at 0,0,0 in -2,4,-5; chunk contains blocks -32,-64,-80 to -17,319,-65), Region: (-1,-1; contains chunks -32,-32 to -1,-1, blocks -512,-64,-512 to -1,319,-1)
+	Level time: 248 game time, 248 day time
+	Level name: New World
+	Level game mode: Game mode: creative (ID 1). Hardcore: false. Cheats: true
+	Level weather: Rain time: 177201 (now: false), thunder time: 88531 (now: false)
+	Known server brands: forge
+	Level was modded: true
+	Level storage version: 0x04ABD - Anvil
+Stacktrace:
+	at net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:869) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:806) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.client.server.IntegratedServer.tickServer(IntegratedServer.java:84) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:runtimedistcleaner:A}
+	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:654) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:244) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at java.lang.Thread.run(Thread.java:842) ~[?:?] {}
+
+
+-- System Details --
+Details:
+	Minecraft Version: 1.19.2
+	Minecraft Version ID: 1.19.2
+	Operating System: Windows 10 (amd64) version 10.0
+	Java Version: 17.0.11, Oracle Corporation
+	Java VM Version: Java HotSpot(TM) 64-Bit Server VM (mixed mode, sharing), Oracle Corporation
+	Memory: 1149670528 bytes (1096 MiB) / 2264924160 bytes (2160 MiB) up to 12876513280 bytes (12280 MiB)
+	CPUs: 12
+	Processor Vendor: AuthenticAMD
+	Processor Name: AMD Ryzen 5 3600 6-Core Processor              
+	Identifier: AuthenticAMD Family 23 Model 113 Stepping 0
+	Microarchitecture: Zen 2
+	Frequency (GHz): 3.59
+	Number of physical packages: 1
+	Number of physical CPUs: 6
+	Number of logical CPUs: 12
+	Graphics card #0 name: Meta Virtual Monitor
+	Graphics card #0 vendor: Meta Inc.
+	Graphics card #0 VRAM (MB): 0.00
+	Graphics card #0 deviceId: unknown
+	Graphics card #0 versionInfo: DriverVersion=17.12.55.198
+	Graphics card #1 name: NVIDIA GeForce GTX 1660 SUPER
+	Graphics card #1 vendor: NVIDIA (0x10de)
+	Graphics card #1 VRAM (MB): 4095.00
+	Graphics card #1 deviceId: 0x21c4
+	Graphics card #1 versionInfo: DriverVersion=32.0.15.7602
+	Memory slot #0 capacity (MB): 8192.00
+	Memory slot #0 clockSpeed (GHz): 2.40
+	Memory slot #0 type: DDR4
+	Memory slot #1 capacity (MB): 16384.00
+	Memory slot #1 clockSpeed (GHz): 2.40
+	Memory slot #1 type: DDR4
+	Memory slot #2 capacity (MB): 8192.00
+	Memory slot #2 clockSpeed (GHz): 2.40
+	Memory slot #2 type: DDR4
+	Memory slot #3 capacity (MB): 16384.00
+	Memory slot #3 clockSpeed (GHz): 2.40
+	Memory slot #3 type: DDR4
+	Virtual memory max (MB): 58316.45
+	Virtual memory used (MB): 47882.99
+	Swap memory total (MB): 9216.00
+	Swap memory used (MB): 2287.71
+	JVM Flags: 2 total; -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump
+	Server Running: true
+	Player Count: 1 / 8; [ServerPlayer['Dev'/226, l='ServerLevel[New World]', x=-30.50, y=64.00, z=-88.50]]
+	Data Packs: vanilla, mod:terrablender, mod:forge, mod:demonslayer, mod:geckolib3 (incompatible), mod:playeranimator (incompatible)
+	World Generation: Stable
+	Type: Integrated Server (map_client.txt)
+	Is Modded: Definitely; Client brand changed to 'forge'; Server brand changed to 'forge'
+	Launched Version: MOD_DEV
+	ModLauncher: 10.0.9+10.0.9+main.dcd20f30
+	ModLauncher launch target: forgeclientuserdev
+	ModLauncher naming: mcp
+	ModLauncher services: 
+		mixin-0.8.5.jar mixin PLUGINSERVICE 
+		eventbus-6.0.3.jar eventbus PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar slf4jfixer PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar object_holder_definalize PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar runtime_enum_extender PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar capability_token_subclass PLUGINSERVICE 
+		accesstransformers-8.0.4.jar accesstransformer PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar runtimedistcleaner PLUGINSERVICE 
+		modlauncher-10.0.9.jar mixin TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar fml TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		minecraft@1.0
+		lowcodefml@null
+		javafml@null
+	Mod List: 
+		forge-1.19.2-43.5.0_mapped_official_1.19.2.jar    |Minecraft                     |minecraft                     |1.19.2              |DONE      |Manifest: a1:d4:5e:04:4f:d3:d6:e0:7b:37:97:cf:77:b0:de:ad:4a:47:ce:8c:96:49:5f:0a:cf:8c:ae:b2:6d:4b:8a:3f
+		terrablender-563928-4618490_mapped_official_1.19.2|TerraBlender                  |terrablender                  |2.0.1.166           |DONE      |Manifest: NOSIGNATURE
+		                                                  |Forge                         |forge                         |43.5.0              |DONE      |Manifest: NOSIGNATURE
+		main                                              |Demon Slayer                  |demonslayer                   |0.0.7               |DONE      |Manifest: NOSIGNATURE
+		geckolib-forge-1.19-3.1.19_mapped_official_1.19.2.|GeckoLib                      |geckolib3                     |3.1.19              |DONE      |Manifest: NOSIGNATURE
+		playeranimator-658587-4418149_mapped_official_1.19|Player Animator               |playeranimator                |1.0.2               |DONE      |Manifest: NOSIGNATURE
+	Crash Report UUID: 70997441-4b7f-4f8d-9be8-1623bea15a55
+	FML: 43.5
+	Forge: net.minecraftforge:43.5.0

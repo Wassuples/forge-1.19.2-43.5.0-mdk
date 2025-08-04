@@ -11,5 +11,7 @@ public interface IForm {
     int getBreathCost();
     boolean IsBDA();
 
+    int getCooldownTicks(LivingEntity user);
+    default boolean isBuff() {return false;}
     void performAction(LivingEntity user, ServerLevel level);
 }

@@ -6,6 +6,8 @@ import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyle;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.command.DemonSlayerCommands;
+import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
+import com.wassuples.demonslayer.cooldown.PlayerCooldownsProvider;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.effects.ForcedSleepEffect;
@@ -94,6 +96,9 @@ public class ModEvents {
             }
             if (!event.getObject().getCapability(PlayerDemonProvider.PLAYER_DEMON).isPresent()) {
                 event.addCapability(PlayerDemonProvider.KEY, new PlayerDemonProvider());
+            }
+            if (!event.getObject().getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).isPresent()) {
+                event.addCapability(PlayerCooldownsProvider.KEY, new PlayerCooldownsProvider());
             }
         }
     }
@@ -225,6 +230,7 @@ public class ModEvents {
         event.register(PlayerProgression.class);
         event.register(PlayerMissions.class);
         event.register(PlayerDemon.class);
+        event.register(PlayerCooldowns.class);
     }
 
     @SubscribeEvent

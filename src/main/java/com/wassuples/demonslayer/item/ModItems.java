@@ -20,8 +20,18 @@ public class ModItems {
             DeferredRegister.create(ForgeRegistries.ITEMS, DemonSlayer.MOD_ID);
 
     public static final RegistryObject<Item> NICHIRIN_BLADE = ITEMS.register("nichirin_blade",
-            () -> new NichirinSwordItem(Tiers.NETHERITE, 10, 5f,
+            () -> new SwordItem(Tiers.NETHERITE, 10, 5f,
                     new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
+
+    public static final RegistryObject<Item> NICHIRIN_BLADE_GIYU = ITEMS.register("nichirin_blade_giyu",
+            () -> new SwordItem(Tiers.NETHERITE, 10, 5f,
+                    new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
+
+    public static final RegistryObject<Item> NICHIRIN_BLADE_SHINOBU = ITEMS.register("nichirin_blade_shinobu",
+            () -> new SwordItem(Tiers.NETHERITE, 10, 5f,
+                    new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
+
+
 
     public static final RegistryObject<Item> MUZANS_BLOOD = ITEMS.register("muzans_blood",
             () -> new Item(new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)

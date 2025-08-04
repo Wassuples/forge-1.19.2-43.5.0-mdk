@@ -29,6 +29,6 @@ public class LowerMoonFiveEntity extends DemonEntity {
     @Override
     protected void registerGoals() {
         super.registerGoals();
-        // Add specific goals for Lower Moon Five later.
+        // Add specific goals for Lower Moon Five later
     }
 }

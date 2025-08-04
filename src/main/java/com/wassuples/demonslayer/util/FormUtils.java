@@ -740,18 +740,23 @@ public class FormUtils {
     @Mod.EventBusSubscriber(modid = "demonslayer", bus = Mod.EventBusSubscriber.Bus.FORGE)
     public static class ActiveFormManager {
         private static final Map<UUID, ActiveForm> ACTIVE_FORMS = new HashMap<>();
+        private static final Map<UUID, Map<IForm, ActiveForm>> BUFF_FORMS = new HashMap<>();
         private static final Map<IForm, BiFunction<LivingEntity, IForm, ActiveForm>> FORM_FACTORIES;
         public static final UUID KNOCKBACK_IMMUNITY_UUID = UUID.fromString("d8a6a6dc-34d3-4e42-8c19-3c871343399b");
 
         // --- Manager Public API ---
-
         public static void start(LivingEntity user, IForm form) {
-            System.out.println("[DEBUG] ==> Attempting to START form: " + form.getDisplayName());
+            if (form.isBuff()) {
+                startBuffForm(user, form);
+            } else {
+                startActiveForm(user, form);
+            }
+        }
+
+        private static void startActiveForm(LivingEntity user, IForm form) {
             if (ACTIVE_FORMS.containsKey(user.getUUID())) {
                 ActiveForm existingForm = ACTIVE_FORMS.get(user.getUUID());
-                System.out.println("[DEBUG] Found existing form: " + existingForm.getForm().getDisplayName() + ", Interruptible: " + existingForm.isInterruptible());
                 if (!existingForm.isInterruptible()) {
-                    System.out.println("[DEBUG] BLOCKED: Existing form is not interruptible.");
                     return;
                 }
             }
@@ -761,22 +766,46 @@ public class FormUtils {
             if (factory != null) {
                 ActiveForm activeForm = factory.apply(user, form);
                 ACTIVE_FORMS.put(user.getUUID(), activeForm);
-                System.out.println("[DEBUG] Successfully STARTED and MAPPED form: " + form.getDisplayName());
                 activeForm.onStart();
+            }
+        }
+        private static void startBuffForm(LivingEntity user, IForm form) {
+            Map<IForm, ActiveForm> playerBuffs = BUFF_FORMS.computeIfAbsent(user.getUUID(), k -> new HashMap<>());
+
+            if (playerBuffs.containsKey(form)) {
+                stopBuffForm(user, form);
             } else {
-                System.out.println("[DEBUG] ERROR: No factory found for form: " + form.getDisplayName());
+                BiFunction<LivingEntity, IForm, ActiveForm> factory = FORM_FACTORIES.get(form);
+                if (factory != null) {
+                    ActiveForm activeForm = factory.apply(user, form);
+                    playerBuffs.put(form, activeForm);
+                    activeForm.onStart();
+                }
             }
         }
 
+
         public static void stop(LivingEntity user) {
+            stop(user, true);
+        }
+        public static void stop(LivingEntity user, boolean notifyClient) {
             ActiveForm form = ACTIVE_FORMS.remove(user.getUUID());
             if (form != null) {
                 System.out.println("[DEBUG] ==> Attempting to STOP and REMOVE form: " + form.getForm().getDisplayName());
                 form.onStop();
                 System.out.println("[DEBUG] Successfully STOPPED form: " + form.getForm().getDisplayName());
 
-                if (user instanceof ServerPlayer player) {
+                if (notifyClient && user instanceof ServerPlayer player) {
                     ModMessages.sendToPlayer(new StopFormS2CPacket(), player);
+                }
+            }
+        }
+        public static void stopBuffForm(LivingEntity user, IForm form) {
+            Map<IForm, ActiveForm> playerBuffs = BUFF_FORMS.get(user.getUUID());
+            if (playerBuffs != null) {
+                ActiveForm activeForm = playerBuffs.remove(form);
+                if (activeForm != null) {
+                    activeForm.onStop();
                 }
             }
         }
@@ -785,7 +814,6 @@ public class FormUtils {
             if (form.getInputType() != BreathingForms.InputType.HOLD) return;
             start(user, form);
         }
-
         public static void releaseCharge(LivingEntity user) {
             ActiveForm activeForm = ACTIVE_FORMS.get(user.getUUID());
             if (activeForm != null) {
@@ -802,11 +830,15 @@ public class FormUtils {
             }
         }
 
+        @Nullable
         public static ActiveForm getActiveForm(LivingEntity user) {
             return ACTIVE_FORMS.get(user.getUUID());
         }
 
-        // --- Event Handlers ---
+        public static boolean isBuffActive(LivingEntity user, IForm form) {
+            Map<IForm, ActiveForm> playerBuffs = BUFF_FORMS.get(user.getUUID());
+            return playerBuffs != null && playerBuffs.containsKey(form);
+        }
 
         @SubscribeEvent
         public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
@@ -814,6 +846,15 @@ public class FormUtils {
                 ActiveForm activeForm = ACTIVE_FORMS.get(player.getUUID());
                 if (activeForm != null) {
                     activeForm.tick();
+                }
+
+                Map<IForm, ActiveForm> buffForms = BUFF_FORMS.get(player.getUUID());
+                if (buffForms != null && !buffForms.isEmpty()) {
+                    buffForms.values().removeIf(buff -> {
+                        buff.tick();
+                        // This part is for future use with buffs that have duration
+                        return false;
+                    });
                 }
             }
         }
@@ -841,6 +882,13 @@ public class FormUtils {
                 if (activeForm != null) {
                     activeForm.onHurt(event);
                 }
+
+                Map<IForm, ActiveForm> buffForms = BUFF_FORMS.get(player.getUUID());
+                if (buffForms != null) {
+                    for (ActiveForm buff : buffForms.values()) {
+                        buff.onHurt(event);
+                    }
+                }
             }
 
             ActiveForm activeForm = getActiveForm(target);
@@ -865,7 +913,6 @@ public class FormUtils {
         }
 
         // --- Static Initializer for Form Factories ---
-
         static {
             FORM_FACTORIES = new ImmutableMap.Builder<IForm, BiFunction<LivingEntity, IForm, ActiveForm>>()
                     // WATER
@@ -1088,7 +1135,7 @@ public class FormUtils {
         @Override
         protected void onTick() {
             if (ticksActive >= duration) {
-                ActiveFormManager.stop(user);
+                ActiveFormManager.stop(user, false);
             }
         }
     }
@@ -1116,8 +1163,8 @@ public class FormUtils {
     }
 
     public static abstract class ChargeableForm extends ActiveForm {
-        protected int chargeGoal;
-        protected int chargeTicks = 0;
+        public int chargeGoal;
+        public int chargeTicks = 0;
         protected boolean released = false;
         private int stopTick = -1;
 
@@ -1157,6 +1204,15 @@ public class FormUtils {
             onChargeEnd();
         }
 
+        @Override
+        public void onHurt(LivingHurtEvent event) {
+            // If the form is interruptible and we are not yet in the release phase, stop it
+            if (isInterruptible() && !this.released) {
+                level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.8f, 0.8f);
+                ActiveFormManager.stop(user, true);
+            }
+        }
+
         public void release(boolean wasFullyCharged) {
             if (this.released) return;
             this.released = true;
@@ -1184,9 +1240,9 @@ public class FormUtils {
     // =================================================================================
 
     // --- WATER FORMS ---
-    public static class WaterWheelForm extends ActiveForm {
+    public static class WaterWheelForm extends TimedForm {
         public WaterWheelForm(LivingEntity user, IForm form) {
-            super(user, form);
+            super(user, form, 10);
         }
 
         @Override
@@ -1223,7 +1279,7 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
-            // Do nothing.
+            super.onTick();
         }
     }
 
@@ -1438,6 +1494,11 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
+            if (!user.isSprinting()) {
+                ActiveFormManager.stop(user);
+                return;
+            }
+
             if (ticksActive > 0 && ticksActive % 20 == 0) {
                 user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
                     if (breath.getBreath() >= BREATH_COST_PER_TICK) {
@@ -5876,7 +5937,7 @@ public class FormUtils {
         }
     }
 
-    public static class CrazedCryOfThunderdeathForm extends ActiveForm {
+    public static class CrazedCryOfThunderdeathForm extends TimedForm  {
         private static final int WIND_UP_TICKS = 60;
         private static final int LIGHTNING_START_TICKS = 80;
         private static final int LIGHTNING_TICK_RATE = 5;
@@ -5886,7 +5947,7 @@ public class FormUtils {
         private final Vec3 arenaCenter;
 
         public CrazedCryOfThunderdeathForm(LivingEntity user, IForm form) {
-            super(user, form);
+            super(user, form, WIND_UP_TICKS + LIGHTNING_START_TICKS + 100); // 60 + 80 + 100 = 240 ticks total or 12 seconds
             this.arenaCenter = user.position().add(user.getLookAngle().scale(ARENA_RADIUS));
         }
 
@@ -5903,6 +5964,8 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
+            super.onTick();
+
             if (user.isCrouching()) {
                 ActiveFormManager.stop(user);
                 return;
@@ -5953,15 +6016,15 @@ public class FormUtils {
         }
     }
 
-    public static class CountlessStrikingTreesForm extends ActiveForm {
+    public static class CountlessStrikingTreesForm extends TimedForm  {
         private static final int STRIKE_TICK_RATE = 8;
         private static final double AOE_RADIUS = 35.0;
         private static final double DAMAGE_RADIUS = 3.0;
         private static final float DAMAGE = 18.0f;
 
         public CountlessStrikingTreesForm(LivingEntity user, IForm form) {
-            super(user, form);
-        }
+            super(user, form, 200);
+        } // 200 ticks = 10 seconds
 
         @Override
         protected void onStart() {
@@ -5971,6 +6034,7 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
+            super.onTick();
             if (ticksActive % 20 == 0) {
                 level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_BASEDRUM, SoundSource.PLAYERS, 2.0f, 0.5f);
             }
@@ -6206,7 +6270,7 @@ public class FormUtils {
         }
     }
 
-    public static class DisorderForm extends ActiveForm {
+    public static class DisorderForm extends TimedForm {
         private static final double CONE_RANGE = 15.0;
         private static final double CONE_ANGLE_DEGREES = 45.0;
         private static final int PULSE_RATE = 4;
@@ -6215,8 +6279,8 @@ public class FormUtils {
         private final Set<UUID> knockedBackEntities = new HashSet<>();
 
         public DisorderForm(LivingEntity user, IForm form) {
-            super(user, form);
-        }
+            super(user, form, 100);
+        } // 5s
 
         @Override
         public boolean isInterruptible() {
@@ -6231,6 +6295,8 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
+            super.onTick();
+
             if (ticksActive > 0 && ticksActive % PULSE_RATE == 0) {
                 float damagePerPulse = 6.0f + (ticksActive / 40f);
                 level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.8f);

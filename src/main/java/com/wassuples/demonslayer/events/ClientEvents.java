@@ -41,18 +41,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ClientEvents {
-    private static boolean isChargeFormActive = false;
-    public static boolean isChargeFormActive() {
-        return isChargeFormActive;
+    private static boolean abilityKeyIsDown = false;
+    public static void resetAbilityKeyState() {
+        abilityKeyIsDown = false;
     }
-    public static void setChargeFormActive(boolean active) {
-        isChargeFormActive = active;
-    }
-
 
     @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, value = Dist.CLIENT)
     public static class ClientForgeEvents {
-        private static boolean useKeyHeld = false;
         private static int useKeyHoldTime = 0;
         public static boolean isVignetteActive = false;
         private static boolean canAirJump = true;
@@ -112,34 +107,14 @@ public class ClientEvents {
                 }
             }
 
-            if (KeyBinding.USE_KEY.isDown()) {
-                if (!useKeyHeld) {
-                    useKeyHeld = true;
+            boolean isUseKeyDown = KeyBinding.USE_KEY.isDown();
 
-                    if (!isChargeFormActive()) {
-                        mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                            BreathingForms currentForm = style.getCurrentForms();
-                            if (currentForm.getInputType() == BreathingForms.InputType.HOLD) {
-                                setChargeFormActive(true);
-                                ModMessages.sendToServer(new ChargeFormC2SPacket(ChargeFormC2SPacket.ChargeType.START));
-                            }
-                        });
-                    }
-                }
-            } else {
-                if (useKeyHeld) {
-                    mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                        BreathingForms currentForm = style.getCurrentForms();
-                        if (currentForm.getInputType() == BreathingForms.InputType.PRESS) {
-                            ModMessages.sendToServer(new UseFormC2SPacket());
-                        } else if (currentForm.getInputType() == BreathingForms.InputType.HOLD) {
-                            if (isChargeFormActive()) {
-                                ModMessages.sendToServer(new ChargeFormC2SPacket(ChargeFormC2SPacket.ChargeType.RELEASE));
-                            }
-                        }
-                    });
-                }
-                useKeyHeld = false;
+            if (isUseKeyDown && !abilityKeyIsDown) {
+                abilityKeyIsDown = true;
+                ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.PRESS));
+            } else if (!isUseKeyDown && abilityKeyIsDown) {
+                abilityKeyIsDown = false;
+                ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.RELEASE));
             }
 
             mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {

@@ -45,12 +45,6 @@ public class ModMessages {
                 .consumerMainThread(ChangeFormC2SPacket::handle)
                 .add();
 
-        net.messageBuilder(ChargeFormC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(ChargeFormC2SPacket::new)
-                .encoder(ChargeFormC2SPacket::toBytes)
-                .consumerMainThread(ChargeFormC2SPacket::handle)
-                .add();
-
         net.messageBuilder(PlayerStyleSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PlayerStyleSyncS2CPacket::new)
                 .encoder(PlayerStyleSyncS2CPacket::toBytes)
@@ -61,6 +55,12 @@ public class ModMessages {
                 .decoder(PlayerBreathSyncS2CPacket::new)
                 .encoder(PlayerBreathSyncS2CPacket::toBytes)
                 .consumerMainThread(PlayerBreathSyncS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(EquipBdaC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(EquipBdaC2SPacket::new)
+                .encoder(EquipBdaC2SPacket::toBytes)
+                .consumerMainThread(EquipBdaC2SPacket::handle)
                 .add();
 
         net.messageBuilder(VignetteS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
@@ -181,6 +181,12 @@ public class ModMessages {
                 .decoder(StopFormS2CPacket::new)
                 .encoder(StopFormS2CPacket::toBytes)
                 .consumerMainThread(StopFormS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(AbilityKeyC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(AbilityKeyC2SPacket::new)
+                .encoder(AbilityKeyC2SPacket::toBytes)
+                .consumerMainThread(AbilityKeyC2SPacket::handle)
                 .add();
     }
 

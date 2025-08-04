@@ -2,6 +2,8 @@ package com.wassuples.demonslayer.entity.custom.hashira;
 
 import com.wassuples.demonslayer.entity.custom.HashiraEntity;
 import com.wassuples.demonslayer.item.ModItems;
+import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
+import com.wassuples.demonslayer.item.custom.SwordModel;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.DifficultyInstance;
@@ -19,7 +21,7 @@ public class WindHashiraEntity extends HashiraEntity {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, @Nullable SpawnGroupData pSpawnData, @Nullable CompoundTag pDataTag) {
-        this.setItemSlot(EquipmentSlot.MAINHAND, new ItemStack(ModItems.NICHIRIN_BLADE.get()));
+        this.setItemSlot(EquipmentSlot.MAINHAND, NichirinSwordItem.createSword(SwordModel.WIND));
         return super.finalizeSpawn(pLevel, pDifficulty, pReason, pSpawnData, pDataTag);
     }
 }

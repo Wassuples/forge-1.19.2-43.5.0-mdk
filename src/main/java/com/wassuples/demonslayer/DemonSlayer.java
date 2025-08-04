@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer;
 
+import com.mojang.logging.LogUtils;
 import com.wassuples.demonslayer.block.ModBlocks;
 import com.wassuples.demonslayer.client.gui.SleepQTEOverlay;
 import com.wassuples.demonslayer.effects.ModEffects;
@@ -16,12 +17,9 @@ import com.wassuples.demonslayer.missions.MissionRegistry;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.worldgen.biome.ModBiomes;
 import com.wassuples.demonslayer.worldgen.terrablender.ModOverworldRegion;
-import com.wassuples.demonslayer.worldgen.terrablender.ModTerraBlender;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.SpawnPlacements;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.FireBlock;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.client.event.EntityRenderersEvent;
 import net.minecraftforge.common.MinecraftForge;
@@ -36,9 +34,13 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import terrablender.api.Regions;
 
+import com.mojang.logging.LogUtils;
+import org.slf4j.Logger;
+
 @Mod(DemonSlayer.MOD_ID)
 public class DemonSlayer {
     public static final String MOD_ID = "demonslayer";
+    public static final Logger LOGGER = LogUtils.getLogger();
 
     public DemonSlayer() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();

@@ -3,7 +3,6 @@ package com.wassuples.demonslayer.entity.custom;
 // --- Add all necessary imports ---
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -20,8 +19,10 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
@@ -32,6 +33,9 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 import javax.annotation.Nullable;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
@@ -40,13 +44,14 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
 
     public ColdWhitePrincessEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
-        this.noPhysics = true;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
-                .add(Attributes.MOVEMENT_SPEED, 0.0D);
+                .add(Attributes.MOVEMENT_SPEED, 0.0D)
+                .add(Attributes.FOLLOW_RANGE, 32.0D)
+                .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D);
     }
 
     @Override
@@ -56,7 +61,7 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public @NotNull Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -64,7 +69,15 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(1, new IcyBreathAttackGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, (entity) -> !isOwner(entity)));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, LivingEntity.class, true, (entity) -> !isOwner(entity) && !(entity instanceof ColdWhitePrincessEntity)));
+    }
+
+    @Override
+    public void knockback(double pStrength, double pX, double pZ) {}
+
+    @Override
+    public boolean hurt(@NotNull DamageSource pSource, float pAmount) {
+        return false;
     }
 
     public void setOwner(@Nullable LivingEntity owner) {
@@ -78,7 +91,6 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
     @Override
     public void tick() {
         super.tick();
-        this.setDeltaMovement(0, 0, 0);
         if (this.tickCount > 400) {
             this.discard();
         }
@@ -88,7 +100,7 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
     }
 
     @Override
-    public boolean isInvulnerableTo(DamageSource pSource) {
+    public boolean isInvulnerableTo(@NotNull DamageSource pSource) {
         return pSource == DamageSource.FREEZE || (pSource.getEntity() != null && isOwner((LivingEntity) pSource.getEntity())) || super.isInvulnerableTo(pSource);
     }
 
@@ -122,7 +134,7 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
         @Override
         public void start() {
             this.attackTime = 0;
-            this.princess.level.playSound(null, this.princess.blockPosition(), SoundEvents.ELYTRA_FLYING, SoundSource.HOSTILE, 1.0f, 1.5f);
+            this.princess.level.playSound(null, this.princess.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.HOSTILE, 1.0f, 1.8f);
         }
 
         @Override
@@ -132,35 +144,63 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
 
         @Override
         public void tick() {
-            if (this.target == null || !this.target.isAlive()) {
+            if (this.target == null || !this.target.isAlive() || this.princess.distanceToSqr(this.target) > 20 * 20) {
                 this.stop();
                 return;
             }
 
             this.attackTime++;
             this.princess.getLookControl().setLookAt(this.target, 30.0F, 30.0F);
-
-            Vec3 startPos = this.princess.getEyePosition();
-            Vec3 endPos = this.target.getEyePosition();
-            Vec3 path = endPos.subtract(startPos);
-            double distance = path.length();
-
-            for (double d = 0; d < distance; d += 0.5) {
-                Vec3 point = startPos.add(path.normalize().scale(d));
-                this.princess.level.addParticle(ParticleTypes.SNOWFLAKE, point.x, point.y, point.z, 0, 0, 0);
-                if (this.attackTime % 5 == 0) {
-                    this.princess.level.addParticle(ParticleTypes.WHITE_ASH, point.x, point.y, point.z, 0, 0, 0);
+                       // Play a continuous "breathing" sound
+            if (this.attackTime % 4 == 0) {
+                this.princess.level.playSound(null, this.princess.getX(), this.princess.getEyeY(), this.princess.getZ(), SoundEvents.PLAYER_BREATH, SoundSource.HOSTILE, 1.5f, 0.5f);
+            }
+            
+            Vec3 breathOrigin = this.princess.getEyePosition().subtract(0, 0.2, 0);
+            Vec3 direction = this.target.getEyePosition().subtract(breathOrigin).normalize();
+            double breathLength = 15.0; // Long reach
+            double coneAngle = 0.4; // How wide the cone gets
+            
+            // Set to keep track of who we hit this tick to prevent multi-damage
+            final Set<LivingEntity> hitThisTick = new HashSet<>();
+            
+            // Create the cone effect
+            for (double d = 1.0; d < breathLength; d += 0.5) {
+                double currentRadius = d * coneAngle;
+                Vec3 centerPoint = breathOrigin.add(direction.scale(d));
+                
+                // Spawn a ring of particles to form the cone
+                for (int i = 0; i < 8; i++) {
+                    Vec3 randomOffset = new Vec3(this.princess.level.random.nextDouble() - 0.5, this.princess.level.random.nextDouble() - 0.5, this.princess.level.random.nextDouble() - 0.5)
+                            .normalize().scale(this.princess.level.random.nextDouble() * currentRadius);
+                    Vec3 particlePos = centerPoint.add(randomOffset);
+                    this.princess.level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, -0.05, 0);
                 }
-
-                BlockPos blockPos = new BlockPos(point);
-                if (this.princess.level.getBlockState(blockPos).is(Blocks.WATER)) {
-                    this.princess.level.setBlockAndUpdate(blockPos, Blocks.FROSTED_ICE.defaultBlockState());
+                
+                // Damage entities within the cone
+                AABB damageZone = new AABB(centerPoint, centerPoint).inflate(currentRadius);
+                List<LivingEntity> entitiesInCone = this.princess.level.getEntitiesOfClass(LivingEntity.class, damageZone, (entity) -> !this.princess.isOwner(entity) && entity != this.princess && entity.isAlive());
+                hitThisTick.addAll(entitiesInCone);
+                
+                // Freeze blocks within the cone
+                BlockPos centerBlockPos = new BlockPos(centerPoint);
+                for (BlockPos pos : BlockPos.betweenClosed(centerBlockPos.offset((int)-currentRadius, (int)-currentRadius, (int)-currentRadius), centerBlockPos.offset((int)currentRadius, (int)currentRadius, (int)currentRadius))) {
+                    if (this.princess.level.getBlockState(pos).is(Blocks.WATER)) {
+                        this.princess.level.setBlockAndUpdate(pos, Blocks.FROSTED_ICE.defaultBlockState());
+                    }
+                    // New: Place snow on top of non-air blocks to "freeze" them
+                    if (this.princess.level.getBlockState(pos).isSolidRender(this.princess.level, pos) && !this.princess.level.getBlockState(pos).is(Blocks.SNOW) && this.princess.level.getBlockState(pos.above()).isAir()) {
+                        if (this.princess.level.random.nextInt(20) == 0) { // Don't freeze every single block
+                            this.princess.level.setBlockAndUpdate(pos.above(), Blocks.SNOW.defaultBlockState());
+                        }
+                    }
                 }
             }
-
-            if (this.attackTime % 10 == 0) {
-                this.target.hurt(DamageSource.mobAttack(this.princess), 2.0f);
-                this.target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 40, 3));
+            
+            // Apply damage and effects to all entities hit in the cone this tick
+            for (LivingEntity hitEntity : hitThisTick) {
+                hitEntity.hurt(DamageSource.mobAttack(this.princess), 2.0f);
+                hitEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 2));
             }
         }
     }

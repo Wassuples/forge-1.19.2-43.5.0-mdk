@@ -1,22 +1,17 @@
-### CRITICAL BUGS
-- Some Water forms are kinda buggy now. (Specifically, Water4 and Water6)
+### CRITICAL PRIORITY
 - Fix Sun13
-- Upper moon 1 should be able to use Moon Breathing and Crescent BDA, or just have Crescent BDA always active.
-- Hold abilities aren't activating until after you let go, but then it just cancels it after the hold animation is done.
 
 ### HIGH PRIORITY
-- Add AI to ColdWhitePrincesses (Doma, Cryo BDA).
 - Add missions and shit.
 - Fix commands
-- Add cooldowns
 - Change attack damage in all forms. Make it accurately reflect the weapon held
 - Water7 and Water8 have janky activations
-- Menu is squished
 - Bring back parry indicators for:
   * Water11, Dead Calm
   * Flame4, Blooming Flame
   * Wind3, Clear Storm
-- Make it so that each sword may have a custom model. So that Hashira can have their custom swords without making a million different items!
+- Model and texture each Hashira's sword... Don't forget to register them in ModItems!
+- Wind4, Wind5
 
 ### MEDIUM PRIORITY
 - Add animations, particles, and motions to all forms
@@ -49,6 +44,7 @@
 - Abilities that all players are able to use (Dash, maybe charged jump)
 - Sword design and breathing style separation
 - Demon Slayer Mark: Unlocks when on very low health and fighting an upper moon
+- Nemesis System (https://chatgpt.com/c/6879342a-1574-8011-b489-c02c34fcbca7).
 
 ### Future Content that MAY be added
 Mission Requests:
@@ -56,5 +52,4 @@ Mission Requests:
 - Kokushibo before become demon.
 - Demon castle, but ALL OF THEM ARE AFTER YOU. They are out to jump your ass. All demons, all slayers, working together for a single goal, to KILL you.
 - Investigation missions, like batman AR detective stuff.
-- Nemesis System (https://chatgpt.com/c/6879342a-1574-8011-b489-c02c34fcbca7).
 - Killing Muzan gives you his power to control all demon.

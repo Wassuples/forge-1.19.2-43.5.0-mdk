@@ -21,7 +21,7 @@ public class StopFormS2CPacket {
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
-            ClientEvents.setChargeFormActive(false);
+            ClientEvents.resetAbilityKeyState();
         });
         return true;
     }

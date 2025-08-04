@@ -3,10 +3,12 @@ package com.wassuples.demonslayer.entity.ai;
 import com.wassuples.demonslayer.entity.custom.AbstractFormUsingEntity;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.DemonForms;
+import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.ai.goal.Goal;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
@@ -70,34 +72,28 @@ public class FormUserAttackGoal extends Goal {
     private void chooseAndUseRandomForm(LivingEntity target) {
         if (!(this.pMob.level instanceof ServerLevel serverLevel)) return;
 
-        if (this.pMob.getBreathingStyle() != null) {
-            List<BreathingForms> availableForms = Arrays.stream(BreathingForms.values())
-                    .filter(form -> form.getStyle() == this.pMob.getBreathingStyle())
-                    .toList();
+        List<IForm> allAvailableForms = new ArrayList<>();
 
-            if (!availableForms.isEmpty()) {
-                BreathingForms formToUse = availableForms.get(this.pMob.getRandom().nextInt(availableForms.size()));
-                formToUse.performAction(this.pMob, serverLevel);
-                this.attackCooldown = 40;
-                return;
-            }
+        if (this.pMob.getBreathingStyle() != null) {
+            Arrays.stream(BreathingForms.values())
+                    .filter(form -> form.getStyle() == this.pMob.getBreathingStyle())
+                    .forEach(allAvailableForms::add);
         }
 
         if (this.pMob.getDemonArt() != null) {
-            List<DemonForms> availableDemonForms = Arrays.stream(DemonForms.values())
+            Arrays.stream(DemonForms.values())
                     .filter(form -> form.getStyle() == this.pMob.getDemonArt())
-                    .toList();
-
-            if (!availableDemonForms.isEmpty()) {
-                DemonForms formToUse = availableDemonForms.get(this.pMob.getRandom().nextInt(availableDemonForms.size()));
-                formToUse.performAction(this.pMob, serverLevel);
-                this.attackCooldown = 40;
-                return;
-            }
+                    .forEach(allAvailableForms::add);
         }
 
-        this.pMob.doHurtTarget(target);
-        this.attackCooldown = 20;
+        if (!allAvailableForms.isEmpty()) {
+            IForm formToUse = allAvailableForms.get(this.pMob.getRandom().nextInt(allAvailableForms.size()));
+            formToUse.performAction(this.pMob, serverLevel);
+            this.attackCooldown = 40;
+        } else {
+            this.pMob.doHurtTarget(target);
+            this.attackCooldown = 20;
+        }
     }
 
     protected double getAttackReachSqr(LivingEntity pAttackTarget) {

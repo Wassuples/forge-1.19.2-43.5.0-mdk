@@ -1,13 +1,14 @@
 package com.wassuples.demonslayer.styles;
 
 import com.mojang.math.Vector3f;
-import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
 import com.wassuples.demonslayer.entity.custom.MistCloneEntity;
 import com.wassuples.demonslayer.entity.custom.ThrownNichirinEntity;
+import com.wassuples.demonslayer.ranking.PlayerProgression;
+import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
+import com.wassuples.demonslayer.ranking.Rank;
 import com.wassuples.demonslayer.util.FormUtils;
-import com.wassuples.demonslayer.util.ModUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -35,7 +36,6 @@ public enum BreathingForms implements IForm {
     // =================================================================================
     // WATER BREATHING
     // =================================================================================
-
     WATER_1(
             BreathingStyles.WATER,
             "First Form: Water Surface Slash",
@@ -45,10 +45,12 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a singular, horizontal slash aiming to decapitate their target.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
+            System.out.println("[DEBUG] Inside performAction for WATER_1");
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.0f);
             FormUtils.dealDirectionalDamage(user, 4.0, 6.0f, 0.7); // 90 degree cone
             FormUtils.spawnParticleArc(user, ParticleTypes.SPLASH, 2.5, 140, 30);
@@ -62,9 +64,11 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps forward into the air and performs a front flip, releasing a singular vertical slash in a circular motion.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
+            System.out.println("[DEBUG] Inside performAction for WATER_2");
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
@@ -76,9 +80,11 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user swings and bends their blade in a winding motion along with their body and dances in a flowing pattern, slicing everything in its path.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
+            System.out.println("[DEBUG] Inside performAction for WATER_3");
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
@@ -90,7 +96,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a multitude of slashes in a flowing fashion to release multiple consecutive slashes.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
@@ -108,7 +115,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user changes the grip on their sword and decapitates the opponent in a single flowing strike that causes little to no pain. It is a “sword strike of kindness” used when the enemy willingly surrenders.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             LivingEntity target = FormUtils.getLookedAtEntity(user, 5.0);
@@ -142,7 +150,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user twists their body, using their blade to perform a fierce whirling motion which generates a whirlpool of air to shred apart anything caught within its current like a giant sharp blade.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -156,7 +165,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a precise, fast and accurate thrust with their blade.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -170,7 +180,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user cuts the target vertically in a flowing motion which is most effective when they are falling downward.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (!user.isOnGround() && user.getDeltaMovement().y < 0) {
@@ -188,7 +199,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user changes their footwork in a way that minimizes the landing time and surface needed when landing, allowing the user to move without limits. Ideal when fighting in a place with no solid foothold.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.SplashingWaterFlowForm) {
@@ -206,7 +218,8 @@ public enum BreathingForms implements IForm {
             100,
             100,
             "The user charges toward the target whilst performing a continuous flowing attack with their blade which increases in strength and speed over time using momentum. The attacks seemingly take the form of a Japanese water dragon that accompanies the user in battle.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Toggleable form
@@ -225,7 +238,8 @@ public enum BreathingForms implements IForm {
             200,
             100,
             "The personal creation of the current Water Hashira, Giyu Tomioka. The user ceases all body movements and enters a state of complete tranquility, deflecting, blocking and cutting any incoming attacks with imperceptible speed with their blade. However, its effectiveness is limited as fast and numerous attacks can break through.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -244,7 +258,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes towards the target at tremendous speeds, before unleashing a singular horizontal slash directed at the targets neck for a decapitation.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -258,7 +273,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes an arcing vertical slash in an upwards motion, often brought up from a tail guard.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
@@ -277,7 +293,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs an arcing downwards vertical slash, often brought down from a high guard.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (user.isOnGround()) {
@@ -295,7 +312,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular slash or multiple if needed, in a fluid circular motion to defend from incoming attacks and decapitate multiple targets.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -309,7 +327,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forth, bringing their blade into a high guard before performing a series of sword slashes which take the form of a flaming tiger enveloping the user.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.FlameTigerForm) {
@@ -327,7 +346,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The most powerful Flame Breathing technique. The user assumes a high stance before performing an extremely high-speed dash towards the target and unleashing a singular, devastating slash. The technique is powerful enough to completely carve out the ground in its wake. In the movie and anime adaptation, this technique seemingly took the form of a flaming Japanese dragon that envelopes the user as they are charging towards the target.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -346,7 +366,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forward at blinding speeds and slashes continuously in a horizontal cyclone pattern.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -360,7 +381,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user lifts the sword upwards towards the right, above their head and unleashes four vertical slashes at once down on the enemy resembling claws.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.4f);
@@ -379,7 +401,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes a whirlwind of slashes around their body that can defend them from incoming attacks and slice up their surroundings.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -393,7 +416,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases several whirlwind slashes above them from below their target.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -407,7 +431,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user creates several circular arched slashes that increase in size from above their target.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -421,7 +446,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user rotates their body in an uppercut movement, creating an arcing slash.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
@@ -444,7 +470,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air while swinging their blade which generates gale-force winds to shred their opponent apart.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -458,7 +485,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and swings their blade which generates circular torrents of wind that slices up the opponent instantly.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -472,7 +500,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user backflips into the air and while upside-down, unleashes a powerful gust of circular wind that slashes apart anything below.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -490,7 +519,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unsheathes their katana, dashes forward at blinding speeds and decapitates their opponent faster than they can react, before sheathing it back. This technique is extremely reminiscent of Iaijutsu and its movements are described to be akin to \"lightning ripping through the air\".",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -504,7 +534,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases five arched slashes accompanied by lightning in quick succession.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -518,7 +549,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user surrounds the enemy with waves of arched lightning and attacks them from all directions.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -532,7 +564,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user generates a ball of electricity that releases waves of strong multi-directional lightning bolts from afar.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -546,7 +579,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes a long-ranged upward sword slash accompanied by lightning.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // 1. Perform a long-range raycast to find where the player is looking.
@@ -590,7 +624,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a series of powerful long-ranged lightning attacks that strike his opponent from afar.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -604,7 +639,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The personal creation of Zenitsu Agatsuma. The user dashes forward at blinding speeds and unleashes a singular forward slash at a low stance, which is seemingly accompanied by a yellow Japanese dragon shaped like a lightning bolt.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -622,7 +658,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular and powerful frontal thrust.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 0.8f);
@@ -647,7 +684,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs eight slashes in quick succession.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -661,7 +699,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a powerful and swift circular slash that can blow away incoming projectiles.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -675,7 +714,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user takes a low stance before dashing toward the target and slashing them.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -689,7 +729,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user charges at their target at blistering speeds in a zig-zag motion while performing a barrage of continuous slashes in front and/or around them.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -703,7 +744,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and performs a multitude of slashes in a somersaulting motion, decimating dozens of targets at once.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -717,7 +759,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The personal creation of Muichiro Tokito. A movement-based technique designed to heavily disorientate the target, which is done so by fluctuating the user's tempo. When the user appears before the target, they move incredibly slow, but then accelerate to blistering speeds before getting hit, making it seem like they disappeared into a cloud of mist. When done repeatedly, it can disorientate the target to the point of making them think they are being covered in a thick layer of mist.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             final int RADIUS = 10; // A 20x20 block area of mist
@@ -803,7 +846,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user lifts their twin swords above their head and slams them down with great force, causing a loud sound resembling thunder as a result.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -817,7 +861,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user holds their twin swords apart and spins them rapidly around themselves, enabling the blades to destroy anything it makes contact with for powerful defensive capabilities around the user.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -831,7 +876,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user holds the chain of their twin swords and rotates the blades at high speed while charging forward. The spin of the blades without changing grip allows for continual slashes while still being in motion.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -849,7 +895,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forward and performs a single slash that winds through the target, hitting multiple areas with one slice.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -863,7 +910,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular, long-winding swing, akin to a whipping motion, that cuts the target at multiple angles.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -877,7 +925,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and performs multiple arched slashes in quick succession.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -891,7 +940,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air before performing a somersault and releasing dozens of rapid, winding slashes from afar that essentially form a tornado of slashes.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -905,7 +955,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user fully extends their sword to perform an arcing slash before retracting it and extending it once more, done in quick succession to form a layer of slashes.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -923,7 +974,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and charges towards the opponent, stinging them multiple times with their blade to inject poison in just seemingly one strike.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -937,7 +989,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes at their target at blinding speeds and uses the momentum of their speed to then strengthen a single thrust into their opponent and inject poison into them.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -951,7 +1004,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A six strike attack with which the user aims to strike and inject their target with multiple doses of poison at the target's weak spots (such as the neck, heart, torso, etc.) in order to kill them with a large dose of poison.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -965,7 +1019,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "An attack with which the user uses their full speed to run a zigzag pattern that confuses their opponent in order to create an opening for them to directly stab their opponent's neck and inject poison to kill them, with the stab's force and power being further enhanced by the momentum of their speed. Doma noted that the sheer speed of this technique is strong enough to destroy an entire wooden bridge.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -983,7 +1038,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user throws both the flail and axe towards their intended target and manipulates the chain by rotating it thus causing the axe and flail to also rotate in order to drill and grind right through their target.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -997,7 +1053,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user throws both their axe and spiked flail for a pincer move before smashing down on the chain to cause the flail to then rebound and smash into their target from afar.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1011,7 +1068,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user rapidly twirls and swings the chain around them to unleash an omnidirectional flurry of attacks with both the flail and axe. This technique can also be used to block and counter enemy attacks from all directions at once.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1025,7 +1083,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user manipulates both the flail and axe weapons at both ends of the chain by swinging the chain on both sides in order to strike their opponents using a two pronged wide ranged attack.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1039,7 +1098,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user utilizes a powerful barrage with their flail and axe, doing a great amount of damage. The axe is destined to hit first with the trajectory of the flail following from the opposite side and slamming it into the opponent.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1057,7 +1117,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases several rotating sword slashes that deflects incoming physical attacks.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level){
             FormUtils.ActiveFormManager.start(user, this);
@@ -1071,7 +1132,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes single sword slash that curves and twists gracefully.\n",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level){
             final float DAMAGE = 9.0f;
@@ -1103,7 +1165,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Form: Peonies of Futility desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1117,7 +1180,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A technique used after or during evasion, the user spins around moving with their body weight to deliver an attack.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1131,7 +1195,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A focusing technique that raises the user's kinetic vision to its maximum, while using this technique the user perceives the world as if it were in slow motion. Usage of the technique, however, is highly dangerous, as the tremendous strain on the eyes could cause blood vessels to rupture and lead to partial or complete blindness. This technique is still usable even if the user only has one fully functional eye.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1149,7 +1214,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a singular frontal horizontal slash aimed at their target in a winding motion.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             final float DAMAGE = 10.0f;
@@ -1188,7 +1254,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes behind their opponent at blinding speed and aims to swiftly slice off their head from behind.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1202,7 +1269,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user circles around their opponent while using their sword to slice them from all directions.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1216,7 +1284,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps forward and performs a horizontal slash that slices through the target.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             final float DAMAGE = 16.0f;
@@ -1245,7 +1314,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user charges forth in a twisting and winding motion, curving their sword in multiple directions to strike multiple targets at once. This technique is capable of decapitating multiple enemies at once.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1262,7 +1332,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "First Form: Dark Moon, Evening Palace desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0f, 2.0f);
@@ -1288,7 +1359,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Second Form: Pearl Flower Moongazing desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1302,7 +1374,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Third Form: Loathsome Moon, Chains desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SKELETON_HURT, SoundSource.PLAYERS, 1.0f, 0.8f);
@@ -1329,7 +1402,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Form: Moon Spirit Calamitous Eddy desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1343,7 +1417,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixth Form: Perpetual Night, Lonely Moon - Incessant desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1357,7 +1432,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Seventh Form: Mirror of Misfortune, Moonlit desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1371,7 +1447,8 @@ public enum BreathingForms implements IForm {
     50,
     100,
     "Eighth Form: Moon-Dragon Ringtail desc.",
-    false) {
+    false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1385,7 +1462,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Ninth Form: Waning Moonswaths desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1399,7 +1477,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Tenth Form: Drilling Slashes, Moon Through Bamboo Leaves desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1413,7 +1492,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fourteenth Form: Catastrophe, Tenman Crescent Moon desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1427,7 +1507,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixteenth Form: Moonbow, Half Moon desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1444,7 +1525,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "First Fang: Pierce desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_CRIT, 1.2f, 1.0f);
@@ -1477,7 +1559,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Second Fang: Slice desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.2f, 0.9f);
@@ -1505,7 +1588,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Third Fang: Devour desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.1f, 0.8f);
@@ -1529,7 +1613,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fourth Fang: Slice 'n' Dice desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1543,7 +1628,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Fang: Crazy Cutting desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (user.isOnGround()) {
@@ -1563,7 +1649,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixth Fang: Palisade Bite desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1577,10 +1664,15 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Seventh Form: Spatial Awareness desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
+        }
+        @Override
+        public boolean isBuff() {
+            return true;
         }
     },
     BEAST_8(BreathingStyles.BEAST,
@@ -1591,7 +1683,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Eighth Form: Explosive Rush desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1605,7 +1698,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Ninth Fang: Extending Bendy Slash desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1619,7 +1713,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Tenth Fang: Whirling Fangs desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1633,7 +1728,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Eleventh Fang: Sudden Throwing Strike desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.2f, 1.0f);
@@ -1663,7 +1759,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The most fundamental slash, from which all other techniques are born. A single, perfect vertical slash that shatters all defenses.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.5f);
@@ -1714,7 +1811,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user spins their body, releasing a 360° slash that purifies the battlefield.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1728,7 +1826,8 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "Unleash two consecutive 360-degree slashes that incinerate incoming attacks.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1742,7 +1841,8 @@ public enum BreathingForms implements IForm {
             50,
             400,
             "A spiraling slash that creates a defensive vortex to intercept frontal attacks.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1756,7 +1856,8 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "A graceful backflip into the air to unleash a devastating horizontal slash below.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1770,7 +1871,8 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "Dash forward, masking the true length of your blade in a heat haze to land a surprising long-range strike.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1784,7 +1886,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Spiral into the air while performing a swirling upward slash to strike the target.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1798,7 +1901,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A devastating thrust that blooms with solar energy upon impact.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1812,7 +1916,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Unleash a continuous, flowing attack in the form of a solar dragon.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.SunHaloDragonForm) {
@@ -1830,7 +1935,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fire Wheel desc.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1844,7 +1950,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Perform a high-speed dash that creates afterimages to confuse enemies.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1858,7 +1965,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A two-strike combo starting with a vertical slash, followed by a horizontal one.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1872,7 +1980,8 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Continuously perform all twelve forms in rapid succession.",
-            false) {
+            false,
+            20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1893,8 +2002,18 @@ public enum BreathingForms implements IForm {
     private final int masteryGoal;
     private final String description;
     private final Boolean isBDA;
+    private final int baseCooldown;
 
-    BreathingForms(BreathingStyles style, String displayName, IForm.InputType inputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, Boolean isBDA) {
+    private Rank getPlayerRank(LivingEntity user) {
+        if (user instanceof Player player) {
+            return player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION)
+                    .map(PlayerProgression::getRank)
+                    .orElse(Rank.CIVILIAN);
+        }
+        return Rank.CIVILIAN;
+    }
+
+    BreathingForms(BreathingStyles style, String displayName, IForm.InputType inputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, Boolean isBDA, int baseCooldown) {
         this.style = style;
         this.displayName = displayName;
         this.inputType = inputType;
@@ -1904,6 +2023,7 @@ public enum BreathingForms implements IForm {
         this.masteryGoal = masteryGoal;
         this.description = description;
         this.isBDA = isBDA;
+        this.baseCooldown = baseCooldown;
     }
 
     public BreathingStyles getStyle() { return style; }
@@ -1916,5 +2036,11 @@ public enum BreathingForms implements IForm {
     public String getDescription() { return description; }
     public boolean IsBDA() { return isBDA; }
 
+    @Override public int getCooldownTicks(LivingEntity user) {
+        Rank rank = getPlayerRank(user);
+        int reduction = rank.ordinal() * 5; // rank 1 gets 5 ticks off, rank 11 gets 55 ticks off
+
+        return Math.max(1, baseCooldown - reduction); // minimum cooldown is 0.05 seconds, 1 tick
+    }
     public abstract void performAction(LivingEntity user, ServerLevel level);
 }
