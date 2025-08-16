@@ -12,11 +12,12 @@ import com.wassuples.demonslayer.effects.ForcedSleepEffect;
 import com.wassuples.demonslayer.effects.ModEffects;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.*;
+import com.wassuples.demonslayer.entity.custom.demon.UpperMoonOneEntity;
 import com.wassuples.demonslayer.gamerule.ModGameRules;
 import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
-import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
+import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.commands.arguments.EntityAnchorArgument;
@@ -25,6 +26,7 @@ import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -43,6 +45,7 @@ import net.minecraft.world.entity.animal.Animal;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
+import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
@@ -61,8 +64,8 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
-import static com.wassuples.demonslayer.styles.BloodDemonArts.THREADS;
 import static com.wassuples.demonslayer.styles.BreathingForms.*;
 
 public class FormUtils {
@@ -305,16 +308,23 @@ public class FormUtils {
 
             // Choose a particle effect based on the current style.
             ParticleOptions particle = switch (currentStyle) {
-                case WATER -> ParticleTypes.SPLASH;
-                case FLAME -> ParticleTypes.FLAME;
                 case WIND -> ParticleTypes.CLOUD;
-                case MIST -> new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.0f);
-                case STONE -> new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState());
                 case INSECT -> new DustParticleOptions(new Vector3f(0.8f, 0.4f, 1.0f), 1.0f);
+                case STONE -> new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState());
+                case WATER -> ParticleTypes.SPLASH;
                 case LOVE -> new DustParticleOptions(new Vector3f(1.0f, 0.6f, 0.9f), 1.0f);
-                case THUNDER -> ParticleTypes.ELECTRIC_SPARK;
+                case SOUND -> new DustParticleOptions(new Vector3f(0.5f, 0.5f, 0.5f), 1.0f);
+                case BEAST -> new DustParticleOptions(new Vector3f(0.6f, 0.4f, 0.2f), 1.0f);
                 case SERPENT -> new DustParticleOptions(new Vector3f(0.8f, 0.8f, 0.8f), 1.0f);
                 case FLOWER -> new DustParticleOptions(new Vector3f(1.0f, 0.7f, 0.8f), 1.0f);
+                case THUNDER -> ParticleTypes.ELECTRIC_SPARK;
+                case FLAME -> ParticleTypes.FLAME;
+                case MIST -> new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.0f);
+                case MOON -> new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+                case SUN -> new DustParticleOptions(new Vector3f(1.0f, 0.8f, 0.2f), 1.0f);
+                case WOOD -> new DustParticleOptions(new Vector3f(0.4f, 0.6f, 0.2f), 1.0f);
+                case FROST -> new DustParticleOptions(new Vector3f(0.2f, 0.8f, 1.0f), 1.0f);
+                case SAND -> new DustParticleOptions(new Vector3f(0.8f, 0.7f, 0.5f), 1.0f);
                 default -> ParticleTypes.SWEEP_ATTACK;
             };
 
@@ -334,10 +344,15 @@ public class FormUtils {
                 BloodDemonArts currentBda = bda.getEquippedBda();
 
                 ParticleOptions particle = switch (currentBda) {
-                    case THREADS -> ParticleTypes.SPIT;
+                    case CRESCENT -> new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+                    case CRYO -> ParticleTypes.SNOWFLAKE;
+                    case DESTRUCTIVE_DEATH -> new DustParticleOptions(new Vector3f(0.9f, 0.1f, 0.1f), 1.0f);
+                    case EMOTION -> new DustParticleOptions(new Vector3f(0.5f, 0.5f, 0.5f), 1.0f);
+                    case FISH -> new DustParticleOptions(new Vector3f(0.2f, 0.8f, 0.9f), 1.0f);
                     case SASH -> new DustParticleOptions(new Vector3f(0.9f, 0.4f, 0.8f), 1.0f);
                     case HAEMO -> new DustParticleOptions(new Vector3f(0.7f, 0.1f, 0.1f), 1.0f);
-                    case CRYO -> ParticleTypes.SNOWFLAKE;
+                    case SLEEP -> new DustParticleOptions(new Vector3f(0.6f, 0.6f, 0.9f), 1.0f);
+                    case THREADS -> ParticleTypes.SPIT;
                     default -> ParticleTypes.SWEEP_ATTACK;
                 };
 
@@ -713,8 +728,8 @@ public class FormUtils {
      * Checks if the player is holding a NichirinSwordItem in either hand.
      */
     public static boolean isPlayerHoldingNichirin(Player player) {
-        return player.getMainHandItem().getItem() instanceof NichirinSwordItem ||
-                player.getOffhandItem().getItem() instanceof NichirinSwordItem;
+        return player.getMainHandItem().getItem() instanceof SwordItem ||
+                player.getOffhandItem().getItem() instanceof SwordItem;
     }
 
     /**
@@ -1086,14 +1101,16 @@ public class FormUtils {
                 boolean isDemon = player.getCapability(PlayerDemonProvider.PLAYER_DEMON)
                         .map(PlayerDemon::isDemon)
                         .orElse(false);
+                boolean hasSword = isPlayerHoldingNichirin(player);
 
                 // Is anyone trying to use a breathing style without a sword?
-                if (!isPlayerHoldingNichirin(player) && !this.form.IsBDA()) {
+                if (!hasSword && (form instanceof com.wassuples.demonslayer.styles.BreathingForms)) {
                     ActiveFormManager.stop(player);
                     return;
                 }
+
                 // Is a human trying to use BDA?
-                if (this.form.IsBDA() && !isDemon) {
+                if ((this.form instanceof com.wassuples.demonslayer.styles.DemonForms) && !isDemon) {
                     ActiveFormManager.stop(player);
                     return;
                 }
@@ -1214,6 +1231,7 @@ public class FormUtils {
         }
 
         public void release(boolean wasFullyCharged) {
+            DemonSlayer.LOGGER.debug("[ChargeForm] release(wasFullyCharged={})", wasFullyCharged);
             if (this.released) return;
             this.released = true;
             this.ticksActive = 0;
@@ -1297,9 +1315,9 @@ public class FormUtils {
         protected void onTick() {
             super.onTick(); // Handles timeout
             if (ticksActive % 5 == 0) {
-                pushPlayer(user, 1.8, true);
-                dealDirectionalDamage(user, 3.0, 6.0f, 0.5);
-                spawnParticleArc(user, ParticleTypes.SPLASH, 1.5, 90, 10);
+                pushPlayer(user, 2.5, false);
+                dealThrustDamage(user, 5.0, 8.0f);
+                spawnParticleArc(user, ParticleTypes.SPLASH, 3.0, 120, 25);
             }
         }
     }
@@ -5827,43 +5845,54 @@ public class FormUtils {
     }
 
     public static class KillerFishScalesForm extends TimedForm {
-        private static final int DURATION = 100;
-        private static final int DASH_COOLDOWN = 10;
+        // --- CONSTANTS ---
+        private static final int DURATION = 100; // 5 seconds
         private static final int MAX_BOUNCES = 6;
         private static final double DASH_RANGE = 15.0;
         private static final float DAMAGE_PER_HIT = 12.0f;
         private static final double DAMAGE_RADIUS = 3.0;
+        private static final double FORWARD_DASH_SPEED = 2.5;
+        private static final double HOMING_DASH_SPEED = 2.8; // Speed for bouncing between targets
 
+        // --- STATE FIELDS ---
         @Nullable
         private LivingEntity currentTarget;
         private int bouncesLeft;
-        private int dashTicks;
+        private final boolean isHoming;
+        private final Set<LivingEntity> alreadyHit;
 
         public KillerFishScalesForm(LivingEntity user, IForm form) {
             super(user, form, DURATION);
             this.bouncesLeft = MAX_BOUNCES;
-            this.dashTicks = 0;
             this.currentTarget = getLookedAtEntity(user, DASH_RANGE);
+            this.isHoming = this.currentTarget != null;
+            this.alreadyHit = new HashSet<>();
         }
 
         @Override
         protected void onStart() {
-            if (this.currentTarget == null) {
-                level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.7f, 1.5f);
-                ActiveFormManager.stop(user);
-                return;
-            }
+            // Shared effects for both modes
             user.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, DURATION + 5, 2));
             user.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION + 5, 1));
             level.playSound(null, user.blockPosition(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 1.5f, 1.2f);
-            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.0f, 1.0f);
+
+            if (isHoming) {
+                // Sound specific to the homing attack
+                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_CRIT, SoundSource.PLAYERS, 1.0f, 1.0f);
+            } else {
+                // Launch the user forward for the dash attack
+                level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_RIPTIDE_1, SoundSource.PLAYERS, 1.2f, 1.0f);
+                Vec3 lookVec = user.getLookAngle();
+                user.setDeltaMovement(lookVec.scale(FORWARD_DASH_SPEED).add(0, 0.2, 0));
+                user.hurtMarked = true; // Essential for applying velocity changes on the server
+            }
         }
 
         @Override
         protected void onTick() {
             super.onTick();
-            this.dashTicks--;
 
+            // Shared spinning particle effect for both modes
             final DustParticleOptions scaleParticle = new DustParticleOptions(new Vector3f(0.3f, 0.9f, 0.7f), 1.0f);
             for (int i = 0; i < 5; i++) {
                 double angle = (ticksActive * 0.5) + (i * Math.PI / 2.5);
@@ -5871,32 +5900,57 @@ public class FormUtils {
                 level.sendParticles(scaleParticle, user.getX() + offset.x, user.getY() + 1.0, user.getZ() + offset.z, 1, 0, 0.1, 0, 0);
             }
 
-            if (this.dashTicks <= 0) {
+            if (isHoming) {
+                // --- Homing Bounce Attack Logic ---
                 if (this.currentTarget == null || !this.currentTarget.isAlive() || this.bouncesLeft <= 0) {
                     ActiveFormManager.stop(user);
                     return;
                 }
-                user.teleportTo(this.currentTarget.getX(), this.currentTarget.getY(), this.currentTarget.getZ());
-                dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_HIT, 0.8f, DamageSource.mobAttack(user));
-                level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.8f);
-                level.sendParticles(ParticleTypes.EXPLOSION, user.getX(), user.getY(), user.getZ(), 1, 0, 0, 0, 0);
-                this.bouncesLeft--;
 
-                List<LivingEntity> potentialNextTargets = level.getEntitiesOfClass(LivingEntity.class,
-                        user.getBoundingBox().inflate(DASH_RANGE),
-                        e -> e != user && e != this.currentTarget && e.isAlive() && !(e instanceof Player && ((Player) e).isCreative()));
+                // Check for collision with the target
+                if (user.getBoundingBox().inflate(0.75).intersects(this.currentTarget.getBoundingBox())) {
+                    // --- HIT AND BOUNCE ---
+                    dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_HIT, 0.8f, DamageSource.mobAttack(user));
+                    level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.8f);
+                    level.sendParticles(ParticleTypes.EXPLOSION, this.currentTarget.getX(), this.currentTarget.getY(0.5), this.currentTarget.getZ(), 1, 0.2, 0.2, 0.2, 0);
+                    this.bouncesLeft--;
 
-                if (potentialNextTargets.isEmpty()) {
-                    this.currentTarget = null;
+                    LivingEntity oldTarget = this.currentTarget;
+                    List<LivingEntity> potentialNextTargets = level.getEntitiesOfClass(LivingEntity.class,
+                            user.getBoundingBox().inflate(DASH_RANGE),
+                            e -> e != user && e != oldTarget && e.isAlive() && !(e instanceof Player && ((Player) e).isCreative()));
+
+                    this.currentTarget = potentialNextTargets.isEmpty() ? null : potentialNextTargets.get(level.random.nextInt(potentialNextTargets.size()));
+
+                    // Apply a vertical "bounce" to jump out of the attack
+                    user.setDeltaMovement(user.getDeltaMovement().x * 0.2, 0.7, user.getDeltaMovement().z * 0.2);
+                    user.hurtMarked = true;
+
                 } else {
-                    this.currentTarget = potentialNextTargets.get(level.random.nextInt(potentialNextTargets.size()));
+                    // --- DASH TOWARDS TARGET ---
+                    Vec3 direction = this.currentTarget.position().subtract(user.position()).normalize();
+                    user.setDeltaMovement(direction.scale(HOMING_DASH_SPEED));
+                    user.hurtMarked = true;
                 }
-                this.dashTicks = DASH_COOLDOWN;
+            } else {
+                // --- Forward Dash Attack Logic ---
+                level.sendParticles(ParticleTypes.SWEEP_ATTACK, user.getX(), user.getY(0.5), user.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
+
+                List<LivingEntity> hitEntities = level.getEntitiesOfClass(LivingEntity.class,
+                        user.getBoundingBox().inflate(1.0),
+                        e -> e != user && e.isAlive() && !alreadyHit.contains(e) && !(e instanceof Player && ((Player) e).isCreative()));
+
+                for (LivingEntity target : hitEntities) {
+                    target.hurt(DamageSource.mobAttack(user), DAMAGE_PER_HIT);
+                    alreadyHit.add(target);
+                    level.playSound(null, target.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.2f);
+                }
             }
         }
 
         @Override
         protected void onStop() {
+            // Clean up effects for both modes
             user.removeEffect(MobEffects.MOVEMENT_SPEED);
             user.removeEffect(MobEffects.DAMAGE_RESISTANCE);
         }
@@ -6137,7 +6191,7 @@ public class FormUtils {
         protected void onStart() {
             if (!level.isClientSide && user instanceof ServerPlayer caster) {
                 applyImmobility(caster, 40);
-                updateTargets(caster); // Run the scan once immediately.
+                updateTargets(caster);
                 level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0f, 1.5f);
 
                 CompassNeedleEntity effect = new CompassNeedleEntity(level, caster.getX(), caster.getY() + 0.01, caster.getZ());
@@ -6163,6 +6217,7 @@ public class FormUtils {
                     }
                 }
                 level.playSound(null, user.blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 1.0f, 1.5f);
+                ModMessages.sendToPlayer(new UpdateCompassInfoPacket(-1, Component.empty(), 0, 0, 0, 0, 0, BlockPos.ZERO, new ArrayList<>(), Component.empty(), Component.empty(), -1, "", -1, -1, "", false, "", -1, ""), caster);
             }
         }
 
@@ -6174,8 +6229,91 @@ public class FormUtils {
 
             rescanTimer++;
             if (rescanTimer >= 20) {
-                rescanTimer = 0; // Reset the timer
-                updateTargets(caster); // Run the update logic.
+                rescanTimer = 0;
+                updateTargets(caster);
+            }
+
+            updateAndSendTargetInfo(caster);
+        }
+
+        private void updateAndSendTargetInfo(ServerPlayer caster) {
+            double range = 128.0;
+
+            Vec3 startPos = caster.getEyePosition();
+            Vec3 lookVector = caster.getLookAngle();
+            Vec3 endPos = startPos.add(lookVector.scale(range));
+
+            AABB searchBox = caster.getBoundingBox().expandTowards(lookVector.scale(range)).inflate(1.0D, 1.0D, 1.0D);
+
+            EntityHitResult result = ProjectileUtil.getEntityHitResult(
+                    caster.level,
+                    caster,
+                    startPos,
+                    endPos,
+                    searchBox,
+                    (entity) -> !entity.isSpectator() && entity.isPickable() && entity.isAlive() && entity instanceof LivingEntity && !entity.is(caster)
+            );
+
+            if (result != null && result.getEntity() instanceof LivingEntity target) {
+                Component entityTypeName = target.getType().getDescription();
+
+                float health = target.getHealth();
+                float maxHealth = target.getMaxHealth();
+                int armor = target.getArmorValue();
+
+                int air = target.getAirSupply();
+                int maxAir = target.getMaxAirSupply();
+
+                BlockPos position = target.blockPosition();
+
+                Component mainHandItem = target.getMainHandItem().getHoverName();
+                Component offHandItem = target.getOffhandItem().getHoverName();
+
+                List<String> effects = target.getActiveEffects().stream().map(effect -> effect.getEffect().getDisplayName().getString() + " " + (effect.getAmplifier() + 1)).collect(Collectors.toList());
+
+                int hunger = (target instanceof Player p) ? p.getFoodData().getFoodLevel() : -1;
+
+                String slayerRank = target.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).map(prog -> prog.getRank().getDisplayName().getString()).orElse("");
+
+                final int[] breathData = {-1, -1};
+                target.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(cap -> {
+                    breathData[0] = cap.getBreath();
+                    breathData[1] = cap.getMaxBreath();
+                });
+
+                String style = target.getCapability(PlayerStyleProvider.PLAYER_STYLE).map(cap -> cap.getCurrentStyles().getDisplayName()).orElse("");
+
+                final boolean[] isDemon = {false};
+                final String[] demonRank = {""};
+                final int[] bloodPoints = {-1};
+                final String[] bda = {""};
+
+                if (target instanceof DemonEntity demonMob) {
+                    isDemon[0] = true;
+                    demonRank[0] = demonMob.getDemonRank().getDisplayName().getString();
+                    if (demonMob.getDemonArt() != null) {
+                        bda[0] = demonMob.getDemonArt().getDisplayName();
+                    }
+                } else if (target instanceof UpperMoonOneEntity um1) {
+                    isDemon[0] = true;
+                    demonRank[0] = um1.getDemonRank().getDisplayName().getString();
+                    if (um1.getDemonArt() != null) {
+                        bda[0] = um1.getDemonArt().getDisplayName();
+                    }
+                } else {
+                    target.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(cap -> {
+                        if (cap.isDemon()) {
+                            isDemon[0] = true;
+                            demonRank[0] = cap.getRank().getDisplayName().getString();
+                            bloodPoints[0] = cap.getBloodPoints();
+                            bda[0] = cap.getEquippedBda().getDisplayName();
+                        }
+                    });
+                }
+
+                ModMessages.sendToPlayer(new UpdateCompassInfoPacket(target.getId(), entityTypeName, health, maxHealth, armor, air, maxAir, position, effects, mainHandItem, offHandItem, hunger, slayerRank, breathData[0], breathData[1], style, isDemon[0], demonRank[0], bloodPoints[0], bda[0]), caster);
+            } else {
+                ModMessages.sendToPlayer(new UpdateCompassInfoPacket(-1, Component.empty(), 0, 0, 0, 0, 0, BlockPos.ZERO, new ArrayList<>(), Component.empty(), Component.empty(), -1, "", -1, -1, "", false, "", -1, ""), caster);
             }
         }
 
@@ -7217,43 +7355,44 @@ public class FormUtils {
 
         @Override
         protected void onStart() {
-            level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.GLASS_HIT, SoundSource.PLAYERS, 1.0f, 2.0f);
+            if (!level.isClientSide) {
+                level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.GLASS_HIT, SoundSource.PLAYERS, 1.0f, 2.0f);
+            }
         }
 
         @Override
         protected void onTick() {
             super.onTick();
 
-            if (ticksActive <= TELEGRAPH_DURATION) {
-                double angle = (ticksActive * 0.4);
-                double radius = IMPACT_RADIUS * 0.8;
-                Vec3 particlePos = targetPoint.add(new Vec3(Math.cos(angle) * radius, 0.2, Math.sin(angle) * radius));
-                level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 2, 0, 0, 0, 0);
-            }
-
-            if (ticksActive == TELEGRAPH_DURATION) {
-                level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5f, 0.8f);
-                level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.PLAYERS, 1.2f, 1.0f);
-                int icicleCount = 7;
-                for (int i = 0; i < icicleCount; i++) {
-                    Vec3 icicleBasePos = targetPoint.add(new Vec3(
-                            (level.random.nextDouble() - 0.5) * (IMPACT_RADIUS),
-                            0.1,
-                            (level.random.nextDouble() - 0.5) * (IMPACT_RADIUS)
-                    ));
-                    spawnIcicleVFX(level, icicleBasePos);
+            if (!level.isClientSide) {
+                if (ticksActive <= TELEGRAPH_DURATION) {
+                    double angle = (ticksActive * 0.4);
+                    double radius = IMPACT_RADIUS * 0.8;
+                    Vec3 particlePos = targetPoint.add(new Vec3(Math.cos(angle) * radius, 0.2, Math.sin(angle) * radius));
+                    level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 2, 0, 0, 0, 0);
                 }
 
-                AABB eruptionBox = new AABB(targetPoint, targetPoint).inflate(IMPACT_RADIUS, 2.0, IMPACT_RADIUS);
-                List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, eruptionBox, e -> e != user && e.isAlive());
+                if (ticksActive == TELEGRAPH_DURATION) {
+                    level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5f, 0.8f);
+                    level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.PLAYERS, 1.2f, 1.0f);
 
-                for (LivingEntity target : targets) {
-                    if (user instanceof ServerPlayer player) {
-                        target.hurt(DamageSource.playerAttack(player), DAMAGE);
-                    } else {
-                        target.hurt(DamageSource.mobAttack(user), DAMAGE);
+                    int icicleCount = 7;
+                    for (int i = 0; i < icicleCount; i++) {
+                        Vec3 icicleBasePos = targetPoint.add(new Vec3(
+                                (level.random.nextDouble() - 0.5) * (IMPACT_RADIUS),
+                                0.1,
+                                (level.random.nextDouble() - 0.5) * (IMPACT_RADIUS)
+                        ));
+                        spawnIcicleVFX((ServerLevel) level, icicleBasePos);
                     }
-                    target.hurtMarked = true;
+
+                    AABB eruptionBox = new AABB(targetPoint, targetPoint).inflate(IMPACT_RADIUS, 2.0, IMPACT_RADIUS);
+                    List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, eruptionBox, e -> e != user && e.isAlive());
+
+                    for (LivingEntity target : targets) {
+                        DamageSource source = (user instanceof Player p) ? DamageSource.playerAttack(p) : DamageSource.mobAttack(user);
+                        target.hurt(source, DAMAGE);
+                    }
                 }
             }
         }
@@ -7890,6 +8029,11 @@ public class FormUtils {
 
         @Override
         protected void onTick() {
+            if(!user.isSprinting()) {
+                ActiveFormManager.stop(user);
+                return;
+            }
+
             if (ticksActive % 10 == 0) {
                 user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
                     if (breath.getBreath() >= BREATH_COST_PER_TICK) {

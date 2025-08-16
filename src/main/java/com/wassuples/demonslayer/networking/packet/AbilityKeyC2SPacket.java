@@ -45,7 +45,7 @@ public class AbilityKeyC2SPacket {
             ServerPlayer player = context.getSender();
             if (player == null) return;
 
-            // KEY RELEASE
+            // Handle key RELEASE for chargeable forms
             if (this.keyState == KeyState.RELEASE) {
                 FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(player);
                 if (activeForm instanceof FormUtils.ChargeableForm chargeable) {
@@ -55,7 +55,7 @@ public class AbilityKeyC2SPacket {
                 return;
             }
 
-            // KEY PRESS
+            // Handle key PRESS
             if (this.keyState == KeyState.PRESS) {
                 IForm formToUse = player.getCapability(PlayerDemonProvider.PLAYER_DEMON)
                         .filter(PlayerDemon::isBdaModeActive)
@@ -67,39 +67,49 @@ public class AbilityKeyC2SPacket {
 
                 if (formToUse == null) return;
 
-                if (formToUse.isBuff()) {
+                FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(player);
+                PlayerCooldowns cooldowns = player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).orElse(null);
+                if (cooldowns == null) {
+                    DemonSlayer.LOGGER.error("CRITICAL: Player {} is missing PlayerCooldowns capability!", player.getName().getString());
+                    return;
+                }
+
+                // --- DEACTIVATION LOGIC ---
+                // If the player is trying to use the form that is already active, it's a deactivation attempt (for toggles).
+                if (activeForm != null && activeForm.getForm() == formToUse) {
                     formToUse.performAction(player, (ServerLevel) player.level);
+                    // No cooldown check/set on deactivation.
+                    return;
+                }
 
-                } else {
-                    // Guard: Is a combat move already in progress? If so, block the new one
-                    if (FormUtils.ActiveFormManager.getActiveForm(player) != null) {
-                        return;
-                    }
+                // --- ACTIVATION LOGIC ---
 
-                    // Guard: Is the form on cooldown?
-                    PlayerCooldowns cooldowns = player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).orElse(null);
-                    if (cooldowns == null) {
-                        DemonSlayer.LOGGER.error("CRITICAL: Player {} is missing PlayerCooldowns capability!", player.getName().getString());
-                        return;
-                    }
-                    if (cooldowns.isOnCooldown(formToUse)) {
-                        int ticksLeft = cooldowns.getCooldownRemainingTicks(formToUse);
-                        player.sendSystemMessage(Component.literal(formToUse.getDisplayName() + " is on cooldown for " + String.format("%.1f", ticksLeft / 20.0) + "s"), true);
-                        return;
-                    }
+                // Guard: Another combat move is already in progress.
+                // We allow buffs to be activated over other buffs, but not combat moves.
+                if (activeForm != null && !activeForm.getForm().isBuff()) {
+                    return;
+                }
 
-                    // Guard: Validation checks
-                    boolean isDemon = player.getCapability(PlayerDemonProvider.PLAYER_DEMON).map(PlayerDemon::isDemon).orElse(false);
-                    if (!isDemon && !formToUse.IsBDA() && !FormUtils.isPlayerHoldingNichirin(player)) {
-                        player.level.playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.5f, 0.8f);
-                        return;
-                    }
+                // Guard: The form is on cooldown.
+                if (cooldowns.isOnCooldown(formToUse)) {
+                    int ticksLeft = cooldowns.getCooldownRemainingTicks(formToUse);
+                    player.sendSystemMessage(Component.literal(formToUse.getDisplayName() + " is on cooldown for " + String.format("%.1f", ticksLeft / 20.0) + "s"), true);
+                    return;
+                }
 
-                    // All checks passed, perform the combat move.
-                    formToUse.performAction(player, (ServerLevel) player.level);
+                // Guard: Slayers need a Nichirin sword for non-BDA forms.
+                boolean isDemon = player.getCapability(PlayerDemonProvider.PLAYER_DEMON).map(PlayerDemon::isDemon).orElse(false);
+                if (!isDemon && (formToUse instanceof com.wassuples.demonslayer.styles.BreathingForms) && !FormUtils.isPlayerHoldingNichirin(player)) {
+                    player.level.playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.5f, 0.8f);
+                    return;
+                }
 
-                    // Put the combat move on cooldown.
-                    int cooldownTicks = formToUse.getCooldownTicks(player);
+                // All checks passed. Perform the action.
+                formToUse.performAction(player, (ServerLevel) player.level);
+
+                // Set the cooldown. Forms can have a cooldown of 0.
+                int cooldownTicks = formToUse.getCooldownTicks(player);
+                if (cooldownTicks > 0) {
                     cooldowns.setOnCooldown(formToUse, cooldownTicks);
                 }
             }

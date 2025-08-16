@@ -77,7 +77,13 @@ public class UseFormC2SPacket {
                     }
 
                     // Check 3: Form unlocked
-                    boolean isUnlocked = progression.getStyleMastery(currentForm.getStyle()) >= currentForm.getStyleMasteryToUnlock();
+                    boolean isUnlocked = false; // Default to false
+                    Object styleObject = currentForm.getStyle();
+
+                    if (styleObject instanceof com.wassuples.demonslayer.styles.BreathingStyles breathingStyle) {
+                        isUnlocked = progression.getStyleMastery(breathingStyle) >= currentForm.getStyleMasteryToUnlock();
+                    }
+
                     if (!isUnlocked) {
                         player.sendSystemMessage(Component.literal("This form hasn't been unlocked yet.").withStyle(ChatFormatting.RED));
                         return;

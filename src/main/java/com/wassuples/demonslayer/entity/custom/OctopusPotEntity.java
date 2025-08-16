@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import net.minecraft.network.protocol.Packet;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
@@ -20,6 +21,7 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+import java.util.List;
 import java.util.UUID;
 
 public class OctopusPotEntity extends Monster implements IAnimatable {
@@ -58,7 +60,32 @@ public class OctopusPotEntity extends Monster implements IAnimatable {
         if (this.tickCount % 20 == 0) {
             float damage = 12.0f;
             double radius = 10.0;
-            com.wassuples.demonslayer.util.FormUtils.dealAOEDamage(this, this.position(), radius, damage, 1.2f, DamageSource.mobAttack(this));
+
+            LivingEntity owner = null;
+            if (this.ownerUUID != null && this.level instanceof ServerLevel serverLevel) {
+                Entity ownerEntity = serverLevel.getEntity(this.ownerUUID);
+                if (ownerEntity instanceof LivingEntity) {
+                    owner = (LivingEntity) ownerEntity;
+                }
+            }
+
+            DamageSource damageSource = owner != null ? DamageSource.mobAttack(owner) : DamageSource.mobAttack(this);
+
+            List<LivingEntity> nearbyEntities = this.level.getEntitiesOfClass(
+                    LivingEntity.class,
+                    this.getBoundingBox().inflate(radius)
+            );
+
+            for (LivingEntity target : nearbyEntities) {
+                if (target == this || target.equals(owner)) {
+                    continue;
+                }
+
+                if (this.distanceToSqr(target) < radius * radius) {
+                    target.hurt(damageSource, damage);
+                }
+            }
+
             this.level.playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE, this.getSoundSource(), 1.0f, 1.5f);
         }
     }

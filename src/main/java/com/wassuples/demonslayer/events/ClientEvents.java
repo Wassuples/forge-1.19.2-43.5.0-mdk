@@ -2,6 +2,7 @@ package com.wassuples.demonslayer.events;
 
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
+import com.wassuples.demonslayer.client.FormSelectionScreen;
 import com.wassuples.demonslayer.client.LesserEyeRendererManager;
 import com.wassuples.demonslayer.client.gui.BreathHudOverlay;
 import com.wassuples.demonslayer.client.gui.BreathingMenuScreen;
@@ -15,8 +16,7 @@ import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
-import com.wassuples.demonslayer.styles.BreathingForms;
-import com.wassuples.demonslayer.styles.BreathingStyles;
+import com.wassuples.demonslayer.styles.*;
 import com.wassuples.demonslayer.util.FormUtils;
 import com.wassuples.demonslayer.util.KeyBinding;
 import net.minecraft.client.Camera;
@@ -38,7 +38,9 @@ import net.minecraftforge.fml.common.Mod;
 import net.minecraft.world.level.Level;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class ClientEvents {
     private static boolean abilityKeyIsDown = false;
@@ -55,6 +57,9 @@ public class ClientEvents {
         private static final List<Entity> tempGlowers = new ArrayList<>();
         private static final ResourceLocation VIGNETTE_TEXTURE =
                 new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/vignette.png");
+        private static final int HOLD_DURATION_TICKS = 10;
+        private static int switchFormKeyHoldTicks = 0;
+        private static boolean wasSwitchFormKeyDown = false;
 
         public static int lastSyncedStyle = -1;
 
@@ -93,8 +98,29 @@ public class ClientEvents {
                 });
             }
 
-            if (KeyBinding.CHANGE_KEY.consumeClick()) {
-                ModMessages.sendToServer(new ChangeFormC2SPacket());
+            if (KeyBinding.CHANGE_KEY.isDown()) {
+                // Key is currently being held down
+                if (Minecraft.getInstance().screen == null) { // Don't tick up if a GUI is already open
+                    switchFormKeyHoldTicks++;
+                }
+
+                if (switchFormKeyHoldTicks == HOLD_DURATION_TICKS) {
+                    // We've held it long enough, open the wheel
+                    openFormSelectionScreen();
+                }
+                wasSwitchFormKeyDown = true;
+            } else {
+                // Key is not being held down
+                if (wasSwitchFormKeyDown) {
+                    // This means the key was JUST released
+                    if (switchFormKeyHoldTicks < HOLD_DURATION_TICKS) {
+                        // It was a short press (a tap), so just cycle the form
+                        ModMessages.sendToServer(new ChangeFormC2SPacket());
+                    }
+                    // Reset for the next key press
+                    switchFormKeyHoldTicks = 0;
+                }
+                wasSwitchFormKeyDown = false;
             }
 
             if (KeyBinding.BDA_TOGGLE_KEY.consumeClick()) {
@@ -107,12 +133,11 @@ public class ClientEvents {
                 }
             }
 
-            boolean isUseKeyDown = KeyBinding.USE_KEY.isDown();
-
-            if (isUseKeyDown && !abilityKeyIsDown) {
+            if (KeyBinding.USE_KEY.consumeClick()) {
                 abilityKeyIsDown = true;
                 ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.PRESS));
-            } else if (!isUseKeyDown && abilityKeyIsDown) {
+            }
+            if (!KeyBinding.USE_KEY.isDown() && abilityKeyIsDown) {
                 abilityKeyIsDown = false;
                 ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.RELEASE));
             }
@@ -135,6 +160,35 @@ public class ClientEvents {
                 } else {
                     canAirJump = true;
                     wasJumping = false;
+                }
+            });
+        }
+
+        private static void openFormSelectionScreen() {
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null || mc.screen != null) {
+                return;
+            }
+
+            mc.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                if (demon.isDemon() && demon.isBdaModeActive()) {
+                    // Player is a DEMON and in BDA MODE
+                    BloodDemonArts currentBda = demon.getEquippedBda();
+                    if (currentBda != BloodDemonArts.NONE) {
+                        List<IForm> availableForms = Arrays.stream(DemonForms.values())
+                                .filter(form -> form.getStyle() == currentBda)
+                                .collect(Collectors.toList());
+
+                        mc.setScreen(new FormSelectionScreen(availableForms, true));
+                    }
+                } else {
+                    // Player is a SLAYER, or a DEMON NOT in BDA mode
+                    mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
+                        List<IForm> availableForms = style.getFormsForCurrentStyle()
+                                .collect(Collectors.toList());
+
+                        mc.setScreen(new FormSelectionScreen(availableForms, false));
+                    });
                 }
             });
         }

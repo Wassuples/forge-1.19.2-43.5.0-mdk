@@ -1,7 +1,7 @@
 package com.wassuples.demonslayer.ranking;
 
 import com.wassuples.demonslayer.DemonSlayer;
-import com.wassuples.demonslayer.styles.BreathingForms;
+import com.wassuples.demonslayer.styles.*;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
@@ -29,21 +29,23 @@ public class PlayerProgressionProvider implements ICapabilityProvider, INBTSeria
         return this.progression;
     }
 
-    /**
-     * NEW: Central static method to handle mastery gain.
-     * This should be called every time a player successfully uses a form.
-     */
-    public static void grantMasteryOnUse(ServerPlayer player, BreathingForms form) {
+
+    public static void grantMasteryOnUse(ServerPlayer player, IForm form) {
         if (player == null || form == null) return;
 
         player.getCapability(PLAYER_PROGRESSION).ifPresent(progression -> {
-            // Grant 1 mastery point to the form itself.
-            progression.addFormMastery(form, 1);
+            if (form instanceof BreathingForms bf) {
+                progression.addFormMastery(bf, 1);
+            } else if (form instanceof DemonForms df) {
+                progression.addDemonFormMastery(df, 1);
+            }
 
-            progression.addStyleMastery(form.getStyle(), 1);
-
-            // Here you could add more complex logic, like a small chance
-            // for a "Mastery Bonus!" where the player gains extra points.
+            Object style = form.getStyle();
+            if (style instanceof BreathingStyles breathingStyle) {
+                progression.addStyleMastery(breathingStyle, 1);
+            } else if (style instanceof BloodDemonArts bloodDemonArt) {
+                progression.addDemonArtMastery(bloodDemonArt, 1);
+            }
         });
     }
 

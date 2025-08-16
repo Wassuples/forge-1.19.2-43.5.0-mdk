@@ -760,7 +760,7 @@ public class BreathingMenuScreen extends Screen {
     }
 
     private void renderMoveListTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
-        if (selectedStyleForMoveList == null || this.minecraft == null) return;
+        if (selectedStyleForMoveList == null || this.minecraft == null || this.minecraft.player == null) return;
 
         int subWindowX = leftPos + 8;
         int subWindowY = topPos + 30;
@@ -779,14 +779,12 @@ public class BreathingMenuScreen extends Screen {
         this.blit(poseStack, subWindowX + 4, subWindowY + 4, iconU, iconV, 16, 16);
         this.font.draw(poseStack, selectedStyleForMoveList.getDisplayName(), subWindowX + 24, subWindowY + 9, textColor);
 
-        // Define panel areas
         int listWidth = 100;
         int detailX = subWindowX + listWidth + 5;
         int listY = subWindowY + 28;
         int listHeight = subWindowHeight - 32;
 
         // --- LEFT PANEL: MOVE LIST ---
-        // Use Scissor to make sure the list doesn't draw outside its box
         RenderSystem.enableScissor((int)(subWindowX * minecraft.getWindow().getGuiScale()), (int)((this.height - (listY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
 
         this.minecraft.player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
@@ -796,7 +794,14 @@ public class BreathingMenuScreen extends Screen {
 
                 if (entryY + moveListEntryHeight >= listY && entryY <= listY + listHeight) {
                     boolean isSelected = (i == selectedFormIndex);
-                    boolean isUnlocked = progression.getStyleMastery(form.getStyle()) >= form.getStyleMasteryToUnlock();
+                    boolean isUnlocked = false;
+                    Object style = form.getStyle();
+
+                    if (style instanceof BreathingStyles breathingStyle) {
+                        isUnlocked = progression.getStyleMastery(breathingStyle) >= form.getStyleMasteryToUnlock();
+                    } else if (style instanceof BloodDemonArts bloodDemonArt) {
+                        isUnlocked = progression.getDemonArtMastery(bloodDemonArt) >= form.getStyleMasteryToUnlock();
+                    }
 
                     if (isSelected) {
                         fill(poseStack, subWindowX, entryY, subWindowX + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
@@ -818,32 +823,39 @@ public class BreathingMenuScreen extends Screen {
             this.minecraft.player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
                 int yOffset = subWindowY + 28;
 
-                // Full Name
                 this.font.drawWordWrap(Component.literal(selectedForm.getDisplayName()), detailX, yOffset, subWindowWidth - listWidth - 10, goldColor);
                 yOffset += this.font.wordWrapHeight(selectedForm.getDisplayName(), subWindowWidth - listWidth - 10) + 4;
-
-                // Separator
                 fill(poseStack, detailX, yOffset - 2, detailX + subWindowWidth - listWidth - 15, yOffset - 1, grayColor);
-
-                // Description
                 this.font.drawWordWrap(Component.literal(selectedForm.getDescription()), detailX, yOffset, subWindowWidth - listWidth - 10, textColor);
                 yOffset += this.font.wordWrapHeight(selectedForm.getDescription(), subWindowWidth - listWidth - 10) + 8;
-
-                // Breath Cost
                 this.font.draw(poseStack, "Breath Cost: " + selectedForm.getBreathCost(), detailX, yOffset, textColor);
                 yOffset += 12;
-
-                // Mastery and Status
                 this.font.draw(poseStack, "Form Mastery: " + progression.getFormMastery(selectedForm) + " / " + selectedForm.getMasteryGoal(), detailX, yOffset, textColor);
                 yOffset += 12;
 
-                boolean isUnlocked = progression.getStyleMastery(selectedForm.getStyle()) >= selectedForm.getStyleMasteryToUnlock();
+                Object selectedStyleObject = selectedForm.getStyle();
+                boolean isUnlocked = false;
+
+                if (selectedStyleObject instanceof BreathingStyles breathingStyle) {
+                    isUnlocked = progression.getStyleMastery(breathingStyle) >= selectedForm.getStyleMasteryToUnlock();
+                } else if (selectedStyleObject instanceof BloodDemonArts bloodDemonArt) {
+                    isUnlocked = progression.getDemonArtMastery(bloodDemonArt) >= selectedForm.getStyleMasteryToUnlock();
+                }
+
                 if (isUnlocked) {
                     this.font.draw(poseStack, "Status: ", detailX, yOffset, textColor);
                     this.font.draw(poseStack, Component.literal("Unlocked").withStyle(ChatFormatting.GREEN).getVisualOrderText(), detailX + font.width("Status: "), yOffset, 0xFFFFFF);
                 } else {
                     this.font.draw(poseStack, "Requires: ", detailX, yOffset, textColor);
-                    Component requirementText = Component.literal(selectedForm.getStyleMasteryToUnlock() + " " + selectedForm.getStyle().getDisplayName() + " Mastery")
+                    String styleName = "Unknown";
+
+                    if (selectedStyleObject instanceof BreathingStyles breathingStyle) {
+                        styleName = breathingStyle.getDisplayName();
+                    } else if (selectedStyleObject instanceof BloodDemonArts bloodDemonArt) {
+                        styleName = bloodDemonArt.getDisplayName();
+                    }
+
+                    Component requirementText = Component.literal(selectedForm.getStyleMasteryToUnlock() + " " + styleName + " Mastery")
                             .withStyle(ChatFormatting.RED);
                     this.font.draw(poseStack, requirementText.getVisualOrderText(), detailX + font.width("Requires: "), yOffset, 0xFFFFFF);
                 }

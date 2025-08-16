@@ -75,6 +75,18 @@ public class ModMessages {
                 .consumerMainThread(SwingInAirC2SPacket::handle)
                 .add();
 
+        net.messageBuilder(SelectFormC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(SelectFormC2SPacket::new)
+                .encoder(SelectFormC2SPacket::toBytes)
+                .consumerMainThread(SelectFormC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(UpdateCompassInfoPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(UpdateCompassInfoPacket::new)
+                .encoder(UpdateCompassInfoPacket::encode)
+                .consumerMainThread(UpdateCompassInfoPacket::handle)
+                .add();
+
         net.messageBuilder(PlayerProgressionSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PlayerProgressionSyncS2CPacket::new)
                 .encoder(PlayerProgressionSyncS2CPacket::toBytes)

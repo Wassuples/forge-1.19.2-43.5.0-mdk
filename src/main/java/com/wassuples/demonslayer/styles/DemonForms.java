@@ -17,7 +17,6 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Cutting Thread Cage desc.",
-            true,
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -32,7 +31,6 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Murderous Eye Basket desc.",
-            true,
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -47,7 +45,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Cutting Thread Rotation desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -66,7 +64,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Whispers of Forced Unconscious Hypnosis desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -81,7 +79,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Eyes of Forced Unconscious Sleep desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -100,7 +98,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Eight-Layered Obi Slash desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
@@ -119,7 +117,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Flying Blood Sickles desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -134,7 +132,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Rampant Arc Rampage desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
@@ -149,7 +147,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Rotating Circular Slashes desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -168,7 +166,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Thousand Needle Fish Kill desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -183,7 +181,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Water Prison Pot desc.",
-            true,
+            
             20){
         @Override
         public void performAction(LivingEntity user,  ServerLevel level) {
@@ -198,7 +196,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Octopus Vase Hell desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
@@ -213,7 +211,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Ten Thousand Gliding Slime-Fish desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -228,7 +226,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Killer Fish Scales desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -247,7 +245,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Weeping Spears desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
@@ -262,7 +260,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Crazed Cry of Thunderdeath desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -277,7 +275,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Countless Striking Trees desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
@@ -296,7 +294,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Compressed Sound Waves desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
@@ -315,7 +313,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Compass Needle desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -339,7 +337,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Air Type desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -354,7 +352,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Disorder desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -373,7 +371,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Annihilation Type desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -388,7 +386,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Leg Type: Crown Splitter desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -403,7 +401,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Leg Type: Explosive Flurry desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -418,7 +416,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Leg Type: Flying Planet Thousand Wheels desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -433,7 +431,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Eight-Layered Demon Core desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -448,7 +446,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Crushing Type: Ten Thousand Leaves Flashing Willow desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -463,7 +461,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Final Form: Blue Silver Chaotic Afterglow desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -482,7 +480,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Frozen Lotus desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -497,7 +495,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Barren Hanging Garden desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -512,7 +510,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Freezing Clouds desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -527,7 +525,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Lotus Vines desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -542,7 +540,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Cold White Princesses desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -557,7 +555,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Wintry Icicles desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -572,7 +570,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Scattering Lotuses desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -587,7 +585,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Crystalline Divine Child desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -602,7 +600,7 @@ public enum DemonForms implements IForm {
             50,
             100,
             "Rime — Water Lily Bodhisattva desc.",
-            true,
+            
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -610,15 +608,6 @@ public enum DemonForms implements IForm {
         }
     },
     ;
-
-    private Rank getPlayerRank(LivingEntity user) {
-        if (user instanceof Player player) {
-            return player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION)
-                    .map(PlayerProgression::getRank)
-                    .orElse(Rank.CIVILIAN);
-        }
-        return Rank.CIVILIAN;
-    }
 
     private final BloodDemonArts style;
     private final String displayName;
@@ -628,10 +617,9 @@ public enum DemonForms implements IForm {
     private final int styleMasteryToUnlock;
     private final int masteryGoal;
     private final String description;
-    private final Boolean isBDA;
     private final int baseCooldown;
 
-    DemonForms(BloodDemonArts style, String displayName, IForm.InputType InputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, boolean isBDA, int baseCooldown) {
+    DemonForms(BloodDemonArts style, String displayName, IForm.InputType InputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, int baseCooldown) {
         this.style = style;
         this.displayName = displayName;
         this.InputType = InputType;
@@ -640,25 +628,32 @@ public enum DemonForms implements IForm {
         this.styleMasteryToUnlock = styleMasteryToUnlock;
         this.masteryGoal = masteryGoal;
         this.description = description;
-        this.isBDA = isBDA;
         this.baseCooldown = baseCooldown;
     }
 
-    public BloodDemonArts getStyle() { return style; }
+    @Override public Object getStyle() { return style; }
     @Override public String getDisplayName() { return this.displayName; }
+    @Override public String getDescription() { return this.description; }
     @Override public IForm.InputType getInputType() { return this.InputType; }
     @Override public int getChargeTicks() { return this.chargeTicks; }
     @Override public int getBreathCost() { return this.breathCost; }
-    @Override public boolean IsBDA() { return this.isBDA; }
-    public int getStyleMasteryToUnlock() { return styleMasteryToUnlock; }
-    public int getMasteryGoal() { return masteryGoal; }
-    public String getDescription() { return description; }
+    @Override public int getStyleMasteryToUnlock() { return styleMasteryToUnlock; }
+    @Override public int getMasteryGoal() { return masteryGoal; }
 
     @Override public int getCooldownTicks(LivingEntity user) {
         Rank rank = getPlayerRank(user);
-        int reduction = rank.ordinal() * 5; // rank 1 gets 5 ticks off, rank 11 gets 55 ticks off
-
-        return Math.max(1, baseCooldown - reduction); // minimum cooldown is 0.05 seconds, 1 tick
+        int reduction = rank.ordinal() * 5;
+        return Math.max(1, baseCooldown - reduction);
     }
+
     @Override public abstract void performAction(LivingEntity user, ServerLevel level);
+
+    private Rank getPlayerRank(LivingEntity user) {
+        if (user instanceof Player player) {
+            return player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION)
+                    .map(PlayerProgression::getRank)
+                    .orElse(Rank.CIVILIAN);
+        }
+        return Rank.CIVILIAN;
+    }
 }

@@ -114,7 +114,7 @@ key_key.hotbar.9:key.keyboard.9
 key_key.demonslayer.change_form:key.keyboard.r
 key_key.demonslayer.use_form:key.mouse.4
 key_key.demonslayer.open_menu:key.keyboard.b
-soundCategory_master:1.0
+soundCategory_master:0.43377483
 soundCategory_music:0.0
 soundCategory_record:1.0
 soundCategory_weather:0.0

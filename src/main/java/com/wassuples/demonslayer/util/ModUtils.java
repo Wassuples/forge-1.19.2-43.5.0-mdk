@@ -52,4 +52,12 @@ public final class ModUtils {
             ModMessages.sendToPlayer(new PlayerDemonSyncS2CPacket(nbt), player);
         });
     }
+
+    public static void syncAll(ServerPlayer player) {
+        syncProgression(player);
+        syncMissions(player);
+        syncStyle(player);
+        syncBreath(player);
+        syncDemon(player);
+    }
 }

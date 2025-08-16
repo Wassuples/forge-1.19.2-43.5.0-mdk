@@ -121,8 +121,12 @@ public class ModEntityTypes {
             ENTITY_TYPES.register("thrown_nichirin",
                     () -> EntityType.Builder.<ThrownNichirinEntity>of(ThrownNichirinEntity::new, MobCategory.MISC)
                             .sized(0.5f, 0.5f)
-                            .clientTrackingRange(4)
-                            .updateInterval(10)
+                            .setShouldReceiveVelocityUpdates(true)
+                            .clientTrackingRange(64)
+                            .updateInterval(1)
+                            .setCustomClientFactory((spawnPacket, world) ->
+                                    new ThrownNichirinEntity(ModEntityTypes.THROWN_NICHIRIN.get(), world)
+                            )
                             .build("thrown_nichirin"));
 
 

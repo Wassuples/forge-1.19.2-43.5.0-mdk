@@ -1,7 +1,9 @@
 package com.wassuples.demonslayer.ranking;
 
+import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.BreathingStyles;
+import com.wassuples.demonslayer.styles.DemonForms;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
@@ -16,6 +18,9 @@ public class PlayerProgression {
     private final Set<BreathingStyles> unlockedStyles = new HashSet<>();
     private final Map<BreathingStyles, Integer> styleMastery = new HashMap<>();
 
+    private final Map<BloodDemonArts, Integer> bdaMastery = new HashMap<>();
+    private final Map<DemonForms, Integer> demonFormMastery = new HashMap<>();
+
     private final Set<BreathingForms> unlockedForms = new HashSet<>();
     private final Map<BreathingForms, Integer> formMastery = new HashMap<>();
 
@@ -24,7 +29,6 @@ public class PlayerProgression {
     public boolean hasDodgeCharge() {
         return this.hasDodgeCharge;
     }
-
     public void setDodgeCharge(boolean hasCharge) {
         this.hasDodgeCharge = hasCharge;
     }
@@ -41,6 +45,11 @@ public class PlayerProgression {
 
     public int getStyleMastery(BreathingStyles style) { return styleMastery.getOrDefault(style, 0); }
     public Map<BreathingStyles, Integer> getStyleMasteryMap() { return this.styleMastery; }
+
+    public int getDemonArtMastery(BloodDemonArts bda) {
+        return bdaMastery.getOrDefault(bda, 0);
+    }
+    public int getDemonFormMastery(DemonForms form) { return demonFormMastery.getOrDefault(form, 0); }
 
     public int getFormMastery(BreathingForms form) { return formMastery.getOrDefault(form, 0); }
     public Map<BreathingForms, Integer> getFormMasteryMap() { return this.formMastery; }
@@ -62,6 +71,18 @@ public class PlayerProgression {
         int currentMastery = getStyleMastery(style);
         int newMastery = Math.min(currentMastery + amount, 1000);
         styleMastery.put(style, newMastery);
+    }
+
+    public void addDemonArtMastery(BloodDemonArts bda, int amount) {
+        int currentMastery = getDemonArtMastery(bda);
+        int newMastery = Math.min(currentMastery + amount, 1000);
+        bdaMastery.put(bda, newMastery);
+    }
+
+    public void addDemonFormMastery(DemonForms form, int amount) {
+        int currentMastery = getDemonFormMastery(form);
+        int newMastery = Math.min(currentMastery + amount, 100);
+        demonFormMastery.put(form, newMastery);
     }
 
     public void addFormMastery(BreathingForms form, int amount) {
@@ -109,6 +130,11 @@ public class PlayerProgression {
         this.styleMastery.putAll(source.styleMastery);
         this.formMastery.clear();
         this.formMastery.putAll(source.formMastery);
+
+        this.bdaMastery.clear();
+        this.bdaMastery.putAll(source.bdaMastery);
+        this.demonFormMastery.clear();
+        this.demonFormMastery.putAll(source.demonFormMastery);
     }
 
     public void saveNBTData(CompoundTag nbt) {
@@ -129,6 +155,14 @@ public class PlayerProgression {
         CompoundTag formMasteryTag = new CompoundTag();
         formMastery.forEach((form, mastery) -> formMasteryTag.putInt(form.name(), mastery));
         nbt.put("formMastery", formMasteryTag);
+
+        CompoundTag bdaMasteryTag = new CompoundTag();
+        bdaMastery.forEach((bda, mastery) -> bdaMasteryTag.putInt(bda.name(), mastery));
+        nbt.put("bdaMastery", bdaMasteryTag);
+
+        CompoundTag demonFormMasteryTag = new CompoundTag();
+        demonFormMastery.forEach((form, mastery) -> demonFormMasteryTag.putInt(form.name(), mastery));
+        nbt.put("demonFormMastery", demonFormMasteryTag);
     }
 
     public void loadNBTData(CompoundTag nbt) {
@@ -169,6 +203,24 @@ public class PlayerProgression {
             CompoundTag formMasteryTag = nbt.getCompound("formMastery");
             formMasteryTag.getAllKeys().forEach(key -> {
                 try { formMastery.put(BreathingForms.valueOf(key), formMasteryTag.getInt(key)); }
+                catch (IllegalArgumentException ignored) {}
+            });
+        }
+
+        if (nbt.contains("bdaMastery", 10)) {
+            bdaMastery.clear();
+            CompoundTag bdaMasteryTag = nbt.getCompound("bdaMastery");
+            bdaMasteryTag.getAllKeys().forEach(key -> {
+                try { bdaMastery.put(BloodDemonArts.valueOf(key), bdaMasteryTag.getInt(key)); }
+                catch (IllegalArgumentException ignored) {}
+            });
+        }
+
+        if (nbt.contains("demonFormMastery", 10)) {
+            demonFormMastery.clear();
+            CompoundTag demonFormMasteryTag = nbt.getCompound("demonFormMastery");
+            demonFormMasteryTag.getAllKeys().forEach(key -> {
+                try { demonFormMastery.put(DemonForms.valueOf(key), demonFormMasteryTag.getInt(key)); }
                 catch (IllegalArgumentException ignored) {}
             });
         }

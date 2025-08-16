@@ -11,6 +11,8 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+import static com.wassuples.demonslayer.util.ModUtils.syncDemon;
+
 public class ToggleBdaModeC2SPacket {
 
     public ToggleBdaModeC2SPacket() {
@@ -32,6 +34,8 @@ public class ToggleBdaModeC2SPacket {
                 if (demon.isDemon()) {
                     boolean newState = !demon.isBdaModeActive();
                     demon.setBdaModeActive(newState);
+
+                    syncDemon(player);
 
                     // Send feedback to the player
                     if (newState) {

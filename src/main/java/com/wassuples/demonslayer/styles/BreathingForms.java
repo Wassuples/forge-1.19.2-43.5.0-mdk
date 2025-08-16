@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.styles;
 
 import com.mojang.math.Vector3f;
+import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
 import com.wassuples.demonslayer.entity.custom.MistCloneEntity;
@@ -15,6 +16,7 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
@@ -30,6 +32,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
+import java.util.UUID;
 
 public enum BreathingForms implements IForm {
 
@@ -45,8 +48,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a singular, horizontal slash aiming to decapitate their target.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
@@ -64,8 +68,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps forward into the air and performs a front flip, releasing a singular vertical slash in a circular motion.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             System.out.println("[DEBUG] Inside performAction for WATER_2");
@@ -80,8 +85,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user swings and bends their blade in a winding motion along with their body and dances in a flowing pattern, slicing everything in its path.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             System.out.println("[DEBUG] Inside performAction for WATER_3");
@@ -96,8 +102,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a multitude of slashes in a flowing fashion to release multiple consecutive slashes.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
@@ -115,8 +122,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user changes the grip on their sword and decapitates the opponent in a single flowing strike that causes little to no pain. It is a “sword strike of kindness” used when the enemy willingly surrenders.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             LivingEntity target = FormUtils.getLookedAtEntity(user, 5.0);
@@ -150,8 +158,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user twists their body, using their blade to perform a fierce whirling motion which generates a whirlpool of air to shred apart anything caught within its current like a giant sharp blade.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -165,8 +174,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a precise, fast and accurate thrust with their blade.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -180,8 +190,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user cuts the target vertically in a flowing motion which is most effective when they are falling downward.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (!user.isOnGround() && user.getDeltaMovement().y < 0) {
@@ -199,8 +210,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user changes their footwork in a way that minimizes the landing time and surface needed when landing, allowing the user to move without limits. Ideal when fighting in a place with no solid foothold.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.SplashingWaterFlowForm) {
@@ -218,8 +230,9 @@ public enum BreathingForms implements IForm {
             100,
             100,
             "The user charges toward the target whilst performing a continuous flowing attack with their blade which increases in strength and speed over time using momentum. The attacks seemingly take the form of a Japanese water dragon that accompanies the user in battle.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_10.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Toggleable form
@@ -238,8 +251,9 @@ public enum BreathingForms implements IForm {
             200,
             100,
             "The personal creation of the current Water Hashira, Giyu Tomioka. The user ceases all body movements and enters a state of complete tranquility, deflecting, blocking and cutting any incoming attacks with imperceptible speed with their blade. However, its effectiveness is limited as fast and numerous attacks can break through.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_11.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -258,8 +272,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes towards the target at tremendous speeds, before unleashing a singular horizontal slash directed at the targets neck for a decapitation.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -273,8 +288,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes an arcing vertical slash in an upwards motion, often brought up from a tail guard.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
@@ -293,8 +309,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs an arcing downwards vertical slash, often brought down from a high guard.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (user.isOnGround()) {
@@ -312,8 +329,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular slash or multiple if needed, in a fluid circular motion to defend from incoming attacks and decapitate multiple targets.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -327,8 +345,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forth, bringing their blade into a high guard before performing a series of sword slashes which take the form of a flaming tiger enveloping the user.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.FlameTigerForm) {
@@ -346,8 +365,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The most powerful Flame Breathing technique. The user assumes a high stance before performing an extremely high-speed dash towards the target and unleashing a singular, devastating slash. The technique is powerful enough to completely carve out the ground in its wake. In the movie and anime adaptation, this technique seemingly took the form of a flaming Japanese dragon that envelopes the user as they are charging towards the target.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -366,8 +386,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forward at blinding speeds and slashes continuously in a horizontal cyclone pattern.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -381,8 +402,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user lifts the sword upwards towards the right, above their head and unleashes four vertical slashes at once down on the enemy resembling claws.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.4f);
@@ -401,8 +423,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes a whirlwind of slashes around their body that can defend them from incoming attacks and slice up their surroundings.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -416,8 +439,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases several whirlwind slashes above them from below their target.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -431,8 +455,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user creates several circular arched slashes that increase in size from above their target.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -446,11 +471,11 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user rotates their body in an uppercut movement, creating an arcing slash.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            // Doesn't have ActiveForm class, because it is very simple.
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.3f);
 
             final DustParticleOptions greenDust = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.2f), 1.0f);
@@ -470,8 +495,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air while swinging their blade which generates gale-force winds to shred their opponent apart.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -485,8 +511,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and swings their blade which generates circular torrents of wind that slices up the opponent instantly.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -500,8 +527,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user backflips into the air and while upside-down, unleashes a powerful gust of circular wind that slashes apart anything below.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -519,8 +547,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unsheathes their katana, dashes forward at blinding speeds and decapitates their opponent faster than they can react, before sheathing it back. This technique is extremely reminiscent of Iaijutsu and its movements are described to be akin to \"lightning ripping through the air\".",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -534,8 +563,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases five arched slashes accompanied by lightning in quick succession.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -549,8 +579,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user surrounds the enemy with waves of arched lightning and attacks them from all directions.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -564,8 +595,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user generates a ball of electricity that releases waves of strong multi-directional lightning bolts from afar.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -579,12 +611,13 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes a long-ranged upward sword slash accompanied by lightning.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // 1. Perform a long-range raycast to find where the player is looking.
-            // A range of 256 is effectively "infinite" for most gameplay.
+            // A range of 256 is effectively infinite
             net.minecraft.world.phys.BlockHitResult hitResult = (net.minecraft.world.phys.BlockHitResult) user.pick(256, 0, false);
             if (hitResult.getType() == net.minecraft.world.phys.HitResult.Type.MISS) {
                 // If we're looking at the sky, do nothing.
@@ -624,8 +657,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a series of powerful long-ranged lightning attacks that strike his opponent from afar.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -639,8 +673,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The personal creation of Zenitsu Agatsuma. The user dashes forward at blinding speeds and unleashes a singular forward slash at a low stance, which is seemingly accompanied by a yellow Japanese dragon shaped like a lightning bolt.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -658,8 +693,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular and powerful frontal thrust.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 0.8f);
@@ -684,8 +720,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs eight slashes in quick succession.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -699,8 +736,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a powerful and swift circular slash that can blow away incoming projectiles.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -714,8 +752,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user takes a low stance before dashing toward the target and slashing them.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -729,8 +768,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user charges at their target at blistering speeds in a zig-zag motion while performing a barrage of continuous slashes in front and/or around them.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -744,8 +784,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and performs a multitude of slashes in a somersaulting motion, decimating dozens of targets at once.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -759,8 +800,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The personal creation of Muichiro Tokito. A movement-based technique designed to heavily disorientate the target, which is done so by fluctuating the user's tempo. When the user appears before the target, they move incredibly slow, but then accelerate to blistering speeds before getting hit, making it seem like they disappeared into a cloud of mist. When done repeatedly, it can disorientate the target to the point of making them think they are being covered in a thick layer of mist.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             final int RADIUS = 10; // A 20x20 block area of mist
@@ -846,8 +888,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user lifts their twin swords above their head and slams them down with great force, causing a loud sound resembling thunder as a result.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -861,8 +904,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user holds their twin swords apart and spins them rapidly around themselves, enabling the blades to destroy anything it makes contact with for powerful defensive capabilities around the user.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -876,8 +920,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user holds the chain of their twin swords and rotates the blades at high speed while charging forward. The spin of the blades without changing grip allows for continual slashes while still being in motion.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -895,8 +940,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forward and performs a single slash that winds through the target, hitting multiple areas with one slice.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -910,8 +956,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular, long-winding swing, akin to a whipping motion, that cuts the target at multiple angles.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -925,8 +972,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and performs multiple arched slashes in quick succession.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -940,8 +988,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air before performing a somersault and releasing dozens of rapid, winding slashes from afar that essentially form a tornado of slashes.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -955,8 +1004,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user fully extends their sword to perform an arcing slash before retracting it and extending it once more, done in quick succession to form a layer of slashes.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -974,8 +1024,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and charges towards the opponent, stinging them multiple times with their blade to inject poison in just seemingly one strike.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -989,8 +1040,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes at their target at blinding speeds and uses the momentum of their speed to then strengthen a single thrust into their opponent and inject poison into them.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1004,8 +1056,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A six strike attack with which the user aims to strike and inject their target with multiple doses of poison at the target's weak spots (such as the neck, heart, torso, etc.) in order to kill them with a large dose of poison.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1019,8 +1072,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "An attack with which the user uses their full speed to run a zigzag pattern that confuses their opponent in order to create an opening for them to directly stab their opponent's neck and inject poison to kill them, with the stab's force and power being further enhanced by the momentum of their speed. Doma noted that the sheer speed of this technique is strong enough to destroy an entire wooden bridge.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1038,8 +1092,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user throws both the flail and axe towards their intended target and manipulates the chain by rotating it thus causing the axe and flail to also rotate in order to drill and grind right through their target.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1053,8 +1108,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user throws both their axe and spiked flail for a pincer move before smashing down on the chain to cause the flail to then rebound and smash into their target from afar.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1068,8 +1124,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user rapidly twirls and swings the chain around them to unleash an omnidirectional flurry of attacks with both the flail and axe. This technique can also be used to block and counter enemy attacks from all directions at once.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1083,8 +1140,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user manipulates both the flail and axe weapons at both ends of the chain by swinging the chain on both sides in order to strike their opponents using a two pronged wide ranged attack.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1098,8 +1156,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user utilizes a powerful barrage with their flail and axe, doing a great amount of damage. The axe is destined to hit first with the trajectory of the flail following from the opposite side and slamming it into the opponent.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1117,8 +1176,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases several rotating sword slashes that deflects incoming physical attacks.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level){
             FormUtils.ActiveFormManager.start(user, this);
@@ -1132,8 +1192,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes single sword slash that curves and twists gracefully.\n",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level){
             final float DAMAGE = 9.0f;
@@ -1165,8 +1226,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Form: Peonies of Futility desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1180,8 +1242,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A technique used after or during evasion, the user spins around moving with their body weight to deliver an attack.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1195,8 +1258,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A focusing technique that raises the user's kinetic vision to its maximum, while using this technique the user perceives the world as if it were in slow motion. Usage of the technique, however, is highly dangerous, as the tremendous strain on the eyes could cause blood vessels to rupture and lead to partial or complete blindness. This technique is still usable even if the user only has one fully functional eye.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1214,8 +1278,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a singular frontal horizontal slash aimed at their target in a winding motion.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             final float DAMAGE = 10.0f;
@@ -1254,8 +1319,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes behind their opponent at blinding speed and aims to swiftly slice off their head from behind.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1269,8 +1335,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user circles around their opponent while using their sword to slice them from all directions.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1284,8 +1351,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps forward and performs a horizontal slash that slices through the target.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             final float DAMAGE = 16.0f;
@@ -1314,8 +1382,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user charges forth in a twisting and winding motion, curving their sword in multiple directions to strike multiple targets at once. This technique is capable of decapitating multiple enemies at once.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1332,8 +1401,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "First Form: Dark Moon, Evening Palace desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0f, 2.0f);
@@ -1359,8 +1429,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Second Form: Pearl Flower Moongazing desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1374,8 +1445,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Third Form: Loathsome Moon, Chains desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SKELETON_HURT, SoundSource.PLAYERS, 1.0f, 0.8f);
@@ -1402,8 +1474,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Form: Moon Spirit Calamitous Eddy desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1417,8 +1490,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixth Form: Perpetual Night, Lonely Moon - Incessant desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1432,23 +1506,25 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Seventh Form: Mirror of Misfortune, Moonlit desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
         }
     },
     MOON_8(BreathingStyles.MOON,
-    "Eighth Form: Moon-Dragon Ringtail",
-    InputType.PRESS,
-    0,
-    1,
-    50,
-    100,
-    "Eighth Form: Moon-Dragon Ringtail desc.",
-    false,
-            20) {
+            "Eighth Form: Moon-Dragon Ringtail",
+            InputType.PRESS,
+            0,
+            1,
+            50,
+            100,
+            "Eighth Form: Moon-Dragon Ringtail desc.",
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1462,8 +1538,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Ninth Form: Waning Moonswaths desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1477,8 +1554,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Tenth Form: Drilling Slashes, Moon Through Bamboo Leaves desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_10.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1492,8 +1570,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fourteenth Form: Catastrophe, Tenman Crescent Moon desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_14.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1507,8 +1586,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixteenth Form: Moonbow, Half Moon desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_16.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1525,8 +1605,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "First Fang: Pierce desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_CRIT, 1.2f, 1.0f);
@@ -1559,8 +1640,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Second Fang: Slice desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.2f, 0.9f);
@@ -1579,7 +1661,6 @@ public enum BreathingForms implements IForm {
             FormUtils.spawnParticleArc(user, new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, net.minecraft.world.level.block.Blocks.DIRT.defaultBlockState()), 2.5, 120, 10);
         }
     },
-    // Add this to your BreathingForms.java enum
     BEAST_3(BreathingStyles.BEAST,
             "Third Fang: Devour",
             InputType.PRESS,
@@ -1588,8 +1669,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Third Fang: Devour desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.1f, 0.8f);
@@ -1613,8 +1695,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fourth Fang: Slice 'n' Dice desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1628,8 +1711,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Fang: Crazy Cutting desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (user.isOnGround()) {
@@ -1649,8 +1733,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixth Fang: Palisade Bite desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1664,8 +1749,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Seventh Form: Spatial Awareness desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1683,8 +1769,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Eighth Form: Explosive Rush desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1698,8 +1785,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Ninth Fang: Extending Bendy Slash desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1713,11 +1801,16 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Tenth Fang: Whirling Fangs desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_10.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.WhirlingFangsForm) {
+                FormUtils.ActiveFormManager.stop(user);
+            } else {
+                FormUtils.ActiveFormManager.start(user, this);
+            }
         }
     },
     BEAST_11(BreathingStyles.BEAST,
@@ -1728,23 +1821,30 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Eleventh Fang: Sudden Throwing Strike desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_11.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
+            UUID throwId = UUID.randomUUID();
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.2f, 1.0f);
             level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.5f);
 
             Vec3 lookVec = user.getLookAngle();
             Vec3 sideVec = lookVec.cross(new Vec3(0, 1, 0)).normalize().scale(0.3);
 
-            ThrownNichirinEntity blade1 = new ThrownNichirinEntity(level, user);
-            blade1.shoot(lookVec.x - sideVec.x, lookVec.y, lookVec.z - sideVec.z, 2.0f, 2.0f);
-            level.addFreshEntity(blade1);
-
-            ThrownNichirinEntity blade2 = new ThrownNichirinEntity(level, user);
-            blade2.shoot(lookVec.x + sideVec.x, lookVec.y, lookVec.z + sideVec.z, 2.0f, 2.0f);
-            level.addFreshEntity(blade2);
+            for (Vec3 dir : List.of(
+                    user.getLookAngle().subtract(sideVec),
+                    user.getLookAngle().add(sideVec)
+            )) {
+                ThrownNichirinEntity blade = new ThrownNichirinEntity(level, user);
+                blade.setThrowId(throwId);
+                blade.shoot(dir.x, dir.y, dir.z, 2.0f, 2.0f);
+                if (!level.isClientSide) {
+                    DemonSlayer.LOGGER.debug("[EleventhFang] Spawning blade with throwId={}", throwId);
+                    level.addFreshEntity(blade);
+                }
+            }
         }
     },
     // =================================================================================
@@ -1758,9 +1858,10 @@ public enum BreathingForms implements IForm {
             100,
             50,
             100,
-            "The most fundamental slash, from which all other techniques are born. A single, perfect vertical slash that shatters all defenses.",
-            false,
-            20) {
+            "The most fundamental slash, from which all other techniques are born.",
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.5f);
@@ -1811,8 +1912,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user spins their body, releasing a 360° slash that purifies the battlefield.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1826,8 +1928,9 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "Unleash two consecutive 360-degree slashes that incinerate incoming attacks.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1841,8 +1944,9 @@ public enum BreathingForms implements IForm {
             50,
             400,
             "A spiraling slash that creates a defensive vortex to intercept frontal attacks.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1856,8 +1960,9 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "A graceful backflip into the air to unleash a devastating horizontal slash below.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1871,8 +1976,9 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "Dash forward, masking the true length of your blade in a heat haze to land a surprising long-range strike.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1886,8 +1992,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Spiral into the air while performing a swirling upward slash to strike the target.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1901,8 +2008,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A devastating thrust that blooms with solar energy upon impact.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1916,15 +2024,12 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Unleash a continuous, flowing attack in the form of a solar dragon.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.SunHaloDragonForm) {
-                FormUtils.ActiveFormManager.stop(user);
-            } else {
-                FormUtils.ActiveFormManager.start(user, this);
-            }
+            FormUtils.ActiveFormManager.start(user, this);
         }
     },
     SUN_10(BreathingStyles.SUN,
@@ -1935,8 +2040,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fire Wheel desc.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_10.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1950,8 +2056,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Perform a high-speed dash that creates afterimages to confuse enemies.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_11.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1965,8 +2072,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A two-strike combo starting with a vertical slash, followed by a horizontal one.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_12.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -1980,8 +2088,9 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Continuously perform all twelve forms in rapid succession.",
-            false,
-            20) {
+            
+            20,
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_13.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             FormUtils.ActiveFormManager.start(user, this);
@@ -2001,8 +2110,8 @@ public enum BreathingForms implements IForm {
     private final int styleMasteryToUnlock;
     private final int masteryGoal;
     private final String description;
-    private final Boolean isBDA;
     private final int baseCooldown;
+    private final ResourceLocation icon;
 
     private Rank getPlayerRank(LivingEntity user) {
         if (user instanceof Player player) {
@@ -2013,7 +2122,7 @@ public enum BreathingForms implements IForm {
         return Rank.CIVILIAN;
     }
 
-    BreathingForms(BreathingStyles style, String displayName, IForm.InputType inputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, Boolean isBDA, int baseCooldown) {
+    BreathingForms(BreathingStyles style, String displayName, IForm.InputType inputType, int chargeTicks, int breathCost, int styleMasteryToUnlock, int masteryGoal, String description, int baseCooldown, ResourceLocation icon) {
         this.style = style;
         this.displayName = displayName;
         this.inputType = inputType;
@@ -2022,25 +2131,33 @@ public enum BreathingForms implements IForm {
         this.styleMasteryToUnlock = styleMasteryToUnlock;
         this.masteryGoal = masteryGoal;
         this.description = description;
-        this.isBDA = isBDA;
         this.baseCooldown = baseCooldown;
+        this.icon = icon;
     }
 
-    public BreathingStyles getStyle() { return style; }
-    public String getDisplayName() { return displayName; }
-    public IForm.InputType getInputType() { return inputType; }
-    public int getChargeTicks() { return chargeTicks; }
-    public int getBreathCost() { return breathCost; }
-    public int getStyleMasteryToUnlock() { return styleMasteryToUnlock; }
-    public int getMasteryGoal() { return masteryGoal; }
-    public String getDescription() { return description; }
-    public boolean IsBDA() { return isBDA; }
+    @Override public Object getStyle() { return style; }
+    @Override public String getDisplayName() { return displayName; }
+    @Override public String getDescription() { return description; }
+    @Override public IForm.InputType getInputType() { return inputType; }
+    @Override public int getChargeTicks() { return chargeTicks; }
+    @Override public int getBreathCost() { return breathCost; }
+    @Override public int getStyleMasteryToUnlock() { return styleMasteryToUnlock; }
+    @Override public int getMasteryGoal() { return masteryGoal; }
+    @Override public ResourceLocation getIcon() { return icon; }
 
     @Override public int getCooldownTicks(LivingEntity user) {
         Rank rank = getPlayerRank(user);
-        int reduction = rank.ordinal() * 5; // rank 1 gets 5 ticks off, rank 11 gets 55 ticks off
-
-        return Math.max(1, baseCooldown - reduction); // minimum cooldown is 0.05 seconds, 1 tick
+        int reduction = rank.ordinal() * 5;
+        return Math.max(1, baseCooldown - reduction);
     }
-    public abstract void performAction(LivingEntity user, ServerLevel level);
+    @Override public abstract void performAction(LivingEntity user, ServerLevel level);
+
+    public String getShortDisplayName() {
+        String name = getDisplayName();
+        // "First Form: Water Surface Slash" -> "1st Form"
+        if (name.contains(":")) {
+            return name.substring(0, name.indexOf(" ")).replace("First", "1st").replace("Second", "2nd").replace("Third", "3rd").replace("Fourth", "4th").replace("Fifth", "5th").replace("Sixth", "6th").replace("Seventh", "7th").replace("Eighth", "8th").replace("Ninth", "9th").replace("Tenth", "10th").replace("Eleventh", "11th").replace("Thirteenth", "13th").replace("Fourteenth", "14th").replace("Fifteenth", "15th").replace("Sixteenth", "16th") + " Form";
+        }
+        return name;
+    }
 }

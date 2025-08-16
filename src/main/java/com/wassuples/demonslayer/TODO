@@ -1,16 +1,24 @@
 ### CRITICAL PRIORITY
-- Fix Sun13
+- Fix the timings for Sun13 aaaaaaaand:
+    FlowerFinal, does not allow use of other forms while active. Nor can it be canceled early.
+
+    Cryo, Crystalline Divine Child. Also, they try to attack your other summons, like Rime. But they can't damage.
+    Cryo, Maybe break CDC if strong enough single attack.
+    Cryo, if poisoned CDC should cancel.
+
+    Gyokko, Thousand Needle Fish Kill summons floating.
+
+- Implement demon blood points.
 
 ### HIGH PRIORITY
 - Add missions and shit.
 - Fix commands
 - Change attack damage in all forms. Make it accurately reflect the weapon held
-- Water7 and Water8 have janky activations
 - Bring back parry indicators for:
   * Water11, Dead Calm
   * Flame4, Blooming Flame
   * Wind3, Clear Storm
-- Model and texture each Hashira's sword... Don't forget to register them in ModItems!
+- Model and texture each Hashira's sword. Don't forget to register them in ModItems!
 - Wind4, Wind5
 
 ### MEDIUM PRIORITY
@@ -38,6 +46,7 @@
 - Empty or non-existent pool: demonslayer:mansion/perimeter_half_a
 - Make the Wisteria biomes (Mt. Fujikasane) better looking, and shit.
 - Highlight in Style select is incorrect.
+- Make gamerule to edit and manipulate cooldowns.
 
 
 ### Future Content that WILL be added
@@ -53,3 +62,5 @@ Mission Requests:
 - Demon castle, but ALL OF THEM ARE AFTER YOU. They are out to jump your ass. All demons, all slayers, working together for a single goal, to KILL you.
 - Investigation missions, like batman AR detective stuff.
 - Killing Muzan gives you his power to control all demon.
+- Toon-force BDA
+- Gambling BDA

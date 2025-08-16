@@ -104,53 +104,69 @@ public class KillerGoldfishEntity extends Monster implements IAnimatable {
 
     static class SpitNeedlesGoal extends Goal {
         private final KillerGoldfishEntity fish;
-        private int attackTime = 0;
-        private int attackCooldown = 0;
-        private int volleysFired = 0;
+        private int attackCooldown;
+        private int volleyTime;
 
         public SpitNeedlesGoal(KillerGoldfishEntity pFish) {
             this.fish = pFish;
-            this.setFlags(EnumSet.of(Goal.Flag.LOOK, Goal.Flag.MOVE));
+            this.setFlags(EnumSet.of(Goal.Flag.LOOK));
         }
 
         @Override
         public boolean canUse() {
             LivingEntity target = this.fish.getTarget();
-            return target != null && target.isAlive() && this.volleysFired < 3;
+            return target != null && target.isAlive();
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return this.canUse();
         }
 
         @Override
         public void start() {
-            this.attackTime = 0;
-            this.attackCooldown = 60 + fish.random.nextInt(20);
+            this.attackCooldown = 20;
+            this.volleyTime = 0;
         }
 
         @Override
         public void stop() {
-            this.volleysFired++;
+            this.volleyTime = 0;
+        }
+
+        @Override
+        public boolean requiresUpdateEveryTick() {
+            return true;
         }
 
         @Override
         public void tick() {
             LivingEntity target = this.fish.getTarget();
-            if (target == null) return;
+            if (target == null) {
+                return;
+            }
 
             this.fish.getLookControl().setLookAt(target, 30.0F, 30.0F);
 
-            if (--this.attackCooldown <= 0) {
-                if (this.attackTime < 40) {
-                    if (this.attackTime % 5 == 0) {
-                        Vec3 direction = target.getEyePosition().subtract(this.fish.position()).normalize();
-                        PoisonNeedleProjectileEntity needle = new PoisonNeedleProjectileEntity(this.fish.level, this.fish);
-                        needle.setPos(this.fish.getX(), this.fish.getEyeY(), this.fish.getZ());
-                        needle.shoot(direction.x, direction.y, direction.z, 1.8f, 10.0f);
-                        this.fish.level.addFreshEntity(needle);
-                        this.fish.playSound(SoundEvents.SKELETON_SHOOT, 1.0F, 1.2F / (this.fish.getRandom().nextFloat() * 0.4F + 0.8F));
-                    }
-                    this.attackTime++;
-                } else {
-                    this.stop();
+            this.attackCooldown--;
+
+            if (this.volleyTime > 0) {
+                this.volleyTime--;
+                if (this.volleyTime % 5 == 0) {
+                    Vec3 direction = target.getEyePosition().subtract(this.fish.position()).normalize();
+                    PoisonNeedleProjectileEntity needle = new PoisonNeedleProjectileEntity(this.fish.level, this.fish);
+                    needle.setPos(this.fish.getX(), this.fish.getEyeY(), this.fish.getZ());
+                    needle.shoot(direction.x, direction.y, direction.z, 1.8f, 10.0f);
+                    this.fish.level.addFreshEntity(needle);
+                    this.fish.playSound(SoundEvents.SKELETON_SHOOT, 1.0F, 1.2F / (this.fish.getRandom().nextFloat() * 0.4F + 0.8F));
                 }
+
+                if (this.volleyTime == 0) {
+                    this.attackCooldown = 60 + this.fish.random.nextInt(20);
+                }
+            }
+            else if (this.attackCooldown <= 0) {
+                this.volleyTime = 40;
             }
         }
     }
