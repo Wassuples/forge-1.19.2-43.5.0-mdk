@@ -646,7 +646,7 @@ public enum BreathingForms implements IForm {
                 level.sendParticles(YELLOW_LIGHTNING, particlePos.x, particlePos.y, particlePos.z, 3, 0.2, 0.2, 0.2, 0);
             }
 
-            FormUtils.dealVerticalColumnDamage(user, groundCenter, ERUPTION_RADIUS, ERUPTION_HEIGHT, DAMAGE, damageSource);
+            FormUtils.dealVerticalColumnDamage(user, groundCenter, ERUPTION_RADIUS, ERUPTION_HEIGHT, DAMAGE);
         }
     },
     THUNDER_6(BreathingStyles.THUNDER,

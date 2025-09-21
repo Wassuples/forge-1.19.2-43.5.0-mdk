@@ -1,34 +1,43 @@
 package com.wassuples.demonslayer.networking.packet;
 
+import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
+
 import java.util.function.Supplier;
 
 public class PlayerDemonSyncS2CPacket {
-    private final CompoundTag demonData;
+    private final CompoundTag nbtData;
+
+    public PlayerDemonSyncS2CPacket(PlayerDemon demon) {
+        this.nbtData = new CompoundTag();
+        demon.saveNBTData(this.nbtData);
+    }
 
     public PlayerDemonSyncS2CPacket(CompoundTag nbt) {
-        this.demonData = nbt;
+        this.nbtData = nbt;
     }
 
     public PlayerDemonSyncS2CPacket(FriendlyByteBuf buf) {
-        this.demonData = buf.readNbt();
+        this.nbtData = buf.readNbt();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
-        buf.writeNbt(this.demonData);
+        buf.writeNbt(this.nbtData);
     }
 
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {
-            // CLIENT-SIDE
-            if (Minecraft.getInstance().player != null) {
-                Minecraft.getInstance().player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                    demon.loadNBTData(this.demonData);
+            // Client-side
+            LocalPlayer player = Minecraft.getInstance().player;
+            if (player != null) {
+                player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                    demon.loadNBTData(this.nbtData);
                 });
             }
         });

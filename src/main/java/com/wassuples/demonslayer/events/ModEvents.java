@@ -8,6 +8,7 @@ import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.command.DemonSlayerCommands;
 import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
 import com.wassuples.demonslayer.cooldown.PlayerCooldownsProvider;
+import com.wassuples.demonslayer.demon.DemonPassive;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.effects.ForcedSleepEffect;
@@ -45,11 +46,15 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
@@ -78,6 +83,9 @@ public class ModEvents {
     private static final Map<UUID, CompoundTag> breathDeathData = new HashMap<>();
     private static final Map<UUID, CompoundTag> missionDeathData =new HashMap<>();
     private static final Map<UUID, CompoundTag> demonDeathData = new HashMap<>();
+
+    private static final UUID ENHANCED_VIGOR_MODIFIER_ID = UUID.fromString("a7a2f5a2-a3a4-492c-a8e2-89255ac3a7e4");
+    private static final UUID DEMONIC_STRENGTH_MODIFIER_ID = UUID.fromString("f3b1f1a0-75da-4c4b-b72e-c4e9c7a6e12e");
 
     @SubscribeEvent
     public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
@@ -260,29 +268,26 @@ public class ModEvents {
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.player instanceof ServerPlayer serverPlayer) {
+            // --- SLAYER BREATH REGEN ---
             event.player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
                 if (breath.getBreath() < breath.maxBreath && serverPlayer.getRandom().nextFloat() < 0.025f) {
                     breath.addBreath(1);
                 }
 
-                if (serverPlayer.tickCount % 20 == 0) { // Sync slightly less often
+                if (serverPlayer.tickCount % 20 == 0) {
                     ModMessages.sendToPlayer(new PlayerBreathSyncS2CPacket(breath.getBreath(), breath.getMaxBreath()), serverPlayer);
                 }
             });
 
+            // --- DEMON PASSIVE HANDLING ---
             serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                if (demon.isDemon()) {
-                    // Apply buffs
-                    serverPlayer.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, false));
-                    serverPlayer.addEffect(new MobEffectInstance(MobEffects.JUMP, 20, 0, false, false, false));
-                    serverPlayer.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20, 0, false, false, false));
+                // This handles attributes (Health/Damage), regeneration, and sun weakness/resistance
+                handleDemonPassives(serverPlayer, demon);
 
-                    // Apply sun weakness
-                    if (serverPlayer.level.isDay() && !serverPlayer.level.isRaining() && serverPlayer.level.canSeeSky(serverPlayer.blockPosition())) {
-                        if (serverPlayer.getRemainingFireTicks() <= 1) {
-                            serverPlayer.setSecondsOnFire(8);
-                        }
-                    }
+                // This handles passives that only run when toggled on and at the end of the tick
+                if (event.phase == TickEvent.Phase.END && demon.isDemon()) {
+                    handleStalkersGait(serverPlayer, demon);
+                    handleOverwhelmingAura(serverPlayer, demon);
                 }
             });
 
@@ -401,6 +406,122 @@ public class ModEvents {
             if (serverPlayer.isPassenger() && serverPlayer.getVehicle() instanceof WaterPrisonEntity) {
                 serverPlayer.setAirSupply(0);
             }
+
+            if (event.phase == TickEvent.Phase.END && !event.player.level.isClientSide && event.player instanceof ServerPlayer player) {
+                player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                    if (!demon.isDemon()) return;
+
+                    handleStalkersGait(player, demon);
+                    handleOverwhelmingAura(player, demon);
+                });
+            }
+        }
+    }
+
+    private static void handleDemonPassives(ServerPlayer player, PlayerDemon demon) {
+        // Guard clause for non-demons
+        if (!demon.isDemon()) return;
+
+        // --- ENHANCED VIGOR (Max Health) ---
+        AttributeInstance maxHealth = player.getAttribute(Attributes.MAX_HEALTH);
+        if (maxHealth != null) {
+            // Always remove the modifier first to ensure it's updated correctly if the tier changes
+            maxHealth.removeModifier(ENHANCED_VIGOR_MODIFIER_ID);
+            if (demon.isDemon() && demon.isPassiveActive(DemonPassive.ENHANCED_VIGOR)) {
+                int tier = demon.getPassiveTier(DemonPassive.ENHANCED_VIGOR);
+                if (tier > 0) {
+                    AttributeModifier modifier = new AttributeModifier(ENHANCED_VIGOR_MODIFIER_ID, "Enhanced Vigor", tier * 2.0, AttributeModifier.Operation.ADDITION);
+                    maxHealth.addPermanentModifier(modifier);
+                }
+            }
+        }
+
+        // --- DEMONIC_STRENGTH (Melee Damage) ---
+        AttributeInstance attackDamage = player.getAttribute(Attributes.ATTACK_DAMAGE);
+        if (attackDamage != null) {
+            attackDamage.removeModifier(DEMONIC_STRENGTH_MODIFIER_ID);
+            if (demon.isDemon() && demon.isPassiveActive(DemonPassive.DEMONIC_STRENGTH)) {
+                int tier = demon.getPassiveTier(DemonPassive.DEMONIC_STRENGTH);
+                if (tier > 0) {
+                    AttributeModifier modifier = new AttributeModifier(DEMONIC_STRENGTH_MODIFIER_ID, "Demonic Strength", tier * 1.0, AttributeModifier.Operation.ADDITION);
+                    attackDamage.addPermanentModifier(modifier);
+                }
+            }
+        }
+
+        // --- HYPER REGENERATION ---
+        if (demon.isPassiveActive(DemonPassive.HYPER_REGENERATION)) {
+            int tier = demon.getPassiveTier(DemonPassive.HYPER_REGENERATION);
+            if (tier > 0) {
+                // Apply Regeneration effect. Amplifier is tier-1 (Tier 1 = Regen I)
+                player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 30, tier - 1, true, false, true));
+            }
+        }
+
+        // --- SUNLIGHT WEAKNESS & RESISTANCE ---
+        boolean isInSun = player.level.isDay() && !player.level.isRaining() && player.level.canSeeSky(player.blockPosition());
+        if (isInSun) {
+            if (demon.isPassiveActive(DemonPassive.SUNLIGHT_RESISTANCE)) {
+                int tier = demon.getPassiveTier(DemonPassive.SUNLIGHT_RESISTANCE);
+                int maxGraceTicks = tier * 4 * 20; // 4 seconds of grace time per tier
+
+                if (demon.getSunGraceTicks() < maxGraceTicks) {
+                    demon.incrementSunGraceTicks();
+                    return; // Exit before the burning logic is applied
+                }
+            }
+            // either the passive is off, or the grace period has expired
+            if (player.getRemainingFireTicks() <= 1) {
+                player.setSecondsOnFire(8);
+            }
+        } else {
+            // If not in the sun, reset the grace period timer
+            demon.resetSunGraceTicks();
+        }
+    }
+
+    private static void handleStalkersGait(ServerPlayer player, PlayerDemon demon) {
+        if (demon.getPassiveTier(DemonPassive.STALKERS_GAIT) > 0 && demon.isPassiveActive(DemonPassive.STALKERS_GAIT)) {
+            player.setSilent(true);
+        } else {
+            if (player.isSilent()) {
+                player.setSilent(false);
+            }
+        }
+    }
+
+    private static void handleOverwhelmingAura(ServerPlayer player, PlayerDemon demon) {
+        int auraTier = demon.getPassiveTier(DemonPassive.OVERWHELMING_AURA);
+        if (auraTier <= 0 || !demon.isPassiveActive(DemonPassive.OVERWHELMING_AURA)) {
+            demon.setGazeTarget(null);
+            return;
+        }
+
+        //(1.5s -> 1.25s -> 1s)
+        int requiredTicks = 30 - ((auraTier - 1) * 5);
+
+        HitResult hitResult = player.pick(20, 0, false);
+        UUID currentTargetId = null;
+        if (hitResult.getType() == HitResult.Type.ENTITY) {
+            Entity targetEntity = ((EntityHitResult) hitResult).getEntity();
+            if (targetEntity instanceof LivingEntity && targetEntity != player) {
+                currentTargetId = targetEntity.getUUID();
+            }
+        }
+
+        demon.setGazeTarget(currentTargetId);
+
+        if (currentTargetId != null && demon.getGazeTargetId() != null) {
+            demon.incrementGazeTicks();
+            if (demon.getGazeTicks() == requiredTicks) {
+                Entity target = player.getServer().getLevel(player.level.dimension()).getEntity(currentTargetId);
+                if (target instanceof LivingEntity livingTarget) {
+                    int effectDuration = 40 + (auraTier * 20); // 2s -> 3s -> 4s
+                    livingTarget.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, effectDuration, 1));
+                    livingTarget.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, effectDuration, 2));
+                    demon.incrementGazeTicks();
+                }
+            }
         }
     }
 
@@ -460,6 +581,19 @@ public class ModEvents {
                 }
             }
         }
+
+        target.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            if (!demon.isDemon() || !demon.isPassiveActive(DemonPassive.TOUGHENED_HIDE)) {
+                return;
+            }
+
+            int tier = demon.getPassiveTier(DemonPassive.TOUGHENED_HIDE);
+            if (tier > 0) {
+                float reductionMultiplier = 1.0f - (tier * 0.04f); // 4% reduction per tier
+                float newDamage = event.getAmount() * reductionMultiplier;
+                event.setAmount(newDamage);
+            }
+        });
     }
 
     @SubscribeEvent

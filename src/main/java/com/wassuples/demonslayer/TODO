@@ -2,15 +2,23 @@
 - Fix the timings for Sun13 aaaaaaaand:
     FlowerFinal, does not allow use of other forms while active. Nor can it be canceled early.
 
-    Cryo, Crystalline Divine Child. Also, they try to attack your other summons, like Rime. But they can't damage.
+    Cryo, Crystalline Divine Child. they try to attack your other summons, like Rime. But they can't damage.
     Cryo, Maybe break CDC if strong enough single attack.
     Cryo, if poisoned CDC should cancel.
+    Cryo, Rime hurts itself
 
     Gyokko, Thousand Needle Fish Kill summons floating.
+- Flame9 Rengoku breaking bedrock still (Aim zenith)
 
 - Implement demon blood points.
+- Add icons for demon progression.
+- Make damage passive (the blood potency one) do damage fixing shit.
+- Make BDA tiers actually do shit!
+- Make BDA Cost something.
 
 ### HIGH PRIORITY
+- Add icon for BDA tab
+- Wintry icicles telegraph not showing up on grass but showing up on snow?
 - Add missions and shit.
 - Fix commands
 - Change attack damage in all forms. Make it accurately reflect the weapon held
@@ -18,7 +26,7 @@
   * Water11, Dead Calm
   * Flame4, Blooming Flame
   * Wind3, Clear Storm
-- Model and texture each Hashira's sword. Don't forget to register them in ModItems!
+- Model and texture each Hashira's sword. Don't forget to register them in ModItems! Using the correct Nichirin Sword type buffs attacks of that type.
 - Wind4, Wind5
 
 ### MEDIUM PRIORITY

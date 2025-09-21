@@ -193,7 +193,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
             Vec3 lookDir = this.getLookAngle();
             Vec3 centerOfCone = this.getEyePosition().add(lookDir.scale(d));
             double widthOfCone = d * 0.7;
-            FormUtils.dealAOEDamage(pilot, centerOfCone, widthOfCone, 2.0f, 0.2f, DamageSource.indirectMagic(this, pilot));
+            FormUtils.dealAOEDamage(pilot, centerOfCone, widthOfCone, 2.0f, 0.2f);
 
             for (int i = 0; i < 15; i++) {
                 Vec3 sideDir = new Vec3(-lookDir.z, 0, lookDir.x).normalize();
@@ -230,7 +230,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
 
         // Damage logic remains the same
         Vec3 centerOfSwipe = this.getEyePosition().add(this.getLookAngle().scale(8.0));
-        FormUtils.dealAOEDamage(pilot, centerOfSwipe, 8.0, 50.0f, 2.5f, DamageSource.mobAttack(this));
+        FormUtils.dealAOEDamage(pilot, centerOfSwipe, 8.0, 50.0f, 2.5f);
     }
 
     @Override

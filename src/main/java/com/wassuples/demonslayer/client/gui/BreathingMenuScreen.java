@@ -7,13 +7,12 @@ import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
+import com.wassuples.demonslayer.demon.DemonPassive;
+import com.wassuples.demonslayer.demon.DemonProgressionHelper;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.missions.*;
 import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.networking.packet.AbandonMissionC2SPacket;
-import com.wassuples.demonslayer.networking.packet.AcceptMissionC2SPacket;
-import com.wassuples.demonslayer.networking.packet.EquipBdaC2SPacket;
-import com.wassuples.demonslayer.networking.packet.SwitchStyleC2SPacket;
+import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingForms;
@@ -29,10 +28,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec2;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class BreathingMenuScreen extends Screen {
@@ -40,6 +36,7 @@ public class BreathingMenuScreen extends Screen {
 
     private static final ResourceLocation BACKGROUND_TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/breathing_menu_background.png");
     private static final ResourceLocation WIDGETS_TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/breathing_menu_widgets.png");
+    private static final ResourceLocation DEMON_WIDGETS_TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/demon_widgets.png");
 
     private final int windowWidth = (int) (256 * GUI_SCALE);
     private final int windowHeight = (int) (166 * GUI_SCALE);
@@ -98,22 +95,38 @@ public class BreathingMenuScreen extends Screen {
     private Button acceptMissionButton;
     private Button abandonMissionButton;
 
-    private List<BloodDemonArts> availableBdas = new ArrayList<>();
-    private BloodDemonArts selectedBda = null;
-    private double bdaListScroll = 0.0;
-    private int selectedBdaIndex = -1;
-
-    private enum Tab { PROFILE, SKILL_TREE, MOVE_LIST, MISSIONS, BDA }
+    private enum Tab { PROFILE, SKILL_TREE, MOVE_LIST, DEMON_PROGRESSION, MISSIONS }
     private Tab currentTab = Tab.PROFILE;
 
     private BreathingStyles selectedStyleForMoveList = null;
 
     private TabButton profileButton;
-    private TabButton bdaButton;
     private TabButton stylesButton;
+    private TabButton demonProgressionButton;
     private TabButton missionsButton;
     private Button switchStyleButton;
     private Button equipBdaButton;
+
+    private enum DemonSubTab { RANK, BDA, PHYSIOLOGY }
+    private DemonSubTab currentDemonTab = DemonSubTab.RANK;
+    private Button rankUpButton;
+    private Button rankSubTabButton, bdaSubTabButton, physiologySubTabButton;
+    private BloodDemonArts selectedBdaForUpgrade;
+    private double bdaUpgradeScroll;
+    private Button upgradeBdaButton;
+    private List<BloodDemonArts> demonArtsList = new ArrayList<>();
+    private Button purchaseBdaButton;
+
+    private static final Map<DemonPassive, Vec2> PASSIVE_POSITIONS = new ImmutableMap.Builder<DemonPassive, Vec2>()
+            .put(DemonPassive.ENHANCED_VIGOR, new Vec2(20, 20))
+            .put(DemonPassive.DEMONIC_STRENGTH, new Vec2(20, 60))
+            .put(DemonPassive.TOUGHENED_HIDE, new Vec2(90, 20))
+            .put(DemonPassive.HYPER_REGENERATION, new Vec2(90, 60))
+            .put(DemonPassive.BLOOD_ART_POTENCY, new Vec2(160, 20))
+            .put(DemonPassive.STALKERS_GAIT, new Vec2(160, 60))
+            .put(DemonPassive.OVERWHELMING_AURA, new Vec2(230, 40))
+            .put(DemonPassive.SUNLIGHT_RESISTANCE, new Vec2(300, 40))
+            .build();
 
     private static final Map<BreathingStyles, Vec2> STYLE_POSITIONS = new ImmutableMap.Builder<BreathingStyles, Vec2>()
             // TIER 0 (ROOT)
@@ -171,82 +184,58 @@ public class BreathingMenuScreen extends Screen {
         int leftPos = (this.width - this.windowWidth) / 2;
         int topPos = (this.height - this.windowHeight) / 2;
 
-        this.profileButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart, topPos + tabYStart, 0, (button) -> this.currentTab = Tab.PROFILE));
-        this.stylesButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + tabXSpacing, topPos + tabYStart, 20, (button) -> this.currentTab = Tab.SKILL_TREE));
-        this.missionsButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 2), topPos + tabYStart, 40, (button) -> {
+        this.profileButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart, topPos + tabYStart, 0, (b) -> this.currentTab = Tab.PROFILE));
+        this.stylesButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + tabXSpacing, topPos + tabYStart, 20, (b) -> this.currentTab = Tab.SKILL_TREE));
+        this.missionsButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 2), topPos + tabYStart, 40, (b) -> {
             this.currentTab = Tab.MISSIONS;
             this.prepareMissionsList();
         }));
-        this.bdaButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 3), topPos + tabYStart, 60, (button) -> {
-            this.currentTab = Tab.BDA;
-            this.prepareBdaList();
+        this.demonProgressionButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 3), topPos + tabYStart, 80, (b) -> {
+            this.currentTab = Tab.DEMON_PROGRESSION;
+            this.prepareBdaUpgradeList();
         }));
-        this.switchStyleButton = this.addRenderableWidget(new Button(
-                leftPos + windowWidth - 92,
-                topPos + 5,
-                80, 20,
-                Component.literal("Switch Style"),
-                (button) -> {
-                    if (this.selectedStyleForMoveList != null) {
-                        ModMessages.sendToServer(new SwitchStyleC2SPacket(this.selectedStyleForMoveList.ordinal()));
-                    }
-                }
-        ));
-        this.equipBdaButton = this.addRenderableWidget(new Button(
-                leftPos + windowWidth - 92,
-                topPos + 5,
-                80, 20,
-                Component.literal("Equip BDA"),
-                (button) -> {
-                    if (this.selectedBda != null) {
-                        ModMessages.sendToServer(new EquipBdaC2SPacket(this.selectedBda));
-                    }
-                }
-        ));
-        this.acceptMissionButton = this.addRenderableWidget(new Button(
-                leftPos + windowWidth - 92,
-                topPos + 5,
-                80, 20,
-                Component.literal("Accept"),
-                (button) -> {
-                    if(this.selectedMission != null) {
-                        ModMessages.sendToServer(new AcceptMissionC2SPacket(this.selectedMission.id()));
-                    }
-                }
-        ));
 
-        this.abandonMissionButton = this.addRenderableWidget(new Button(
-                leftPos + windowWidth - 92,
-                topPos + 5,
-                80, 20,
-                Component.literal("Abandon"),
-                (button) -> {
-                    if (this.selectedMission != null) {
-                        ModMessages.sendToServer(new AbandonMissionC2SPacket(this.selectedMission.id()));
-                    }
-                }
-        ));
+        int subTabButtonY = topPos + subWindowYOffset + 5;
+        this.rankSubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 5, subTabButtonY, 50, 20, Component.literal("Rank"), (b) -> this.currentDemonTab = DemonSubTab.RANK));
+        this.bdaSubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 60, subTabButtonY, 50, 20, Component.literal("BDA"), (b) -> this.currentDemonTab = DemonSubTab.BDA));
+        this.physiologySubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 115, subTabButtonY, 70, 20, Component.literal("Physiology"), (b) -> this.currentDemonTab = DemonSubTab.PHYSIOLOGY));
+
+        this.rankUpButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("ASCEND"), (b) -> ModMessages.sendToServer(new RankUpC2SPacket())));
+        this.purchaseBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("Purchase"), (b) -> {
+            if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new PurchaseBdaC2SPacket(this.selectedBdaForUpgrade));
+        }));
+        this.equipBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("Equip"), (b) -> {
+            if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new EquipBdaC2SPacket(this.selectedBdaForUpgrade));
+        }));
+        this.upgradeBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("UPGRADE"), (b) -> {
+            if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new UpgradeBdaC2SPacket(this.selectedBdaForUpgrade));
+        }));
+
+        this.switchStyleButton = this.addRenderableWidget(new Button(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Switch Style"), (b) -> {
+            if (this.selectedStyleForMoveList != null) ModMessages.sendToServer(new SwitchStyleC2SPacket(this.selectedStyleForMoveList.ordinal()));
+        }));
+        this.acceptMissionButton = this.addRenderableWidget(new Button(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Accept"), (b) -> {
+            if (this.selectedMission != null) ModMessages.sendToServer(new AcceptMissionC2SPacket(this.selectedMission.id()));
+        }));
+        this.abandonMissionButton = this.addRenderableWidget(new Button(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Abandon"), (b) -> {
+            if (this.selectedMission != null) ModMessages.sendToServer(new AbandonMissionC2SPacket(this.selectedMission.id()));
+        }));
 
         this.prepareMoveList();
         this.prepareMissionsList();
-        this.prepareBdaList();
+        this.prepareBdaUpgradeList();
 
-        this.bdaButton.visible = false;
+        this.demonProgressionButton.visible = false;
         if (this.minecraft != null && this.minecraft.player != null) {
             this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                this.bdaButton.visible = demon.isDemon();
+                this.demonProgressionButton.visible = demon.isDemon();
             });
         }
-
-        this.acceptMissionButton.visible = false;
-        this.switchStyleButton.visible = false;
-        this.equipBdaButton.visible = false;
     }
 
     @Override
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(poseStack);
-
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
         RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE);
         int x = (this.width - this.windowWidth) / 2;
@@ -256,41 +245,50 @@ public class BreathingMenuScreen extends Screen {
         this.profileButton.isActive = (this.currentTab == Tab.PROFILE);
         this.stylesButton.isActive = (this.currentTab == Tab.SKILL_TREE);
         this.missionsButton.isActive = (this.currentTab == Tab.MISSIONS);
-        this.bdaButton.isActive = (this.currentTab == Tab.BDA);
+        this.demonProgressionButton.isActive = (this.currentTab == Tab.DEMON_PROGRESSION);
 
-        if(this.currentTab == Tab.MISSIONS) {
+        this.acceptMissionButton.visible = false;
+        this.abandonMissionButton.visible = false;
+        this.switchStyleButton.visible = false;
+        this.equipBdaButton.visible = false;
+        this.purchaseBdaButton.visible = false;
+        this.rankUpButton.visible = false;
+        this.upgradeBdaButton.visible = false;
+        this.rankSubTabButton.visible = false;
+        this.bdaSubTabButton.visible = false;
+        this.physiologySubTabButton.visible = false;
+
+        if (this.currentTab == Tab.MISSIONS) {
             boolean missionIsActive = this.selectedMission != null && this.activeMissions.contains(this.selectedMission);
             boolean missionIsAvailable = this.selectedMission != null && this.availableMissions.contains(this.selectedMission);
-
             this.acceptMissionButton.visible = missionIsAvailable;
             this.abandonMissionButton.visible = missionIsActive;
-        } else {
-            this.acceptMissionButton.visible = false;
-            this.abandonMissionButton.visible = false;
+        } else if (this.currentTab == Tab.MOVE_LIST) {
+            this.switchStyleButton.visible = true;
+            if (this.minecraft != null && this.minecraft.player != null) {
+                this.minecraft.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
+                    this.switchStyleButton.active = style.getCurrentStyles() != this.selectedStyleForMoveList;
+                });
+            }
+        } else if (this.currentTab == Tab.DEMON_PROGRESSION) {
+            this.rankSubTabButton.visible = true;
+            this.bdaSubTabButton.visible = true;
+            this.physiologySubTabButton.visible = true;
+            this.rankSubTabButton.active = (this.currentDemonTab != DemonSubTab.RANK);
+            this.bdaSubTabButton.active = (this.currentDemonTab != DemonSubTab.BDA);
+            this.physiologySubTabButton.active = (this.currentDemonTab != DemonSubTab.PHYSIOLOGY);
         }
-
-        this.switchStyleButton.visible = (this.currentTab == Tab.MOVE_LIST);
-        this.equipBdaButton.visible = (this.currentTab == Tab.BDA);
-        if (this.switchStyleButton.visible && this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                this.switchStyleButton.active = style.getCurrentStyles() != this.selectedStyleForMoveList;
-            });
-        }
-        if (this.equipBdaButton.visible && this.minecraft != null && this.minecraft.player != null) {
-            this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                this.equipBdaButton.active = demon.getEquippedBda() != this.selectedBda && this.selectedBda != BloodDemonArts.NONE;
-            });
-        }
-
-        super.render(poseStack, mouseX, mouseY, partialTick);
 
         switch (this.currentTab) {
             case PROFILE -> renderProfileTab(poseStack, x, y, mouseX, mouseY);
             case SKILL_TREE -> renderSkillTreeTab(poseStack, x, y);
             case MOVE_LIST -> renderMoveListTab(poseStack, x, y, mouseX, mouseY);
             case MISSIONS -> renderMissionsTab(poseStack, x, y, mouseX, mouseY);
-            case BDA -> renderBdaTab(poseStack, x, y, mouseX, mouseY);
+            case DEMON_PROGRESSION -> renderDemonProgressionTab(poseStack, x, y, mouseX, mouseY);
         }
+
+        super.render(poseStack, mouseX, mouseY, partialTick);
+
         switch (this.currentTab) {
             case PROFILE -> renderBreathTooltip(poseStack, x, y, mouseX, mouseY);
             case SKILL_TREE -> renderSkillTreeTooltip(poseStack, x, y, mouseX, mouseY);
@@ -628,6 +626,224 @@ public class BreathingMenuScreen extends Screen {
         });
     }
 
+    private void renderDemonProgressionTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
+        if (this.minecraft == null || this.minecraft.player == null) return;
+        int subWindowX = leftPos + subWindowXOffset;
+        int subWindowY = topPos + subWindowYOffset;
+
+        fill(poseStack, subWindowX, subWindowY + 28, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
+
+        this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            String bdpText = "Blood Demon Points: " + demon.getBloodPoints();
+            this.font.draw(poseStack, bdpText, leftPos + subWindowXOffset + 195, topPos + subWindowYOffset + 12, goldColor);
+        });
+
+        switch(currentDemonTab) {
+            case RANK -> renderRankUpView(poseStack, leftPos, topPos, mouseX, mouseY);
+            case BDA -> renderBdaManagementView(poseStack, leftPos, topPos, mouseX, mouseY);
+            case PHYSIOLOGY -> renderPhysiologyView(poseStack, leftPos, topPos, mouseX, mouseY);
+        }
+    }
+
+    private void renderRankUpView(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
+        if (this.minecraft == null || this.minecraft.player == null) return;
+
+        int contentX = leftPos + subWindowXOffset + 10;
+        int contentY = topPos + subWindowYOffset + 40;
+        int rightColumnX = contentX + 160;
+
+        this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            // --- Left Column: Rank Up Info ---
+            font.draw(poseStack, "Current Rank: ", contentX, contentY, textColor);
+            font.draw(poseStack, demon.getRank().getDisplayName(), contentX + font.width("Current Rank: "), contentY, 0xFFFFFF);
+
+            DemonProgressionHelper.getNextRank(demon.getRank()).ifPresentOrElse(nextRank -> {
+                int cost = DemonProgressionHelper.RANK_UP_COSTS.getOrDefault(demon.getRank(), -1);
+                font.draw(poseStack, "Next Rank: ", contentX, contentY + 12, textColor);
+                font.draw(poseStack, nextRank.getDisplayName(), contentX + font.width("Next Rank: "), contentY + 12, 0xFFFFFF);
+                Component costText = Component.literal("Cost: " + cost + " BDP").withStyle(demon.getBloodPoints() >= cost ? ChatFormatting.GREEN : ChatFormatting.RED);
+                font.draw(poseStack, costText, contentX, contentY + 24, 0xFFFFFF);
+
+                this.rankUpButton.visible = true;
+                this.rankUpButton.active = demon.getBloodPoints() >= cost;
+                this.rankUpButton.x = leftPos + (windowWidth / 2) - (rankUpButton.getWidth() / 2);
+                this.rankUpButton.y = topPos + windowHeight - 40;
+            }, () -> {
+                font.draw(poseStack, "You have reached the final rank.", contentX, contentY + 24, goldColor);
+                this.rankUpButton.visible = false;
+            });
+
+            // --- Right Column: Current Attributes ---
+            font.draw(poseStack, Component.literal("Current Attributes").withStyle(ChatFormatting.GOLD), rightColumnX, contentY, 0xFFFFFF);
+            int statY = contentY + 12;
+
+            float bonusHealth = DemonProgressionHelper.getBonusHealth(demon);
+            font.draw(poseStack, String.format("Bonus Health: +%.1f", bonusHealth), rightColumnX, statY, textColor);
+            statY += 10;
+
+            float bonusDamage = DemonProgressionHelper.getBonusDamage(demon);
+            font.draw(poseStack, String.format("Bonus Damage: +%.0f%%", bonusDamage * 100), rightColumnX, statY, textColor);
+            statY += 10;
+
+            float bonusRegen = DemonProgressionHelper.getBonusRegen(demon);
+            font.draw(poseStack, String.format("Regeneration: +%.1f/s", bonusRegen), rightColumnX, statY, textColor);
+            statY += 10;
+
+            float damageResist = DemonProgressionHelper.getDamageResistance(demon);
+            font.draw(poseStack, String.format("Resistance: %.0f%%", damageResist * 100), rightColumnX, statY, textColor);
+        });
+    }
+
+    private void renderBdaManagementView(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
+        if (this.minecraft == null || this.minecraft.player == null) return;
+
+        int contentTopY = topPos + subWindowYOffset + 32;
+        int listWidth = 100;
+        int listLeft = leftPos + subWindowXOffset + 5;
+        int listHeight = subWindowHeight - 38;
+
+        RenderSystem.enableScissor((int)(listLeft * minecraft.getWindow().getGuiScale()), (int)((this.height - (contentTopY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
+        for (int i = 0; i < demonArtsList.size(); i++) {
+            BloodDemonArts bda = demonArtsList.get(i);
+            int entryY = contentTopY + (i * moveListEntryHeight) - (int)bdaUpgradeScroll;
+            if (entryY + moveListEntryHeight >= contentTopY && entryY <= contentTopY + listHeight) {
+                if (bda == this.selectedBdaForUpgrade) {
+                    fill(poseStack, listLeft - 2, entryY, listLeft + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
+                }
+                this.font.draw(poseStack, bda.getDisplayName(), listLeft + 2, entryY + 2, textColor);
+            }
+        }
+        RenderSystem.disableScissor();
+
+        if (this.selectedBdaForUpgrade != null) {
+            int detailX = listLeft + listWidth + 10;
+            int yOffset = contentTopY + 5;
+            font.draw(poseStack, this.selectedBdaForUpgrade.getDisplayName(), detailX, yOffset, goldColor);
+            yOffset += 12;
+            font.drawWordWrap(this.selectedBdaForUpgrade.getDescription().copy().withStyle(ChatFormatting.GRAY), detailX, yOffset, 130, textColor);
+            yOffset += 45;
+
+            final int finalYOffset = yOffset;
+            this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                int buttonX = leftPos + (windowWidth / 2) - 40;
+                int buttonY = topPos + windowHeight - 40;
+                if (demon.isBdaUnlocked(this.selectedBdaForUpgrade)) {
+                    this.upgradeBdaButton.visible = true;
+                    this.equipBdaButton.visible = true;
+
+                    this.equipBdaButton.x = buttonX - 42;
+                    this.equipBdaButton.y = buttonY;
+                    this.equipBdaButton.setWidth(80);
+                    this.equipBdaButton.active = demon.getEquippedBda() != this.selectedBdaForUpgrade;
+
+                    this.upgradeBdaButton.x = buttonX + 42;
+                    this.upgradeBdaButton.y = buttonY;
+                    this.upgradeBdaButton.setWidth(80);
+
+                    int currentTier = demon.getBdaTier(this.selectedBdaForUpgrade);
+                    int maxTier = DemonProgressionHelper.BDA_UPGRADE_COSTS.get(this.selectedBdaForUpgrade) != null ? DemonProgressionHelper.BDA_UPGRADE_COSTS.get(this.selectedBdaForUpgrade).size() : 0;
+
+                    font.draw(poseStack, "Tier: " + currentTier + " / " + maxTier, detailX, finalYOffset, textColor);
+
+                    int cost = DemonProgressionHelper.getModifiedBdaUpgradeCost(demon, this.selectedBdaForUpgrade); // GET MODIFIED COST
+                    if (cost != -1) {
+                        font.draw(poseStack, "Next Cost: " + cost + " BDP", detailX, finalYOffset + 12, textColor);
+                        this.upgradeBdaButton.active = demon.getBloodPoints() >= cost;
+                    } else {
+                        font.draw(poseStack, Component.literal("Max Tier Reached").withStyle(ChatFormatting.AQUA), detailX, finalYOffset + 12, 0xFFFFFF);
+                        this.upgradeBdaButton.active = false;
+                    }
+                } else {
+                    this.purchaseBdaButton.visible = true;
+                    this.purchaseBdaButton.x = buttonX;
+                    this.purchaseBdaButton.y = buttonY;
+
+                    int cost = DemonProgressionHelper.getModifiedBdaPurchaseCost(demon, this.selectedBdaForUpgrade); // GET MODIFIED COST
+                    if (cost != -1) {
+                        Component costText = Component.literal("Cost: " + cost + " BDP").withStyle(demon.getBloodPoints() >= cost ? ChatFormatting.GREEN : ChatFormatting.RED);
+                        font.draw(poseStack, costText, detailX, finalYOffset, 0xFFFFFF);
+                        this.purchaseBdaButton.active = demon.getBloodPoints() >= cost;
+                    } else {
+                        font.draw(poseStack, Component.literal("Not Purchasable").withStyle(ChatFormatting.GRAY), detailX, finalYOffset, 0xFFFFFF);
+                        this.purchaseBdaButton.active = false;
+                    }
+                }
+            });
+        }
+    }
+
+    private void renderPhysiologyView(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
+        if (this.minecraft == null || this.minecraft.player == null) return;
+        int contentX = leftPos + subWindowXOffset + 10;
+        int contentY = topPos + subWindowYOffset + 40;
+
+        this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            for(DemonPassive passive : DemonPassive.values()) {
+                Vec2 pos = PASSIVE_POSITIONS.get(passive);
+                if(pos == null) continue;
+
+                int tier = demon.getPassiveTier(passive);
+                int maxTier = passive.getMaxTier();
+                boolean isActive = demon.isPassiveActive(passive);
+                int iconX = contentX + (int)pos.x;
+                int iconY = contentY + (int)pos.y;
+
+                RenderSystem.setShaderTexture(0, DEMON_WIDGETS_TEXTURE);
+                blit(poseStack, iconX, iconY, 0, 0, 16, 16);
+
+                String tierText = tier + "/" + maxTier;
+                font.draw(poseStack, tierText, iconX + 18, iconY + 4, textColor);
+
+                // Draw Enabled/Disabled status if the skill is unlocked
+                if (tier > 0) {
+                    Component status = isActive ? Component.literal("[ON]").withStyle(ChatFormatting.GREEN) : Component.literal("[OFF]").withStyle(ChatFormatting.RED);
+                    font.draw(poseStack, status, iconX + font.width(tierText) + 22, iconY + 4, 0xFFFFFF);
+                }
+            }
+        });
+
+        // Render Tooltip
+        for(DemonPassive passive : DemonPassive.values()) {
+            Vec2 pos = PASSIVE_POSITIONS.get(passive);
+            if(pos == null) continue;
+            int iconX = contentX + (int)pos.x;
+            int iconY = contentY + (int)pos.y;
+            if(mouseX >= iconX && mouseX <= iconX + 16 && mouseY >= iconY && mouseY <= iconY + 16) {
+                renderPassiveTooltip(poseStack, passive, mouseX, mouseY);
+                break;
+            }
+        }
+    }
+
+    private void renderPassiveTooltip(PoseStack stack, DemonPassive passive, int mouseX, int mouseY) {
+        if (this.minecraft == null || this.minecraft.player == null) return;
+
+        List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.literal(passive.getDisplayName()).withStyle(ChatFormatting.GOLD));
+        tooltip.add(Component.literal(passive.getDescription()).withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.literal("")); // Spacer
+
+        this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            int currentTier = demon.getPassiveTier(passive);
+            tooltip.add(Component.literal("Current Tier: " + currentTier + "/" + passive.getMaxTier()).withStyle(ChatFormatting.WHITE));
+
+            if(currentTier < passive.getMaxTier()) {
+                int cost = DemonProgressionHelper.PASSIVE_SKILL_COSTS.get(passive).get(currentTier);
+                tooltip.add(Component.literal("Next Tier Cost: " + cost + " BDP")
+                        .withStyle(demon.getBloodPoints() >= cost ? ChatFormatting.GREEN : ChatFormatting.RED));
+                tooltip.add(Component.literal("Left-click to Upgrade").withStyle(ChatFormatting.YELLOW, ChatFormatting.ITALIC));
+            } else {
+                tooltip.add(Component.literal("Max Tier Reached").withStyle(ChatFormatting.AQUA));
+            }
+
+            if (currentTier > 0) {
+                tooltip.add(Component.literal("Right-click to Toggle").withStyle(ChatFormatting.GRAY, ChatFormatting.ITALIC));
+            }
+        });
+
+        renderComponentTooltip(stack, tooltip, mouseX, mouseY);
+    }
+
     @Override
     public boolean mouseClicked(double pMouseX, double pMouseY, int pButton) {
         if (this.currentTab == Tab.SKILL_TREE) {
@@ -705,21 +921,39 @@ public class BreathingMenuScreen extends Screen {
                 }
             }
         }
-        if (this.currentTab == Tab.BDA && this.availableBdas != null) {
-            int leftPos = (this.width - this.windowWidth) / 2;
-            int topPos = (this.height - this.windowHeight) / 2;
-            int subWindowX = leftPos + 8;
-            int listY = topPos + 30 + 28;
-            int listWidth = 100;
-            int listHeight = 128 - 32;
-
-            if (pMouseX >= subWindowX && pMouseX < subWindowX + listWidth && pMouseY >= listY && pMouseY < listY + listHeight) {
-                int clickedIndex = (int)((pMouseY - listY + bdaListScroll) / moveListEntryHeight);
-
-                if (clickedIndex >= 0 && clickedIndex < availableBdas.size()) {
-                    this.selectedBdaIndex = clickedIndex;
-                    this.selectedBda = availableBdas.get(clickedIndex);
-                    return true;
+        if (this.currentTab == Tab.DEMON_PROGRESSION) {
+            if (this.currentDemonTab == DemonSubTab.BDA) {
+                int contentTopY = (this.height - this.windowHeight) / 2 + subWindowYOffset + 32;
+                int listLeft = (this.width - this.windowWidth) / 2 + subWindowXOffset + 5;
+                int listWidth = 100;
+                int listHeight = subWindowHeight - 38;
+                if (pMouseX >= listLeft && pMouseX < listLeft + listWidth && pMouseY >= contentTopY && pMouseY < contentTopY + listHeight) {
+                    int clickedIndex = (int) ((pMouseY - contentTopY + bdaUpgradeScroll) / moveListEntryHeight);
+                    if (clickedIndex >= 0 && clickedIndex < this.demonArtsList.size()) {
+                        this.selectedBdaForUpgrade = this.demonArtsList.get(clickedIndex);
+                        return true;
+                    }
+                }
+            }
+            if (currentDemonTab == DemonSubTab.PHYSIOLOGY) {
+                int leftPos = (this.width - this.windowWidth) / 2;
+                int topPos = (this.height - this.windowHeight) / 2;
+                int contentX = leftPos + subWindowXOffset + 10;
+                int contentY = topPos + subWindowYOffset + 40;
+                for (DemonPassive passive : DemonPassive.values()) {
+                    Vec2 pos = PASSIVE_POSITIONS.get(passive);
+                    if (pos == null) continue;
+                    int iconX = contentX + (int) pos.x;
+                    int iconY = contentY + (int) pos.y;
+                    if (pMouseX >= iconX && pMouseX <= iconX + 16 && pMouseY >= iconY && pMouseY <= iconY + 16) {
+                        if (pButton == 0) { // Left-click to upgrade
+                            ModMessages.sendToServer(new PurchasePassiveC2SPacket(passive));
+                            return true;
+                        } else if (pButton == 1) { // Right-click to toggle
+                            ModMessages.sendToServer(new TogglePassiveC2SPacket(passive));
+                            return true;
+                        }
+                    }
                 }
             }
         }
@@ -746,17 +980,15 @@ public class BreathingMenuScreen extends Screen {
         this.moveListScroll = 0; // Reset scroll on style change
     }
 
-    private void prepareBdaList() {
-        this.availableBdas = java.util.Arrays.stream(BloodDemonArts.values()).collect(Collectors.toList());
+    private void prepareBdaUpgradeList() {
+        this.demonArtsList = Arrays.stream(BloodDemonArts.values())
+                .filter(bda -> bda != BloodDemonArts.NONE)
+                .collect(Collectors.toList());
 
-        if (!this.availableBdas.isEmpty()) {
-            this.selectedBdaIndex = 0;
-            this.selectedBda = this.availableBdas.get(0);
-        } else {
-            this.selectedBdaIndex = -1;
-            this.selectedBda = null;
+        if (!this.demonArtsList.isEmpty() && this.selectedBdaForUpgrade == null) {
+            this.selectedBdaForUpgrade = this.demonArtsList.get(0);
         }
-        this.bdaListScroll = 0;
+        this.bdaUpgradeScroll = 0;
     }
 
     private void renderMoveListTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
@@ -863,54 +1095,6 @@ public class BreathingMenuScreen extends Screen {
         }
     }
 
-    private void renderBdaTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
-        if (this.minecraft == null) return;
-
-        int subWindowX = leftPos + 8;
-        int subWindowY = topPos + 30;
-        int subWindowWidth = (int) (240 * GUI_SCALE);
-        int subWindowHeight = (int) (128 * GUI_SCALE);
-
-        fill(poseStack, subWindowX, subWindowY, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
-
-        // --- HEADER ---
-        this.font.draw(poseStack, "Blood Demon Arts", subWindowX + 5, subWindowY + 9, goldColor);
-
-        // Define panel areas
-        int listWidth = 100;
-        int detailX = subWindowX + listWidth + 5;
-        int listY = subWindowY + 28;
-        int listHeight = subWindowHeight - 32;
-
-        // --- LEFT PANEL: BDA LIST ---
-        RenderSystem.enableScissor((int)(subWindowX * minecraft.getWindow().getGuiScale()), (int)((this.height - (listY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
-
-        for (int i = 0; i < availableBdas.size(); i++) {
-            BloodDemonArts bda = availableBdas.get(i);
-            int entryY = listY + (i * moveListEntryHeight) - (int)bdaListScroll;
-
-            if (entryY + moveListEntryHeight >= listY && entryY <= listY + listHeight) {
-                boolean isSelected = (i == selectedBdaIndex);
-                if (isSelected) {
-                    fill(poseStack, subWindowX, entryY, subWindowX + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
-                }
-                this.font.draw(poseStack, bda.getDisplayName(), subWindowX + 5, entryY + 2, textColor);
-            }
-        }
-        RenderSystem.disableScissor();
-
-        // --- RIGHT PANEL: DETAIL VIEW ---
-        if (selectedBda != null) {
-            int yOffset = subWindowY + 28;
-            this.font.drawWordWrap(Component.literal(selectedBda.getDisplayName()), detailX, yOffset, subWindowWidth - listWidth - 10, goldColor);
-            yOffset += this.font.wordWrapHeight(selectedBda.getDisplayName(), subWindowWidth - listWidth - 10) + 4;
-            fill(poseStack, detailX, yOffset - 2, detailX + subWindowWidth - listWidth - 15, yOffset - 1, grayColor);
-
-            // You can add descriptions for BDAs later if you want
-            this.font.drawWordWrap(selectedBda.getDescription(), detailX, yOffset, subWindowWidth - listWidth - 10, textColor);
-        }
-    }
-
     @Override
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if (this.currentTab == Tab.MOVE_LIST && formsForSelectedStyle != null && !formsForSelectedStyle.isEmpty()) {
@@ -951,19 +1135,6 @@ public class BreathingMenuScreen extends Screen {
                 return true;
             }
         }
-        if (this.currentTab == Tab.BDA && availableBdas != null && !availableBdas.isEmpty()) {
-            if (pKeyCode == GLFW.GLFW_KEY_DOWN) {
-                this.selectedBdaIndex = Math.min(this.selectedBdaIndex + 1, availableBdas.size() - 1);
-                this.selectedBda = availableBdas.get(this.selectedBdaIndex);
-                this.ensureBdaIsVisible();
-                return true;
-            } else if (pKeyCode == GLFW.GLFW_KEY_UP) {
-                this.selectedBdaIndex = Math.max(this.selectedBdaIndex - 1, 0);
-                this.selectedBda = availableBdas.get(this.selectedBdaIndex);
-                this.ensureBdaIsVisible();
-                return true;
-            }
-        }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 
@@ -988,18 +1159,6 @@ public class BreathingMenuScreen extends Screen {
             this.moveListScroll = itemTopY;
         } else if (itemBottomY > this.moveListScroll + listHeight) {
             this.moveListScroll = itemBottomY - listHeight;
-        }
-    }
-
-    private void ensureBdaIsVisible() {
-        int listHeight = 128 - 32;
-        int itemTopY = this.selectedBdaIndex * this.moveListEntryHeight;
-        int itemBottomY = itemTopY + this.moveListEntryHeight;
-
-        if (itemTopY < this.bdaListScroll) {
-            this.bdaListScroll = itemTopY;
-        } else if (itemBottomY > this.bdaListScroll + listHeight) {
-            this.bdaListScroll = itemBottomY - listHeight;
         }
     }
 
@@ -1028,28 +1187,27 @@ public class BreathingMenuScreen extends Screen {
     public boolean mouseScrolled(double pMouseX, double pMouseY, double pDelta) {
         if (this.currentTab == Tab.SKILL_TREE) {
             this.skillTreeZoom += pDelta * 0.1;
-            this.skillTreeZoom = Mth.clamp(this.skillTreeZoom, 0.35, 2.5); // Adjusted min zoom for wider tree
+            this.skillTreeZoom = Mth.clamp(this.skillTreeZoom, 0.35, 2.5);
             mouseDragged(0,0,0,0,0);
             return true;
         }
         if (this.currentTab == Tab.MOVE_LIST && this.formsForSelectedStyle != null) {
-            // Calculate the maximum scroll amount to prevent scrolling past the last item
             int maxScroll = Math.max(0, (formsForSelectedStyle.size() * moveListEntryHeight) - (128 - 32));
-            // Update the scroll position, clamping it between 0 and the max
             this.moveListScroll = Mth.clamp(this.moveListScroll - (pDelta * 10), 0, maxScroll);
             return true;
         }
         if (this.currentTab == Tab.MISSIONS && this.availableMissions != null) {
-            int maxScroll = Math.max(0, (availableMissions.size() * moveListEntryHeight) - (subWindowHeight - 10));
+            int maxScroll = Math.max(0, (displayList.size() * moveListEntryHeight) - (subWindowHeight - 10));
             this.missionListScroll = Mth.clamp(this.missionListScroll - (pDelta * 10), 0, maxScroll);
             return true;
         }
-        if (this.currentTab == Tab.BDA && this.availableBdas != null) {
-            int maxScroll = Math.max(0, (availableBdas.size() * moveListEntryHeight) - (128 - 32));
-            this.bdaListScroll = Mth.clamp(this.bdaListScroll - (pDelta * 10), 0, maxScroll);
+        if (this.currentTab == Tab.DEMON_PROGRESSION && this.currentDemonTab == DemonSubTab.BDA) {
+            int listHeight = subWindowHeight - 38;
+            int maxScroll = Math.max(0, (this.demonArtsList.size() * moveListEntryHeight) - listHeight);
+            this.bdaUpgradeScroll = Mth.clamp(this.bdaUpgradeScroll - (pDelta * 10), 0, maxScroll);
             return true;
         }
-            return super.mouseScrolled(pMouseX, pMouseY, pDelta);
+        return super.mouseScrolled(pMouseX, pMouseY, pDelta);
     }
 
     private void drawConnectingLine(PoseStack poseStack, Vec2 pos1, Vec2 pos2) {
@@ -1094,7 +1252,7 @@ public class BreathingMenuScreen extends Screen {
                 vOffset = 20; // Hover/Active texture is at v=20
             }
 
-            blit(pPoseStack, this.x, this.y, this.u, vOffset, this.width, this.height);
+            blit(pPoseStack, this.x, this.y, this.u, vOffset, this.width, this.height, 256, 256);
         }
     }
 }

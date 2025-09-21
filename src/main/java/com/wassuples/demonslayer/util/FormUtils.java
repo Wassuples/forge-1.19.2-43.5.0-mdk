@@ -6,6 +6,7 @@ import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
+import com.wassuples.demonslayer.demon.DemonPassive;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.effects.ForcedSleepEffect;
@@ -17,6 +18,7 @@ import com.wassuples.demonslayer.gamerule.ModGameRules;
 import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
+import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.*;
 import net.minecraft.client.Minecraft;
@@ -64,184 +66,251 @@ import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static com.wassuples.demonslayer.styles.BreathingForms.*;
 
 public class FormUtils {
 
+    /**
+     * The single source of truth for damage.
+     * @param user The entity dealing the damage.
+     * @param baseDamage The base damage of the attack before any modifiers.
+     * @return The final calculated damage.
+     */
+    public static float calculateFinalDamage(LivingEntity user, float baseDamage) {
+        // Using an array wrapper to modify the value inside lambdas
+        final float[] finalDamage = { baseDamage };
+
+        // --- DEMON-SPECIFIC MODIFIERS ---
+        user.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            if (!demon.isDemon()) return;
+
+            // Apply Blood Art Potency Passive
+            if (demon.isPassiveActive(DemonPassive.BLOOD_ART_POTENCY)) {
+                int tier = demon.getPassiveTier(DemonPassive.BLOOD_ART_POTENCY);
+                finalDamage[0] *= (1.0f + (tier * 0.05f)); // +5% damage per tier
+            }
+
+            // Apply Crescent BDA (from Moon Breathing) bonus
+            if (demon.getEquippedBda() == BloodDemonArts.CRESCENT) {
+                finalDamage[0] *= 1.3f; // +30% damage
+            }
+
+            // TODO: Apply BDA Tier scaling here if you want a global buff for all abilities
+        });
+
+        // --- SLAYER-SPECIFIC MODIFIERS ---
+        user.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
+            // TODO: Apply Slayer Rank damage bonus
+            // Rank rank = progression.getRank();
+            // finalDamage[0] *= (1.0f + (rank.ordinal() * 0.02f)); // +2% damage per rank
+        });
+
+        return finalDamage[0];
+    }
+
+    /**
+     * The single source of truth for range.
+     * @param user The entity dealing the damage.
+     * @param baseRange The base range of the attack before any modifiers.
+     * @return The final calculated range.
+     */
+    public static double calculateFinalRange(LivingEntity user, double baseRange) {
+        final double[] finalRange = { baseRange };
+
+        user.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            if (!demon.isDemon()) return;
+
+            // Apply Crescent BDA (from Moon Breathing) bonus
+            if (demon.getEquippedBda() == BloodDemonArts.CRESCENT) {
+                finalRange[0] *= 1.2; // +20% range
+            }
+        });
+
+        return finalRange[0];
+    }
+
+    /**
+     * A centralized helper to apply damage and knockback to a target.
+     * @param user The attacker.
+     * @param target The entity being damaged.
+     * @param damage The final, calculated damage to apply.
+     * @param source The DamageSource to use.
+     * @param knockbackDir The direction of the knockback. Can be null.
+     * @param knockbackStrength The strength of the knockback.
+     */
+    private static void applyDamageToTarget(LivingEntity user, LivingEntity target, float damage, DamageSource source, @Nullable Vec3 knockbackDir, float knockbackStrength) {
+        if (!target.hurt(source, damage)) {
+            return; // Don't apply knockback if the damage event was cancelled
+        }
+        if (knockbackDir == null || knockbackStrength <= 0) {
+            return; // No knockback to apply
+        }
+
+        target.knockback(knockbackStrength, knockbackDir.x, knockbackDir.z);
+    }
+
+    /**
+     * Gets the appropriate DamageSource for the user.
+     * @param user The entity dealing damage.
+     * @return DamageSource.playerAttack or DamageSource.mobAttack.
+     */
+    private static DamageSource getDamageSource(LivingEntity user) {
+        return (user instanceof Player player) ? DamageSource.playerAttack(player) : DamageSource.mobAttack(user);
+    }
+
+    /**
+     * Gets the appropriate DamageSource for the user, with optional properties.
+     * @param user The entity dealing damage.
+     * @param isFire Whether the damage should be fire-based.
+     * @param isExplosion Whether the damage should count as an explosion.
+     * @return The configured DamageSource.
+     */
+    private static DamageSource getDamageSource(LivingEntity user, boolean isFire, boolean isExplosion) {
+        DamageSource source = getDamageSource(user);
+        if (isFire) source.setIsFire();
+        if (isExplosion) source.setExplosion();
+        return source;
+    }
+
     // =================================================================================
     // Damage Dealing Methods
     // =================================================================================
 
     /**
-     * Deals damage in a cone in front of the player.
+     * Deals damage to targets in a forward-facing cone.
      */
-    public static void dealDirectionalDamage(LivingEntity user, double range, float damage, double angleThreshold) {
-        if (isMoonBdaActive(user)) {
-            damage *= 1.3f; // 30% more damage
-            range *= 1.2f;  // 20% more range
-        }
+    public static void dealDirectionalDamage(LivingEntity user, double baseRange, float baseDamage, double angleThreshold) {
+        if (!(user.level instanceof ServerLevel level)) return;
 
-        ServerLevel level = (ServerLevel) user.getLevel();
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        double finalRange = calculateFinalRange(user, baseRange);
+        DamageSource source = getDamageSource(user);
         Vec3 lookVec = user.getLookAngle().normalize();
-        AABB attackAABB = user.getBoundingBox().inflate(range);
+
+        AABB attackAABB = user.getBoundingBox().inflate(finalRange);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB, entity ->
                 entity != user && entity.isAlive() && user.hasLineOfSight(entity));
 
-
         for (LivingEntity target : targets) {
             Vec3 toTarget = target.position().subtract(user.position()).normalize();
-            double dot = lookVec.dot(toTarget);
-            if (dot > angleThreshold) {
-                if (user instanceof Player player) {
-                    target.hurt(DamageSource.playerAttack(player), damage);
-                } else {
-                    target.hurt(DamageSource.mobAttack(user), damage);
-                }
-                Vec3 knockback = toTarget.scale(0.5);
-                target.push(knockback.x, 0.1, knockback.z);
-            }
+            if (lookVec.dot(toTarget) < angleThreshold) continue;
+
+            Vec3 knockback = toTarget.scale(0.5);
+            applyDamageToTarget(user, target, finalDamage, source, knockback, 0.5f);
         }
     }
 
     /**
      * Deals damage in a cone in a specific direction, defined by yaw.
      */
-    public static void dealDirectionalDamageInYaw(LivingEntity user, double range, float damage, float knockback, float yaw) {
-        if (isMoonBdaActive(user)) {
-            damage *= 1.3f; // 30% more damage
-            range *= 1.2f;  // 20% more range
-        }
+    public static void dealDirectionalDamageInYaw(LivingEntity user, double baseRange, float baseDamage, float knockback, float yaw) {
+        if (!(user.level instanceof ServerLevel level)) return;
 
-        Vec3 eyePos = user.getEyePosition();
-        float f = (float) Math.toRadians(-yaw);
-        float f1 = (float) Math.toRadians(-user.getXRot());
-        Vec3 lookVec = new Vec3(Mth.sin(f) * Mth.cos(f1), -Mth.sin(f1), Mth.cos(f) * Mth.cos(f1));
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        double finalRange = calculateFinalRange(user, baseRange);
+        DamageSource source = getDamageSource(user);
 
+        // Calculate the direction vector from yaw and pitch
+        float yawRad = (float) Math.toRadians(-yaw);
+        float pitchRad = (float) Math.toRadians(-user.getXRot());
+        Vec3 lookVec = new Vec3(Mth.sin(yawRad) * Mth.cos(pitchRad), -Mth.sin(pitchRad), Mth.cos(yawRad) * Mth.cos(pitchRad));
 
-        for (int i = 0; i < 8; ++i) { // Check multiple points for better accuracy
-            Vec3 targetPos = eyePos.add(lookVec.scale(range * i / 8.0));
-            AABB attackAABB = new AABB(targetPos, targetPos).inflate(2.0, 2.0, 2.0);
-            List<LivingEntity> targets = user.level.getEntitiesOfClass(LivingEntity.class, attackAABB, entity ->
-                    !entity.is(user) && entity.isAlive() && user.hasLineOfSight(entity));
+        // Find all targets in a single large box
+        Vec3 endPos = user.getEyePosition().add(lookVec.scale(finalRange));
+        AABB broadPhaseBox = new AABB(user.getEyePosition(), endPos).inflate(2.0);
+        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, broadPhaseBox, entity ->
+                !entity.is(user) && entity.isAlive() && user.hasLineOfSight(entity));
 
-            for (LivingEntity target : targets) {
-                if (user instanceof Player player) {
-                    target.hurt(DamageSource.playerAttack(player), damage);
-                } else {
-                    target.hurt(DamageSource.mobAttack(user), damage);
-                }
-                target.knockback(knockback, -lookVec.x, -lookVec.z);
-            }
+        for (LivingEntity target : targets) {
+            // No need for dot product check as this is a narrow "beam" attack style
+            applyDamageToTarget(user, target, finalDamage, source, new Vec3(-lookVec.x, 0, -lookVec.z), knockback);
         }
     }
 
     /**
-     * Deals damage to all entities within a radius around the player.
+     * Deals damage to all valid targets within a spherical radius, with optional flags.
      */
-    public static void dealAOEDamage(LivingEntity user, Vec3 centerPos, double range, float damage, float knockbackStrength, DamageSource damageSource) {
-        if (isMoonBdaActive(user)) {
-            damage *= 1.3f; // 30% more damage
-            range *= 1.2f;  // 20% more range
-        }
+    public static void dealAOEDamage(LivingEntity user, Vec3 centerPos, double baseRange, float baseDamage, float knockbackStrength, boolean isFire, boolean isExplosion) {
+        if (!(user.level instanceof ServerLevel level)) return;
 
-        ServerLevel level = (ServerLevel) user.getLevel();
-        AABB attackAABB = new AABB(centerPos, centerPos).inflate(range);
-        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB, entity ->
-                entity != user && entity.isAlive());
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        double finalRange = calculateFinalRange(user, baseRange);
+        DamageSource source = getDamageSource(user, isFire, isExplosion);
 
+        AABB attackAABB = new AABB(centerPos, centerPos).inflate(finalRange);
+        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB, entity -> entity != user && entity.isAlive());
 
         for (LivingEntity target : targets) {
-            target.hurt(damageSource, damage);
-            double d0 = centerPos.x() - target.getX();
-            double d1;
-            for (d1 = centerPos.z() - target.getZ(); d0 * d0 + d1 * d1 < 1.0E-4D; d1 = (Math.random() - Math.random()) * 0.01D) {
-                d0 = (Math.random() - Math.random()) * 0.01D;
-            }
-            target.knockback(knockbackStrength, d0, d1);
+            Vec3 knockbackDir = centerPos.vectorTo(target.position()).normalize();
+            applyDamageToTarget(user, target, finalDamage, source, knockbackDir, knockbackStrength);
         }
+    }
+
+    /**
+     * Overloaded version of dealAOEDamage for non-special damage types.
+     */
+    public static void dealAOEDamage(LivingEntity user, Vec3 centerPos, double range, float baseDamage, float knockbackStrength) {
+        dealAOEDamage(user, centerPos, range, baseDamage, knockbackStrength, false, false);
     }
 
     /**
      * Deals damage to all entities within a vertical column.
      */
-    public static void dealVerticalColumnDamage(LivingEntity user, Vec3 bottomCenter, double radius, double height, float damage, DamageSource damageSource) {
-        if (isMoonBdaActive(user)) {
-            damage *= 1.3f; // 30% more damage
-            radius *= 1.2f;
-            height *= 1.2f;
-        }
+    public static void dealVerticalColumnDamage(LivingEntity user, Vec3 bottomCenter, double baseRadius, double baseHeight, float baseDamage) {
+        if (!(user.level instanceof ServerLevel level)) return;
 
-        ServerLevel level = (ServerLevel) user.getLevel();
-        AABB damageZone = new AABB(bottomCenter, bottomCenter).inflate(radius, 0, radius).expandTowards(0, height, 0);
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        double finalRadius = calculateFinalRange(user, baseRadius);
+        double finalHeight = calculateFinalRange(user, baseHeight); // Height can also be considered a "range"
+        DamageSource source = getDamageSource(user);
+
+        AABB damageZone = new AABB(bottomCenter, bottomCenter).inflate(finalRadius, 0, finalRadius).expandTowards(0, finalHeight, 0);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageZone, e -> e != user && e.isAlive());
 
-
         for (LivingEntity target : targets) {
-            // Using lightningBolt damage source is very thematic for Thunder Breathing.
-            target.hurt(damageSource, damage);
+            applyDamageToTarget(user, target, finalDamage, source, null, 0);
         }
     }
 
     /**
      * Deals damage in a straight line (a thrust).
      */
-    public static void dealThrustDamage(LivingEntity user, double range, float damage) {
-        if (isMoonBdaActive(user)) {
-            damage *= 1.3f; // 30% more damage
-            range *= 1.2f;  // 20% more range
-        }
+    public static void dealThrustDamage(LivingEntity user, double baseRange, float baseDamage) {
+        if (!(user.level instanceof ServerLevel level)) return;
 
-        ServerLevel level = (ServerLevel) user.getLevel();
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        double finalRange = calculateFinalRange(user, baseRange);
+        DamageSource source = getDamageSource(user);
         Vec3 start = user.getEyePosition();
         Vec3 direction = user.getLookAngle().normalize();
-        Vec3 end = start.add(direction.scale(range));
+        Vec3 end = start.add(direction.scale(finalRange));
+
         AABB lineAABB = new AABB(start, end).inflate(1.0);
+        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, lineAABB, entity ->
+                entity != user && entity.isAlive() && isEntityInLineOfSight(user, entity, lineAABB));
 
-
-        if (user instanceof Player player) {
-            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, lineAABB, entity ->
-                    entity != player && entity.isAlive() && isEntityInLineOfSight(player, entity, lineAABB));
-
-            for (LivingEntity target : targets) {
-                target.hurt(DamageSource.playerAttack(player), damage);
-
-                Vec3 knockback = direction.scale(0.5);
-                target.push(knockback.x, 0.1, knockback.z);
-            }
-        } else {
-            List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, lineAABB, entity ->
-                    entity != user && entity.isAlive() && user.hasLineOfSight(entity));
-
-            for (LivingEntity target : targets) {
-                target.hurt(DamageSource.mobAttack(user), damage);
-                Vec3 knockback = direction.scale(0.5);
-                target.push(knockback.x, 0.1, knockback.z);
-            }
+        for (LivingEntity target : targets) {
+            applyDamageToTarget(user, target, finalDamage, source, direction, 0.5f);
         }
     }
 
     /**
      * Deals damage and sets entities on fire along a vector path.
      */
-    public static void dealLineDamage(LivingEntity user, Vec3 startPos, Vec3 endPos, float damage, int fireSeconds) {
-        if (isMoonBdaActive(user)) {
-            damage *= 1.3f; // 30% more damage
-        }
+    public static void dealLineDamage(LivingEntity user, Vec3 startPos, Vec3 endPos, float baseDamage, int fireSeconds) {
+        if (!(user.level instanceof ServerLevel level)) return;
 
-        ServerLevel level = (ServerLevel) user.getLevel();
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        DamageSource source = getDamageSource(user, fireSeconds > 0, false);
+
         AABB damageAABB = new AABB(startPos, endPos).inflate(2.0);
-        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageAABB, entity ->
-                entity != user && entity.isAlive());
-
+        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageAABB, entity -> entity != user && entity.isAlive());
 
         for (LivingEntity target : targets) {
-            if (user instanceof Player player) {
-                target.hurt(DamageSource.playerAttack(player), damage);
-            } else {
-                target.hurt(DamageSource.mobAttack(user), damage);
-            }
+            applyDamageToTarget(user, target, finalDamage, source, null, 0);
             if (fireSeconds > 0) {
                 target.setSecondsOnFire(fireSeconds);
             }
@@ -251,23 +320,28 @@ public class FormUtils {
     /**
      * Deals damage in multiple arcs, simulating claws.
      */
-    public static void dealClawDamage(LivingEntity user, ParticleOptions particle,  float damage, double range, int clawCount, double spreadAngle, float knockback) {
-        if (isMoonBdaActive(user)) {
-            damage *= 1.3f; // 30% more damage
-            range *= 1.2f;  // 20% more range
-        }
+    public static void dealClawDamage(LivingEntity user, ParticleOptions particle, float baseDamage, double baseRange, int clawCount, double spreadAngle, float knockback) {
+        if (!(user.level instanceof ServerLevel level)) return;
 
-        ServerLevel level = (ServerLevel) user.getLevel();
-        Vec3 playerPos = user.position();
-        float yawRad = -user.getYRot() * ((float) Math.PI / 180F);
-        Vec3 horizontalDir = new Vec3(Math.sin(yawRad), 0, Math.cos(yawRad)).normalize();
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        double finalRange = calculateFinalRange(user, baseRange);
+        DamageSource source = getDamageSource(user);
 
+        Vec3 userPos = user.position();
+        float yawRad = -user.getYRot() * Mth.DEG_TO_RAD;
+        Vec3 horizontalDir = new Vec3(Mth.sin(yawRad), 0, Mth.cos(yawRad)).normalize();
+
+        AABB broadPhaseBox = user.getBoundingBox().inflate(finalRange + 2.0, 4.0, finalRange + 2.0);
+        List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, broadPhaseBox, entity -> entity != user && entity.isAlive());
+        if (potentialTargets.isEmpty()) return;
+
+        Set<LivingEntity> hitTargets = new HashSet<>();
 
         for (int clawIndex = 0; clawIndex < clawCount; clawIndex++) {
             double angleOffset = -(spreadAngle / 2) + (clawIndex * (spreadAngle / (clawCount - 1)));
             Vec3 slashDirection = horizontalDir.yRot((float) Math.toRadians(angleOffset));
 
-            BlockPos endGroundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, user.blockPosition().offset(slashDirection.scale(range).x, 0, slashDirection.scale(range).z));
+            BlockPos endGroundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, user.blockPosition().offset(slashDirection.scale(finalRange).x, 0, slashDirection.scale(finalRange).z));
             Vec3 arcEnd = Vec3.atBottomCenterOf(endGroundPos);
 
             for (int i = 0; i <= 15; i++) {
@@ -278,23 +352,17 @@ public class FormUtils {
 
                 level.sendParticles(particle, currentPoint.x, currentPoint.y, currentPoint.z, 1, 0, 0, 0, 0);
 
-                AABB damageBox = new AABB(currentPoint, currentPoint).inflate(1.8);
-                List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, damageBox, entity -> entity != user && entity.isAlive());
-
-                for (LivingEntity target : targets) {
-                    if (user instanceof Player player) {
-                        if (target.hurt(DamageSource.playerAttack(player), damage)) {
-                            Vec3 knockbackDir = target.position().subtract(playerPos).normalize();
-                            target.push(knockbackDir.x * knockback, 0.4, knockbackDir.z * knockback);
-                        }
-                    } else {
-                        if (target.hurt(DamageSource.mobAttack(user), damage)) {
-                            Vec3 knockbackDir = target.position().subtract(playerPos).normalize();
-                            target.push(knockbackDir.x * knockback, 0.4, knockbackDir.z * knockback);
-                        }
+                for (LivingEntity potentialTarget : potentialTargets) {
+                    if (potentialTarget.getBoundingBox().inflate(0.5).contains(currentPoint)) {
+                        hitTargets.add(potentialTarget);
                     }
                 }
             }
+        }
+
+        for (LivingEntity target : hitTargets) {
+            Vec3 knockbackDir = userPos.vectorTo(target.position()).normalize();
+            applyDamageToTarget(user, target, finalDamage, source, knockbackDir, knockback);
         }
     }
 
@@ -305,8 +373,6 @@ public class FormUtils {
     public static void performNichirinSwingEffect(LivingEntity user) {
         user.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
             BreathingStyles currentStyle = style.getCurrentStyles();
-
-            // Choose a particle effect based on the current style.
             ParticleOptions particle = switch (currentStyle) {
                 case WIND -> ParticleTypes.CLOUD;
                 case INSECT -> new DustParticleOptions(new Vector3f(0.8f, 0.4f, 1.0f), 1.0f);
@@ -335,30 +401,26 @@ public class FormUtils {
     }
 
     public static void performDemonAttack(LivingEntity user) {
-        // First, check if the user is actually a demon
         user.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             if (!demon.isDemon()) return;
 
-            // If they are a demon, get their EQUIPPED BDA from the new BDA capability
-            user.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(bda -> {
-                BloodDemonArts currentBda = bda.getEquippedBda();
+            BloodDemonArts currentBda = demon.getEquippedBda();
 
-                ParticleOptions particle = switch (currentBda) {
-                    case CRESCENT -> new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
-                    case CRYO -> ParticleTypes.SNOWFLAKE;
-                    case DESTRUCTIVE_DEATH -> new DustParticleOptions(new Vector3f(0.9f, 0.1f, 0.1f), 1.0f);
-                    case EMOTION -> new DustParticleOptions(new Vector3f(0.5f, 0.5f, 0.5f), 1.0f);
-                    case FISH -> new DustParticleOptions(new Vector3f(0.2f, 0.8f, 0.9f), 1.0f);
-                    case SASH -> new DustParticleOptions(new Vector3f(0.9f, 0.4f, 0.8f), 1.0f);
-                    case HAEMO -> new DustParticleOptions(new Vector3f(0.7f, 0.1f, 0.1f), 1.0f);
-                    case SLEEP -> new DustParticleOptions(new Vector3f(0.6f, 0.6f, 0.9f), 1.0f);
-                    case THREADS -> ParticleTypes.SPIT;
-                    default -> ParticleTypes.SWEEP_ATTACK;
-                };
+            ParticleOptions particle = switch (currentBda) {
+                case CRESCENT -> new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+                case CRYO -> ParticleTypes.SNOWFLAKE;
+                case DESTRUCTIVE_DEATH -> new DustParticleOptions(new Vector3f(0.9f, 0.1f, 0.1f), 1.0f);
+                case EMOTION -> new DustParticleOptions(new Vector3f(0.5f, 0.5f, 0.5f), 1.0f);
+                case FISH -> new DustParticleOptions(new Vector3f(0.2f, 0.8f, 0.9f), 1.0f);
+                case SASH -> new DustParticleOptions(new Vector3f(0.9f, 0.4f, 0.8f), 1.0f);
+                case HAEMO -> new DustParticleOptions(new Vector3f(0.7f, 0.1f, 0.1f), 1.0f);
+                case SLEEP -> new DustParticleOptions(new Vector3f(0.6f, 0.6f, 0.9f), 1.0f);
+                case THREADS -> ParticleTypes.SPIT;
+                default -> ParticleTypes.SWEEP_ATTACK;
+            };
 
-                dealDirectionalDamage(user, 3.0, 4.0f, 0.7);
-                spawnParticleArc(user, particle, 2.0, 120, 20);
-            });
+            dealDirectionalDamage(user, 3.0, 4.0f, 0.7);
+            spawnParticleArc(user, particle, 2.0, 120, 20);
         });
     }
 
@@ -689,8 +751,8 @@ public class FormUtils {
     /**
      * A more robust line-of-sight check that considers the entity's bounding box.
      */
-    private static boolean isEntityInLineOfSight(Player player, Entity entity, AABB boundingBox) {
-        return player.hasLineOfSight(entity) || entity.getBoundingBox().intersects(boundingBox);
+    private static boolean isEntityInLineOfSight(LivingEntity user, Entity entity, AABB boundingBox) {
+        return user.hasLineOfSight(entity) || entity.getBoundingBox().intersects(boundingBox);
     }
 
     /**
@@ -1288,11 +1350,7 @@ public class FormUtils {
                     level.sendParticles(ParticleTypes.BUBBLE, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0.05);
                 }
             }
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), 5.0, 8.0f, 0.5f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), 5.0, 8.0f, 0.5f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), 5.0, 8.0f, 0.5f);
         }
 
         @Override
@@ -1352,11 +1410,7 @@ public class FormUtils {
             user.setYHeadRot(newYaw);
 
             spawnParticleArc(user, ParticleTypes.SPLASH, 2.5, 360, 20);
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), 3.0, 3.0f, 1.2f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), 3.0, 3.0f, 1.2f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), 3.0, 3.0f, 1.2f);
         }
 
         @Override
@@ -1415,11 +1469,8 @@ public class FormUtils {
                 double radius = Mth.clamp(2.0 + fallDistance * 0.15, 2.0, 10.0);
                 float knockback = 0.5f + fallDistance * 0.05f;
 
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), radius, damage, knockback, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), radius, damage, knockback, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), radius, damage, knockback);
+
                 level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_SPLASH, SoundSource.PLAYERS, 1.0f, 0.8f);
                 level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, user.getX(), user.getY(), user.getZ(), 1, 0, 0, 0, 0);
 
@@ -1596,11 +1647,8 @@ public class FormUtils {
                 user.hurtMarked = true;
                 level.sendParticles(ParticleTypes.SMOKE, user.getX(), user.getY() + 1, user.getZ(), 2, 0, 0, 0, 0.1);
 
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), 1.5, 2.0f, 0.1f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), 1.5, 2.0f, 0.1f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), 1.5, 2.0f, 0.1f);
+
             } else if (ticksActive == DASH_DURATION) {
                 user.setDeltaMovement(Vec3.ZERO);
                 user.hurtMarked = true;
@@ -1634,19 +1682,11 @@ public class FormUtils {
         protected void onTick() {
             user.setDeltaMovement(user.getDeltaMovement().add(0, -0.2, 0)); // a bit more gravity
             if (user.isOnGround()) {
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), 4.0, 10.0f, 0.8f, DamageSource.playerAttack(player));
-                    level.playSound(null, player.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.2f);
-                    level.sendParticles(ParticleTypes.LAVA, player.getX(), player.getY() + 0.5, player.getZ(), 50, 2.0, 0.5, 2.0, 0);
-                    level.sendParticles(ParticleTypes.FLAME, player.getX(), player.getY() + 0.5, player.getZ(), 100, 2.0, 0.5, 2.0, 0.1);
-                    ActiveFormManager.stop(player);
-                } else {
-                    dealAOEDamage(user, user.position(), 4.0, 10.0f, 0.8f, DamageSource.mobAttack(user));
-                    level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.2f);
-                    level.sendParticles(ParticleTypes.LAVA, user.getX(), user.getY() + 0.5, user.getZ(), 50, 2.0, 0.5, 2.0, 0);
-                    level.sendParticles(ParticleTypes.FLAME, user.getX(), user.getY() + 0.5, user.getZ(), 100, 2.0, 0.5, 2.0, 0.1);
-                    ActiveFormManager.stop(user);
-                }
+                dealAOEDamage(user, user.position(), 4.0, 10.0f, 0.8f);
+                level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.2f);
+                level.sendParticles(ParticleTypes.LAVA, user.getX(), user.getY() + 0.5, user.getZ(), 50, 2.0, 0.5, 2.0, 0);
+                level.sendParticles(ParticleTypes.FLAME, user.getX(), user.getY() + 0.5, user.getZ(), 100, 2.0, 0.5, 2.0, 0.1);
+                ActiveFormManager.stop(user);
             }
         }
     }
@@ -1660,15 +1700,9 @@ public class FormUtils {
         protected void onParrySuccess(Entity attacker) {
             applyImmobility(user, 10);
             performGenericAttack(user, SoundEvents.GENERIC_EXPLODE, 1.0f, 1.0f);
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), 4.0, 10.0f, 0.8f, DamageSource.playerAttack(player));
-                spawnParticleArc(player, ParticleTypes.FLAME, 4.0, 360, 60);
-                level.sendParticles(ParticleTypes.LAVA, player.getX(), player.getY() + 0.5, player.getZ(), 20, 1.5, 0.5, 1.5, 0);
-            } else {
-                dealAOEDamage(user, user.position(), 4.0, 10.0f, 0.8f, DamageSource.mobAttack(user));
-                spawnParticleArc(user, ParticleTypes.FLAME, 4.0, 360, 60);
-                level.sendParticles(ParticleTypes.LAVA, user.getX(), user.getY() + 0.5, user.getZ(), 20, 1.5, 0.5, 1.5, 0);
-            }
+            dealAOEDamage(user, user.position(), 4.0, 10.0f, 0.8f);
+            spawnParticleArc(user, ParticleTypes.FLAME, 4.0, 360, 60);
+            level.sendParticles(ParticleTypes.LAVA, user.getX(), user.getY() + 0.5, user.getZ(), 20, 1.5, 0.5, 1.5, 0);
         }
 
         @Override
@@ -1704,13 +1738,8 @@ public class FormUtils {
 
             if (ticksActive % 15 == 0) {
                 float damage = 3.0f + (ticksActive / 50f);
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), 2.5, damage, 0.2f, DamageSource.playerAttack(player));
-                    level.playSound(null, player.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 0.5f, 1.5f);
-                } else {
-                    dealAOEDamage(user, user.position(), 2.5, damage, 0.2f, DamageSource.mobAttack(user));
-                    level.playSound(null, user.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 0.5f, 1.5f);
-                }
+                dealAOEDamage(user, user.position(), 2.5, damage, 0.2f);
+                level.playSound(null, user.blockPosition(), SoundEvents.BLAZE_SHOOT, SoundSource.PLAYERS, 0.5f, 1.5f);
             }
             // Particle aura
             int particleCount = Math.min(10 + (ticksActive / 20), 40);
@@ -1829,13 +1858,8 @@ public class FormUtils {
             super.onTick();
             user.setDeltaMovement(direction.scale(1.8));
             user.hurtMarked = true;
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), 2.5, 5.0f, 0.4f, DamageSource.playerAttack(player));
-                spawnCycloneParticles(level, WIND_DUST, GREEN_DUST, player.position().add(0, 1.1, 0), 2.0, 2.2, 8, ticksActive);
-            } else {
-                dealAOEDamage(user, user.position(), 2.5, 5.0f, 0.4f, DamageSource.mobAttack(user));
-                spawnCycloneParticles(level, WIND_DUST, GREEN_DUST, user.position().add(0, 1.1, 0), 2.0, 2.2, 8, ticksActive);
-            }
+            dealAOEDamage(user, user.position(), 2.5, 5.0f, 0.4f);
+            spawnCycloneParticles(level, WIND_DUST, GREEN_DUST, user.position().add(0, 1.1, 0), 2.0, 2.2, 8, ticksActive);
         }
 
         @Override
@@ -1974,13 +1998,8 @@ public class FormUtils {
                 ActiveFormManager.stop(user);
                 return;
             }
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), 3.5, 2.0f, 1.2f, DamageSource.playerAttack(player));
-                spawnParticleArc(player, ParticleTypes.SWEEP_ATTACK, 3.5, 360, 5);
-            } else {
-                dealAOEDamage(user, user.position(), 3.5, 2.0f, 1.2f, DamageSource.mobAttack(user));
-                spawnParticleArc(user, ParticleTypes.SWEEP_ATTACK, 3.5, 360, 5);
-            }
+            dealAOEDamage(user, user.position(), 3.5, 2.0f, 1.2f);
+            spawnParticleArc(user, ParticleTypes.SWEEP_ATTACK, 3.5, 360, 5);
             if (ticksActive % 8 == 0) {
                 level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 0.8f, 1.8f);
             }
@@ -2082,11 +2101,7 @@ public class FormUtils {
                 spawnVortexParticles(level, targetPos, radius, 50, ticksActive);
             } else if (ticksActive == VORTEX_DURATION + 1) {
                 // Explosion logic...
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, Vec3.atCenterOf(targetPos), 10.0, 40.0f, 2.0f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, Vec3.atCenterOf(targetPos), 10.0, 40.0f, 2.0f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, Vec3.atCenterOf(targetPos), 10.0, 40.0f, 2.0f);
                 level.playSound(null, targetPos, SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 1.0f, 1.2f);
                 level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, targetPos.getX() + 0.5, targetPos.getY() + 0.5, targetPos.getZ() + 0.5, 3, 0, 0, 0, 0);
 
@@ -2436,11 +2451,8 @@ public class FormUtils {
                 user.teleportTo(newPos.x, newPos.y, newPos.z);
                 user.hurtMarked = true;
 
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), 2.0, DASH_DAMAGE, 0.2f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), 2.0, DASH_DAMAGE, 0.2f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), 2.0, DASH_DAMAGE, 0.2f);
+
                 Vec3 sideVector = dashDirection.cross(new Vec3(0, 1, 0));
                 Vec3 upVector = new Vec3(0, 1, 0);
 
@@ -2517,11 +2529,7 @@ public class FormUtils {
             // --- Offensive Circular Slash ---
             performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.5f);
             // Damage and strongly knock back nearby enemies
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), 4.0, 7.0f, 1.5f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), 4.0, 7.0f, 1.5f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), 4.0, 7.0f, 1.5f);
             // Create the 360-degree mist visual
             spawnParticleArc(user, DENSE_MIST, 3.5, 360, 40);
             spawnParticleArc(user, ParticleTypes.CLOUD, 4.0, 360, 40);
@@ -2614,13 +2622,8 @@ public class FormUtils {
                 user.hurtMarked = true;
 //                user.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(user));
 
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), 2.0, 2.0f, 0.1f, DamageSource.playerAttack(player));
-                    level.sendParticles(DENSE_MIST, player.getX(), player.getY() + 1, player.getZ(), 2, 0, 0, 0, 0);
-                } else {
-                    dealAOEDamage(user, user.position(), 2.0, 2.0f, 0.1f, DamageSource.mobAttack(user));
-                    level.sendParticles(DENSE_MIST, user.getX(), user.getY() + 1, user.getZ(), 2, 0, 0, 0, 0);
-                }
+                dealAOEDamage(user, user.position(), 2.0, 2.0f, 0.1f);
+                level.sendParticles(DENSE_MIST, user.getX(), user.getY() + 1, user.getZ(), 2, 0, 0, 0, 0);
                 if (dashTicks >= DASH_DURATION) {
                     // The final slash will use whatever direction the player is currently looking.
                     performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.0f, 1.2f);
@@ -2684,11 +2687,8 @@ public class FormUtils {
             user.hurtMarked = true;
 //            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
 
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f);
+
             if (ticksActive > 0 && ticksActive % 2 == 0) {
                 BlindingMistCloudEntity cloud = ModEntityTypes.BLINDING_MIST_CLOUD.get().create(level);
                 if (cloud != null) {
@@ -2733,11 +2733,8 @@ public class FormUtils {
 
             // --- Continuous AOE Barrage ---
             // Deal damage every tick to all nearby enemies.
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.2f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.2f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.2f);
+
             // --- Visuals: The Obscuring Clouds and Slashes ---
             // 1. Spawn a large, dense sphere of mist around the player.
             for (int i = 0; i < 20; i++) {
@@ -2791,11 +2788,7 @@ public class FormUtils {
             }
             if (ticksActive == SLAM_DELAY) {
                 // Damage and Sound logic (now uses the new 10-block radius)
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), SLAM_RADIUS, SLAM_DAMAGE, SLAM_KNOCKBACK, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), SLAM_RADIUS, SLAM_DAMAGE, SLAM_KNOCKBACK, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), SLAM_RADIUS, SLAM_DAMAGE, SLAM_KNOCKBACK);
                 level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.5f, 1.0f);
                 level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 2.0f, 1.2f);
 
@@ -2861,11 +2854,7 @@ public class FormUtils {
 
             if (ticksActive % DAMAGE_TICK_RATE == 0) {
                 level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.5f);
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK);
             }
 
             this.rotationAngle += 35.0f;
@@ -2915,11 +2904,7 @@ public class FormUtils {
             Vec3 lookVec = user.getLookAngle();
             user.setDeltaMovement(lookVec.x * FORWARD_SPEED, user.getDeltaMovement().y, lookVec.z * FORWARD_SPEED);
             user.hurtMarked = true;
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK);
 
             this.rotationAngle += 45.0f;
             Vec3 discCenter = user.getEyePosition().add(user.getLookAngle().scale(1.5));
@@ -3062,11 +3047,7 @@ public class FormUtils {
             super.onTick();
             if (ticksActive == SLASH_DELAY) {
                 level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_BELL, SoundSource.PLAYERS, 1.5f, 1.8f);
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), RADIUS, DAMAGE, KNOCKBACK);
 
                 BlockPos groundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, user.blockPosition());
                 Vec3 groundTarget = Vec3.atBottomCenterOf(groundPos);
@@ -3119,11 +3100,7 @@ public class FormUtils {
             if (this.tornadoCenter == null) return;
 
             if (ticksActive % DAMAGE_TICK_RATE == 0) {
-                if (user instanceof ServerPlayer player) {
-                    dealVerticalColumnDamage(player, this.tornadoCenter, TORNADO_RADIUS, TORNADO_HEIGHT, DAMAGE_PER_PULSE, DamageSource.playerAttack(player));
-                } else {
-                    dealVerticalColumnDamage(user, this.tornadoCenter, TORNADO_RADIUS, TORNADO_HEIGHT, DAMAGE_PER_PULSE, DamageSource.mobAttack(user));
-                }
+                dealVerticalColumnDamage(user, this.tornadoCenter, TORNADO_RADIUS, TORNADO_HEIGHT, DAMAGE_PER_PULSE);
                 level.playSound(null, tornadoCenter.x, tornadoCenter.y, tornadoCenter.z, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.NEUTRAL, 1.0f, 1.8f);
             }
 
@@ -3392,11 +3369,8 @@ public class FormUtils {
                 );
                 user.swing(InteractionHand.MAIN_HAND);
 
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, strikePos, 0.8, DAMAGE_PER_STRIKE, 0.1f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, strikePos, 0.8, DAMAGE_PER_STRIKE, 0.1f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, strikePos, 0.8, DAMAGE_PER_STRIKE, 0.1f);
+
                 List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, new AABB(strikePos, strikePos).inflate(0.8));
                 for (LivingEntity target : hitTargets) {
                     if (target != user) {
@@ -3621,11 +3595,7 @@ public class FormUtils {
                     this.flailPos = this.flailPos.add(smashDirection.scale(smashSpeed));
 
                     if (this.phaseTicks >= SMASH_DURATION) {
-                        if (user instanceof ServerPlayer player) {
-                            dealAOEDamage(player, smashCenter, SMASH_RADIUS, SMASH_DAMAGE, 1.5f, DamageSource.playerAttack(player));
-                        } else {
-                            dealAOEDamage(user, smashCenter, SMASH_RADIUS, SMASH_DAMAGE, 1.5f, DamageSource.mobAttack(user));
-                        }
+                        dealAOEDamage(user, smashCenter, SMASH_RADIUS, SMASH_DAMAGE, 1.5f, false, true);
                         level.playSound(null, smashCenter.x, smashCenter.y, smashCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 1.5f, 1.0f);
                         level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.STONE.defaultBlockState()), smashCenter.x, smashCenter.y, smashCenter.z, 100, 1.5, 1.5, 1.5, 0.5);
                         ActiveFormManager.stop(user);
@@ -3677,11 +3647,8 @@ public class FormUtils {
             level.playSound(null, user.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.2f, 1.0f);
             level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.8f);
 
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK, true, true);
+
             BlockState groundState = level.getBlockState(user.blockPosition().below());
             if (!groundState.isAir()) {
                 level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, groundState), user.getX(), user.getY() + 0.2, user.getZ(), 100, COUNTER_RADIUS * 0.8, 0.2, COUNTER_RADIUS * 0.8, 0.2);
@@ -3807,22 +3774,14 @@ public class FormUtils {
             // Axe Impact
             if (!axeHasHit && ticksActive >= AXE_IMPACT_TICK) {
                 axeHasHit = true;
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, this.destinationPoint, IMPACT_RADIUS, AXE_DAMAGE, 0.5f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, this.destinationPoint, IMPACT_RADIUS, AXE_DAMAGE, 0.5f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, this.destinationPoint, IMPACT_RADIUS, AXE_DAMAGE, 0.5f);
                 level.playSound(null, destinationPoint.x, destinationPoint.y, destinationPoint.z, SoundEvents.ARMOR_EQUIP_IRON, SoundSource.BLOCKS, 1.5f, 0.8f);
             }
 
             // Flail Impact
             if (!flailHasHit && ticksActive >= FLAIL_IMPACT_TICK) {
                 flailHasHit = true;
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, this.destinationPoint, IMPACT_RADIUS * 1.5, FLAIL_DAMAGE, 1.0f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, this.destinationPoint, IMPACT_RADIUS * 1.5, FLAIL_DAMAGE, 1.0f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, this.destinationPoint, IMPACT_RADIUS * 1.5, FLAIL_DAMAGE, 1.0f);
                 level.playSound(null, destinationPoint.x, destinationPoint.y, destinationPoint.z, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 1.5f, 1.0f);
             }
         }
@@ -3941,11 +3900,7 @@ public class FormUtils {
             float newYaw = this.startYaw + (ticksActive * ROTATION_SPEED);
             user.setYRot(newYaw);
             user.setYHeadRot(newYaw);
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, 0.3f);
             for (int i = 0; i < 10; i++) {
                 double angle = level.random.nextDouble() * 2 * Math.PI;
                 double radius = level.random.nextDouble() * AOE_RADIUS;
@@ -4191,11 +4146,7 @@ public class FormUtils {
 
             // --- Shared Damage and Visuals (Unchanged) ---
             if (ticksActive % DAMAGE_TICK_RATE == 0) {
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), 3.0, DAMAGE_PER_PULSE, 0.2f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), 3.0, DAMAGE_PER_PULSE, 0.2f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), 3.0, DAMAGE_PER_PULSE, 0.2f);
                 performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 0.8f, 1.8f);
             }
             level.sendParticles(SERPENT_PARTICLE, user.getX(), user.getY() + 1, user.getZ(), 3, 0.2, 0.2, 0.2, 0.05);
@@ -4253,11 +4204,7 @@ public class FormUtils {
             user.hurtMarked = true;
 //            player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetEntityMotionPacket(player));
 
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.1f);
             level.sendParticles(SERPENT_PARTICLE, user.getX(), user.getY() + 1, user.getZ(), 3, 0.2, 0.2, 0.2, 0.05);
             if (ticksActive % 5 == 0) {
                 level.sendParticles(ParticleTypes.SWEEP_ATTACK, user.getX(), user.getEyeY(), user.getZ(), 2, 1.5, 0.1, 1.5, 0.0);
@@ -4397,7 +4344,7 @@ public class FormUtils {
             super.onTick();
 
             if (ticksActive % 8 == 0) {
-                dealAOEDamage(user, this.stormCenter, STORM_RADIUS, DAMAGE_PER_TICK, 0.1f, DamageSource.mobAttack(user));
+                dealAOEDamage(user, this.stormCenter, STORM_RADIUS, DAMAGE_PER_TICK, 0.1f);
                 level.playSound(null, this.stormCenter.x, this.stormCenter.y, this.stormCenter.z, SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 2.0f);
             }
 
@@ -4780,7 +4727,7 @@ public class FormUtils {
                     level.playSound(null, impactPoint.x, impactPoint.y, impactPoint.z, SoundEvents.GENERIC_EXPLODE, SoundSource.BLOCKS, 2.0f, 0.8f);
 
                     level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, impactPoint.x, impactPoint.y, impactPoint.z, 1, 0, 0, 0, 0);
-                    dealAOEDamage(user, impactPoint, IMPACT_RADIUS, DAMAGE, KNOCKBACK, DamageSource.mobAttack(user).setExplosion());
+                    dealAOEDamage(user, impactPoint, IMPACT_RADIUS, DAMAGE, KNOCKBACK, false, true);
                     destroyBlocksInRadius(level, new BlockPos(impactPoint), IMPACT_RADIUS, 4, false, user);
                 }
             }
@@ -4853,7 +4800,7 @@ public class FormUtils {
             user.hurtMarked = true;
 
             if (ticksActive % 3 == 0) {
-                dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, KNOCKBACK, DamageSource.mobAttack(user));
+                dealAOEDamage(user, user.position(), AOE_RADIUS, DAMAGE_PER_TICK, KNOCKBACK);
             }
 
             if (ticksActive % 2 == 0) {
@@ -5047,11 +4994,7 @@ public class FormUtils {
             user.setDeltaMovement(this.direction.scale(DASH_SPEED));
             user.hurtMarked = true;
 
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, player.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.playerAttack(player));
-            } else {
-                dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.mobAttack(user));
-            }
+            dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_TICK, 0.3f);
 
             level.sendParticles(ParticleTypes.POOF, user.getX(), user.getY() + 1, user.getZ(), 5, 0.5, 0.5, 0.5, 0.1);
             level.sendParticles(ParticleTypes.CRIT, user.getX(), user.getY() + 1, user.getZ(), 10, 0.5, 0.5, 0.5, 0.2);
@@ -5150,11 +5093,7 @@ public class FormUtils {
             }
 
             if (ticksActive % 5 == 0) {
-                if (user instanceof ServerPlayer player) {
-                    dealAOEDamage(player, player.position(), DEFENSE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.playerAttack(player));
-                } else {
-                    dealAOEDamage(user, user.position(), DEFENSE_RADIUS, DAMAGE_PER_TICK, 0.3f, DamageSource.mobAttack(user));
-                }
+                dealAOEDamage(user, user.position(), DEFENSE_RADIUS, DAMAGE_PER_TICK, 0.3f);
             }
 
             this.rotationAngle += 50.0f;
@@ -5322,7 +5261,7 @@ public class FormUtils {
                     tickContraction();
                     if (this.phaseTicks >= CONTRACTION_DURATION) {
                         // Final burst of damage
-                        dealAOEDamage(user, this.cageCenter, 1.0, CONTRACTION_BASE_DAMAGE + CONTRACTION_RAMP_DAMAGE, 0.5f, DamageSource.MAGIC);
+                        dealAOEDamage(user, this.cageCenter, 1.0, CONTRACTION_BASE_DAMAGE + CONTRACTION_RAMP_DAMAGE, 0.5f);
                         level.playSound(null, cageCenter.x, cageCenter.y, cageCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.0f);
                         level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, cageCenter.x, cageCenter.y, cageCenter.z, 1, 0, 0, 0, 0);
                         ActiveFormManager.stop(user);
@@ -5613,7 +5552,7 @@ public class FormUtils {
             level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.2f, 1.2f);
             level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.0f, 1.5f);
 
-            dealAOEDamage(user, user.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK, DamageSource.mobAttack(user));
+            dealAOEDamage(user, user.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK);
 
             for (int i = 0; i < 200; i++) {
                 Vec3 randomDir = new Vec3(level.random.nextDouble() - 0.5, level.random.nextDouble() - 0.5, level.random.nextDouble() - 0.5).normalize();
@@ -5834,7 +5773,7 @@ public class FormUtils {
                 double weaveAmplitude = 0.4 + level.random.nextDouble() * 0.4;
                 double weaveFrequency = 3.0 + level.random.nextDouble() * 2.0;
                 spawnParticleStreamWithWeave(level, fishParticle, startPoint, finalTargetPoint, weaveAmplitude, weaveFrequency, 60);
-                dealAOEDamage(user, finalTargetPoint, IMPACT_RADIUS, DAMAGE_PER_HIT, 0.5f, DamageSource.mobAttack(user));
+                dealAOEDamage(user, finalTargetPoint, IMPACT_RADIUS, DAMAGE_PER_HIT, 0.5f);
             }
             ActiveFormManager.stop(user);
         }
@@ -5910,7 +5849,7 @@ public class FormUtils {
                 // Check for collision with the target
                 if (user.getBoundingBox().inflate(0.75).intersects(this.currentTarget.getBoundingBox())) {
                     // --- HIT AND BOUNCE ---
-                    dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_HIT, 0.8f, DamageSource.mobAttack(user));
+                    dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_HIT, 0.8f);
                     level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.8f);
                     level.sendParticles(ParticleTypes.EXPLOSION, this.currentTarget.getX(), this.currentTarget.getY(0.5), this.currentTarget.getZ(), 1, 0.2, 0.2, 0.2, 0);
                     this.bouncesLeft--;
@@ -6125,7 +6064,7 @@ public class FormUtils {
                 level.sendParticles(woodParticle, position.x, position.y, position.z, 3, 0.8, 1.5, 0.8, motionY);
             }
             level.sendParticles(ParticleTypes.EXPLOSION, position.x, position.y + 1.0, position.z, 1, 0, 0, 0, 0);
-            dealAOEDamage(user, position, DAMAGE_RADIUS, DAMAGE, 1.5f, DamageSource.mobAttack(user));
+            dealAOEDamage(user, position, DAMAGE_RADIUS, DAMAGE, 1.5f);
         }
 
         @Override
@@ -6568,11 +6507,7 @@ public class FormUtils {
         }
 
         private void triggerExplosion(Vec3 position) {
-            if (user instanceof ServerPlayer player) {
-                dealAOEDamage(player, position, IMPACT_RADIUS, IMPACT_DAMAGE, 3.0f, DamageSource.playerAttack(player).setExplosion());
-            } else {
-                dealAOEDamage(user, position, IMPACT_RADIUS, IMPACT_DAMAGE, 3.0f, DamageSource.mobAttack(user).setExplosion());
-            }
+            dealAOEDamage(user, position, IMPACT_RADIUS, IMPACT_DAMAGE, 3.0f, false, true);
             level.playSound(null, position.x, position.y, position.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 3.0f, 0.8f);
             level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, position.x, position.y, position.z, 2, 0, 0, 0, 0);
             level.sendParticles(ParticleTypes.SONIC_BOOM, position.x, position.y, position.z, 2, 0, 0, 0, 0);
@@ -7694,7 +7629,7 @@ public class FormUtils {
 
         private void performSlash(double radius) {
             level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 0.9f);
-            dealAOEDamage(user, user.position(), radius, SLASH_DAMAGE, 0.8f, DamageSource.playerAttack((Player) user).setIsFire());
+            dealAOEDamage(user, user.position(), radius, SLASH_DAMAGE, 0.8f, true, false);
             spawnParticleArcInWorld(level, user.position().add(0, 1.0, 0), radius, 360, (int) (radius * 10), 0, 0, RED_HOT);
         }
 
@@ -7809,7 +7744,7 @@ public class FormUtils {
 
                 level.playSound(null, this.impactCenter.x, this.impactCenter.y, this.impactCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.5f, 1.0f);
                 spawnParticleArcInWorld(level, this.impactCenter.add(0, 0.2, 0), IMPACT_RADIUS, 360, 80, 0, 0, RED_HOT);
-                dealAOEDamage(user, this.impactCenter, IMPACT_RADIUS, DAMAGE, KNOCKBACK, DamageSource.playerAttack((Player) user).setExplosion());
+                dealAOEDamage(user, this.impactCenter, IMPACT_RADIUS, DAMAGE, KNOCKBACK, false, true);
             }
         }
 
@@ -7995,7 +7930,7 @@ public class FormUtils {
             float bloomDamage = BLOOM_BASE_DAMAGE + (this.chargeTicks >= this.chargeGoal ? BLOOM_CHARGE_BONUS : 0);
             Vec3 bloomCenter = primaryTarget.position();
 
-            dealAOEDamage(user, bloomCenter, BLOOM_RADIUS, bloomDamage, 1.0f, damageSource.setExplosion());
+            dealAOEDamage(user, bloomCenter, BLOOM_RADIUS, bloomDamage, 1.0f, false, true);
 
             level.playSound(null, bloomCenter.x, bloomCenter.y, bloomCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.2f, 1.0f);
             for (int i = 0; i < 360; i += 20) {
@@ -8123,8 +8058,7 @@ public class FormUtils {
                 spawnParticleArcInWorld(level, this.impactCenter.add(0, 1.0, 0), IMPACT_RADIUS, 180, 60, user.getYRot(), 90, ParticleTypes.LAVA);
 
                 DamageSource damageSource = (user instanceof Player p) ? DamageSource.playerAttack(p).setExplosion() : DamageSource.mobAttack(user).setExplosion();
-                dealAOEDamage(user, this.impactCenter, IMPACT_RADIUS, DAMAGE, KNOCKBACK, damageSource);
-
+                dealAOEDamage(user, this.impactCenter, IMPACT_RADIUS, DAMAGE, KNOCKBACK, false, true);
                 ActiveFormManager.stop(user);
             }
         }
@@ -8237,7 +8171,7 @@ public class FormUtils {
             if (this.ticksActive == HORIZONTAL_SLASH_TICK) {
                 level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.8f);
 
-                dealAOEDamage(user, user.position(), 6.0, HORIZONTAL_DAMAGE, 0.5f, DamageSource.playerAttack((Player)user).setIsFire());
+                dealAOEDamage(user, user.position(), 6.0, HORIZONTAL_DAMAGE, 0.5f, true, false);
                 spawnParticleArcInWorld(level, user.position().add(0, 1.2, 0), 6.0, 360, 80, 0, 90, RED_HOT);
             }
         }

@@ -93,10 +93,40 @@ public class ModMessages {
                 .consumerMainThread(PlayerProgressionSyncS2CPacket::handle)
                 .add();
 
+        net.messageBuilder(PurchasePassiveC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PurchasePassiveC2SPacket::new)
+                .encoder(PurchasePassiveC2SPacket::toBytes)
+                .consumerMainThread(PurchasePassiveC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(RankUpC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(RankUpC2SPacket::new)
+                .encoder(RankUpC2SPacket::toBytes)
+                .consumerMainThread(RankUpC2SPacket::handle)
+                .add();
+
         net.messageBuilder(SwitchStyleC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SwitchStyleC2SPacket::new)
                 .encoder(SwitchStyleC2SPacket::toBytes)
                 .consumerMainThread(SwitchStyleC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(UpgradeBdaC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(UpgradeBdaC2SPacket::new)
+                .encoder(UpgradeBdaC2SPacket::toBytes)
+                .consumerMainThread(UpgradeBdaC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(PurchaseBdaC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(PurchaseBdaC2SPacket::new)
+                .encoder(PurchaseBdaC2SPacket::toBytes)
+                .consumerMainThread(PurchaseBdaC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(TogglePassiveC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(TogglePassiveC2SPacket::new)
+                .encoder(TogglePassiveC2SPacket::toBytes)
+                .consumerMainThread(TogglePassiveC2SPacket::handle)
                 .add();
 
         net.messageBuilder(PlayerMissionSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
