@@ -27,7 +27,7 @@ import java.util.UUID;
 public class WaterPrisonEntity extends Monster implements IAnimatable {
 
     private final AnimationFactory factory = new AnimationFactory(this);
-    private int lifeTime = 1200; // 60 seconds
+    private final int lifeTime = 1200; // 60 seconds
     @Nullable
     private UUID trappedUUID;
 

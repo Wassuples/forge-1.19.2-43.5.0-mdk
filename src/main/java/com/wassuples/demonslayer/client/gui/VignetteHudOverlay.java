@@ -26,7 +26,7 @@ public class VignetteHudOverlay {
         RenderSystem.setShaderTexture(0, VIGNETTE_TEXTURE);
 
         // Draw our vignette texture stretched across the entire screen.
-        gui.blit(poseStack, 0, 0, 0, 0, screenWidth, screenHeight, screenWidth, screenHeight);
+        GuiComponent.blit(poseStack, 0, 0, 0, 0, screenWidth, screenHeight, screenWidth, screenHeight);
 
         RenderSystem.depthMask(true);
         RenderSystem.enableDepthTest();

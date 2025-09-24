@@ -50,7 +50,7 @@ public class ClientEvents {
 
     @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, value = Dist.CLIENT)
     public static class ClientForgeEvents {
-        private static int useKeyHoldTime = 0;
+        private static final int useKeyHoldTime = 0;
         public static boolean isVignetteActive = false;
         private static boolean canAirJump = true;
         private static boolean wasJumping = false;

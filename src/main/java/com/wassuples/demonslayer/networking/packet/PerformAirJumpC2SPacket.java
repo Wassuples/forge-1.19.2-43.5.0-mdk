@@ -10,6 +10,8 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
+
 public class PerformAirJumpC2SPacket {
 
     public PerformAirJumpC2SPacket() {}
@@ -28,7 +30,7 @@ public class PerformAirJumpC2SPacket {
             player.hurtMarked = true;
 
             player.level.playSound(null, player.blockPosition(), SoundEvents.PLAYER_SPLASH_HIGH_SPEED, SoundSource.PLAYERS, 1.0f, 1.0f);
-            FormUtils.spawnParticleArc(player, net.minecraft.core.particles.ParticleTypes.SPLASH, 1.5, 360, 30);
+            spawnParticleArc(player, net.minecraft.core.particles.ParticleTypes.SPLASH, 1.5, 360, 30);
         });
         return true;
     }

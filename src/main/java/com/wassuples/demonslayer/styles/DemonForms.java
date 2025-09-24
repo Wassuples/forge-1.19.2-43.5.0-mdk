@@ -1,9 +1,12 @@
 package com.wassuples.demonslayer.styles;
 
+import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.forms.demon.akaza.CompassNeedleForm;
+import com.wassuples.demonslayer.forms.demon.akaza.DisorderForm;
+import com.wassuples.demonslayer.forms.demon.hantengu.CountlessStrikingTreesForm;
 import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -20,7 +23,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     THREADS_2(BloodDemonArts.THREADS,
@@ -34,7 +37,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     THREADS_3(BloodDemonArts.THREADS,
@@ -49,7 +52,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -68,7 +71,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SLEEP_2(BloodDemonArts.SLEEP,
@@ -83,7 +86,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -102,7 +105,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -121,7 +124,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     HAEMO_2(BloodDemonArts.HAEMO,
@@ -136,7 +139,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     HAEMO_3(BloodDemonArts.HAEMO,
@@ -151,7 +154,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -170,7 +173,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FISH_2(BloodDemonArts.FISH,
@@ -185,7 +188,7 @@ public enum DemonForms implements IForm {
             20){
         @Override
         public void performAction(LivingEntity user,  ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FISH_3(BloodDemonArts.FISH,
@@ -200,7 +203,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FISH_4(BloodDemonArts.FISH,
@@ -215,7 +218,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FISH_5(BloodDemonArts.FISH,
@@ -230,7 +233,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -249,7 +252,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     EMOTION_2(BloodDemonArts.EMOTION,
@@ -264,7 +267,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     EMOTION_3(BloodDemonArts.EMOTION,
@@ -279,10 +282,10 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.CountlessStrikingTreesForm) {
-                FormUtils.ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) instanceof CountlessStrikingTreesForm) {
+                ActiveFormManager.stop(user);
             } else {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             }
         }
     },
@@ -298,7 +301,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level)  {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -317,10 +320,10 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.CompassNeedleForm) {
-                FormUtils.ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) instanceof CompassNeedleForm) {
+                ActiveFormManager.stop(user);
             } else {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             }
         }
 
@@ -341,7 +344,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     DESTRUCTIVE_DEATH_3(BloodDemonArts.DESTRUCTIVE_DEATH,
@@ -356,10 +359,10 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.DisorderForm) {
-                FormUtils.ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) instanceof DisorderForm) {
+                ActiveFormManager.stop(user);
             } else {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             }
         }
     },
@@ -375,7 +378,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     DESTRUCTIVE_DEATH_5(BloodDemonArts.DESTRUCTIVE_DEATH,
@@ -390,7 +393,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     DESTRUCTIVE_DEATH_6(BloodDemonArts.DESTRUCTIVE_DEATH,
@@ -405,7 +408,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     DESTRUCTIVE_DEATH_7(BloodDemonArts.DESTRUCTIVE_DEATH,
@@ -420,7 +423,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     DESTRUCTIVE_DEATH_8(BloodDemonArts.DESTRUCTIVE_DEATH,
@@ -435,7 +438,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     DESTRUCTIVE_DEATH_9(BloodDemonArts.DESTRUCTIVE_DEATH,
@@ -450,7 +453,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     DESTRUCTIVE_DEATH_10(BloodDemonArts.DESTRUCTIVE_DEATH,
@@ -465,7 +468,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -484,7 +487,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_2(BloodDemonArts.CRYO,
@@ -499,7 +502,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_3(BloodDemonArts.CRYO,
@@ -514,7 +517,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_4(BloodDemonArts.CRYO,
@@ -529,7 +532,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_5(BloodDemonArts.CRYO,
@@ -544,7 +547,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_6(BloodDemonArts.CRYO,
@@ -559,7 +562,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_7(BloodDemonArts.CRYO,
@@ -574,7 +577,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_8(BloodDemonArts.CRYO,
@@ -589,7 +592,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     CRYO_9(BloodDemonArts.CRYO,
@@ -604,7 +607,7 @@ public enum DemonForms implements IForm {
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     ;

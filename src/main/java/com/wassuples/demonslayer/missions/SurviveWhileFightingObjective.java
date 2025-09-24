@@ -35,6 +35,6 @@ public record SurviveWhileFightingObjective(EntityType<?> bossType, int duration
     @Override
     public String getProgressKey() {
         // A unique key for this objective type
-        return "survive_fight_" + EntityType.getKey(bossType).toString();
+        return "survive_fight_" + EntityType.getKey(bossType);
     }
 }

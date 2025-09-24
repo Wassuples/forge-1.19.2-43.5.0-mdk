@@ -17,6 +17,8 @@ import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.HashiraEntity;
 import com.wassuples.demonslayer.entity.custom.MotherEyeEntity;
 import com.wassuples.demonslayer.entity.custom.WaterPrisonEntity;
+import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.item.ModItems;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.missions.*;
@@ -25,10 +27,8 @@ import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
-import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import com.wassuples.demonslayer.styles.DemonForms;
-import com.wassuples.demonslayer.util.FormUtils;
 import com.wassuples.demonslayer.util.ModUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -75,6 +75,8 @@ import org.lwjgl.glfw.GLFW;
 import java.util.*;
 
 import static com.wassuples.demonslayer.ranking.PlayerProgressionProvider.PLAYER_PROGRESSION;
+import static com.wassuples.demonslayer.util.CombatHelper.performDemonAttack;
+import static com.wassuples.demonslayer.util.CombatHelper.performNichirinSwingEffect;
 
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID)
 public class ModEvents {
@@ -204,15 +206,12 @@ public class ModEvents {
     }
 
     private static void syncAllDataToClient(ServerPlayer player) {
-        player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-            ModMessages.sendToPlayer(new PlayerStyleSyncS2CPacket(style.getForm(), style.getStyleIndex()), player);
-        });
-        player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
-            ModMessages.sendToPlayer(new PlayerBreathSyncS2CPacket(breath.getBreath(), breath.getMaxBreath()), player);
-        });
-        player.getCapability(PLAYER_PROGRESSION).ifPresent(progression -> {
-            ModMessages.sendToPlayer(new PlayerProgressionSyncS2CPacket(player.getId(), progression.getRank(), progression.getUnlockedStyles(), progression.getStyleMasteryMap(), progression.getFormMasteryMap()), player);
-        });
+        player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> ModMessages.sendToPlayer(new PlayerStyleSyncS2CPacket(style.getForm(), style.getStyleIndex()), player));
+
+        player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> ModMessages.sendToPlayer(new PlayerBreathSyncS2CPacket(breath.getBreath(), breath.getMaxBreath()), player));
+
+        player.getCapability(PLAYER_PROGRESSION).ifPresent(progression -> ModMessages.sendToPlayer(new PlayerProgressionSyncS2CPacket(player.getId(), progression.getRank(), progression.getUnlockedStyles(), progression.getStyleMasteryMap(), progression.getFormMasteryMap()), player));
+
         player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(mission -> {
             CompoundTag nbt = new CompoundTag();
             mission.saveNBTData(nbt);
@@ -568,7 +567,7 @@ public class ModEvents {
             return;
         }
 
-        FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(target);
+        ActiveForm activeForm = ActiveFormManager.getActiveForm(target);
         if (activeForm != null) {
             activeForm.onHurt(event);
             if (activeForm.getForm() == DemonForms.DESTRUCTIVE_DEATH_1 && !event.isCanceled()) {
@@ -680,43 +679,39 @@ public class ModEvents {
         // --- Standard Swing Effects & Mastery Gain ---
         if (player instanceof ServerPlayer serverPlayer) {
             if (serverPlayer.getMainHandItem().getItem() instanceof NichirinSwordItem) {
-                FormUtils.performNichirinSwingEffect(serverPlayer);
+                performNichirinSwingEffect(serverPlayer);
             }
 
             // Check if the player is a demon and is performing a melee attack
             serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
                 if (demon.isDemon()) {
-                    FormUtils.performDemonAttack(serverPlayer);
+                    performDemonAttack(serverPlayer);
                 }
             });
 
             // --- Mastery Gain Logic ---
-            serverPlayer.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                serverPlayer.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
-                    BreathingStyles currentStyle = style.getCurrentStyles();
-                    progression.addStyleMastery(currentStyle, 1);
-                    ModMessages.sendToPlayer(new PlayerProgressionSyncS2CPacket(
-                                    player.getId(),
-                                    progression.getRank(),
-                                    progression.getUnlockedStyles(),
-                                    progression.getStyleMasteryMap(),
-                                    progression.getFormMasteryMap()),
-                            serverPlayer
-                    );
-                });
-            });
+            serverPlayer.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> serverPlayer.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
+                BreathingStyles currentStyle = style.getCurrentStyles();
+                progression.addStyleMastery(currentStyle, 1);
+                ModMessages.sendToPlayer(new PlayerProgressionSyncS2CPacket(
+                                player.getId(),
+                                progression.getRank(),
+                                progression.getUnlockedStyles(),
+                                progression.getStyleMasteryMap(),
+                                progression.getFormMasteryMap()),
+                        serverPlayer
+                );
+            }));
         }
     }
 
     public static void syncProgression(ServerPlayer player) {
-        player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
-            ModMessages.sendToClients(new PlayerProgressionSyncS2CPacket(
-                    player.getId(),
-                    progression.getRank(),
-                    progression.getUnlockedStyles(),
-                    progression.getStyleMasteryMap(),
-                    progression.getFormMasteryMap()
-            ));
-        });
+        player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> ModMessages.sendToClients(new PlayerProgressionSyncS2CPacket(
+                player.getId(),
+                progression.getRank(),
+                progression.getUnlockedStyles(),
+                progression.getStyleMasteryMap(),
+                progression.getFormMasteryMap()
+        )));
     }
 }

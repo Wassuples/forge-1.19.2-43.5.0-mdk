@@ -26,11 +26,11 @@ import java.util.UUID;
 
 public class OctopusPotEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
-    private int lifeTime = 400;
+    private final int lifeTime = 400;
     private UUID ownerUUID;
 
     // A flag to track the animation state.
-    private boolean hasEmerged = false;
+    private final boolean hasEmerged = false;
 
     public OctopusPotEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);

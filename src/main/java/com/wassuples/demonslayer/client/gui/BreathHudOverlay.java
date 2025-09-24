@@ -25,7 +25,7 @@ public class BreathHudOverlay {
                 RenderSystem.setShaderTexture(0, BREATH_BAR_TEXTURE);
 
                 // --- Draw the Background ---
-                gui.blit(poseStack, xPos, yPos, 0, 0, barWidth, barHeight, 12, 100);
+                GuiComponent.blit(poseStack, xPos, yPos, 0, 0, barWidth, barHeight, 12, 100);
 
                 // --- Draw the Foreground ---
                 int currentBreath = playerBreath.getBreath();
@@ -33,7 +33,7 @@ public class BreathHudOverlay {
                 int fillAmount = (int) (((float) currentBreath / maxBreath) * barHeight);
 
                 // Using the same explicit blit method for the foreground
-                gui.blit(poseStack,
+                GuiComponent.blit(poseStack,
                         xPos,
                         yPos + barHeight - fillAmount,
                         0,       // u-offset of the filled texture part
@@ -45,7 +45,7 @@ public class BreathHudOverlay {
 
                 // The debug text proves the data is correct, so you can comment this out if you wish.
                 String debugText = "Breath: " + currentBreath + "/" + maxBreath;
-                gui.drawString(poseStack, Minecraft.getInstance().font, debugText, 5, 5, 0xFFFFFF);
+                GuiComponent.drawString(poseStack, Minecraft.getInstance().font, debugText, 5, 5, 0xFFFFFF);
             });
         }
     };

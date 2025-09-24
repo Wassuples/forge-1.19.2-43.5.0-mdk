@@ -38,7 +38,7 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     @Nullable
     private UUID casterUUID;
-    private int lifeTime = 1200; // 60 seconds max
+    private final int lifeTime = 1200; // 60 seconds max
     private final List<BlockPos> lesserEyePositions = new ArrayList<>();
 
     public MotherEyeEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class PlayerDemon {
     private boolean isDemon = false;
-    private boolean isOvercomer = false;
+    private final boolean isOvercomer = false;
     private DemonRank rank = DemonRank.FODDER;
     private int bloodPoints = 0;
     private BloodDemonArts equippedBda = BloodDemonArts.NONE;

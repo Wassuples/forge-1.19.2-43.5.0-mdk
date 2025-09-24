@@ -28,7 +28,7 @@ import java.util.UUID;
 
 public class WeepingSpearProjectileEntity extends AbstractArrow implements IAnimatable {
     private int life = 80;
-    private int maxPierces = 3;
+    private final int maxPierces = 3;
     private final List<UUID> hitEntities = new ArrayList<>();
 
     private final AnimationFactory factory = new AnimationFactory(this);

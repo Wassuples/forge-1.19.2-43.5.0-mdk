@@ -6,10 +6,16 @@ import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
 import com.wassuples.demonslayer.entity.custom.MistCloneEntity;
 import com.wassuples.demonslayer.entity.custom.ThrownNichirinEntity;
+import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
+import com.wassuples.demonslayer.forms.baseForms.ParryForm;
+import com.wassuples.demonslayer.forms.slayer.beast.WhirlingFangsForm;
+import com.wassuples.demonslayer.forms.slayer.flame.FlameTigerForm;
+import com.wassuples.demonslayer.forms.slayer.water.ConstantFluxForm;
+import com.wassuples.demonslayer.forms.slayer.water.SplashingWaterFlowForm;
 import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -34,6 +40,10 @@ import net.minecraft.world.phys.Vec3;
 import java.util.List;
 import java.util.UUID;
 
+import static com.wassuples.demonslayer.util.CombatHelper.*;
+import static com.wassuples.demonslayer.util.MovementHelper.pushPlayer;
+import static com.wassuples.demonslayer.util.VFXHelper.*;
+
 public enum BreathingForms implements IForm {
 
     // =================================================================================
@@ -55,9 +65,9 @@ public enum BreathingForms implements IForm {
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
             System.out.println("[DEBUG] Inside performAction for WATER_1");
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.0f);
-            FormUtils.dealDirectionalDamage(user, 4.0, 6.0f, 0.7); // 90 degree cone
-            FormUtils.spawnParticleArc(user, ParticleTypes.SPLASH, 2.5, 140, 30);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.0f);
+            dealDirectionalDamage(user, 4.0, 6.0f, 0.7); // 90 degree cone
+            spawnParticleArc(user, ParticleTypes.SPLASH, 2.5, 140, 30);
         }
     },
     WATER_2(BreathingStyles.WATER,
@@ -74,7 +84,7 @@ public enum BreathingForms implements IForm {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             System.out.println("[DEBUG] Inside performAction for WATER_2");
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WATER_3(BreathingStyles.WATER,
@@ -91,7 +101,7 @@ public enum BreathingForms implements IForm {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             System.out.println("[DEBUG] Inside performAction for WATER_3");
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WATER_4(BreathingStyles.WATER,
@@ -108,10 +118,10 @@ public enum BreathingForms implements IForm {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Doesn't have ActiveForm class, because it is very simple.
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_SPLASH, 1.0f, 1.0f);
-            FormUtils.pushPlayer(user, 2.5, false);
-            FormUtils.dealThrustDamage(user, 5.0, 8.0f);
-            FormUtils.spawnParticleArc(user, ParticleTypes.SPLASH, 3.0, 120, 25);
+            performGenericAttack(user, SoundEvents.PLAYER_SPLASH, 1.0f, 1.0f);
+            pushPlayer(user, 2.5, false);
+            dealThrustDamage(user, 5.0, 8.0f);
+            spawnParticleArc(user, ParticleTypes.SPLASH, 3.0, 120, 25);
         }
     },
     WATER_5(BreathingStyles.WATER,
@@ -127,11 +137,11 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            LivingEntity target = FormUtils.getLookedAtEntity(user, 5.0);
+            LivingEntity target = getLookedAtEntity(user, 5.0);
 
             if (target == null) {
                 level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.8f, 1.8f);
-                FormUtils.spawnParticleArc(user, ParticleTypes.SPLASH, 2.0, 90, 15);
+                spawnParticleArc(user, ParticleTypes.SPLASH, 2.0, 90, 15);
                 return;
             }
 
@@ -163,7 +173,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WATER_7(BreathingStyles.WATER,
@@ -179,7 +189,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WATER_8(BreathingStyles.WATER,
@@ -196,7 +206,7 @@ public enum BreathingForms implements IForm {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             if (!user.isOnGround() && user.getDeltaMovement().y < 0) {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             } else {
                 level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.8f, 1.5f);
             }
@@ -215,10 +225,10 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.SplashingWaterFlowForm) {
-                FormUtils.ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) instanceof SplashingWaterFlowForm) {
+                ActiveFormManager.stop(user);
             } else {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             }
         }
     },
@@ -236,10 +246,10 @@ public enum BreathingForms implements IForm {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             // Toggleable form
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.ConstantFluxForm) {
-                FormUtils.ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) instanceof ConstantFluxForm) {
+                ActiveFormManager.stop(user);
             } else {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             }
         }
     },
@@ -256,7 +266,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_11.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -277,7 +287,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FLAME_2(BreathingStyles.FLAME,
@@ -296,9 +306,9 @@ public enum BreathingForms implements IForm {
             // Doesn't have ActiveForm class, because it is very simple.
             user.setDeltaMovement(user.getDeltaMovement().add(0, 0.6, 0));
             user.hurtMarked = true;
-            FormUtils.performGenericAttack(user, SoundEvents.FIRECHARGE_USE, 1.0f, 1.0f);
-            FormUtils.dealDirectionalDamage(user, 4.0, 7.0f, 0.6);
-            FormUtils.spawnParticleArc(user, ParticleTypes.FLAME, 2.5, 160, 30);
+            performGenericAttack(user, SoundEvents.FIRECHARGE_USE, 1.0f, 1.0f);
+            dealDirectionalDamage(user, 4.0, 7.0f, 0.6);
+            spawnParticleArc(user, ParticleTypes.FLAME, 2.5, 160, 30);
         }
     },
     FLAME_3(BreathingStyles.FLAME,
@@ -318,7 +328,7 @@ public enum BreathingForms implements IForm {
                 level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.8f, 1.5f);
                 return;
             }
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FLAME_4(BreathingStyles.FLAME,
@@ -334,7 +344,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FLAME_5(BreathingStyles.FLAME,
@@ -350,10 +360,10 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.FlameTigerForm) {
-                FormUtils.ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) instanceof FlameTigerForm) {
+                ActiveFormManager.stop(user);
             } else {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             }
         }
     },
@@ -370,7 +380,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -391,7 +401,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WIND_2(BreathingStyles.WIND,
@@ -407,12 +417,12 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.4f);
+            performGenericAttack(user, SoundEvents.ENDER_DRAGON_FLAP, 1.0f, 1.4f);
             user.setDeltaMovement(user.getDeltaMovement().add(0, 0.6, 0));
             user.hurtMarked = true;
 
             final DustParticleOptions greenDust = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.1f), 1.0f);
-            FormUtils.dealClawDamage(user, greenDust, 8.0f, 6.0, 4, 90.0, 0.7f);
+            dealClawDamage(user, greenDust, 8.0f, 6.0, 4, 90.0, 0.7f);
         }
     },
     WIND_3(BreathingStyles.WIND,
@@ -428,7 +438,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WIND_4(BreathingStyles.WIND,
@@ -444,7 +454,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WIND_5(BreathingStyles.WIND,
@@ -460,7 +470,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WIND_6(BreathingStyles.WIND,
@@ -476,15 +486,15 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.3f);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.3f);
 
             final DustParticleOptions greenDust = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.2f), 1.0f);
             final DustParticleOptions whiteDust = new DustParticleOptions(new Vector3f(1.0f, 1.0f, 1.0f), 1.0f);
 
-            FormUtils.dealDirectionalDamage(user, 4.0, 8.0f, 0.4);
+            dealDirectionalDamage(user, 4.0, 8.0f, 0.4);
 
-            FormUtils.spawnParticleArc(user, greenDust, 2.5, 180, 25);
-            FormUtils.spawnParticleArc(user, whiteDust, 2.5, 180, 25);
+            spawnParticleArc(user, greenDust, 2.5, 180, 25);
+            spawnParticleArc(user, whiteDust, 2.5, 180, 25);
         }
     },
     WIND_7(BreathingStyles.WIND,
@@ -500,7 +510,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WIND_8(BreathingStyles.WIND,
@@ -516,7 +526,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     WIND_9(BreathingStyles.WIND,
@@ -532,7 +542,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -552,7 +562,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     THUNDER_2(BreathingStyles.THUNDER,
@@ -568,7 +578,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     THUNDER_3(BreathingStyles.THUNDER,
@@ -584,7 +594,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     THUNDER_4(BreathingStyles.THUNDER,
@@ -600,7 +610,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     THUNDER_5(BreathingStyles.THUNDER,
@@ -625,7 +635,7 @@ public enum BreathingForms implements IForm {
             }
 
             // 2. The player performs their slash animation. They are free to move.
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 2.0f);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 2.0f);
             level.playSound(null, user.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 0.3f, 2.0f);
 
             // 3. Find the ground position at the distant target location.
@@ -646,7 +656,7 @@ public enum BreathingForms implements IForm {
                 level.sendParticles(YELLOW_LIGHTNING, particlePos.x, particlePos.y, particlePos.z, 3, 0.2, 0.2, 0.2, 0);
             }
 
-            FormUtils.dealVerticalColumnDamage(user, groundCenter, ERUPTION_RADIUS, ERUPTION_HEIGHT, DAMAGE);
+            dealVerticalColumnDamage(user, groundCenter, ERUPTION_RADIUS, ERUPTION_HEIGHT, DAMAGE);
         }
     },
     THUNDER_6(BreathingStyles.THUNDER,
@@ -662,7 +672,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     THUNDER_7(BreathingStyles.THUNDER,
@@ -678,7 +688,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -698,18 +708,18 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 0.8f);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 0.8f);
 
             double range = 6.0;
-            FormUtils.dealThrustDamage(user, range, 6.0f);
+            dealThrustDamage(user, range, 6.0f);
 
             Vec3 startPos = user.getEyePosition();
             Vec3 endPos = startPos.add(user.getLookAngle().scale(range));
 
             final DustParticleOptions denseMist = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.5f);
 
-            FormUtils.spawnLineParticles(level, ParticleTypes.CLOUD, startPos, endPos, 20);
-            FormUtils.spawnLineParticles(level, denseMist, startPos, endPos, 15);
+            spawnLineParticles(level, ParticleTypes.CLOUD, startPos, endPos, 20);
+            spawnLineParticles(level, denseMist, startPos, endPos, 15);
         }
     },
     MIST_2(BreathingStyles.MIST,
@@ -725,7 +735,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MIST_3(BreathingStyles.MIST,
@@ -741,7 +751,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MIST_4(BreathingStyles.MIST,
@@ -757,7 +767,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MIST_5(BreathingStyles.MIST,
@@ -773,7 +783,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MIST_6(BreathingStyles.MIST,
@@ -789,7 +799,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MIST_7(BreathingStyles.MIST,
@@ -893,7 +903,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SOUND_4(BreathingStyles.SOUND,
@@ -909,7 +919,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SOUND_5(BreathingStyles.SOUND,
@@ -925,7 +935,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -945,7 +955,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     LOVE_2(BreathingStyles.LOVE,
@@ -961,7 +971,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     LOVE_3(BreathingStyles.LOVE,
@@ -977,7 +987,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     LOVE_5(BreathingStyles.LOVE,
@@ -993,7 +1003,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     LOVE_6(BreathingStyles.LOVE,
@@ -1009,7 +1019,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -1029,7 +1039,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     INSECT_2(BreathingStyles.INSECT,
@@ -1045,7 +1055,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     INSECT_3(BreathingStyles.INSECT,
@@ -1061,7 +1071,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     INSECT_4(BreathingStyles.INSECT,
@@ -1077,7 +1087,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -1097,7 +1107,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     STONE_2(BreathingStyles.STONE,
@@ -1113,7 +1123,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     STONE_3(BreathingStyles.STONE,
@@ -1129,7 +1139,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     STONE_4(BreathingStyles.STONE,
@@ -1145,7 +1155,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     STONE_5(BreathingStyles.STONE,
@@ -1161,7 +1171,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -1181,7 +1191,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level){
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FLOWER_4(BreathingStyles.FLOWER,
@@ -1200,14 +1210,14 @@ public enum BreathingForms implements IForm {
             final float DAMAGE = 9.0f;
             final double RANGE = 4.5;
 
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.6f);
-            FormUtils.dealDirectionalDamage(user, RANGE, DAMAGE, 0.7);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.6f);
+            dealDirectionalDamage(user, RANGE, DAMAGE, 0.7);
 
             final DustParticleOptions pinkPetal = new DustParticleOptions(new Vector3f(1.0f, 0.7f, 0.8f), 1.0f);
             final DustParticleOptions crimsonPetal = new DustParticleOptions(new Vector3f(0.8f, 0.1f, 0.2f), 1.2f);
 
-            FormUtils.spawnParticleArc(user, pinkPetal, 2.8, 140, 30, 0);
-            FormUtils.spawnParticleArc(user, crimsonPetal, 2.5, 120, 25, 0);
+            spawnParticleArc(user, pinkPetal, 2.8, 140, 30, 0);
+            spawnParticleArc(user, crimsonPetal, 2.5, 120, 25, 0);
 
             for (int i = 0; i < 5; i++) {
                 level.sendParticles(ParticleTypes.FALLING_SPORE_BLOSSOM,
@@ -1231,7 +1241,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FLOWER_6(BreathingStyles.FLOWER,
@@ -1247,7 +1257,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     FLOWER_7(BreathingStyles.FLOWER,
@@ -1263,7 +1273,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
 
@@ -1286,8 +1296,8 @@ public enum BreathingForms implements IForm {
             final float DAMAGE = 10.0f;
             final double RANGE = 6.0;
 
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.0f, 1.5f);
-            FormUtils.dealDirectionalDamage(user, RANGE, DAMAGE, 0.7);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.0f, 1.5f);
+            dealDirectionalDamage(user, RANGE, DAMAGE, 0.7);
 
             final DustParticleOptions serpentScale = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.0f);
             final int segments = 25;
@@ -1324,7 +1334,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SERPENT_3(BreathingStyles.SERPENT,
@@ -1340,7 +1350,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SERPENT_4(BreathingStyles.SERPENT,
@@ -1366,12 +1376,12 @@ public enum BreathingForms implements IForm {
             user.setDeltaMovement(user.getDeltaMovement().add(leapVec));
             user.hurtMarked = true;
 
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.2f);
-            FormUtils.dealDirectionalDamage(user, RANGE, DAMAGE, 0.7);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.2f);
+            dealDirectionalDamage(user, RANGE, DAMAGE, 0.7);
 
             final DustParticleOptions serpentScale = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.9f), 1.0f);
-            FormUtils.spawnParticleArc(user, serpentScale, 3.0, 140, 25);
-            FormUtils.spawnParticleArc(user, ParticleTypes.CRIT, 3.2, 140, 20);
+            spawnParticleArc(user, serpentScale, 3.0, 140, 25);
+            spawnParticleArc(user, ParticleTypes.CRIT, 3.2, 140, 20);
         }
     },
     SERPENT_5(BreathingStyles.SERPENT,
@@ -1387,7 +1397,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     // =================================================================================
@@ -1412,13 +1422,13 @@ public enum BreathingForms implements IForm {
             float damage = 22.0f;
             double range = 6.0;
             double angleThreshold = 0.0;
-            FormUtils.dealDirectionalDamage(user, range, damage, angleThreshold);
+            dealDirectionalDamage(user, range, damage, angleThreshold);
 
             final DustParticleOptions purple = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
             final ParticleOptions silver = ParticleTypes.END_ROD;
 
-            FormUtils.spawnParticleArc(user, purple, 4.0, 160, 50, 0);
-            FormUtils.spawnParticleArc(user, silver, 4.0, 160, 20, 0);
+            spawnParticleArc(user, purple, 4.0, 160, 50, 0);
+            spawnParticleArc(user, silver, 4.0, 160, 20, 0);
         }
     },
     MOON_2(BreathingStyles.MOON,
@@ -1434,7 +1444,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_3(BreathingStyles.MOON,
@@ -1455,15 +1465,15 @@ public enum BreathingForms implements IForm {
 
             float damage = 25.0f;
             double range = 8.0;
-            FormUtils.dealDirectionalDamage(user, range, damage, 0.4);
+            dealDirectionalDamage(user, range, damage, 0.4);
 
             final DustParticleOptions purple = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.2f);
 
             Vec3 upperArcOrigin = user.getEyePosition().add(0, 0.5, 0);
-            FormUtils.spawnParticleArcInWorld(level, upperArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
+            spawnParticleArcInWorld(level, upperArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
 
             Vec3 lowerArcOrigin = user.position().add(0, user.getBbHeight() * 0.5, 0);
-            FormUtils.spawnParticleArcInWorld(level, lowerArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
+            spawnParticleArcInWorld(level, lowerArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
         }
     },
     MOON_5(BreathingStyles.MOON,
@@ -1479,7 +1489,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_6(BreathingStyles.MOON,
@@ -1495,7 +1505,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_7(BreathingStyles.MOON,
@@ -1511,7 +1521,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_8(BreathingStyles.MOON,
@@ -1527,7 +1537,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_9(BreathingStyles.MOON,
@@ -1543,7 +1553,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_10(BreathingStyles.MOON,
@@ -1559,7 +1569,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_10.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_14(BreathingStyles.MOON,
@@ -1575,7 +1585,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_14.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_16(BreathingStyles.MOON,
@@ -1591,7 +1601,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_16.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     // =================================================================================
@@ -1610,12 +1620,12 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_1.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_CRIT, 1.2f, 1.0f);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_CRIT, 1.2f, 1.0f);
             level.playSound(null, user.blockPosition(), SoundEvents.HOGLIN_ATTACK, SoundSource.PLAYERS, 0.8f, 1.2f);
 
             float damage = 18.0f;
             double range = 4.5;
-            FormUtils.dealThrustDamage(user, range, damage);
+            dealThrustDamage(user, range, damage);
 
             Vec3 startPos = user.getEyePosition();
             Vec3 lookVec = user.getLookAngle();
@@ -1628,8 +1638,8 @@ public enum BreathingForms implements IForm {
             Vec3 rightBladeEnd = rightBladeStart.add(lookVec.scale(range));
 
             // Spawn the particle trails
-            FormUtils.spawnLineParticles(level, ParticleTypes.CRIT, leftBladeStart, leftBladeEnd, 15);
-            FormUtils.spawnLineParticles(level, ParticleTypes.CRIT, rightBladeStart, rightBladeEnd, 15);
+            spawnLineParticles(level, ParticleTypes.CRIT, leftBladeStart, leftBladeEnd, 15);
+            spawnLineParticles(level, ParticleTypes.CRIT, rightBladeStart, rightBladeEnd, 15);
         }
     },
     BEAST_2(BreathingStyles.BEAST,
@@ -1645,20 +1655,20 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.2f, 0.9f);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_KNOCKBACK, 1.2f, 0.9f);
             level.playSound(null, user.blockPosition(), SoundEvents.RAVAGER_ATTACK, SoundSource.PLAYERS, 0.7f, 1.1f);
 
             float damage = 16.0f;
             double range = 5.0;
             double angleThreshold = 0.6;
-            FormUtils.dealDirectionalDamage(user, range, damage, angleThreshold);
+            dealDirectionalDamage(user, range, damage, angleThreshold);
 
             // top-left to bottom-right
-            FormUtils.spawnParticleArc(user, ParticleTypes.CRIT, 3.0, 120, 25, 45.0f);
+            spawnParticleArc(user, ParticleTypes.CRIT, 3.0, 120, 25, 45.0f);
             // top-right to bottom-left
-            FormUtils.spawnParticleArc(user, ParticleTypes.CRIT, 3.0, 120, 25, -45.0f);
+            spawnParticleArc(user, ParticleTypes.CRIT, 3.0, 120, 25, -45.0f);
 
-            FormUtils.spawnParticleArc(user, new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, net.minecraft.world.level.block.Blocks.DIRT.defaultBlockState()), 2.5, 120, 10);
+            spawnParticleArc(user, new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, net.minecraft.world.level.block.Blocks.DIRT.defaultBlockState()), 2.5, 120, 10);
         }
     },
     BEAST_3(BreathingStyles.BEAST,
@@ -1674,17 +1684,17 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.1f, 0.8f);
+            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_STRONG, 1.1f, 0.8f);
             level.playSound(null, user.blockPosition(), SoundEvents.RAVAGER_ROAR, SoundSource.PLAYERS, 0.8f, 1.3f);
 
             float damage = 20.0f;
             double range = 4.0;
             double angleThreshold = 0.9;
-            FormUtils.dealDirectionalDamage(user, range, damage, angleThreshold);
+            dealDirectionalDamage(user, range, damage, angleThreshold);
 
             Vec3 eyePos = user.getEyePosition();
-            FormUtils.spawnParticleArc(user, ParticleTypes.CRIT, 2.5, 120, 20, 90.0f);
-            FormUtils.spawnParticleArcInWorld(level, eyePos.add(0, -0.3, 0), 2.5, 120, 20, user.getYRot(), user.getXRot(), ParticleTypes.CRIT);
+            spawnParticleArc(user, ParticleTypes.CRIT, 2.5, 120, 20, 90.0f);
+            spawnParticleArcInWorld(level, eyePos.add(0, -0.3, 0), 2.5, 120, 20, user.getYRot(), user.getXRot(), ParticleTypes.CRIT);
         }
     },
     BEAST_4(BreathingStyles.BEAST,
@@ -1700,7 +1710,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     BEAST_5(BreathingStyles.BEAST,
@@ -1722,7 +1732,7 @@ public enum BreathingForms implements IForm {
                 return;
             }
 
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     BEAST_6(BreathingStyles.BEAST,
@@ -1738,7 +1748,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     BEAST_7(BreathingStyles.BEAST,
@@ -1754,7 +1764,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
         @Override
         public boolean isBuff() {
@@ -1774,7 +1784,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     BEAST_9(BreathingStyles.BEAST,
@@ -1790,7 +1800,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     BEAST_10(BreathingStyles.BEAST,
@@ -1806,10 +1816,10 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_10.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            if (FormUtils.ActiveFormManager.getActiveForm(user) instanceof FormUtils.WhirlingFangsForm) {
-                FormUtils.ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) instanceof WhirlingFangsForm) {
+                ActiveFormManager.stop(user);
             } else {
-                FormUtils.ActiveFormManager.start(user, this);
+                ActiveFormManager.start(user, this);
             }
         }
     },
@@ -1878,10 +1888,10 @@ public enum BreathingForms implements IForm {
             DamageSource sunSource = DamageSource.playerAttack((Player)user).setMagic();
 
             for (LivingEntity target : targets) {
-                FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(target);
-                if (activeForm instanceof FormUtils.ParryForm) {
+                ActiveForm activeForm = ActiveFormManager.getActiveForm(target);
+                if (activeForm instanceof ParryForm) {
                     target.hurt(sunSource, baseDamage + parryShatterBonus);
-                    FormUtils.ActiveFormManager.stop(target);
+                    ActiveFormManager.stop(target);
 
                     level.playSound(null, target.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 1.0f);
                     level.sendParticles(ParticleTypes.LAVA, target.getX(), target.getEyeY(), target.getZ(), 30, 0.5, 0.5, 0.5, 0.0);
@@ -1900,8 +1910,8 @@ public enum BreathingForms implements IForm {
             final DustParticleOptions redHot = new DustParticleOptions(new Vector3f(1.0f, 0.2f, 0.1f), 1.5f);
             final ParticleOptions embers = ParticleTypes.LAVA;
 
-            FormUtils.spawnParticleArc(user, redHot, 3.5, 160, 60, 90.0f);
-            FormUtils.spawnParticleArc(user, embers, 3.5, 160, 30, 90.0f);
+            spawnParticleArc(user, redHot, 3.5, 160, 60, 90.0f);
+            spawnParticleArc(user, embers, 3.5, 160, 30, 90.0f);
         }
     },
     SUN_2(BreathingStyles.SUN,
@@ -1917,7 +1927,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_2.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_3(BreathingStyles.SUN,
@@ -1933,7 +1943,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_4(BreathingStyles.SUN,
@@ -1949,7 +1959,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_4.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_5(BreathingStyles.SUN,
@@ -1965,7 +1975,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_6(BreathingStyles.SUN,
@@ -1981,7 +1991,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_6.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_7(BreathingStyles.SUN,
@@ -1997,7 +2007,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_8(BreathingStyles.SUN,
@@ -2013,7 +2023,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_8.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_9(BreathingStyles.SUN,
@@ -2029,7 +2039,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_9.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_10(BreathingStyles.SUN,
@@ -2045,7 +2055,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_10.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_11(BreathingStyles.SUN,
@@ -2061,7 +2071,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_11.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_12(BreathingStyles.SUN,
@@ -2077,7 +2087,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_12.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     SUN_13(BreathingStyles.SUN,
@@ -2093,7 +2103,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_13.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            FormUtils.ActiveFormManager.start(user, this);
+            ActiveFormManager.start(user, this);
         }
     },
     ;

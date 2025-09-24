@@ -13,6 +13,9 @@ import javax.annotation.Nullable;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
+import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
+
 public class ForcedSleepEffect extends MobEffect {
     private static final Map<UUID, UUID> SLEEPING_ENTITIES_TO_CASTERS = Maps.newHashMap();
 
@@ -22,7 +25,7 @@ public class ForcedSleepEffect extends MobEffect {
 
     @Override
     public void applyEffectTick(LivingEntity target, int amplifier) {
-        FormUtils.applyImmobility(target, 5);
+        applyImmobility(target, 5);
         if (!target.hasEffect(MobEffects.BLINDNESS)) {
             target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, target.getEffect(this).getDuration(), 0, false, false, true));
             target.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, target.getEffect(this).getDuration(), 255, false, false, true));
@@ -31,7 +34,7 @@ public class ForcedSleepEffect extends MobEffect {
 
     @Override
     public void removeAttributeModifiers(LivingEntity pLivingEntity, AttributeMap pAttributeMap, int pAmplifier) {
-        FormUtils.removeImmobility(pLivingEntity);
+        removeImmobility(pLivingEntity);
         pLivingEntity.removeEffect(MobEffects.BLINDNESS);
         pLivingEntity.removeEffect(MobEffects.WEAKNESS);
 

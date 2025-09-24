@@ -1,6 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
-import com.wassuples.demonslayer.util.FormUtils;
+import com.wassuples.demonslayer.forms.ActiveFormManager;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -20,6 +20,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
+import org.jetbrains.annotations.NotNull;
 import software.bernie.geckolib3.core.IAnimatable;
 import software.bernie.geckolib3.core.PlayState;
 import software.bernie.geckolib3.core.builder.AnimationBuilder;
@@ -31,6 +32,8 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
 public class BodhisattvaEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
@@ -62,7 +65,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
     }
 
     @Override
-    public Packet<?> getAddEntityPacket() {
+    public @NotNull Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
     }
 
@@ -77,17 +80,15 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
     @Nullable
     public LivingEntity getPilot() {
         if (!this.level.isClientSide) {
-            return this.entityData.get(PILOT_UUID)
+            return (LivingEntity) this.entityData.get(PILOT_UUID)
                     .map(uuid -> ((ServerLevel) this.level).getEntity(uuid))
-                    .filter(entity -> entity instanceof LivingEntity)
-                    .map(entity -> (LivingEntity) entity)
-                    .orElse(null);
+                    .filter(entity -> entity instanceof LivingEntity).orElse(null);
         }
         return null;
     }
 
     @Override
-    public boolean isInvulnerableTo(DamageSource pSource) {
+    public boolean isInvulnerableTo(@NotNull DamageSource pSource) {
         return pSource == DamageSource.IN_WALL || pSource == DamageSource.FALL || (pSource.getEntity() != null && pSource.getEntity().getUUID().equals(this.entityData.get(PILOT_UUID).orElse(null))) || super.isInvulnerableTo(pSource);
     }
 
@@ -131,7 +132,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
     }
 
     @Override
-    public void positionRider(Entity pPassenger) {
+    public void positionRider(@NotNull Entity pPassenger) {
         if (this.hasPassenger(pPassenger)) {
             // This calculates a point on the right shoulder.
             // Adjust the numbers to move the seat exactly where you want it on your model.
@@ -156,14 +157,14 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
     }
 
     @Override
-    public void die(DamageSource pDamageSource) {
+    public void die(@NotNull DamageSource pDamageSource) {
         this.shatter();
         super.die(pDamageSource);
     }
 
     public void shatter() {
         if (this.getPilot() != null) {
-            FormUtils.ActiveFormManager.stop(this.getPilot());
+            ActiveFormManager.stop(this.getPilot());
         }
         if (!this.level.isClientSide) {
             ((ServerLevel)this.level).sendParticles(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, Blocks.ICE.defaultBlockState()),
@@ -193,7 +194,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
             Vec3 lookDir = this.getLookAngle();
             Vec3 centerOfCone = this.getEyePosition().add(lookDir.scale(d));
             double widthOfCone = d * 0.7;
-            FormUtils.dealAOEDamage(pilot, centerOfCone, widthOfCone, 2.0f, 0.2f);
+            dealAOEDamage(pilot, centerOfCone, widthOfCone, 2.0f, 0.2f);
 
             for (int i = 0; i < 15; i++) {
                 Vec3 sideDir = new Vec3(-lookDir.z, 0, lookDir.x).normalize();
@@ -230,11 +231,11 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
 
         // Damage logic remains the same
         Vec3 centerOfSwipe = this.getEyePosition().add(this.getLookAngle().scale(8.0));
-        FormUtils.dealAOEDamage(pilot, centerOfSwipe, 8.0, 50.0f, 2.5f);
+        dealAOEDamage(pilot, centerOfSwipe, 8.0, 50.0f, 2.5f);
     }
 
     @Override
-    public void removePassenger(Entity pPassenger) {
+    public void removePassenger(@NotNull Entity pPassenger) {
         // First, call the super method to handle the default dismounting logic.
         super.removePassenger(pPassenger);
 

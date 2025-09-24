@@ -1,8 +1,9 @@
 package com.wassuples.demonslayer.entity.custom;
 
+import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
@@ -28,7 +29,7 @@ public abstract class AbstractFormUsingEntity extends PathfinderMob {
         super.tick();
         // On the server side, check for an active form and tick it.
         if (!this.level.isClientSide()) {
-            FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(this);
+            ActiveForm activeForm = ActiveFormManager.getActiveForm(this);
             if (activeForm != null) {
                 activeForm.tick();
             }

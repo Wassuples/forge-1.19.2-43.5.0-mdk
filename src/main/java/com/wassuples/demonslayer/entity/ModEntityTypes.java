@@ -18,7 +18,7 @@ public class ModEntityTypes {
 
     public static final RegistryObject<EntityType<BlindingMistCloudEntity>> BLINDING_MIST_CLOUD =
             ENTITY_TYPES.register("blinding_mist_cloud",
-                    () -> EntityType.Builder.<BlindingMistCloudEntity>of(BlindingMistCloudEntity::new, MobCategory.MISC)
+                    () -> EntityType.Builder.of(BlindingMistCloudEntity::new, MobCategory.MISC)
                             .sized(6.0F, 0.5F) // The cloud's initial hitbox size
                             .clientTrackingRange(10)
                             .updateInterval(Integer.MAX_VALUE) // The cloud doesn't need constant updates
@@ -64,19 +64,19 @@ public class ModEntityTypes {
 
     public static final RegistryObject<EntityType<KillerGoldfishEntity>> KILLER_GOLDFISH =
             ENTITY_TYPES.register("killer_goldfish",
-                    () -> EntityType.Builder.<KillerGoldfishEntity>of(KillerGoldfishEntity::new, MobCategory.MONSTER)
+                    () -> EntityType.Builder.of(KillerGoldfishEntity::new, MobCategory.MONSTER)
                             .sized(1.0f, 1.0f)
                             .build("killer_goldfish"));
 
     public static final RegistryObject<EntityType<WaterPrisonEntity>> WATER_PRISON_POT =
             ENTITY_TYPES.register("water_prison_pot",
-                    () -> EntityType.Builder.<WaterPrisonEntity>of(WaterPrisonEntity::new, MobCategory.MONSTER)
+                    () -> EntityType.Builder.of(WaterPrisonEntity::new, MobCategory.MONSTER)
                             .sized(1.0f, 1.0f)
                             .build("water_prison_pot"));
 
     public static final RegistryObject<EntityType<OctopusPotEntity>> OCTOPUS_POT =
             ENTITY_TYPES.register("octopus_pot",
-                    () -> EntityType.Builder.<OctopusPotEntity>of(OctopusPotEntity::new, MobCategory.MONSTER)
+                    () -> EntityType.Builder.of(OctopusPotEntity::new, MobCategory.MONSTER)
                             .sized(1.0f, 1.0f)
                             .build("octopus_pot"));
 
@@ -107,7 +107,7 @@ public class ModEntityTypes {
 
     public static final RegistryObject<EntityType<CrystallineDivineChildEntity>> CRYSTALLINE_DIVINE_CHILD =
             ENTITY_TYPES.register("crystalline_divine_child",
-                    () -> EntityType.Builder.<CrystallineDivineChildEntity>of(CrystallineDivineChildEntity::new, MobCategory.MONSTER)
+                    () -> EntityType.Builder.of(CrystallineDivineChildEntity::new, MobCategory.MONSTER)
                             .sized(0.6f, 1.8f)
                             .build("crystalline_divine_child"));
 

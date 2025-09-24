@@ -7,8 +7,10 @@ import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
 import com.wassuples.demonslayer.cooldown.PlayerCooldownsProvider;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
+import com.wassuples.demonslayer.forms.baseForms.ChargeableForm;
 import com.wassuples.demonslayer.styles.IForm;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -18,6 +20,8 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
+
+import static com.wassuples.demonslayer.util.CombatHelper.isPlayerHoldingNichirin;
 
 public class AbilityKeyC2SPacket {
 
@@ -47,8 +51,8 @@ public class AbilityKeyC2SPacket {
 
             // Handle key RELEASE for chargeable forms
             if (this.keyState == KeyState.RELEASE) {
-                FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(player);
-                if (activeForm instanceof FormUtils.ChargeableForm chargeable) {
+                ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
+                if (activeForm instanceof ChargeableForm chargeable) {
                     boolean wasFullyCharged = chargeable.chargeTicks >= chargeable.chargeGoal;
                     chargeable.release(wasFullyCharged);
                 }
@@ -67,7 +71,7 @@ public class AbilityKeyC2SPacket {
 
                 if (formToUse == null) return;
 
-                FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(player);
+                ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
                 PlayerCooldowns cooldowns = player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).orElse(null);
                 if (cooldowns == null) {
                     DemonSlayer.LOGGER.error("CRITICAL: Player {} is missing PlayerCooldowns capability!", player.getName().getString());
@@ -99,7 +103,7 @@ public class AbilityKeyC2SPacket {
 
                 // Guard: Slayers need a Nichirin sword for non-BDA forms.
                 boolean isDemon = player.getCapability(PlayerDemonProvider.PLAYER_DEMON).map(PlayerDemon::isDemon).orElse(false);
-                if (!isDemon && (formToUse instanceof com.wassuples.demonslayer.styles.BreathingForms) && !FormUtils.isPlayerHoldingNichirin(player)) {
+                if (!isDemon && (formToUse instanceof com.wassuples.demonslayer.styles.BreathingForms) && !isPlayerHoldingNichirin(player)) {
                     player.level.playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.5f, 0.8f);
                     return;
                 }

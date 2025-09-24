@@ -9,6 +9,8 @@ import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.client.renderer.ModRenderTypes;
 import com.wassuples.demonslayer.entity.custom.CompassNeedleEntity;
+import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
 import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
@@ -260,7 +262,7 @@ public class CompassNeedleHandler {
     }
 
     private static boolean isCompassFormActive(Player player) {
-        FormUtils.ActiveForm activeForm = FormUtils.ActiveFormManager.getActiveForm(player);
+        ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
 
         if (activeForm == null) {
             return false;

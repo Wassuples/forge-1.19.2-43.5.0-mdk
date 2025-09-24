@@ -13,6 +13,8 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+import static com.wassuples.demonslayer.util.CombatHelper.performDemonAttack;
+
 public class DemonMeleeAttackC2SPacket {
 
     public DemonMeleeAttackC2SPacket() { }
@@ -30,7 +32,7 @@ public class DemonMeleeAttackC2SPacket {
 
             player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
                 if (demon.isDemon()) {
-                    FormUtils.performDemonAttack(player);
+                    performDemonAttack(player);
 
                     player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(playerProgression -> {
                         player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(playerStyle -> {

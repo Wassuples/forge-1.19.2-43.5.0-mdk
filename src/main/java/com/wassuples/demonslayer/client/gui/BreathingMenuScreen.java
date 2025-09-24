@@ -85,10 +85,10 @@ public class BreathingMenuScreen extends Screen {
     private final int moveListEntryHeight = 12;
     private int selectedFormIndex = -1;
 
-    private List<Object> displayList = new ArrayList<>();
-    private List<Mission> activeMissions = new ArrayList<>();
-    private List<Mission> availableMissions = new ArrayList<>();
-    private List<Mission> completedMissions = new ArrayList<>();
+    private final List<Object> displayList = new ArrayList<>();
+    private final List<Mission> activeMissions = new ArrayList<>();
+    private final List<Mission> availableMissions = new ArrayList<>();
+    private final List<Mission> completedMissions = new ArrayList<>();
     private Mission selectedMission = null;
     private double missionListScroll = 0.0;
     private int selectedDisplayIndex = -1;
@@ -190,7 +190,7 @@ public class BreathingMenuScreen extends Screen {
             this.currentTab = Tab.MISSIONS;
             this.prepareMissionsList();
         }));
-        this.demonProgressionButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 3), topPos + tabYStart, 80, (b) -> {
+        this.demonProgressionButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 3), topPos + tabYStart, 60, (b) -> {
             this.currentTab = Tab.DEMON_PROGRESSION;
             this.prepareBdaUpgradeList();
         }));
@@ -313,10 +313,8 @@ public class BreathingMenuScreen extends Screen {
             if (entryY + moveListEntryHeight >= listY && entryY <= listY + listHeight) {
                 Object entry = displayList.get(i);
                 if (entry instanceof String header) {
-                    // Draw a category header
                     this.font.draw(poseStack, Component.literal(header).withStyle(ChatFormatting.YELLOW), subWindowX + 5, entryY + 2, goldColor);
                 } else if (entry instanceof Mission mission) {
-                    // Draw a mission entry
                     if (i == selectedDisplayIndex) {
                         fill(poseStack, subWindowX, entryY, subWindowX + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
                     }
@@ -361,7 +359,6 @@ public class BreathingMenuScreen extends Screen {
     public void prepareMissionsList() {
         if (this.minecraft == null || this.minecraft.player == null) return;
 
-        // Get the real mission data from the client-side capability
         this.minecraft.player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(playerMissions -> {
             this.activeMissions.clear();
             this.completedMissions.clear();
@@ -375,8 +372,6 @@ public class BreathingMenuScreen extends Screen {
                 } else if (playerMissions.hasCompleted(mission.id())) {
                     this.completedMissions.add(mission);
                 } else {
-                    // This check should ideally be done server-side, but for now we replicate it on the client
-                    // for display purposes. The server will still have the final say.
                     this.minecraft.player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
                         boolean canStart = false;
                         if (mission.type() == MissionType.RANK_UP) {
@@ -391,7 +386,6 @@ public class BreathingMenuScreen extends Screen {
                 }
             }
 
-            // Build the display list with categories
             this.displayList.clear();
             if (!activeMissions.isEmpty()) {
                 this.displayList.add("--- ACTIVE ---");
@@ -406,7 +400,6 @@ public class BreathingMenuScreen extends Screen {
                 this.displayList.addAll(completedMissions);
             }
 
-            // Select the first actual mission in the list by default
             if (this.selectedDisplayIndex >= this.displayList.size() || this.selectedDisplayIndex == -1) {
                 this.selectedDisplayIndex = -1;
                 this.selectedMission = null;
@@ -653,7 +646,7 @@ public class BreathingMenuScreen extends Screen {
         int rightColumnX = contentX + 160;
 
         this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-            // --- Left Column: Rank Up Info ---
+            // Left: Rank Up Info
             font.draw(poseStack, "Current Rank: ", contentX, contentY, textColor);
             font.draw(poseStack, demon.getRank().getDisplayName(), contentX + font.width("Current Rank: "), contentY, 0xFFFFFF);
 
@@ -673,7 +666,7 @@ public class BreathingMenuScreen extends Screen {
                 this.rankUpButton.visible = false;
             });
 
-            // --- Right Column: Current Attributes ---
+            // Right: Current Attributes
             font.draw(poseStack, Component.literal("Current Attributes").withStyle(ChatFormatting.GOLD), rightColumnX, contentY, 0xFFFFFF);
             int statY = contentY + 12;
 
@@ -745,7 +738,7 @@ public class BreathingMenuScreen extends Screen {
 
                     font.draw(poseStack, "Tier: " + currentTier + " / " + maxTier, detailX, finalYOffset, textColor);
 
-                    int cost = DemonProgressionHelper.getModifiedBdaUpgradeCost(demon, this.selectedBdaForUpgrade); // GET MODIFIED COST
+                    int cost = DemonProgressionHelper.getModifiedBdaUpgradeCost(demon, this.selectedBdaForUpgrade);
                     if (cost != -1) {
                         font.draw(poseStack, "Next Cost: " + cost + " BDP", detailX, finalYOffset + 12, textColor);
                         this.upgradeBdaButton.active = demon.getBloodPoints() >= cost;
@@ -758,7 +751,7 @@ public class BreathingMenuScreen extends Screen {
                     this.purchaseBdaButton.x = buttonX;
                     this.purchaseBdaButton.y = buttonY;
 
-                    int cost = DemonProgressionHelper.getModifiedBdaPurchaseCost(demon, this.selectedBdaForUpgrade); // GET MODIFIED COST
+                    int cost = DemonProgressionHelper.getModifiedBdaPurchaseCost(demon, this.selectedBdaForUpgrade);
                     if (cost != -1) {
                         Component costText = Component.literal("Cost: " + cost + " BDP").withStyle(demon.getBloodPoints() >= cost ? ChatFormatting.GREEN : ChatFormatting.RED);
                         font.draw(poseStack, costText, detailX, finalYOffset, 0xFFFFFF);
@@ -794,7 +787,6 @@ public class BreathingMenuScreen extends Screen {
                 String tierText = tier + "/" + maxTier;
                 font.draw(poseStack, tierText, iconX + 18, iconY + 4, textColor);
 
-                // Draw Enabled/Disabled status if the skill is unlocked
                 if (tier > 0) {
                     Component status = isActive ? Component.literal("[ON]").withStyle(ChatFormatting.GREEN) : Component.literal("[OFF]").withStyle(ChatFormatting.RED);
                     font.draw(poseStack, status, iconX + font.width(tierText) + 22, iconY + 4, 0xFFFFFF);
@@ -802,7 +794,6 @@ public class BreathingMenuScreen extends Screen {
             }
         });
 
-        // Render Tooltip
         for(DemonPassive passive : DemonPassive.values()) {
             Vec2 pos = PASSIVE_POSITIONS.get(passive);
             if(pos == null) continue;
@@ -821,7 +812,7 @@ public class BreathingMenuScreen extends Screen {
         List<Component> tooltip = new ArrayList<>();
         tooltip.add(Component.literal(passive.getDisplayName()).withStyle(ChatFormatting.GOLD));
         tooltip.add(Component.literal(passive.getDescription()).withStyle(ChatFormatting.GRAY));
-        tooltip.add(Component.literal("")); // Spacer
+        tooltip.add(Component.literal(""));
 
         this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             int currentTier = demon.getPassiveTier(passive);
@@ -888,16 +879,13 @@ public class BreathingMenuScreen extends Screen {
             int listWidth = 100;
             int listHeight = 128 - 32;
 
-            // Check if the click was within the bounds of the list area
             if (pMouseX >= subWindowX && pMouseX < subWindowX + listWidth && pMouseY >= listY && pMouseY < listY + listHeight) {
-                // Calculate which list item was clicked based on mouse Y and scroll position
                 int clickedIndex = (int)((pMouseY - listY + moveListScroll) / moveListEntryHeight);
 
-                // If the click was on a valid item, select it
                 if (clickedIndex >= 0 && clickedIndex < formsForSelectedStyle.size()) {
                     this.selectedFormIndex = clickedIndex;
                     this.selectedForm = formsForSelectedStyle.get(clickedIndex);
-                    return true; // We handled the click
+                    return true;
                 }
             }
         }
@@ -913,7 +901,7 @@ public class BreathingMenuScreen extends Screen {
                 int clickedIndex = (int) ((pMouseY - listY + missionListScroll) / moveListEntryHeight);
                 if (clickedIndex >= 0 && clickedIndex < displayList.size()) {
                     Object selectedObject = displayList.get(clickedIndex);
-                    if (selectedObject instanceof Mission mission) { // Only select if it's a mission
+                    if (selectedObject instanceof Mission mission) {
                         this.selectedDisplayIndex = clickedIndex;
                         this.selectedMission = mission;
                         return true;
@@ -946,10 +934,10 @@ public class BreathingMenuScreen extends Screen {
                     int iconX = contentX + (int) pos.x;
                     int iconY = contentY + (int) pos.y;
                     if (pMouseX >= iconX && pMouseX <= iconX + 16 && pMouseY >= iconY && pMouseY <= iconY + 16) {
-                        if (pButton == 0) { // Left-click to upgrade
+                        if (pButton == 0) {
                             ModMessages.sendToServer(new PurchasePassiveC2SPacket(passive));
                             return true;
-                        } else if (pButton == 1) { // Right-click to toggle
+                        } else if (pButton == 1) {
                             ModMessages.sendToServer(new TogglePassiveC2SPacket(passive));
                             return true;
                         }
@@ -964,12 +952,10 @@ public class BreathingMenuScreen extends Screen {
     private void prepareMoveList() {
         if (selectedStyleForMoveList == null) return;
 
-        // Filter all forms from the enum to get only the ones for the selected style
         this.formsForSelectedStyle = java.util.Arrays.stream(BreathingForms.values())
                 .filter(form -> form.getStyle() == selectedStyleForMoveList)
                 .collect(Collectors.toList());
 
-        // Default to selecting the first form in the list
         if (!this.formsForSelectedStyle.isEmpty()) {
             this.selectedFormIndex = 0;
             this.selectedForm = this.formsForSelectedStyle.get(0);
@@ -977,7 +963,7 @@ public class BreathingMenuScreen extends Screen {
             this.selectedFormIndex = -1;
             this.selectedForm = null;
         }
-        this.moveListScroll = 0; // Reset scroll on style change
+        this.moveListScroll = 0;
     }
 
     private void prepareBdaUpgradeList() {
@@ -1001,7 +987,7 @@ public class BreathingMenuScreen extends Screen {
 
         fill(poseStack, subWindowX, subWindowY, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
 
-        // --- HEADER ---
+        // HEADER
         RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
         final int ICONS_PER_COLUMN = 12;
         final int ICON_GRID_V_OFFSET = 64;
@@ -1016,7 +1002,7 @@ public class BreathingMenuScreen extends Screen {
         int listY = subWindowY + 28;
         int listHeight = subWindowHeight - 32;
 
-        // --- LEFT PANEL: MOVE LIST ---
+        // LEFT: MOVE LIST
         RenderSystem.enableScissor((int)(subWindowX * minecraft.getWindow().getGuiScale()), (int)((this.height - (listY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
 
         this.minecraft.player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
@@ -1050,7 +1036,7 @@ public class BreathingMenuScreen extends Screen {
         });
         RenderSystem.disableScissor();
 
-        // --- RIGHT PANEL: DETAIL VIEW ---
+        // RIGHT: DETAIL VIEW
         if (selectedForm != null) {
             this.minecraft.player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
                 int yOffset = subWindowY + 28;
@@ -1099,13 +1085,11 @@ public class BreathingMenuScreen extends Screen {
     public boolean keyPressed(int pKeyCode, int pScanCode, int pModifiers) {
         if (this.currentTab == Tab.MOVE_LIST && formsForSelectedStyle != null && !formsForSelectedStyle.isEmpty()) {
             if (pKeyCode == GLFW.GLFW_KEY_DOWN) {
-                // Move selection down
                 this.selectedFormIndex = Math.min(this.selectedFormIndex + 1, formsForSelectedStyle.size() - 1);
                 this.selectedForm = formsForSelectedStyle.get(this.selectedFormIndex);
                 this.ensureSelectionIsVisible();
                 return true;
             } else if (pKeyCode == GLFW.GLFW_KEY_UP) {
-                // Move selection up
                 this.selectedFormIndex = Math.max(this.selectedFormIndex - 1, 0);
                 this.selectedForm = formsForSelectedStyle.get(this.selectedFormIndex);
                 this.ensureSelectionIsVisible();
@@ -1122,7 +1106,7 @@ public class BreathingMenuScreen extends Screen {
 
             if (direction != 0) {
                 int newIndex = selectedDisplayIndex;
-                // Loop to find the next valid mission, skipping headers
+
                 do {
                     newIndex += direction;
                 } while (newIndex >= 0 && newIndex < displayList.size() && !(displayList.get(newIndex) instanceof Mission));
@@ -1247,9 +1231,8 @@ public class BreathingMenuScreen extends Screen {
 
             int vOffset = 0;
 
-            // **FIXED**: Use the same texture for both hovered and active states as requested.
             if (this.isActive || this.isHoveredOrFocused()) {
-                vOffset = 20; // Hover/Active texture is at v=20
+                vOffset = 20;
             }
 
             blit(pPoseStack, this.x, this.y, this.u, vOffset, this.width, this.height, 256, 256);

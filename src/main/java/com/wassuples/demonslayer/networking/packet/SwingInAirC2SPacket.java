@@ -13,6 +13,8 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+import static com.wassuples.demonslayer.util.CombatHelper.performNichirinSwingEffect;
+
 public class SwingInAirC2SPacket {
 
     public SwingInAirC2SPacket() { }
@@ -30,7 +32,7 @@ public class SwingInAirC2SPacket {
 
             // When the server gets this packet, it runs the same swing effect.
             if (player.getMainHandItem().getItem() instanceof NichirinSwordItem) {
-                FormUtils.performNichirinSwingEffect(player);
+                performNichirinSwingEffect(player);
 
                 player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(playerProgression -> {
                     player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(playerStyle -> {
