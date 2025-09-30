@@ -1,76 +1,5 @@
 package com.wassuples.demonslayer.util;
 
-import com.google.common.collect.ImmutableMap;
-import com.mojang.math.Quaternion;
-import com.mojang.math.Vector3f;
-import com.wassuples.demonslayer.DemonSlayer;
-import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
-import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
-import com.wassuples.demonslayer.demon.DemonPassive;
-import com.wassuples.demonslayer.demon.PlayerDemon;
-import com.wassuples.demonslayer.demon.PlayerDemonProvider;
-import com.wassuples.demonslayer.effects.ForcedSleepEffect;
-import com.wassuples.demonslayer.effects.ModEffects;
-import com.wassuples.demonslayer.entity.ModEntityTypes;
-import com.wassuples.demonslayer.entity.custom.*;
-import com.wassuples.demonslayer.entity.custom.demon.UpperMoonOneEntity;
-import com.wassuples.demonslayer.gamerule.ModGameRules;
-import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
-import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.networking.packet.*;
-import com.wassuples.demonslayer.ranking.PlayerProgression;
-import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
-import com.wassuples.demonslayer.styles.*;
-import net.minecraft.client.Minecraft;
-import net.minecraft.commands.arguments.EntityAnchorArgument;
-import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.BlockParticleOption;
-import net.minecraft.core.particles.DustParticleOptions;
-import net.minecraft.core.particles.ParticleOptions;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.sounds.SoundEvent;
-import net.minecraft.sounds.SoundEvents;
-import net.minecraft.sounds.SoundSource;
-import net.minecraft.util.Mth;
-import net.minecraft.world.InteractionHand;
-import net.minecraft.world.damagesource.DamageSource;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.*;
-import net.minecraft.world.entity.ai.attributes.AttributeInstance;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.animal.Animal;
-import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.Projectile;
-import net.minecraft.world.entity.projectile.ProjectileUtil;
-import net.minecraft.world.item.SwordItem;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.levelgen.Heightmap;
-import net.minecraft.world.phys.*;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.api.distmarker.OnlyIn;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.living.LivingHurtEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
-
-import java.awt.*;
-import java.util.*;
-import java.util.List;
-import java.util.function.BiFunction;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-
-import static com.wassuples.demonslayer.styles.BreathingForms.*;
-
 public class FormUtils {
 
     /**
@@ -98,12 +27,12 @@ public class FormUtils {
 //                finalDamage[0] *= 1.3f; // +30% damage
 //            }
 //
-//            // TODO: Apply BDA Tier scaling here if you want a global buff for all abilities
+//            // Apply BDA Tier scaling here if you want a global buff for all abilities
 //        });
 //
 //        // --- SLAYER-SPECIFIC MODIFIERS ---
 //        user.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
-//            // TODO: Apply Slayer Rank damage bonus
+//            // Apply Slayer Rank damage bonus
 //            // Rank rank = progression.getRank();
 //            // finalDamage[0] *= (1.0f + (rank.ordinal() * 0.02f)); // +2% damage per rank
 //        });

@@ -49,12 +49,7 @@ public class WhispersHypnosisForm extends ActiveForm {
             spawnLineParticles(level, whisperParticle, user.getEyePosition(), target.getEyePosition(), 15);
 
             if (target instanceof ServerPlayer sleepingPlayer) {
-                List<Integer> keys = new ArrayList<>();
-                keys.add(GLFW.GLFW_KEY_W);
-                keys.add(GLFW.GLFW_KEY_A);
-                keys.add(GLFW.GLFW_KEY_S);
-                keys.add(GLFW.GLFW_KEY_D);
-
+                List<Integer> keys = new ArrayList<>(List.of(0, 1, 2, 3)); // 0=up, 1=left, 2=down, 3=right
                 Collections.shuffle(keys);
                 ModMessages.sendToPlayer(new StartSleepQTES2CPacket(keys), sleepingPlayer);
             }

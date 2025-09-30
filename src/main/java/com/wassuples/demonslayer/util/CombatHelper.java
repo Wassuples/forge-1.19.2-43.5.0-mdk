@@ -5,6 +5,7 @@ import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.DemonPassive;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
+import com.wassuples.demonslayer.ranking.Rank;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.core.BlockPos;
@@ -42,7 +43,6 @@ public class CombatHelper {
      * @return The final calculated damage.
      */
     public static float calculateFinalDamage(LivingEntity user, float baseDamage) {
-        // Using an array wrapper to modify the value inside lambdas
         final float[] finalDamage = { baseDamage };
 
         // --- DEMON-SPECIFIC MODIFIERS ---
@@ -60,15 +60,20 @@ public class CombatHelper {
                 finalDamage[0] *= 1.3f; // +30% damage
             }
 
-            // TODO: Apply BDA Tier scaling here if you want a global buff for all abilities
+            int bdaTier = demon.getBdaTier(demon.getEquippedBda());
+            finalDamage[0] *= (1.0f + (bdaTier * 0.03f)); // +3% damage per BDA tier
         });
 
-        // --- SLAYER-SPECIFIC MODIFIERS ---
+        // SLAYER-SPECIFIC MODIFIERS
         user.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
-            // TODO: Apply Slayer Rank damage bonus
-            // Rank rank = progression.getRank();
-            // finalDamage[0] *= (1.0f + (rank.ordinal() * 0.02f)); // +2% damage per rank
+            Rank rank = progression.getRank();
+            finalDamage[0] *= (1.0f + (rank.ordinal() * 0.03f)); // +3% damage per rank
+
         });
+
+        if (isPlayerHoldingNichirin((Player) user)) {
+            // TODO: When Hashira Nichirin Swords are implemented, add a check here for extra damage.
+        }
 
         return finalDamage[0];
     }

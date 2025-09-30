@@ -390,7 +390,7 @@ public class ModEvents {
                                     serverPlayer.addEffect(new MobEffectInstance(ModEffects.FORCED_SLEEP.get(), 1200, 0));
                                     ForcedSleepEffect.setCaster(serverPlayer, (LivingEntity) motherEye.getCaster());
 
-                                    List<Integer> keys = new ArrayList<>(List.of(GLFW.GLFW_KEY_W, GLFW.GLFW_KEY_A, GLFW.GLFW_KEY_S, GLFW.GLFW_KEY_D));
+                                    List<Integer> keys = new ArrayList<>(List.of(0, 1, 2, 3)); // 0=up, 1=left, 2=down, 3=right
                                     Collections.shuffle(keys);
                                     ModMessages.sendToPlayer(new StartSleepQTES2CPacket(keys), serverPlayer);
 

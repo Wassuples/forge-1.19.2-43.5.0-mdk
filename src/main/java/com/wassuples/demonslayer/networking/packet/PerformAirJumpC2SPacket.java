@@ -1,6 +1,5 @@
 package com.wassuples.demonslayer.networking.packet;
 
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;

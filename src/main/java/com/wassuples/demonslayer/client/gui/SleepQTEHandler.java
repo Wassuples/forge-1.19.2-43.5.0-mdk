@@ -7,8 +7,10 @@ import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 
 public class SleepQTEHandler {
@@ -17,9 +19,19 @@ public class SleepQTEHandler {
     private static int currentIndex = 0;
 
     public static void startQTE(List<Integer> sequence) {
+        Minecraft mc = Minecraft.getInstance();
         isActive = true;
-        keySequence = sequence;
         currentIndex = 0;
+
+        keySequence = new ArrayList<>();
+        for (int id : sequence) {
+            switch (id) {
+                case 0 -> keySequence.add(mc.options.keyUp.getKey().getValue());
+                case 1 -> keySequence.add(mc.options.keyLeft.getKey().getValue());
+                case 2 -> keySequence.add(mc.options.keyDown.getKey().getValue());
+                case 3 -> keySequence.add(mc.options.keyRight.getKey().getValue());
+            }
+        }
     }
 
     public static void stopQTE() {
@@ -64,12 +76,16 @@ public class SleepQTEHandler {
     }
 
     public static String getKeyName(int keyCode) {
-        return switch (keyCode) {
-            case GLFW.GLFW_KEY_W -> "W";
-            case GLFW.GLFW_KEY_A -> "A";
-            case GLFW.GLFW_KEY_S -> "S";
-            case GLFW.GLFW_KEY_D -> "D";
-            default -> "?";
-        };
+        Minecraft mc = Minecraft.getInstance();
+        if (keyCode == mc.options.keyUp.getKey().getValue()) {
+            return mc.options.keyUp.getTranslatedKeyMessage().getString().toUpperCase(Locale.ROOT);
+        } else if (keyCode == mc.options.keyLeft.getKey().getValue()) {
+            return mc.options.keyLeft.getTranslatedKeyMessage().getString().toUpperCase(Locale.ROOT);
+        } else if (keyCode == mc.options.keyDown.getKey().getValue()) {
+            return mc.options.keyDown.getTranslatedKeyMessage().getString().toUpperCase(Locale.ROOT);
+        } else if (keyCode == mc.options.keyRight.getKey().getValue()) {
+            return mc.options.keyRight.getTranslatedKeyMessage().getString().toUpperCase(Locale.ROOT);
+        }
+        return "?";
     }
 }
