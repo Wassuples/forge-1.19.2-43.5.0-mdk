@@ -1,0 +1,34 @@
+{
+  "taunts": {
+    "generic": [
+      "You have returned, {player}.",
+      "We meet again.",
+      "Last time, you fell. This time will be no different."
+    ],
+    "low_health_comeback": [
+      "You almost had me. 'Almost' is not good enough.",
+      "I will not be caught off-guard again.",
+      "You failed to land the final blow. A mistake you will regret."
+    ],
+    "fire_kill": [
+      "You remember the fire, don't you, {player}?",
+      "Back from the ashes? Let's turn you to soot again.",
+      "I enjoyed watching you burn last time."
+    ],
+    "poison_kill": [
+      "The poison still lingers in your memory, I can see it.",
+      "I remember watching the life drain from your eyes.",
+      "My venom welcomed you once. It will do so again."
+    ],
+    "overkill": [
+      "Our last encounter was brief. Are you here to offer more of a fight?",
+      "I barely remember you. You were that weak.",
+      "It took more effort to walk here than it did to kill you."
+    ],
+    "tactical_kill": [
+      "Your footing was sloppy then, and it is sloppy now.",
+      "You were outmaneuvered easily. Have you learned nothing?",
+      "You left yourself wide open. I wonder if you'll do it again."
+    ]
+  }
+}

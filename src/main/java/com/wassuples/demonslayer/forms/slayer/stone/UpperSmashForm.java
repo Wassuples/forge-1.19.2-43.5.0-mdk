@@ -4,7 +4,6 @@ import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.styles.IForm;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;

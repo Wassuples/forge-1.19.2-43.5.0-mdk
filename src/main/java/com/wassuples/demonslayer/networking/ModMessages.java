@@ -213,12 +213,6 @@ public class ModMessages {
                 .consumerMainThread(ToggleBdaModeC2SPacket::handle)
                 .add();
 
-        net.messageBuilder(PerformAirJumpC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .encoder(PerformAirJumpC2SPacket::toBytes)
-                .decoder(PerformAirJumpC2SPacket::new)
-                .consumerMainThread(PerformAirJumpC2SPacket::handle)
-                .add();
-
         net.messageBuilder(StopFormS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(StopFormS2CPacket::new)
                 .encoder(StopFormS2CPacket::toBytes)
@@ -229,6 +223,24 @@ public class ModMessages {
                 .decoder(AbilityKeyC2SPacket::new)
                 .encoder(AbilityKeyC2SPacket::toBytes)
                 .consumerMainThread(AbilityKeyC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(RequestHierarchyC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(RequestHierarchyC2SPacket::new)
+                .encoder(RequestHierarchyC2SPacket::toBytes)
+                .consumerMainThread(RequestHierarchyC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(UpdateHierarchyS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(UpdateHierarchyS2CPacket::new)
+                .encoder(UpdateHierarchyS2CPacket::toBytes)
+                .consumerMainThread(UpdateHierarchyS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(OpenCrowDispatchS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(OpenCrowDispatchS2CPacket::new)
+                .encoder(OpenCrowDispatchS2CPacket::toBytes)
+                .consumerMainThread(OpenCrowDispatchS2CPacket::handle)
                 .add();
     }
 

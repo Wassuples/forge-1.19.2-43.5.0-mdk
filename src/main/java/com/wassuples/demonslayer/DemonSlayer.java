@@ -14,6 +14,7 @@ import com.wassuples.demonslayer.events.ModEvents;
 import com.wassuples.demonslayer.gamerule.ModGameRules;
 import com.wassuples.demonslayer.item.ModItems;
 import com.wassuples.demonslayer.missions.MissionRegistry;
+import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.worldgen.biome.ModBiomes;
 import com.wassuples.demonslayer.worldgen.terrablender.ModOverworldRegion;
@@ -34,7 +35,6 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import terrablender.api.Regions;
 
-import com.mojang.logging.LogUtils;
 import org.slf4j.Logger;
 
 @Mod(DemonSlayer.MOD_ID)
@@ -71,6 +71,7 @@ public class DemonSlayer {
             SpawnPlacements.register(ModEntityTypes.COMMON_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
             SpawnPlacements.register(ModEntityTypes.GREATER_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
             SpawnPlacements.register(ModEntityTypes.ELITE_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
+            SpawnPlacements.register(ModEntityTypes.CROW.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CrowEntity::checkCrowSpawnRules);
         });
 
         ModMessages.register();
@@ -109,6 +110,7 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.THROWN_NICHIRIN.get(), ThrownNichirinRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CUTTING_THREAD_CAGE.get(), CuttingThreadCageRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.THREAD_WHEEL.get(), ThreadWheelRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.CROW.get(), CrowRenderer::new);
             // HASHIRA
             event.registerEntityRenderer(ModEntityTypes.HASHIRA.get(), HashiraRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.WATER_HASHIRA.get(), WaterHashiraRenderer::new);
@@ -123,6 +125,7 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.SOUND_HASHIRA.get(), SoundHashiraRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.THUNDER_HASHIRA.get(), ThunderHashiraRenderer::new);
             // DEMONS
+            event.registerEntityRenderer(ModEntityTypes.NEMESIS_DEMON.get(), NemesisDemonRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.FODDER_DEMON.get(), FodderDemonRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.LOWLY_DEMON.get(), LowlyDemonRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.COMMON_DEMON.get(), CommonDemonRenderer::new);
@@ -156,6 +159,7 @@ public class DemonSlayer {
         event.put(ModEntityTypes.COLD_WHITE_PRINCESS.get(), ColdWhitePrincessEntity.createAttributes().build());
         event.put(ModEntityTypes.CRYSTALLINE_DIVINE_CHILD.get(), CrystallineDivineChildEntity.createAttributes().build());
         event.put(ModEntityTypes.BODHISATTVA.get(), BodhisattvaEntity.createAttributes().build());
+        event.put(ModEntityTypes.CROW.get(), CrowEntity.createAttributes().build());
 
         // HASHIRA
         event.put(ModEntityTypes.HASHIRA.get(), HashiraEntity.createAttributes().build());
@@ -171,6 +175,7 @@ public class DemonSlayer {
         event.put(ModEntityTypes.SOUND_HASHIRA.get(), HashiraEntity.createAttributes().build());
         event.put(ModEntityTypes.THUNDER_HASHIRA.get(), HashiraEntity.createAttributes().build());
         // DEMONS
+        event.put(ModEntityTypes.NEMESIS_DEMON.get(), NemesisDemonEntity.createAttributes().build());
         event.put(ModEntityTypes.FODDER_DEMON.get(), FodderDemonEntity.createAttributes().build());
         event.put(ModEntityTypes.LOWLY_DEMON.get(), LowlyDemonEntity.createAttributes().build());
         event.put(ModEntityTypes.COMMON_DEMON.get(), CommonDemonEntity.createAttributes().build());

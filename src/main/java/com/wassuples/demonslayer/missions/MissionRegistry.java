@@ -3,15 +3,11 @@ package com.wassuples.demonslayer.missions;
 import com.google.common.collect.ImmutableList;
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.item.ModItems;
-import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
-import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.item.ItemStack;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -31,7 +27,7 @@ public class MissionRegistry {
                 ImmutableList.of(new SurviveInBiomeObjective(new ResourceLocation(DemonSlayer.MOD_ID, "fujikasane_forest"), 24000 * 7)),
                 ImmutableList.of(
                         new RankReward(Rank.MIZUNOTO),
-                        new ItemReward(() -> ModItems.NICHIRIN_BLADE.get(), 1),
+                        new ItemReward(ModItems.NICHIRIN_BLADE.getId(), 1),
                         StyleMasteryReward.current(150)
                 ),
                 Rank.CIVILIAN

@@ -1,7 +1,6 @@
 package com.wassuples.demonslayer.networking.packet;
 
 import com.wassuples.demonslayer.events.ClientEvents;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;

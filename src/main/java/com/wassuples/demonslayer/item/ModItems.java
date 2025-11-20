@@ -82,6 +82,9 @@ public class ModItems {
             () -> new ForgeSpawnEggItem(ModEntityTypes.THUNDER_HASHIRA, 0xFFD700, 0xFFA500, // Gold & Orange
                     new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
 
+    public static final RegistryObject<Item> CROW_SPAWN_EGG = ITEMS.register("crow_spawn_egg",
+            () -> new ForgeSpawnEggItem(ModEntityTypes.CROW, 0x2b2b2b, 0xf4f4f4,
+                    new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);

@@ -1,0 +1,55 @@
+{
+  "format_version": "1.8.0",
+  "animations": {
+    "idle": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [
+            0,
+            {"curve": "linear", "vector": [0, 2, 0], "time": 0.5},
+            0
+          ]
+        },
+        "head": {
+          "rotation": [
+            {"curve": "linear", "vector": [5, 0, 0], "time": 0.25},
+            {"curve": "linear", "vector": [-5, 0, 0], "time": 0.5},
+            0
+          ]
+        }
+      }
+    },
+    "fly": {
+      "loop": true,
+      "bones": {
+        "wing_left": {
+          "rotation": [
+            {"curve": "linear", "vector": [0, 0, -45], "time": 0},
+            {"curve": "linear", "vector": [0, 0, 45], "time": 0.25}
+          ]
+        },
+        "wing_right": {
+          "rotation": [
+            {"curve": "linear", "vector": [0, 0, 45], "time": 0},
+            {"curve": "linear", "vector": [0, 0, -45], "time": 0.25}
+          ]
+        }
+      }
+    },
+    "perched": {
+      "loop": true,
+      "bones": {
+        "body": {
+          "rotation": [2, 0, 0]
+        },
+        "wing_left": {
+          "rotation": [0, 0, 5]
+        },
+        "wing_right": {
+          "rotation": [0, 0, -5]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "id": "UM4",
+  "name": "Hantengu",
+  "title": "the Fourth Moon",
+  "behavior": "OVERLORD",
+  "personality": "PARANOID",
+  "bda": "DESTRUCTIVE_DEATH",
+  "quirks": [
+    "PACK_CALLER",
+    "DEATH_DEFIANT",
+    "TENACIOUS",
+    "SOUND_SENSITIVE"
+  ],
+  "stats": {
+    "vigor": 80,
+    "strength": 85,
+    "agility": 70
+  },
+  "taunts": {
+    "generic": [
+      "Eeeek! It's you! The bully who fought me last time!",
+      "Why are you looking at me like that?! I'm the victim here!",
+      "Don't come near me! You're a monster!"
+    ],
+    "low_health_comeback": [
+      "You hurt me! You hurt me!",
+      "I am just a weak old man! You're evil!"
+    ],
+    "overkill": [
+      "I didn't even do anything! You just fell over! It wasn't my fault!"
+    ]
+  }
+}

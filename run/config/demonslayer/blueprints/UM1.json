@@ -1,0 +1,41 @@
+{
+  "id": "UM1",
+  "name": "Kokushibo",
+  "title": "the First Moon",
+  "behavior": "DUELIST",
+  "personality": "STOIC",
+  "bda": "CRESCENT",
+  "quirks": [
+    "NIMBLE",
+    "EXECUTIONER",
+    "UNSHAKABLE",
+    "DEATH_DEFIANT"
+  ],
+  "stats": {
+    "vigor": 100,
+    "strength": 90,
+    "agility": 100
+  },
+  "taunts": {
+    "generic": [
+      "You have returned, {player}. Have you honed your skills, or merely your foolishness?",
+      "I recall your sword... it was weak. Show me if you have improved.",
+      "To face me again after such a defeat... you have resolve, at least."
+    ],
+    "low_health_comeback": [
+      "You drew my blood. An impressive feat. It will be your last.",
+      "Your technique has flaws. I exploited them then. I will do so now.",
+      "You... How did you...?"
+    ],
+    "overkill": [
+      "Your form is an insult. Do not waste my time with it again.",
+      "I ended our last duel in an instant. This one will be no different.",
+      "You are a mere stone in my path. I had forgotten I even stepped on you."
+    ],
+    "tactical_kill": [
+      "Your breathing is erratic. Your center is weak. You were defeated before you even drew your blade.",
+      "Such a simple opening. You are an amateur.",
+      "I see every one of your moves. You are transparent."
+    ]
+  }
+}

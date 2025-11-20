@@ -16,6 +16,9 @@ import com.wassuples.demonslayer.demon.DemonRank;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.missions.MissionRegistry;
+import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
+import com.wassuples.demonslayer.nemesis.trait.DemonTrait;
+import com.wassuples.demonslayer.nemesis.trait.Quirk;
 import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
@@ -29,11 +32,15 @@ import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
 import net.minecraft.network.chat.*;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class DemonSlayerCommands {
 
@@ -86,20 +93,48 @@ public class DemonSlayerCommands {
         return builder.buildFuture();
     };
 
+    private static final SuggestionProvider<CommandSourceStack> DEMON_NAME_SUGGESTIONS = (ctx, builder) -> {
+        ServerLevel level = ctx.getSource().getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+        return SharedSuggestionProvider.suggest(
+                manager.getAllDemonTraits().stream().map(DemonTrait::getName),
+                builder);
+    };
+
+    private static final SuggestionProvider<CommandSourceStack> QUIRK_SUGGESTIONS = (ctx, builder) ->
+            SharedSuggestionProvider.suggest(Arrays.stream(Quirk.values()).map(q -> q.name().toLowerCase()), builder);
+
+    /**
+     * Suggests both online players and nemesis demons.
+     */
+    private static final SuggestionProvider<CommandSourceStack> SUGGEST_COMBATANTS = (ctx, builder) -> {
+        ServerLevel level = ctx.getSource().getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+
+        // Get Nemesis names
+        Stream<String> nemesisNames = manager.getAllDemonTraits().stream().map(DemonTrait::getName);
+
+        // Get Player names
+        Stream<String> playerNames = ctx.getSource().getServer().getPlayerList().getPlayers().stream().map(p -> p.getGameProfile().getName());
+
+        return SharedSuggestionProvider.suggest(Stream.concat(nemesisNames, playerNames), builder);
+    };
+
+
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
         dispatcher.register(Commands.literal("demonslayer")
                 .requires(source -> source.hasPermission(2))
                 .executes(ctx -> showHelp(ctx.getSource(), "main"))
 
-                // --- HELP COMMAND ---
+                //  HELP COMMAND 
                 .then(Commands.literal("help")
                         .executes(ctx -> showHelp(ctx.getSource(), "main"))
                         .then(Commands.argument("topic", StringArgumentType.word())
-                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(new String[]{"get", "edit", "reset"}, builder))
+                                .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(new String[]{"get", "edit", "reset", "nemesis"}, builder))
                                 .executes(ctx -> showHelp(ctx.getSource(), StringArgumentType.getString(ctx, "topic"))))
                 )
 
-                // --- GET COMMAND ---
+                //  GET COMMAND 
                 .then(Commands.literal("get")
                         .then(Commands.argument("target", EntityArgument.player())
                                 .executes(ctx -> getPlayerSummary(ctx.getSource(), EntityArgument.getPlayer(ctx, "target")))
@@ -116,7 +151,7 @@ public class DemonSlayerCommands {
                                         .executes(ctx -> getFormsListForStyle(ctx.getSource(), StringArgumentType.getString(ctx, "style_name")))))
                 )
 
-                // --- EDIT COMMAND ---
+                //  EDIT COMMAND 
                 .then(Commands.literal("edit")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("breath")
@@ -161,7 +196,60 @@ public class DemonSlayerCommands {
                         )
                 )
 
-                // --- RESET COMMAND ---
+                //  NEMESIS COMMANDS 
+                .then(Commands.literal("nemesis")
+                        .executes(ctx -> showHelp(ctx.getSource(), "nemesis"))
+                        .then(Commands.literal("info")
+                                .then(Commands.argument("demon_name", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                        .executes(ctx -> executeGetDemonInfo(ctx.getSource(), StringArgumentType.getString(ctx, "demon_name")))))
+                        .then(Commands.literal("edit")
+                                .then(Commands.argument("demon_name", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                        .then(Commands.literal("name")
+                                                .then(Commands.argument("new_name", StringArgumentType.greedyString())
+                                                        .executes(ctx -> executeSetNemesisProperty(ctx, "name", StringArgumentType.getString(ctx, "new_name")))))
+                                        .then(Commands.literal("title")
+                                                .then(Commands.argument("new_title", StringArgumentType.greedyString())
+                                                        .executes(ctx -> executeSetNemesisProperty(ctx, "title", StringArgumentType.getString(ctx, "new_title")))))
+                                        .then(Commands.literal("vigor")
+                                                .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                                        .executes(ctx -> executeSetNemesisProperty(ctx, "vigor", IntegerArgumentType.getInteger(ctx, "value")))))
+                                        .then(Commands.literal("strength")
+                                                .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                                        .executes(ctx -> executeSetNemesisProperty(ctx, "strength", IntegerArgumentType.getInteger(ctx, "value")))))
+                                        .then(Commands.literal("agility")
+                                                .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                                        .executes(ctx -> executeSetNemesisProperty(ctx, "agility", IntegerArgumentType.getInteger(ctx, "value")))))
+                                        .then(Commands.literal("bloodpoints")
+                                                .then(Commands.argument("value", IntegerArgumentType.integer(0))
+                                                        .executes(ctx -> executeSetNemesisProperty(ctx, "bloodpoints", IntegerArgumentType.getInteger(ctx, "value")))))
+                                        .then(Commands.literal("bda")
+                                                .then(Commands.argument("bda_name", StringArgumentType.word()).suggests(BDA_SUGGESTIONS)
+                                                        .executes(ctx -> executeSetNemesisProperty(ctx, "bda", StringArgumentType.getString(ctx, "bda_name")))))
+                                        .then(Commands.literal("quirk")
+                                                .then(Commands.literal("add")
+                                                        .then(Commands.argument("quirk_name", StringArgumentType.word()).suggests(QUIRK_SUGGESTIONS)
+                                                                .executes(ctx -> executeModifyNemesisQuirk(ctx, ModifyAction.ADD))))
+                                                .then(Commands.literal("remove")
+                                                        .then(Commands.argument("quirk_name", StringArgumentType.word()).suggests(QUIRK_SUGGESTIONS)
+                                                                .executes(ctx -> executeModifyNemesisQuirk(ctx, ModifyAction.SET)))) // Using SET as a proxy for REMOVE
+                                        )
+                                )
+                        )
+                        .then(Commands.literal("battle")
+                                .then(Commands.literal("start")
+                                        .then(Commands.argument("challengerName", StringArgumentType.string()).suggests(SUGGEST_COMBATANTS)
+                                                .then(Commands.argument("defenderName", StringArgumentType.string()).suggests(SUGGEST_COMBATANTS)
+                                                        .executes(DemonSlayerCommands::executeStartBattle))))
+                                .then(Commands.literal("end")
+                                        .executes(DemonSlayerCommands::executeEndBattle))
+                                .then(Commands.literal("send_hunter")
+                                        .then(Commands.argument("demonName", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .then(Commands.argument("targetPlayer", EntityArgument.player())
+                                                        .executes(DemonSlayerCommands::executeSendHunter))))
+                        )
+                )
+
+                //  RESET COMMAND 
                 .then(Commands.literal("reset")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .executes(ctx -> executeResetPlayer(ctx)))
@@ -169,7 +257,195 @@ public class DemonSlayerCommands {
         );
     }
 
-    // --- EXECUTOR METHODS (FOR MULTI-TARGETING) ---
+    //  HELPER METHODS 
+
+    /**
+     * Gets the UUID of a combatant, checking both online players and nemesis demons.
+     */
+    private static Optional<UUID> getCombatantUUID(CommandSourceStack source, String name) {
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        // Try to find a player first
+        ServerPlayer player = source.getServer().getPlayerList().getPlayerByName(name);
+        if (player != null) {
+            return Optional.of(player.getUUID());
+        }
+
+        // If not a player, try to find a nemesis demon
+        return manager.getDemonUUIDByName(name);
+    }
+
+    //  EXECUTOR METHODS (FOR MULTI-TARGETING) 
+
+    private static int executeStartBattle(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        String challengerName = StringArgumentType.getString(ctx, "challengerName");
+        String defenderName = StringArgumentType.getString(ctx, "defenderName");
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        if (manager.getActiveBattle() != null) {
+            source.sendFailure(Component.literal("A blood battle is already in progress. Use '/demonslayer nemesis battle end' first."));
+            return 0;
+        }
+
+        Optional<UUID> challengerUUIDOpt = getCombatantUUID(source, challengerName);
+        if (challengerUUIDOpt.isEmpty()) {
+            source.sendFailure(Component.literal("Unknown challenger: " + challengerName));
+            return 0;
+        }
+
+        Optional<UUID> defenderUUIDOpt = getCombatantUUID(source, defenderName);
+        if (defenderUUIDOpt.isEmpty()) {
+            source.sendFailure(Component.literal("Unknown defender: " + defenderName));
+            return 0;
+        }
+
+        UUID challengerUUID = challengerUUIDOpt.get();
+        UUID defenderUUID = defenderUUIDOpt.get();
+
+        if (challengerUUID.equals(defenderUUID)) {
+            source.sendFailure(Component.literal("Challenger and defender cannot be the same entity."));
+            return 0;
+        }
+
+        manager.startBloodBattle(challengerUUID, defenderUUID);
+        source.sendSuccess(Component.literal("Forcibly started a blood battle between " + challengerName + " and " + defenderName + "."), true);
+        return 1;
+    }
+
+    private static int executeEndBattle(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        if (manager.getActiveBattle() == null) {
+            source.sendFailure(Component.literal("No blood battle is currently in progress."));
+            return 0;
+        }
+
+        manager.endBloodBattle();
+        source.sendSuccess(Component.literal("Forcibly ended the active blood battle."), true);
+        return 1;
+    }
+
+    private static int executeSendHunter(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        String demonName = StringArgumentType.getString(ctx, "demonName");
+        ServerPlayer targetPlayer = EntityArgument.getPlayer(ctx, "targetPlayer");
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        Optional<UUID> demonUUIDOpt = manager.getDemonUUIDByName(demonName);
+        if (demonUUIDOpt.isEmpty()) {
+            source.sendFailure(Component.literal("No nemesis demon found with that name: " + demonName));
+            return 0;
+        }
+
+        if (manager.getDemonTrait(demonUUIDOpt.get()) == null) {
+            source.sendFailure(Component.literal("Could not retrieve trait data for " + demonName));
+            return 0;
+        }
+
+        // Spawn the demon near the player
+        manager.spawnDemonFromData(demonUUIDOpt.get(), targetPlayer.getLevel(), targetPlayer.blockPosition().north(3));
+        source.sendSuccess(Component.literal("Sent " + demonName + " to hunt " + targetPlayer.getGameProfile().getName() + "."), true);
+        return 1;
+    }
+
+    private static int executeGetDemonInfo(CommandSourceStack source, String demonName) {
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+        Optional<UUID> demonUUIDOpt = manager.getDemonUUIDByName(demonName);
+
+        if (demonUUIDOpt.isEmpty()) {
+            source.sendFailure(Component.literal("No nemesis demon found with that name."));
+            return 0;
+        }
+
+        DemonTrait trait = manager.getDemonTrait(demonUUIDOpt.get());
+        if (trait == null) {
+            source.sendFailure(Component.literal("Could not retrieve trait data for demon."));
+            return 0;
+        }
+
+        MutableComponent message = Component.literal("\n Nemesis Info: " + trait.getName() + " ").withStyle(ChatFormatting.GOLD);
+        manager.getKizukiRank(demonUUIDOpt.get()).ifPresentOrElse(
+                rank -> message.append("\nRank: ").withStyle(ChatFormatting.GRAY).append(rank.getDisplayName()),
+                () -> message.append("\nRank: ").withStyle(ChatFormatting.GRAY).append(Component.literal("Fodder").withStyle(ChatFormatting.DARK_GRAY))
+        );
+        message.append("\nTitle: ").withStyle(ChatFormatting.GRAY).append(Component.literal(trait.getTitle()).withStyle(ChatFormatting.WHITE));
+        message.append("\nBlood Points: ").withStyle(ChatFormatting.GRAY).append(Component.literal(String.valueOf(trait.getBloodPoints())).withStyle(ChatFormatting.RED));
+        message.append("\nBDA: ").withStyle(ChatFormatting.GRAY).append(Component.literal(trait.getAssignedBDA().name()).withStyle(ChatFormatting.LIGHT_PURPLE));
+        message.append("\nStats (V/S/A): ").withStyle(ChatFormatting.GRAY).append(Component.literal(trait.getVigor() + "/" + trait.getStrength() + "/" + trait.getAgility()).withStyle(ChatFormatting.YELLOW));
+        message.append("\nQuirks: ").withStyle(ChatFormatting.GRAY).append(Component.literal(trait.getQuirks().stream().map(Enum::name).collect(Collectors.joining(", "))).withStyle(ChatFormatting.AQUA));
+        message.append("\n-").withStyle(ChatFormatting.DARK_GRAY);
+
+        source.sendSuccess(message, false);
+        return 1;
+    }
+
+    private static int executeSetNemesisProperty(CommandContext<CommandSourceStack> ctx, String property, Object value) throws CommandSyntaxException {
+        String demonName = StringArgumentType.getString(ctx, "demon_name");
+        DemonHierarchyManager manager = DemonHierarchyManager.get(ctx.getSource().getLevel());
+        Optional<UUID> demonUUIDOpt = manager.getDemonUUIDByName(demonName);
+
+        if (demonUUIDOpt.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("No nemesis demon found with that name."));
+            return 0;
+        }
+
+        DemonTrait trait = manager.getDemonTrait(demonUUIDOpt.get());
+        if (trait == null) return 0;
+
+        try {
+            switch (property.toLowerCase()) {
+                case "name" -> trait.setName((String) value);
+                case "title" -> trait.setTitle((String) value);
+                case "vigor" -> trait.setVigor((Integer) value);
+                case "strength" -> trait.setStrength((Integer) value);
+                case "agility" -> trait.setAgility((Integer) value);
+                case "bloodpoints" -> trait.setBloodPoints((Integer) value);
+                case "bda" -> trait.setAssignedBDA(BloodDemonArts.valueOf(((String) value).toUpperCase()));
+            }
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid value: " + value));
+            return 0;
+        }
+
+
+        ctx.getSource().sendSuccess(Component.literal("Set " + property + " for " + demonName + " to " + value), true);
+        manager.setDirty();
+        return 1;
+    }
+
+    private static int executeModifyNemesisQuirk(CommandContext<CommandSourceStack> ctx, ModifyAction action) throws CommandSyntaxException {
+        String demonName = StringArgumentType.getString(ctx, "demon_name");
+        String quirkName = StringArgumentType.getString(ctx, "quirk_name");
+        DemonHierarchyManager manager = DemonHierarchyManager.get(ctx.getSource().getLevel());
+        Optional<UUID> demonUUIDOpt = manager.getDemonUUIDByName(demonName);
+
+        if (demonUUIDOpt.isEmpty()) {
+            ctx.getSource().sendFailure(Component.literal("No nemesis demon found with that name."));
+            return 0;
+        }
+
+        DemonTrait trait = manager.getDemonTrait(demonUUIDOpt.get());
+        if (trait == null) return 0;
+
+        try {
+            Quirk quirk = Quirk.valueOf(quirkName.toUpperCase());
+            if (action == ModifyAction.ADD) {
+                trait.addQuirk(quirk);
+                ctx.getSource().sendSuccess(Component.literal("Added quirk " + quirk.name() + " to " + demonName), true);
+            } else {
+                trait.removeQuirk(quirk);
+                ctx.getSource().sendSuccess(Component.literal("Removed quirk " + quirk.name() + " from " + demonName), true);
+            }
+            manager.setDirty();
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid quirk name: " + quirkName));
+            return 0;
+        }
+
+        return 1;
+    }
 
     private static int executeModifyBreath(CommandContext<CommandSourceStack> ctx, ModifyAction action, boolean isMax) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
@@ -216,33 +492,48 @@ public class DemonSlayerCommands {
     private static int executeSetDemonRank(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
         String rankName = StringArgumentType.getString(ctx, "rank_name");
-        DemonRank newRank = DemonRank.valueOf(rankName.toUpperCase());
-        for (ServerPlayer target : targets) {
-            setPlayerDemonRank(target, newRank);
+        try {
+            DemonRank newRank = DemonRank.valueOf(rankName.toUpperCase());
+            for (ServerPlayer target : targets) {
+                setPlayerDemonRank(target, newRank);
+            }
+            ctx.getSource().sendSuccess(Component.literal("Set demon rank to ").append(newRank.getDisplayName()).append(" for " + targets.size() + " player(s)"), true);
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid demon rank: " + rankName));
+            return 0;
         }
-        ctx.getSource().sendSuccess(Component.literal("Set demon rank to ").append(newRank.getDisplayName()).append(" for " + targets.size() + " player(s)"), true);
         return targets.size();
     }
 
     private static int executeSetBda(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
         String bdaName = StringArgumentType.getString(ctx, "bda_name");
-        BloodDemonArts newBda = BloodDemonArts.valueOf(bdaName.toUpperCase());
-        for (ServerPlayer target : targets) {
-            setPlayerBda(target, newBda);
+        try {
+            BloodDemonArts newBda = BloodDemonArts.valueOf(bdaName.toUpperCase());
+            for (ServerPlayer target : targets) {
+                setPlayerBda(target, newBda);
+            }
+            ctx.getSource().sendSuccess(Component.literal("Set BDA to " + newBda.getDisplayName() + " for " + targets.size() + " player(s)"), true);
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid BDA name: " + bdaName));
+            return 0;
         }
-        ctx.getSource().sendSuccess(Component.literal("Set BDA to " + newBda.getDisplayName() + " for " + targets.size() + " player(s)"), true);
         return targets.size();
     }
 
     private static int executeSetForm(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
         String formName = StringArgumentType.getString(ctx, "form_name");
-        BreathingForms newForm = BreathingForms.valueOf(formName.toUpperCase());
-        for (ServerPlayer target : targets) {
-            setPlayerForm(ctx.getSource(), target, newForm);
+        try {
+            BreathingForms newForm = BreathingForms.valueOf(formName.toUpperCase());
+            for (ServerPlayer target : targets) {
+                setPlayerForm(ctx.getSource(), target, newForm);
+            }
+            ctx.getSource().sendSuccess(Component.literal("Set form to " + newForm.getDisplayName() + " for " + targets.size() + " player(s) (if applicable)"), true);
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid form name: " + formName));
+            return 0;
         }
-        ctx.getSource().sendSuccess(Component.literal("Set form to " + newForm.getDisplayName() + " for " + targets.size() + " player(s) (if applicable)"), true);
         return targets.size();
     }
 
@@ -252,16 +543,22 @@ public class DemonSlayerCommands {
         String amountOrMax;
         int amount = 0;
 
-        if (action == ModifyAction.SET) {
-            amountOrMax = StringArgumentType.getString(ctx, "amount_or_max");
-            amount = "max".equalsIgnoreCase(amountOrMax) ? 1000 : Integer.parseInt(amountOrMax);
-        } else { // ADD
-            amount = IntegerArgumentType.getInteger(ctx, "amount");
+        try {
+            if (action == ModifyAction.SET) {
+                amountOrMax = StringArgumentType.getString(ctx, "amount_or_max");
+                amount = "max".equalsIgnoreCase(amountOrMax) ? 1000 : Integer.parseInt(amountOrMax);
+            } else { // ADD
+                amount = IntegerArgumentType.getInteger(ctx, "amount");
+            }
+
+            for(ServerPlayer target : targets) {
+                modifyPlayerStyleMastery(target, styleOrAll, amount, action);
+            }
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid argument. Expected 'all', a style name, or a number."));
+            return 0;
         }
 
-        for(ServerPlayer target : targets) {
-            modifyPlayerStyleMastery(target, styleOrAll, amount, action);
-        }
 
         ctx.getSource().sendSuccess(Component.literal("Updated style mastery for " + targets.size() + " player(s)"), true);
         return targets.size();
@@ -273,16 +570,22 @@ public class DemonSlayerCommands {
         String amountOrMax;
         int amount = 0;
 
-        if (action == ModifyAction.SET) {
-            amountOrMax = StringArgumentType.getString(ctx, "amount_or_max");
-            amount = "max".equalsIgnoreCase(amountOrMax) ? 100 : Integer.parseInt(amountOrMax);
-        } else { // ADD
-            amount = IntegerArgumentType.getInteger(ctx, "amount");
+        try {
+            if (action == ModifyAction.SET) {
+                amountOrMax = StringArgumentType.getString(ctx, "amount_or_max");
+                amount = "max".equalsIgnoreCase(amountOrMax) ? 100 : Integer.parseInt(amountOrMax);
+            } else { // ADD
+                amount = IntegerArgumentType.getInteger(ctx, "amount");
+            }
+
+            for(ServerPlayer target : targets) {
+                modifyPlayerFormMastery(target, formOrAll, amount, action);
+            }
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid argument. Expected 'all', a form name, or a number."));
+            return 0;
         }
 
-        for(ServerPlayer target : targets) {
-            modifyPlayerFormMastery(target, formOrAll, amount, action);
-        }
 
         ctx.getSource().sendSuccess(Component.literal("Updated form mastery for " + targets.size() + " player(s)"), true);
         return targets.size();
@@ -291,22 +594,32 @@ public class DemonSlayerCommands {
     private static int executeSetRank(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
         String rankName = StringArgumentType.getString(ctx, "rank_name");
-        Rank newRank = Rank.valueOf(rankName.toUpperCase());
-        for (ServerPlayer target : targets) {
-            setPlayerRank(target, newRank);
+        try {
+            Rank newRank = Rank.valueOf(rankName.toUpperCase());
+            for (ServerPlayer target : targets) {
+                setPlayerRank(target, newRank);
+            }
+            ctx.getSource().sendSuccess(Component.literal("Set rank to ").append(newRank.getDisplayName()).append(" for " + targets.size() + " player(s)"), true);
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid rank name: " + rankName));
+            return 0;
         }
-        ctx.getSource().sendSuccess(Component.literal("Set rank to ").append(newRank.getDisplayName()).append(" for " + targets.size() + " player(s)"), true);
         return targets.size();
     }
 
     private static int executeSetStyle(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
         String styleName = StringArgumentType.getString(ctx, "style_name");
-        BreathingStyles newStyle = BreathingStyles.valueOf(styleName.toUpperCase());
-        for (ServerPlayer target : targets) {
-            setPlayerStyle(target, newStyle);
+        try {
+            BreathingStyles newStyle = BreathingStyles.valueOf(styleName.toUpperCase());
+            for (ServerPlayer target : targets) {
+                setPlayerStyle(target, newStyle);
+            }
+            ctx.getSource().sendSuccess(Component.literal("Set style to " + newStyle.name() + " for " + targets.size() + " player(s)"), true);
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid style name: " + styleName));
+            return 0;
         }
-        ctx.getSource().sendSuccess(Component.literal("Set style to " + newStyle.name() + " for " + targets.size() + " player(s)"), true);
         return targets.size();
     }
 
@@ -319,7 +632,7 @@ public class DemonSlayerCommands {
         return targets.size();
     }
 
-    // --- LOGIC METHODS (FOR SINGLE PLAYER) ---
+    //  LOGIC METHODS (FOR SINGLE PLAYER) 
 
     private static void modifyPlayerBreath(ServerPlayer target, ModifyAction action, int amount, boolean isMax) {
         target.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
@@ -365,6 +678,7 @@ public class DemonSlayerCommands {
     private static void setPlayerBda(ServerPlayer target, BloodDemonArts newBda) {
         target.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             if (!demon.isDemon()) return;
+            demon.unlockBda(newBda); // Ensure it's unlocked
             demon.setEquippedBda(newBda);
             ModUtils.syncDemon(target);
         });
@@ -445,11 +759,11 @@ public class DemonSlayerCommands {
         ModUtils.syncAll(target);
     }
 
-    // --- GET & LIST METHODS ---
+    //  GET & LIST METHODS 
 
     private static int getPlayerSummary(CommandSourceStack source, ServerPlayer target) {
         MutableComponent message = Component.literal("\n").withStyle(ChatFormatting.DARK_GRAY)
-                .append("--- " + target.getDisplayName().getString() + "'s Stats ---\n").withStyle(ChatFormatting.GOLD);
+                .append(" " + target.getDisplayName().getString() + "'s Stats \n").withStyle(ChatFormatting.GOLD);
         target.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             if (demon.isDemon()) {
                 message.append(Component.literal("Race: ").withStyle(ChatFormatting.GRAY)).append(Component.literal("Demon").withStyle(ChatFormatting.RED));
@@ -470,7 +784,7 @@ public class DemonSlayerCommands {
                 });
             }
         });
-        message.append(Component.literal("\n-------------------------").withStyle(ChatFormatting.DARK_GRAY));
+        message.append(Component.literal("\n-").withStyle(ChatFormatting.DARK_GRAY));
         source.sendSuccess(message, false);
         return 1;
     }
@@ -557,10 +871,10 @@ public class DemonSlayerCommands {
         }
     }
 
-    // --- HELP METHOD ---
+    //  HELP METHOD 
 
     private static int showHelp(CommandSourceStack source, String topic) {
-        MutableComponent help = Component.literal("\n--- Demon Slayer Help ---").withStyle(ChatFormatting.GOLD);
+        MutableComponent help = Component.literal("\n Demon Slayer Help ").withStyle(ChatFormatting.GOLD);
 
         switch(topic.toLowerCase()) {
             case "get":
@@ -580,17 +894,29 @@ public class DemonSlayerCommands {
                 help.append("\n/demonslayer reset <targets>")
                         .append("\n  - ").append(Component.literal("Resets all Demon Slayer data for player(s) to default.").withStyle(ChatFormatting.RED));
                 break;
+            case "nemesis":
+                help.append("\n/demonslayer nemesis <subcommand> ...")
+                        .append("\n  - ").append(Component.literal("Manage the Nemesis Demon system.").withStyle(ChatFormatting.GRAY))
+                        .append("\n  - ").append(Component.literal("info <name>").withStyle(ChatFormatting.AQUA).append(Component.literal(": Get stats for a Nemesis.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("edit <name> ...").withStyle(ChatFormatting.AQUA).append(Component.literal(": Change Nemesis traits.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("battle start <challenger> <defender>").withStyle(ChatFormatting.AQUA).append(Component.literal(": Force a blood battle.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("battle end").withStyle(ChatFormatting.AQUA).append(Component.literal(": Force-end the current battle.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("battle send_hunter <name> <player>").withStyle(ChatFormatting.AQUA).append(Component.literal(": Spawn a Nemesis to hunt a player.").withStyle(ChatFormatting.GRAY)));
+                break;
             default: // main help
                 help.append("\nBase command for managing Demon Slayer data.")
                         .append("\nUse ").append(Component.literal("/demonslayer help <topic>").withStyle(ChatFormatting.YELLOW)
                                 .withStyle(s -> s.withClickEvent(new ClickEvent(ClickEvent.Action.SUGGEST_COMMAND, "/demonslayer help "))))
                         .append(" for more info.")
-                        .append("\nTopics: ").append(Component.literal("get").withStyle(ChatFormatting.AQUA)
+                        .append("\nTopics: ")
+                        .append(Component.literal("get").withStyle(ChatFormatting.AQUA)
                                 .withStyle(s -> s.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/demonslayer help get"))))
                         .append(", ").append(Component.literal("edit").withStyle(ChatFormatting.AQUA)
                                 .withStyle(s -> s.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/demonslayer help edit"))))
                         .append(", ").append(Component.literal("reset").withStyle(ChatFormatting.AQUA)
-                                .withStyle(s -> s.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/demonslayer help reset"))));
+                                .withStyle(s -> s.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/demonslayer help reset"))))
+                        .append(", ").append(Component.literal("nemesis").withStyle(ChatFormatting.AQUA)
+                                .withStyle(s -> s.withClickEvent(new ClickEvent(ClickEvent.Action.RUN_COMMAND, "/demonslayer help nemesis"))));
                 break;
         }
 

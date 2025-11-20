@@ -3,7 +3,6 @@ package com.wassuples.demonslayer.forms.slayer.insect;
 import com.wassuples.demonslayer.effects.ModEffects;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;

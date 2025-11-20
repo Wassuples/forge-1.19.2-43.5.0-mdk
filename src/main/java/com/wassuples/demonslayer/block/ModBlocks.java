@@ -25,7 +25,9 @@ public class ModBlocks {
     public static final RegistryObject<Block> WISTERIA_LEAVES = registerBlock("wisteria_leaves",
             () -> new Block(BlockBehaviour.Properties.copy(Blocks.OAK_LEAVES)));
 
-    // Helper method to register a block and its item
+    public static final RegistryObject<Block> RANKING_BOARD = registerBlock("ranking_board",
+            () -> new RankingBoardBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).noOcclusion()));
+
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
         registerBlockItem(name, toReturn);

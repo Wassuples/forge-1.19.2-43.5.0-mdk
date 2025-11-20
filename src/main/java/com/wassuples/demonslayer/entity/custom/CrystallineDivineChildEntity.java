@@ -109,6 +109,8 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
         }
     }
 
+    public LivingEntity getOwner() { return this.owner; }
+
     private void copyAttribute(net.minecraft.world.entity.ai.attributes.Attribute attribute, LivingEntity owner) {
         AttributeInstance ownerInstance = owner.getAttribute(attribute);
         AttributeInstance cloneInstance = this.getAttribute(attribute);

@@ -117,6 +117,8 @@ public class BreathingMenuScreen extends Screen {
     private List<BloodDemonArts> demonArtsList = new ArrayList<>();
     private Button purchaseBdaButton;
 
+    private Button parkourButton;
+
     private static final Map<DemonPassive, Vec2> PASSIVE_POSITIONS = new ImmutableMap.Builder<DemonPassive, Vec2>()
             .put(DemonPassive.ENHANCED_VIGOR, new Vec2(20, 20))
             .put(DemonPassive.DEMONIC_STRENGTH, new Vec2(20, 60))

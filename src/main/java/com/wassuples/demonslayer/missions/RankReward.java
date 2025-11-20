@@ -2,19 +2,33 @@ package com.wassuples.demonslayer.missions;
 
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
-public record RankReward(Rank newRank) implements MissionReward{
+public record RankReward(Rank rank) implements MissionReward {
+    public RankReward(FriendlyByteBuf buf) {
+        this(buf.readEnum(Rank.class));
+    }
+
     @Override
     public Component getDescription() {
-        return Component.literal("Rank up to ").append(newRank.getDisplayName());
+        return Component.literal("Rank up to ").append(rank.getDisplayName());
     }
 
     @Override
     public void grant(ServerPlayer player) {
-        player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
-            progression.setRank(newRank);
-        });
+        player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION)
+                .ifPresent(progress -> progress.setRank(rank));
+    }
+
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeEnum(rank);
+    }
+
+    @Override
+    public RewardType<?> getType() {
+        return RewardType.RANK;
     }
 }

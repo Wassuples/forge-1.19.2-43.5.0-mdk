@@ -4,6 +4,7 @@ import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.entity.custom.*;
 import com.wassuples.demonslayer.entity.custom.demon.*;
 import com.wassuples.demonslayer.entity.custom.hashira.*;
+import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MobCategory;
@@ -134,6 +135,12 @@ public class ModEntityTypes {
     //##########################################################
     //              DEMONS
     //##########################################################
+    public static final RegistryObject<EntityType<NemesisDemonEntity>> NEMESIS_DEMON =
+            ENTITY_TYPES.register("nemesis_demon",
+                    () -> EntityType.Builder.of(NemesisDemonEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.95f)
+                            .build(new ResourceLocation(DemonSlayer.MOD_ID, "nemesis_demon").toString()));
+
     public static final RegistryObject<EntityType<FodderDemonEntity>> FODDER_DEMON =
             ENTITY_TYPES.register("fodder_demon",
                     () -> EntityType.Builder.of(FodderDemonEntity::new, MobCategory.MONSTER)
@@ -309,6 +316,12 @@ public class ModEntityTypes {
                     () -> EntityType.Builder.of(ThunderHashiraEntity::new, MobCategory.MONSTER)
                             .sized(0.6f, 1.4f)
                             .build(new ResourceLocation(DemonSlayer.MOD_ID, "jigoro").toString()));
+
+    public static final RegistryObject<EntityType<CrowEntity>> CROW =
+            ENTITY_TYPES.register("crow",
+                    () -> EntityType.Builder.of(CrowEntity::new, MobCategory.CREATURE)
+                            .sized(0.6f, 0.9f)
+                            .build(new ResourceLocation(DemonSlayer.MOD_ID, "crow").toString()));
 
 
     public static void register(IEventBus eventBus) {

@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.missions;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
@@ -9,6 +10,10 @@ import net.minecraft.world.phys.AABB;
 import java.util.Map;
 
 public record SurviveWhileFightingObjective(EntityType<?> bossType, int durationTicks, double radius) implements MissionObjective {
+    public SurviveWhileFightingObjective(FriendlyByteBuf buf) {
+        this(EntityType.byString(buf.readUtf()).orElse(null), buf.readInt(), buf.readDouble());
+    }
+
     @Override
     public Component getDescription() {
         return Component.literal("Survive the encounter with ").append(bossType.getDescription().copy().withStyle(ChatFormatting.RED));
@@ -36,5 +41,17 @@ public record SurviveWhileFightingObjective(EntityType<?> bossType, int duration
     public String getProgressKey() {
         // A unique key for this objective type
         return "survive_fight_" + EntityType.getKey(bossType);
+    }
+
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeUtf(EntityType.getKey(bossType).toString());
+        buf.writeInt(durationTicks);
+        buf.writeDouble(radius);
+    }
+
+    @Override
+    public ObjectiveType<?> getType() {
+        return ObjectiveType.SURVIVE_WHILE_FIGHTING;
     }
 }

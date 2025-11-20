@@ -3,12 +3,16 @@ package com.wassuples.demonslayer.missions;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.BreathingStyles;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import javax.annotation.Nullable;
 
 public record StyleMasteryReward(@Nullable BreathingStyles style, int amount) implements MissionReward {
+    public StyleMasteryReward(FriendlyByteBuf buf) {
+        this(buf.readBoolean() ? buf.readEnum(BreathingStyles.class) : null, buf.readInt());
+    }
 
     @Override
     public Component getDescription() {
@@ -32,6 +36,20 @@ public record StyleMasteryReward(@Nullable BreathingStyles style, int amount) im
                 });
             });
         }
+    }
+
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeBoolean(style != null);
+        if (style != null) {
+            buf.writeEnum(style);
+        }
+        buf.writeInt(amount);
+    }
+
+    @Override
+    public RewardType<?> getType() {
+        return RewardType.STYLE_MASTERY;
     }
 
     public static StyleMasteryReward specific(BreathingStyles style, int amount) {

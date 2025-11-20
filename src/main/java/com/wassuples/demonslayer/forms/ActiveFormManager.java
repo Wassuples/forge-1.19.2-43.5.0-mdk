@@ -33,7 +33,6 @@ import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.StopFormS2CPacket;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.IForm;
-import com.wassuples.demonslayer.util.FormUtils;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;

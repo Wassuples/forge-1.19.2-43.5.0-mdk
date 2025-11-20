@@ -49,6 +49,10 @@ public class OctopusPotEntity extends Monster implements IAnimatable {
         }
     }
 
+    public UUID getOwner() {
+        return this.ownerUUID;
+    }
+
     @Override
     public void tick() {
         super.tick();

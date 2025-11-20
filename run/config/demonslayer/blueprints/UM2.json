@@ -1,0 +1,38 @@
+{
+  "id": "UM2",
+  "name": "Doma",
+  "title": "the Second Moon",
+  "behavior": "SADIST",
+  "personality": "MELODRAMATIC",
+  "bda": "CRYO",
+  "quirks": [
+    "FROST_BLOODED",
+    "VENOMOUS",
+    "RAPID_RECOVERY",
+    "OVERCONFIDENT"
+  ],
+  "stats": {
+    "vigor": 90,
+    "strength": 80,
+    "agility": 85
+  },
+  "taunts": {
+    "generic": [
+      "Oh, hello again, {player}! I'm so happy you've come back to play!",
+      "I was getting so lonely. Thank you for coming back to see me!",
+      "Poor thing, why did you leave paradise? Don't worry! I will save you again!"
+    ],
+    "low_health_comeback": [
+      "You were quite strong, aren't you? I love a challenge!",
+      "You get so passionate when you're desperate. It's adorable!"
+    ],
+    "poison_kill": [
+      "I remember you shivering as my frost crept into your veins. It was such a beautiful sight! Shall we create that art again?",
+      "My frozen air is a gift, you know. It grants a peaceful, painless end. You should be grateful!"
+    ],
+    "overkill": [
+      "Last time was so quick! Let's try to last longer, okay?",
+      "Oh, have I saved you? I'm so sorry, I saved so many people it's getting hard to remember all their faces!"
+    ]
+  }
+}

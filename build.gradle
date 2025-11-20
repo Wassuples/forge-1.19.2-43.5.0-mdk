@@ -113,6 +113,11 @@ tasks.named('jar', Jar).configure {
                 'MixinConfigs'            : 'demonslayer.mixins.json'
         ])
     }
+
+    from(sourceSets.main.output) {
+        include 'demonslayer.refmap.json'
+    }
+
     finalizedBy 'reobfJar'
 }
 

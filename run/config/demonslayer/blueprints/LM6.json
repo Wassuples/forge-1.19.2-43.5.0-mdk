@@ -1,0 +1,18 @@
+{
+  "id": "LM6",
+  "name": "Kamanue",
+  "title": "the Sixth Lower Moon",
+  "behavior": "CALM",
+  "personality": "PARANOID",
+  "bda": "SLEEP",
+  "quirks": [
+    "NIGHT_STALKER",
+    "MAGPIE",
+    "WIND_UP"
+  ],
+  "stats": {
+    "vigor": 35,
+    "strength": 30,
+    "agility": 40
+  }
+}

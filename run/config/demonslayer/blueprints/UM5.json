@@ -1,0 +1,34 @@
+{
+  "id": "UM5",
+  "name": "Gyokko",
+  "title": "the Fifth Moon",
+  "behavior": "TRICKSTER",
+  "personality": "ARROGANT",
+  "bda": "HAEMO",
+  "quirks": [
+    "VENOMOUS",
+    "RAPID_RECOVERY",
+    "NIMBLE",
+    "EASILY_TAUNTED"
+  ],
+  "stats": {
+    "vigor": 70,
+    "strength": 70,
+    "agility": 80
+  },
+  "taunts": {
+    "generic": [
+      "Hyo hyo! Look what the fish dragged in! A tasteless cretin!",
+      "You've returned? Have you come to appreciate my beautiful pots?",
+      "Your... it's as ugly as I remember. An offense to my artist's eye!"
+    ],
+    "low_health_comeback": [
+      "How dare you touch my magnificent body! I will turn you into the most grotesque piece in my collection for that!",
+      "You uncultured swine! You chipped my pot! Unforgivable!"
+    ],
+    "overkill": [
+      "Your death was not even artistic. Just a dull, pathetic end.",
+      "I am an artist. You are merely raw material."
+    ]
+  }
+}

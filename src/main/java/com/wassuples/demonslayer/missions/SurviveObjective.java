@@ -1,11 +1,16 @@
 package com.wassuples.demonslayer.missions;
 
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
 
 public record SurviveObjective(int durationTicks) implements MissionObjective {
+    public SurviveObjective(FriendlyByteBuf buf) {
+        this(buf.readInt());
+    }
+
     @Override
     public Component getDescription() {
         // 20 ticks = 1 second. 24000 ticks = 1 day.
@@ -30,5 +35,15 @@ public record SurviveObjective(int durationTicks) implements MissionObjective {
     @Override
     public String getProgressKey() {
         return "survive_objective"; // A unique key for this type
+    }
+
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeInt(durationTicks);
+    }
+
+    @Override
+    public ObjectiveType<?> getType() {
+        return ObjectiveType.SURVIVE;
     }
 }

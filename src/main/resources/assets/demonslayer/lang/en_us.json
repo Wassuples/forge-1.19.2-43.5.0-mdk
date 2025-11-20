@@ -11,11 +11,19 @@
   "item.demonslayer.kanae_kocho_spawn_egg": "Kanae Kocho Spawn Egg",
   "item.demonslayer.tengen_uzui_spawn_egg": "Tengen Uzui Spawn Egg",
   "item.demonslayer.jigoro_kuwajima_spawn_egg": "Jigoro Kuwajima Spawn Egg",
+  "item.demonslayer.crow_spawn_egg": "Kasugai Crow Spawn Egg",
+
   "item.demonslayer.muzans_blood": "Muzan's Blood",
   "item.demonslayer.wisteria_log": "Wisteria Log",
 
   "block.demonslayer.wisteria_log": "Wisteria Log",
 
+  "gamerule.doFormsGriefing": "Form Griefing",
+  "gamerule.doFormsGriefing.description": "Determines if forms cause environmental damage.",
+  "gamerule.useCanonKizuki": "Use Canon Kizuki",
+  "gamerule.useCanonKizuki.description": "If true, the server will use the original 12 kizuki from the manga and anime. Otherwise, it will generate them randomly.",
+  "gamerule.minDemonRosterSize": "Minimum Demon Roster Size",
+  "gamerule.minDemonRosterSize.description": "The minimum number of demons that must be present on the roster.",
 
   "itemGroup.demonslayertab": "Demon Slayer",
 
@@ -27,9 +35,5 @@
   "message.demonslayer.use_form": "Used Form!",
   "key.demonslayer.open_menu": "Open Breathing Menu",
 
-  "effect.demonslayer.wisteria_poison":  "Wisteria Poison",
-
-  "gamerule.formsGriefing": "Allow Forms Environmental Damage",
-  "gamerule.formsGriefing.description": "If true, certain breathing forms can break blocks or place fire in the world. Set to false to prevent all forms from altering terrain."
-
+  "effect.demonslayer.wisteria_poison":  "Wisteria Poison"
 }

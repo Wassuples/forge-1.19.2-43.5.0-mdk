@@ -8,10 +8,16 @@
     Cryo, Rime hurts itself
 
     Gyokko, Thousand Needle Fish Kill summons floating.
-
-- Add icons for demon progression.
+TODO Replace ranking board with the crows.
+TODO Make the crows give missions.
 
 ### HIGH PRIORITY
+- Demon's "filth" message should happen after, not before eating food.
+- Ranking doesn't work like it should. Enmu killed -> Kokushibo takes 1 and 2nd place -> everyone else goes down one rank.
+- Demons' form use should decrease hunger bars instead of breath or anything else. Even if they are using Breathing Styles.
+- Kokushibo not able to use their BDA properly. Change up the way all nemeses attack and use forms so that this can be fixed.
+- Make the canon Kizuki always use their own skins.
+- Only update leaderboard in-game after when it supposedly took place. (If fight in night, the battle occured at 9-12 PM or something.)
 - Wintry icicles telegraph not showing up on grass but showing up on snow?
 - Add missions and shit.
 - Fix commands
@@ -23,6 +29,8 @@
 - Wind4, Wind5
 
 ### MEDIUM PRIORITY
+- Cooldown still not working properly.
+- Add icons for demon progression.
 - When resetting a character with demon abilities (like extra health) the health doesn't reset. Some other things may not reset as well, you'll have to check it out.
 - Add animations, particles, and motions to all forms
 - Make Hashira spawn naturally, especially in Ubuyashiki Mansion
@@ -51,7 +59,6 @@
 
 
 ### Future Content that WILL be added
-- Abilities that all players are able to use (Dash, maybe charged jump)
 - Sword design and breathing style separation
 - Demon Slayer Mark: Unlocks when on very low health and fighting an upper moon
 - Nemesis System (https://chatgpt.com/c/6879342a-1574-8011-b489-c02c34fcbca7).
@@ -65,185 +72,3 @@ Mission Requests:
 - Killing Muzan gives you his power to control all demon.
 - Toon-force BDA
 - Gambling BDA
-
-
-
-
-NEMESIS SYSTEM SPECIFICS:
-# DemonTrait Capability ("character sheet")
-- Name (Akuza)
-- Title (of Crimson)
-- Personality (Which AI to use, Aggressive, Calm, Cowardly)
-- Behavior (Which taunts to use, Cocky, Ruthless, Nerd)
-(Behavior has higher chance of being tied to the personality, e.g. higher chance of cocky if personality is aggressive.)
-- rankPoints (power level, increases with each battle)
-- Blood Demon Art (Cryo, Haemo, etc.)
-- tauntMap (player-specific taunts, "HA! Be careful with that fire, you might burn yourself!")
-
-# DemonHierarchyManager (Demon Persistence)
-Map<DemonRank, UUID> kizukiSlots (holds UUID of all kizuki. On world load, this is filled with canonical kizuki)
-List<UUID> rankedFodder (all other procedural demons, sorted by their rankPoints)
-Map<UUID, DemonTrait> demonDataCache (cache of the trait data for every demon in the system. The off-screen simulation will read from this cache, not from the entities themselves, preventing the need to load chunks.)
-
-# Off-Screen Simulation:
-Kizuki VS Kizuki (Happens once every 9-10 days. A chance for a Lower Moon to challenge the one above it (e.g., LM5 challenges LM4). The winner takes the higher rank, the loser is slain and removed. This happens infrequently to make it a major event. Upper Moon challenges should be even rarer and more momentous.)
-Challenger VS Kizuki (Happens once every 3-4 days. The highest-ranked demon from the rankedFodder list challenges the current Lower Moon Six. If they win, they take the LM6 slot, and the previous LM6 is slain.)
-Fodder VS Fodder (Happens once a day. Two random demons from the rankedFodder list are pitted against each other. The winner gains rankPoints; the loser is slain.)
-
-# Player Challenges:
-## (Demon)PLAYER VS DEMON (The player can challenge any demon in the system, whether a Kizuki or a procedural demon. This is initiated by the player attacking the demon.)
-The system checks the player's rankPoints. If player.rankPoints < demon.rankPoints, this is officially a "Blood Battle" for rank. Otherwise the player is just bullying a weaker demon.
-If the player wins, they get rankPoints and the player takes the demons rank (Player was LM5, attacking LM1. Player won, player gains LM1).
-If the player loses, they die as normal. The demon gains a significant amount of rankPoints.
-
-## (Slayer)PLAYER VS DEMON
-Nothing special happens, just a normal fight.
-If the player loses to an upper moon and is recognized as strong by the upper moon, there is a chance to be offered a blood donation.
-If the player wins against ANY moon, the demons below are bumped up in rankings. (e.g. player kills LM4, LM5 becomes LM4, LM6 becomes LM5, highest ranked fodder becomes LM6)
-
-# Demon Spawn Mechanics:
-Territory-Based Spawning: Each demon has a preferred biome or territory. The system checks for these biomes when a player enters them. If a player enters a biome that is the territory of a demon, there's a chance that demon will spawn nearby.
-Demon Population: The world maintains a certain number of demons based on the number of players and their average rankPoints. More players or higher-ranked players increase the demon population, making the world more dangerous, and vice versa.
-
-
-# Player Awareness & Lore:
-Chat Announcements: Major events are be broadcast globally.
-    [Server]: In a shocking turn of events, Lower Moon Four has been slain by Lower Moon Five, Kyoketsu the Iron-Fisted!
-    [Server]: A new challenger rises! Akumu the Ravenous has overthrown the previous Lower Moon Six and joined the Twelve Kizuki!
-
-"Demon Ranking Board" When place and interacted with, it opens a GUI showing the current list of the Twelve Kizuki and MAYBE the Top 10 rankedFodder demons. This ties into the missions system.
-The board shows:
-Rank | Name | Title | Player Kills
-
-Prioritize Player Interaction: The simulation must check if a demon is currently in combat with a player. If it is, that demon is exempt from the off-screen simulation for that cycle. Player-driven events always take precedence.
-Hunting: High-ranking demons and Kizuki don't just spawn randomly. When a Slayer player enters a biome, the system checks if a high-ranking demon considers that as its territory. If so, there's a high chance that demon will spawn nearby with the specific goal of finding and eliminating that player.
-
-# Demon Personality & Behavior:
-## Behavior:
-Aggressive: Actively seeks out players and other demons to challenge. (Default)
-Calm: Avoids unnecessary fights, only engaging when provoked or when a clear opportunity arises. (e.g., ambushes the player when they are low on health after a fight with another demon)
-Cowardly: Tends to flee from combat, especially when outnumbered or facing a significantly stronger opponent. (e.g., runs away when low on health, or when the player is a higher rank/high rank slayer)
-Strategist: Uses the environment to its advantage, setting ambushes or retreating to lure players into traps. (e.g. leads the player into water, or teams up with a loyalist demon to ambush the player)
-Berserker: Once engaged in combat, fights with reckless abandon, ignoring its own safety.
-Loyalist: It may form permanent alliances with stronger demons. (May ally with Kizuki if beaten but spared by them)
-Stalwart: The immovable object. This demon is a tank, built to withstand and outlast its opponents rather than overwhelm them with speed or aggression.
-Overlord: This demon rarely fights alone and uses weaker allies to overwhelm its foes.
-Sadist: This demon focuses on crippling its opponents and drawing out the fight, rather than going for a quick kill.
-Ambitious: Has a unique targeting AI. Priority: Higher-Rank Demon > Player Demon > High-Rank Slayer > Kizuki > Fodder Demon > Fodder Slayer. Its sole focus is gaining power and rank, and it evaluates every potential fight through this lens.
-
-## Personality:
-Personality comes from behavior.
-(e.g., a Cowardly demon could have the personality of "Cunning" or "Weak" which would only affect its taunts and dialogue.)
-Aggressive Behavior:
-    Cocky: "Is that all you've got, weakling?" "You dare challenge me?" "I will crush you!"
-    Ruthless: "I will crush you without mercy!"
-Calm Behavior:
-    Observant: "You seem strong, but are you truly ready?" "I sense potential in you."
-    Calculating: "This fight will be over quickly, for you or for me."
-Cowardly Behavior:
-    Nervous: "Please, I don't want to fight!" "I-I'll leave you alone if you spare me!"
-    Deceptive: "You don't want to fight me, I'm not worth your time!"
-    Whining: "This is so unfair! You're clearly cheating!"
-Strategist Behavior:
-    Obvious: "Heh, they won't even notice that I've set up a trap!"
-    Umm... Actually / Nerd: "Predictable." "You're footing is uncertain, a fatal flaw that I would never make." "Oh, look over there. It is a big-titty elf."
-Berserker Behavior:
-    Frenzied: "RAAAARGH! I WILL DESTROY YOU!"
-    Bloodthirsty: "MORE, MORE, MORE! I NEED MORE BLOOD!"
-Loyalist Behavior:
-    Devoted: "I serve a higher power, and you are not it!" "My loyalty is unbreakable!"
-    Fanatical: "For the glory of my master, you will perish!" "You are nothing but filth before the great one!"
-Stalwart Behavior:
-    Stoic: emotionless
-    Weary: fights out of obligation, not desire
-
-# Demon Taunts:
-Enemy on Low Health: "Is that all you've got, weakling?" "GET UP! I haven't even broken a sweat!" "You're no match for me!" "Pathetic!" "You're weak!" "Come back when you're stronger!"
-Victory against a slayer: "Another one falls before me!" "Your efforts were futile!" "Too easy!" "You were no challenge!" "Another weakling bites the dust!"
-Victory against a hashira: "Is that the best a Hashira can do?" "Even Hashira bleed!"
-Fleeing: "This isn't over... I will return!" "THIS IS MERELY A SETBACK!" "You haven't seen the last of me!"
-Challenged: "You dare challenge me? Foolish mortal!" "Another weakling seeking death!" "You think you can best me?"
-Beaten but spared: "You... you are merciful. I will remember this." "I underestimated you... but I will grow stronger."
-Beaten and killed: "Curse you... I will never be defeated..." "This can't be my end..." "I... I failed...?" "Why... why am I so weak...?" "Is this... the end...?" "How... did I lose...?" "My love... I failed you..." "This is my penance." "I was too weak..."
-Has challenged and won another demon: "{Insert another demon's name here} thought he was strong, too. Now he is dust. You are next."
-
-
-
-
-
-
-Implementation Plan:
-
-Phase 1: The Foundation
-Task 1.1: Create the DemonTrait Capability
-This is the "character sheet."
-
-Create Enums: Define your Behavior and Personality enums in a new demonslayer.demon.ai package or similar.
-```
-public enum Behavior { AGGRESSIVE, CALM, BERSERKER, ... }
-public enum Personality { COCKY, RUTHLESS, STOIC, ... }
-```
-    - Create IDemonTrait.java with all the necessary getters and setters (getName, setTitle, getRankPoints, addRankPoints, getBehavior, setPersonality, etc.).
-    - Create the Implementation: Create a DemonTrait.java class that implements IDemonTrait.
-    - Create the Provider & Storage: Implement the standard Forge CapabilityProvider and IStorage classes for your capability.
-    - Register: Register the capability in your mod's event bus.
-
-Task 1.2: Create the DemonHierarchyManager
-    - Create the Class: Make a new class DemonHierarchyManager that extends net.minecraft.world.level.saveddata.SavedData.
-    - Define the Data Fields:
-      // Inside DemonHierarchyManager.java
-      private final Map<DemonRank, UUID> kizukiSlots = new EnumMap<>(DemonRank.class);
-      private final List<UUID> rankedFodder = new ArrayList<>();
-      private final Map<UUID, DemonTrait> demonDataCache = new HashMap<>();
-    - Implement Persistence: Override the save(CompoundTag nbt) and load(CompoundTag nbt) methods. This is crucial. You'll need to serialize your maps and lists to NBT data and read them back.
-    - Create a Static Getter: Implement a static get(ServerLevel level) method to provide easy, global access to the single instance of this manager for the server.
-    - Initial Population: In the load method, if the NBT data is empty (meaning it's the first time the world is run with this mod), populate the kizukiSlots with the UUIDs of your pre-defined, canonical Kizuki bosses.
-
-Phase 2: The Entity and Its Identity
-Task 2.1: Create the NemesisDemonEntity
-    - Create the entity class, extending Monster or your own base demon class.
-    - In an AttachCapabilitiesEvent handler, attach your DemonTrait capability to this entity type.
-    - For now, give it a basic AI. We'll hook into the Behavior enum later.
-Task 2.2: Create the DemonGenerator
-    - Create a static helper class DemonGenerator.
-    - Implement methods like generateName(), generateTitle(), etc., pulling from predefined lists.
-    - Create the main method: public static void initializeDemon(NemesisDemonEntity demon).
-    - Inside this method, get the demon's DemonTrait capability and populate all its fields (name, title, a random BDA, behavior, personality, starting rankPoints).
-    - After populating the traits, get the DemonHierarchyManager and register the new demon: add its UUID to rankedFodder and its trait data to demonDataCache.
-    - Call this initializeDemon method the very first time a NemesisDemonEntity spawns (e.g., in its finalizeSpawn method).
-
-Phase 3: The Core Gameplay Loop
-Task 3.1: Handle Player & Demon Deaths
-    - Create a new NemesisSystemEvents class and subscribe it to the Forge event bus.
-    - Inside, create a handler for LivingDeathEvent.
-    - If Demon kills Player: Check if event.getSource().getEntity() is a NemesisDemonEntity and event.getEntity() is a Player. If so, trigger the logic: get the demon's data from the manager, add rankPoints, potentially update its title/quirks based on the damage source, and add a taunt. Save the updated data back to the manager.
-    - If Player kills Demon: Check if event.getEntity() is a NemesisDemonEntity. If so, notify the DemonHierarchyManager to permanently remove that demon's UUID and data.
-    - If Slayer kills Kizuki: Check if the victim is a Kizuki. If so, call the "Power Vacuum" logic in the manager to promote the top fodder demon.
-Task 3.2: Implement the "Blood Purity" System
-    - In DemonHierarchyManager, add a field to track the current battle: BloodBattle activeBattle = null;
-    - Subscribe to LivingHurtEvent. If a Demon Player attacks a higher-rank demon, create a new BloodBattle object (containing challenger UUID, defender UUID, and a List<UUID> interferers) and store it in the manager.
-    - While activeBattle is not null, continue listening to LivingHurtEvent. If the defender is hurt by anyone not in the battle, add their UUID to the interferers list.
-    - In your LivingDeathEvent handler, if the dying demon was the defender in the activeBattle, check the interferers list. Apply the "Pure" or "Tainted" victory consequences as we designed, then set activeBattle to null.
-
-Phase 4: The Living World (Simulation & Spawning)
-Task 4.1: Implement the Off-Screen Simulation
-    - In an event handler for ServerTickEvent, create a tick counter.
-    - When the counter reaches 24000 (one in-game day), fire the simulation logic.
-    - The logic should call methods in DemonHierarchyManager to run the Fodder vs. Fodder, Challenger vs. Kizuki, and Kizuki vs. Kizuki simulations based on their respective timers.
-    - Remember: This logic operates only on the data in the demonDataCache. It should never load entities.
-Task 4.2: Implement Spawning Mechanics
-    - Hook into a biome loading or player travel event.
-    - Call a method in DemonHierarchyManager like getPotentialSpawnsFor(Biome biome).
-    - This method checks which demons have that biome as their territory and if any should "Hunt" the player.
-    - If a hunt is triggered, spawn that specific demon from its saved data, rather than generating a new one.
-
-Phase 5: The User Interface
-Task 5.1: Create the "Demon Ranking Board"
-    - Create the RankingBoardBlock and RankingBoardBlockEntity.
-    - Create the GUI screen (RankingBoardScreen).
-    - Create two network packets: RequestHierarchyC2SPacket (sent from client to server when GUI opens) and UpdateHierarchyS2CPacket (sent from server to client with the data).
-    - When the server receives the request, it gets the DemonHierarchyManager, reads the kizukiSlots and top 10 rankedFodder, and sends them back to the client.
-    - The client GUI renders the received data.
-Task 5.2: Implement Announcements
-    - Create a simple helper class, e.g., ServerAnnouncer.
-    - In the DemonHierarchyManager, whenever a simulation results in a rank change for a Kizuki, call ServerAnnouncer.broadcast(Component message) to inform all players.

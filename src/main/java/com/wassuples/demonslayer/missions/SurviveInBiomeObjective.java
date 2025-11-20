@@ -1,14 +1,18 @@
 package com.wassuples.demonslayer.missions;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
 
-// --- FIX: Removed the bossToSpawn parameter ---
 public record SurviveInBiomeObjective(ResourceLocation biomeId, int durationTicks) implements MissionObjective {
+    public SurviveInBiomeObjective(FriendlyByteBuf buf) {
+        this(buf.readResourceLocation(), buf.readInt());
+    }
+
     @Override
     public Component getDescription() {
         int days = durationTicks / 24000;
@@ -31,5 +35,16 @@ public record SurviveInBiomeObjective(ResourceLocation biomeId, int durationTick
     @Override
     public String getProgressKey() {
         return "survive_in_biome_" + biomeId.toString().replace(":", "_");
+    }
+
+    @Override
+    public void toBytes(FriendlyByteBuf buf) {
+        buf.writeResourceLocation(biomeId);
+        buf.writeInt(durationTicks);
+    }
+
+    @Override
+    public ObjectiveType<?> getType() {
+        return ObjectiveType.SURVIVE_IN_BIOME;
     }
 }

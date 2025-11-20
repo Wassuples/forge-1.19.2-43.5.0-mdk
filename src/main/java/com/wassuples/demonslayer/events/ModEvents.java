@@ -1,13 +1,12 @@
 package com.wassuples.demonslayer.events;
 
 import com.wassuples.demonslayer.DemonSlayer;
-import com.wassuples.demonslayer.breathing.PlayerBreath;
 import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
-import com.wassuples.demonslayer.breathing.PlayerStyle;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.command.DemonSlayerCommands;
-import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
 import com.wassuples.demonslayer.cooldown.PlayerCooldownsProvider;
+import com.wassuples.demonslayer.crow.CrowManager;
+import com.wassuples.demonslayer.crow.PlayerCrowProvider;
 import com.wassuples.demonslayer.demon.DemonPassive;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
@@ -19,12 +18,10 @@ import com.wassuples.demonslayer.entity.custom.MotherEyeEntity;
 import com.wassuples.demonslayer.entity.custom.WaterPrisonEntity;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
-import com.wassuples.demonslayer.item.ModItems;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.missions.*;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
-import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
@@ -43,9 +40,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.MobSpawnType;
+import net.minecraft.world.entity.*;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -53,24 +48,19 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.BlockHitResult;
-import net.minecraft.world.phys.EntityHitResult;
-import net.minecraft.world.phys.HitResult;
-import net.minecraft.world.phys.Vec3;
-import net.minecraftforge.common.capabilities.RegisterCapabilitiesEvent;
+import net.minecraft.world.phys.*;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
-import net.minecraftforge.event.entity.living.LivingEntityUseItemEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
@@ -85,30 +75,40 @@ public class ModEvents {
     private static final Map<UUID, CompoundTag> breathDeathData = new HashMap<>();
     private static final Map<UUID, CompoundTag> missionDeathData =new HashMap<>();
     private static final Map<UUID, CompoundTag> demonDeathData = new HashMap<>();
+    private static final Map<UUID, CompoundTag> crowDeathData = new HashMap<>();
 
     private static final UUID ENHANCED_VIGOR_MODIFIER_ID = UUID.fromString("a7a2f5a2-a3a4-492c-a8e2-89255ac3a7e4");
     private static final UUID DEMONIC_STRENGTH_MODIFIER_ID = UUID.fromString("f3b1f1a0-75da-4c4b-b72e-c4e9c7a6e12e");
 
     @SubscribeEvent
     public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
-        if (event.getObject() instanceof Player) {
-            if (!event.getObject().getCapability(PlayerBreathProvider.PLAYER_BREATH).isPresent()) {
+        if (event.getObject() instanceof Player player) {
+            if (!player.getCapability(PlayerBreathProvider.PLAYER_BREATH).isPresent()) {
                 event.addCapability(PlayerBreathProvider.KEY, new PlayerBreathProvider());
             }
-            if (!event.getObject().getCapability(PlayerStyleProvider.PLAYER_STYLE).isPresent()) {
+
+            if (!player.getCapability(PlayerStyleProvider.PLAYER_STYLE).isPresent()) {
                 event.addCapability(PlayerStyleProvider.KEY, new PlayerStyleProvider());
             }
-            if (!event.getObject().getCapability(PLAYER_PROGRESSION).isPresent()) {
+
+            if (!player.getCapability(PLAYER_PROGRESSION).isPresent()) {
                 event.addCapability(PlayerProgressionProvider.KEY, new PlayerProgressionProvider());
             }
-            if (!event.getObject().getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).isPresent()) {
+
+            if (!player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).isPresent()) {
                 event.addCapability(PlayerMissionsProvider.KEY, new PlayerMissionsProvider());
             }
-            if (!event.getObject().getCapability(PlayerDemonProvider.PLAYER_DEMON).isPresent()) {
+
+            if (!player.getCapability(PlayerDemonProvider.PLAYER_DEMON).isPresent()) {
                 event.addCapability(PlayerDemonProvider.KEY, new PlayerDemonProvider());
             }
-            if (!event.getObject().getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).isPresent()) {
+
+            if (!player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).isPresent()) {
                 event.addCapability(PlayerCooldownsProvider.KEY, new PlayerCooldownsProvider());
+            }
+
+            if (!player.getCapability(PlayerCrowProvider.PLAYER_CROW).isPresent()) {
+                event.addCapability(PlayerCrowProvider.KEY, new PlayerCrowProvider());
             }
         }
     }
@@ -147,6 +147,12 @@ public class ModEvents {
                 demon.saveNBTData(nbt);
                 demonDeathData.put(serverPlayer.getUUID(), nbt);
             });
+            // Save Crow data
+            serverPlayer.getCapability(PlayerCrowProvider.PLAYER_CROW).ifPresent(crow -> {
+                CompoundTag nbt = new CompoundTag();
+                crow.saveNBTData(nbt);
+                crowDeathData.put(serverPlayer.getUUID(), nbt);
+            });
         }
     }
 
@@ -183,9 +189,16 @@ public class ModEvents {
                 player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> demon.loadNBTData(demonDeathData.get(player.getUUID())));
                 demonDeathData.remove(player.getUUID());
             }
+            // Load Crow data
+            if (crowDeathData.containsKey(player.getUUID())) {
+                CompoundTag nbt = crowDeathData.get(player.getUUID());
+                player.getCapability(PlayerCrowProvider.PLAYER_CROW).ifPresent(data -> data.loadNBTData(nbt));
+                crowDeathData.remove(player.getUUID());
+            }
 
             // After loading the data on the server, sync it all to the client.
             syncAllDataToClient(player);
+            CrowManager.ensureCrowFor(player);
         }
     }
 
@@ -194,6 +207,7 @@ public class ModEvents {
         // When a player logs in, sync all their server-side data to the client.
         if (event.getEntity() instanceof ServerPlayer player) {
             syncAllDataToClient(player);
+            CrowManager.ensureCrowFor(player);
         }
     }
 
@@ -202,6 +216,7 @@ public class ModEvents {
         // When a player changes dimension, sync all their server-side data to the client.
         if (event.getEntity() instanceof ServerPlayer player) {
             syncAllDataToClient(player);
+            CrowManager.ensureCrowFor(player);
         }
     }
 
@@ -217,57 +232,32 @@ public class ModEvents {
             mission.saveNBTData(nbt);
             ModMessages.sendToPlayer(new PlayerMissionSyncS2CPacket(nbt), player);
         });
+
         player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             CompoundTag nbt = new CompoundTag();
             demon.saveNBTData(nbt);
             ModMessages.sendToPlayer(new PlayerDemonSyncS2CPacket(nbt), player);
         });
+
+        player.getCapability(PlayerCrowProvider.PLAYER_CROW).ifPresent(crow -> {
+            CompoundTag nbt = new CompoundTag();
+            crow.saveNBTData(nbt);
+            // optionally send packet later
+        });
     }
 
     @SubscribeEvent
-    public static void onPlayerCloned(PlayerEvent.Clone event) {
-        // We leave this empty because the onPlayerDeath/Respawn system is more reliable with other mods.
-        // If you had other capabilities that *do* work with Clone, you could leave their logic here.
-    }
-
-    @SubscribeEvent
-    public static void onRegisterCapabilities(RegisterCapabilitiesEvent event) {
-        event.register(PlayerBreath.class);
-        event.register(PlayerStyle.class);
-        event.register(PlayerProgression.class);
-        event.register(PlayerMissions.class);
-        event.register(PlayerDemon.class);
-        event.register(PlayerCooldowns.class);
-    }
-
-    @SubscribeEvent
-    public static void onPlayerFinishUsingItem(LivingEntityUseItemEvent.Finish event) {
-        if (event.getEntity() instanceof ServerPlayer player && event.getItem().is(ModItems.MUZANS_BLOOD.get())) {
-            player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                if (!demon.isDemon()) {
-                    demon.setDemon(true);
-                    // Apply buffs that scale with rank
-                    int rankOrdinal = demon.getRank().ordinal();
-                    player.addEffect(new MobEffectInstance(MobEffects.NIGHT_VISION, 220, 0, false, false, true));
-                    // Jump Boost: Starts at 0, increases to I then II for elite demons/moons
-                    player.addEffect(new MobEffectInstance(MobEffects.JUMP, 20, Math.min(rankOrdinal / 4, 2), false, false, true));
-                    // Regeneration: Starts at 0, increases up to III for high-rank moons
-                    player.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20, Math.min(rankOrdinal / 3, 3), false, false, true));
-
-                    if (player.level.isDay() && !player.level.isRaining() && player.level.canSeeSky(player.blockPosition()) && !player.isCreative() && !demon.isOvercomer()) {
-                        if (player.getRemainingFireTicks() <= 10) {
-                            player.setSecondsOnFire(8);
-                        }
-                    }
-                }
-            });
-        }
+    public static void onPlayerSleep(PlayerSleepInBedEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+        CrowManager.handlePlayerSleep(player);
     }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.player instanceof ServerPlayer serverPlayer) {
-            // --- SLAYER BREATH REGEN ---
+            CrowManager.ensureCrowFor(serverPlayer);
+
+            // SLAYER BREATH REGEN
             event.player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
                 if (breath.getBreath() < breath.maxBreath && serverPlayer.getRandom().nextFloat() < 0.025f) {
                     breath.addBreath(1);
@@ -278,7 +268,7 @@ public class ModEvents {
                 }
             });
 
-            // --- DEMON PASSIVE HANDLING ---
+            // DEMON PASSIVE HANDLING
             serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
                 // This handles attributes (Health/Damage), regeneration, and sun weakness/resistance
                 handleDemonPassives(serverPlayer, demon);
@@ -626,19 +616,33 @@ public class ModEvents {
                 if (demon.isDemon()) {
                     LivingEntity killedEntity = event.getEntity();
                     int points = 0;
+
                     if (killedEntity instanceof HashiraEntity hashira) {
                         // Grant bonus points for killing a powerful enemy
                         points = 50 + (hashira.getBreathingStyle().ordinal() * 5);
+
                     } else if (killedEntity instanceof Player killedPlayer) {
                         // Check if the killed player was a Demon Slayer
                         killedPlayer.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(slayerProg -> {
                             // Grant points based on the Slayer's rank
-                            demon.addBloodPoints(10 + slayerProg.getRank().ordinal() * 5);
+                            int bpGained = 10 + slayerProg.getRank().ordinal() * 5;
+                            demon.addBloodPoints(bpGained);
+                            player.getFoodData().eat(10, 1.0f); // 5 shanks + saturation
+                            player.sendSystemMessage(Component.literal("You have consumed their essence. Gained " + bpGained + " blood points.").withStyle(ChatFormatting.DARK_RED), true);
+                            ModUtils.syncDemon(player);
                         });
+                        // We return here because the 'points > 0' logic below would run redundantly
+                        return;
+
+                    } else if (killedEntity instanceof net.minecraft.world.entity.npc.Villager) {
+                        player.getFoodData().eat(10, 1.0f); // 5 shanks + saturation
+                        player.sendSystemMessage(Component.literal("You devour the human.").withStyle(ChatFormatting.DARK_RED), true);
                     }
 
                     if (points > 0) {
                         demon.addBloodPoints(points);
+                        player.getFoodData().eat(10, 1.0f); // 5 shanks + saturation
+
                         player.sendSystemMessage(Component.literal("You have consumed their essence. Gained " + points + " blood points.").withStyle(ChatFormatting.DARK_RED), true);
                         // Sync changes to the client
                         CompoundTag nbt = new CompoundTag();
@@ -676,7 +680,7 @@ public class ModEvents {
             }
         });
 
-        // --- Standard Swing Effects & Mastery Gain ---
+        // Standard Swing Effects & Mastery Gain
         if (player instanceof ServerPlayer serverPlayer) {
             if (serverPlayer.getMainHandItem().getItem() instanceof NichirinSwordItem) {
                 performNichirinSwingEffect(serverPlayer);
@@ -715,3 +719,4 @@ public class ModEvents {
         )));
     }
 }
+

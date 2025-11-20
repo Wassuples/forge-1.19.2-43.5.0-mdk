@@ -13,15 +13,19 @@ import java.util.stream.Collectors;
 
 public class PlayerDemon {
     private boolean isDemon = false;
-    private final boolean isOvercomer = false;
+    private boolean isOvercomer = false;
+    private boolean isDishonored = false;
+
     private DemonRank rank = DemonRank.FODDER;
     private int bloodPoints = 0;
+
     private BloodDemonArts equippedBda = BloodDemonArts.NONE;
     private boolean bdaModeActive = false;
     private DemonForms currentDemonForm = DemonForms.THREADS_1;
-    private final Set<DemonPassive> activePassives = new HashSet<>();
 
+    private final Set<DemonPassive> activePassives = new HashSet<>();
     private final Map<DemonPassive, Integer> unlockedPassives = new HashMap<>();
+
     private final Map<BloodDemonArts, Integer> bdaTiers = new HashMap<>();
     private final Set<BloodDemonArts> unlockedBdas = new HashSet<>();
 
@@ -60,6 +64,9 @@ public class PlayerDemon {
         return isDemon;
     }
     public boolean isOvercomer() { return isOvercomer; }
+    public void setOvercomer(boolean overcomer) { isOvercomer = overcomer; }
+    public boolean isDishonored() { return isDishonored; }
+    public void setDishonored(boolean dishonored) { isDishonored = dishonored; }
     public void setDemon(boolean demon) {
         isDemon = demon;
     }
@@ -180,6 +187,7 @@ public class PlayerDemon {
     public void copyFrom(PlayerDemon source) {
         this.isDemon = source.isDemon;
         this.rank = source.rank;
+        this.isDishonored = source.isDishonored;
         this.bloodPoints = source.bloodPoints;
         this.equippedBda = source.equippedBda;
         this.bdaModeActive = source.bdaModeActive;
@@ -201,6 +209,7 @@ public class PlayerDemon {
         nbt.putString("equippedBda", this.equippedBda.name());
         nbt.putBoolean("bdaModeActive", this.bdaModeActive);
         nbt.putString("currentDemonForm", this.currentDemonForm.name());
+        nbt.putBoolean("isDishonored", this.isDishonored);
 
         CompoundTag passivesTag = new CompoundTag();
         this.unlockedPassives.forEach((passive, tier) -> passivesTag.putInt(passive.name(), tier));
@@ -237,6 +246,7 @@ public class PlayerDemon {
             }
         }
         this.bdaModeActive = nbt.getBoolean("bdaModeActive");
+        this.isDishonored = nbt.getBoolean("isDishonored");
         if (nbt.contains("currentDemonForm")) {
             try { this.currentDemonForm = DemonForms.valueOf(nbt.getString("currentDemonForm")); }
             catch (IllegalArgumentException e) { this.currentDemonForm = DemonForms.THREADS_1; }

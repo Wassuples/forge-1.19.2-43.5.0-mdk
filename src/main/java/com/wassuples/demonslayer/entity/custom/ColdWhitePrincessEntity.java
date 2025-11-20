@@ -84,6 +84,10 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
         this.owner = owner;
     }
 
+    public LivingEntity getOwner() {
+        return this.owner;
+    }
+
     public boolean isOwner(LivingEntity entity) {
         return this.owner != null && this.owner.getUUID().equals(entity.getUUID());
     }

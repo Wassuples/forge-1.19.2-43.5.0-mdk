@@ -1,0 +1,12 @@
+{
+  "taunts": {
+    "generic": [ "MORE! YOUR BLOOD! I REMEMBER THE TASTE!",
+      "YES! YOU'RE BACK! I'M SO THIRSTY, {player}!",
+      "FRESH MEAT!",
+      "BLOOD FOR THE BLOOD GOD!"],
+    "low_health_comeback": [ "YOU MADE ME BLEED! I'LL DRAIN YOU DRY FOR THAT!",
+      "THE PAIN! IT FEELS SO GOOD! NOW YOU'LL FEEL IT TOO!" ],
+    "overkill": [ "NOT ENOUGH! IT WAS OVER TOO FAST! MORE! MORE!",
+      "I BARELY GOT A TASTE LAST TIME!" ]
+  }
+}

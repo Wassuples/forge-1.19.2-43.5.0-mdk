@@ -1,0 +1,12 @@
+{
+  "taunts": {
+    "generic": [ "I will crush you without mercy, again.",
+      "Your life is forfeit. It was the moment you returned.",
+      "There will be nothing left of you this time, {player}." ],
+    "low_health_comeback": [ "Your struggle only makes your demise more certain.",
+      "Wounding me was the last mistake you will ever make." ],
+    "overkill": [ "I will erase your insignificant existence.",
+      "You are less than nothing." ],
+    "poison_kill": [ "I remember your screams as you rotted from within. I want to hear them again." ]
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "LM3",
+  "name": "Rokuro",
+  "title": "the Third Lower Moon",
+  "behavior": "AMBITIOUS",
+  "personality": "OPPORTUNISTIC",
+  "bda": "HAEMO",
+  "quirks": [
+    "BLOOD_SIPHON",
+    "TENACIOUS",
+    "OVERCONFIDENT"
+  ],
+  "stats": {
+    "vigor": 45,
+    "strength": 40,
+    "agility": 35
+  }
+}

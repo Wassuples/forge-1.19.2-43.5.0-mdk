@@ -1,0 +1,14 @@
+{
+  "taunts": {
+    "generic": [ "...",
+      "You are here.",
+      "The outcome will be the same." ],
+    "low_health_comeback": [ "A calculated error. It will not be repeated.",
+      "Your last attack was... notable.",
+    "My mistakes have been within the error margin. However, they will not be repeated." ],
+    "overkill": [ "Inefficient.",
+      "A waste of energy." ],
+    "tactical_kill": [ "Your pattern is obvious.",
+      "Predictable." ]
+  }
+}

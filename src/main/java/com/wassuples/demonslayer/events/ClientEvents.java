@@ -2,7 +2,7 @@ package com.wassuples.demonslayer.events;
 
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
-import com.wassuples.demonslayer.client.FormSelectionScreen;
+import com.wassuples.demonslayer.client.gui.FormSelectionScreen;
 import com.wassuples.demonslayer.client.LesserEyeRendererManager;
 import com.wassuples.demonslayer.client.gui.BreathHudOverlay;
 import com.wassuples.demonslayer.client.gui.BreathingMenuScreen;
@@ -17,7 +17,6 @@ import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.styles.*;
-import com.wassuples.demonslayer.util.FormUtils;
 import com.wassuples.demonslayer.util.KeyBinding;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
@@ -52,8 +51,6 @@ public class ClientEvents {
     public static class ClientForgeEvents {
         private static final int useKeyHoldTime = 0;
         public static boolean isVignetteActive = false;
-        private static boolean canAirJump = true;
-        private static boolean wasJumping = false;
         private static final List<Entity> tempGlowers = new ArrayList<>();
         private static final ResourceLocation VIGNETTE_TEXTURE =
                 new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/vignette.png");
@@ -137,31 +134,11 @@ public class ClientEvents {
                 abilityKeyIsDown = true;
                 ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.PRESS));
             }
+
             if (!KeyBinding.USE_KEY.isDown() && abilityKeyIsDown) {
                 abilityKeyIsDown = false;
                 ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.RELEASE));
             }
-
-            mc.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                if(style.getCurrentForms() == BreathingForms.WATER_9) {
-                    if (mc.player.isOnGround()) {
-                        canAirJump = true;
-                    }
-
-                    boolean isCurrentlyJumping = mc.player.getDeltaMovement().y > 0;
-
-                    if (wasJumping && !isCurrentlyJumping && !mc.player.isOnGround() && canAirJump) {
-                        if (mc.options.keyJump.isDown()) {
-                            canAirJump = false;
-                            ModMessages.sendToServer(new PerformAirJumpC2SPacket());
-                        }
-                    }
-                    wasJumping = isCurrentlyJumping;
-                } else {
-                    canAirJump = true;
-                    wasJumping = false;
-                }
-            });
         }
 
         private static void openFormSelectionScreen() {
@@ -292,6 +269,7 @@ public class ClientEvents {
             event.register(KeyBinding.CHANGE_KEY);
             event.register(KeyBinding.USE_KEY);
             event.register(KeyBinding.OPEN_MENU_KEY);
+            event.register(KeyBinding.BDA_TOGGLE_KEY);
         }
 
         @SubscribeEvent
