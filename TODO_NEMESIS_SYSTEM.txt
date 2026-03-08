@@ -1,0 +1,275 @@
+NEMESIS SYSTEM – COMPLETION TODO (Forge 1.19.2 mod)
+===============================================
+
+Scope
+-----
+This file tracks remaining work needed to complete the Nemesis System (Shadow of War-inspired) in this mod.
+It intentionally avoids “integration details” (UI/networking specifics, etc.) and focuses on system requirements,
+data models, and core behavior.
+
+Legend
+------
+[ ] Not started
+[~] Partially implemented
+[x] Done
+
+What already exists (quick inventory)
+-----------------------------------
+[x] Persistent world state for hierarchy/roster via SavedData (DemonHierarchyManager)
+[x] Daily simulation tick (worldDayCounter increments; runs every 24000 server ticks)
+[~] DemonTrait has birthTime + lastBattleTime persisted
+[~] DemonTrait has a bounded memory list + memoryCounts + lastMemoryTimes
+[~] Taunts/announcements selected by string keys via blueprints/personality/global defaults
+[~] Blood Battles (player-driven) exist with pure/tainted outcome handling
+[~] Simulation has a local “intel level” roll, but it is not a persistent stat/relationship
+
+Top priorities (core architecture)
+---------------------------------
+[ ] 1) Memory model: FACTS vs FEELINGS
+    - Goal: separate “what happened” from “how the demon feels about it”.
+    - Facts:
+        - Keep array/list of recent events (bounded, recent-first).
+        - Each fact entry should include type + timestamp + (optional) source/target/context.
+    - Feelings:
+        - EmotionType enum separate from MemoryType.
+        - Store intensity (float) + lastUpdatedTime per emotion.
+        - Allow personality/behavior traits to affect:
+            - probability to develop fear vs hate
+            - rate of intensity gain per exposure
+            - decay/forget rate (optional)
+    - RULE: MemoryType should be factual; do not encode feelings as MemoryType going forward.
+
+[ ] 2) Formal trigger/router pipeline
+    - Goal: a single “routing layer” that converts gameplay or simulation outcomes into:
+        gameplay event -> fact memory update -> feelings update -> taunt/announcement selection -> story logging
+    - Responsibilities:
+        - detect events (wound type, style used, escape/retreat, near-death, humiliation, etc.)
+        - append fact memories (bounded)
+        - update feelings probabilistically + intensity
+        - choose taunt keys (and optionally announcement keys) deterministically from conditions
+
+[ ] 3) Relationship models (player nemesis + demon rivals)
+    - Per-player relationship (demon -> player):
+        - hate/fear/respect (intensity)
+        - lastBattleTime / lastSeenTime / lastTauntTime
+        - encounter counts, kills/deaths, escapes, humiliations
+    - Per-demon rivalry model (demon -> demon):
+        - rivalry intensity / grudge reasons
+        - alliances (optional) / interference tracking
+        - lastConflictTime
+
+
+Detailed TODO checklist
+-----------------------
+
+A) Memories (facts) – bounded list + fast indexes
+------------------------------------------------
+[~] A1) Change memory cap to last 50 events (NOT 64)
+    - Must be per demon.
+    - Eviction must remove oldest events and keep newest.
+
+[~] A2) Ensure memory list order matches “recent-first” requirement
+    - Ensure all memory queries are consistent.
+
+[~] A3) Expand DemonMemory data (if missing):
+    - timestamp
+    - MemoryType
+    - optional source entity (UUID) + target entity (UUID)
+    - optional context map (style tag, biome, damage tag, battle id, etc.)
+
+[~] A4) Ensure fast indexes exist and stay correct:
+    - Map<MemoryType, int> count
+    - Map<MemoryType, long> lastSeenTime
+    - Rebuild indexes from log on load if needed
+
+[ ] A5) Add “combat style encountered” fact memories
+    - Add MemoryType entries as facts:
+        - FOUGHT_FLAME_STYLE, FOUGHT_WATER_STYLE, etc.
+    - Keep “wounded” separate from “fought/encountered”.
+
+
+B) Feelings / emotions (derived state)
+-------------------------------------
+[ ] B1) Create EmotionType enum
+    - Examples: FEAR_FIRE, HATE_THUNDER_STYLE, RESPECT_PLAYER, etc.
+
+[ ] B2) Add emotion state store per demon
+    - Map<EmotionType, float> intensity
+    - Map<EmotionType, long> lastUpdated
+
+[ ] B3) Emotion derivation rules
+    - Example rules:
+        - If WOUNDED_BY_FLAME then increase FEAR_FIRE chance
+        - Brave demons skew to HATE_* rather than FEAR_*
+        - Cowardly demons gain fear faster and to higher cap
+        - Repeated exposure increases intensity
+        - Optional decay over long time without exposure
+
+[ ] B4) Ensure facts do not get double-counted on load
+    - Emotions should be persisted OR re-derived in a stable way.
+    - Prefer persisting emotions to avoid nondeterminism.
+
+
+C) Time-based information per demon
+----------------------------------
+[~] C1) birthTime is present – validate semantics
+    - Must represent creation time in persistent world ticks.
+
+[~] C2) lastBattleTime is present – validate update points
+    - Must update when a “battle session” ends, not every hit.
+
+[ ] C3) Add lastSeenTime per demon
+    - Tracks last time demon existed in loaded world OR was simulated.
+
+[ ] C4) Provide robust age/time-since-battle helpers
+    - AGE_OF_DEMON derived from (now - birthTime)
+    - TIME_SINCE_LAST_BATTLE derived from (now - lastBattleTime)
+
+
+D) Battle sessionization (prevents memory spam + enables outcomes)
+-----------------------------------------------------------------
+[ ] D1) Define what counts as a “battle”
+    - Proposed: damage exchange within N seconds qualifies as one battle session.
+
+[ ] D2) Track battle session metrics
+    - per (demon, opponent) session:
+        - startTime, lastHitTime
+        - damageDealt, damageTaken
+        - nearDeath flag
+        - escape/retreat flag
+
+[ ] D3) Derive outcome facts from metrics
+    - WON_EASILY / WON_CLOSE_CALL / LOST_BADLY / HUMILIATED / ESCAPED_BATTLE
+
+[ ] D4) Write all battle outcomes through the router
+
+
+E) Growth system (fight-driven, age is minor)
+--------------------------------------------
+[ ] E1) Create persistent “growth inputs” per demon
+    - battleCount, wins, losses, escapes
+    - winStreak
+    - damageDealtTotal, damageTakenTotal
+    - playersKilled, demonsKilled
+    - bloodConsumedTotal
+    - specialEventCount (optional)
+
+[ ] E2) Growth calculation rules
+    - Age: small passive growth
+    - Fighting/surviving: main growth source
+    - Close fights should give different growth from easy wins
+
+[ ] E3) Growth outputs
+    - Stat scaling (vigor/strength/agility)
+    - Unlock/level Blood Demon Arts (BDA)
+    - Add/upgrade quirks
+    - Add emotional predispositions (fear/hate) based on repeated facts
+
+[ ] E4) Prevent runaway scaling
+    - caps, diminishing returns, soft caps, or rank-based scaling
+
+
+F) Blood Battles & hierarchy consequences (persistent)
+-----------------------------------------------------
+[~] F1) Persist blood battle victory/defeat as memories
+    - Facts:
+        - DEFEATED_KIZUKI / KILLED_KIZUKI
+        - PROMOTED / DEMOTED
+        - HUMILIATED (if tainted / interference)
+
+[ ] F2) Define “power vacuum” behavior clearly
+    - Empty slot handling rules
+    - Promotion rules vs refill from fodder vs spawn new demon
+
+[ ] F3) Demon-vs-demon blood battles as first-class events
+    - Must produce the same memory/growth/story consequences as on-screen fights
+
+
+G) Demon-vs-demon scheming (AI-free offscreen politics)
+------------------------------------------------------
+[~] G1) Current daily simulation runs battles, but lacks schemes.
+
+[ ] G2) Add persistent rivalries & alliances
+    - Rivalries created by:
+        - repeated conflicts
+        - hierarchy adjacency
+        - personality clashes
+        - competition for rank/resources
+
+[ ] G3) Scheme selection rules
+    - pick targets based on:
+        - ambition (to climb)
+        - fear (avoid strong targets)
+        - respect/hate
+        - intel advantage
+        - injuries/recent losses
+
+[ ] G4) Persist “intel” as a stat/relationship
+    - Per demon gathering competence
+    - Per matchup knowledge level
+    - Must influence offscreen battle outcomes
+
+[ ] G5) Offscreen battle outcomes beyond win/lose
+    - retreats/escapes
+    - humiliations
+    - interference/betrayal
+    - injuries/temporary debuffs (optional)
+
+
+H) Story engine (emergent narrative + player intel)
+--------------------------------------------------
+[ ] H1) Add story events (world log)
+    - Battle occurred, promotion, betrayal, hunter sent, etc.
+
+[ ] H2) Player-specific intel tiers
+    - RUMOR / CONFIRMED / FULL
+    - More intel unlocks more detail (names, ranks, reasons)
+
+[ ] H3) Weekly digest summaries
+    - Aggregate last 7 in-game days (or N sims) into a short report
+
+[ ] H4) Rumor spread rules
+    - proximity, crow system, demon personality, rank magnitude
+
+
+I) Taunts: standardized key list + dynamic templating
+-----------------------------------------------------
+[ ] I1) Define a standard taunt key registry (single source of truth)
+    - Categories:
+        - style encounter
+        - fear/hate reaction
+        - outcome reaction
+        - rivalry mentions
+        - hunter arrival
+
+[ ] I2) Condition-based taunt selection rules
+    - Example:
+        - if fact has WOUNDED_BY_FLAME and current style is FLAME and personality is COWARDLY:
+          choose from TAUNT_FIRE_PANIC_* keys
+
+[ ] I3) Expand templating variables
+    - Currently: {player}
+    - Add optional placeholders:
+        - {demon}, {rank}, {style}, {biome}, {time}, etc.
+
+
+J) Player interaction requirements
+---------------------------------
+[ ] J1) Player can encounter demon-vs-demon blood battles in the world
+    - Unrelated to player, but visible and can influence intel/story.
+
+[ ] J2) Player can be hunted/challenged
+    - Works whether player is demon or slayer
+    - Hunter selection should consider relationship intensity and rank disparity
+
+
+Stability + design warnings (loopholes to avoid)
+-----------------------------------------------
+- Avoid exploding MemoryType into hundreds of entries; use context fields for details.
+- Without battle sessionization, memory will become noisy and taunts will spam.
+- Persist emotion intensities; don’t re-roll them on load (nondeterminism).
+- Ensure all offscreen simulation writes the SAME kind of events as on-screen gameplay.
+- Use a consistent time source (overworld gameTime) for all timestamps.
+- Add diminishing returns / caps to growth to prevent unstoppable demons.
+
+
