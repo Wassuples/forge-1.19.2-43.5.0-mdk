@@ -4,6 +4,8 @@ import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.DemonPassive;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.item.custom.HashiraSwordHelper;
+import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
@@ -22,7 +24,6 @@ import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.item.SwordItem;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
@@ -71,8 +72,17 @@ public class CombatHelper {
 
         });
 
-        if (isPlayerHoldingNichirin((Player) user)) {
-            // TODO: When Hashira Nichirin Swords are implemented, add a check here for extra damage.
+        if (user instanceof Player player) {
+            if (isPlayerHoldingNichirin(player)) {
+                player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(styleCap -> {
+                    BreathingStyles currentStyle = styleCap.getCurrentStyles();
+                    if (HashiraSwordHelper.doesSwordMatchStyle(player.getMainHandItem(), currentStyle)
+                            || HashiraSwordHelper.doesSwordMatchStyle(player.getOffhandItem(), currentStyle)) {
+                        // +20% damage to attacks while properly aligned.
+                        finalDamage[0] *= 1.20f;
+                    }
+                });
+            }
         }
 
         return finalDamage[0];
@@ -300,15 +310,18 @@ public class CombatHelper {
 
         AABB broadPhaseBox = user.getBoundingBox().inflate(finalRange + 2.0, 4.0, finalRange + 2.0);
         List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, broadPhaseBox, entity -> entity != user && entity.isAlive());
-        if (potentialTargets.isEmpty()) return;
 
         Set<LivingEntity> hitTargets = new HashSet<>();
 
+        // Prevent division-by-zero if a caller ever requests a single claw.
+        final int clawSteps = Math.max(1, clawCount - 1);
+
         for (int clawIndex = 0; clawIndex < clawCount; clawIndex++) {
-            double angleOffset = -(spreadAngle / 2) + (clawIndex * (spreadAngle / (clawCount - 1)));
+            double angleOffset = -(spreadAngle / 2) + (clawIndex * (spreadAngle / clawSteps));
             Vec3 slashDirection = horizontalDir.yRot((float) Math.toRadians(angleOffset));
 
-            BlockPos endGroundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, user.blockPosition().offset(slashDirection.scale(finalRange).x, 0, slashDirection.scale(finalRange).z));
+            BlockPos endGroundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    user.blockPosition().offset(slashDirection.scale(finalRange).x, 0, slashDirection.scale(finalRange).z));
             Vec3 arcEnd = Vec3.atBottomCenterOf(endGroundPos);
 
             for (int i = 0; i <= 15; i++) {
@@ -319,6 +332,7 @@ public class CombatHelper {
 
                 level.sendParticles(particle, currentPoint.x, currentPoint.y, currentPoint.z, 1, 0, 0, 0, 0);
 
+                // Only do hit testing when we have potential targets to consider.
                 for (LivingEntity potentialTarget : potentialTargets) {
                     if (potentialTarget.getBoundingBox().inflate(0.5).contains(currentPoint)) {
                         hitTargets.add(potentialTarget);
@@ -409,8 +423,8 @@ public class CombatHelper {
      * Checks if the player is holding a NichirinSwordItem in either hand.
      */
     public static boolean isPlayerHoldingNichirin(Player player) {
-        return player.getMainHandItem().getItem() instanceof SwordItem ||
-                player.getOffhandItem().getItem() instanceof SwordItem;
+        return player.getMainHandItem().getItem() instanceof NichirinSwordItem
+                || player.getOffhandItem().getItem() instanceof NichirinSwordItem;
     }
 
     /**
@@ -471,5 +485,27 @@ public class CombatHelper {
         vec = vec.xRot(p_rad);
         vec = vec.yRot(-y_rad); // We use negative yaw for standard rotation
         return vec;
+    }
+
+    /**
+     * Deals damage in an AOE, attributing the damage to {@code user}, but excluding a specific entity
+     * (commonly the summon that is executing the attack).
+     */
+    public static void dealAOEDamageExcluding(LivingEntity user, Vec3 centerPos, double baseRange, float baseDamage,
+                                             float knockbackStrength, @Nullable Entity exclude) {
+        if (!(user.level instanceof ServerLevel level)) return;
+
+        float finalDamage = calculateFinalDamage(user, baseDamage);
+        double finalRange = calculateFinalRange(user, baseRange);
+        DamageSource source = getDamageSource(user);
+
+        AABB attackAABB = new AABB(centerPos, centerPos).inflate(finalRange);
+        List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB,
+                entity -> entity.isAlive() && entity != user && (exclude == null || !entity.is(exclude)));
+
+        for (LivingEntity target : targets) {
+            Vec3 knockbackDir = centerPos.vectorTo(target.position()).normalize();
+            applyDamageToTarget(user, target, finalDamage, source, knockbackDir, knockbackStrength);
+        }
     }
 }

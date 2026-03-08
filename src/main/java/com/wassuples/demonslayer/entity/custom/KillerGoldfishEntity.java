@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundEvents;
@@ -48,8 +49,8 @@ public class KillerGoldfishEntity extends Monster implements IAnimatable {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new SpitNeedlesGoal(this));
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true, (e) -> !isOwner(e)));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Monster.class, true, (e) -> !isOwner(e) && !(e instanceof KillerGoldfishEntity)));
+        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true, (e) -> !SummonAllies.areAllies(this, e)));
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Monster.class, true, (e) -> !SummonAllies.areAllies(this, e) && !(e instanceof KillerGoldfishEntity)));
     }
 
     @Override

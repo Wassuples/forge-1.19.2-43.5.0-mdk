@@ -10,6 +10,21 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet that sets the player's currently selected form.
+ *
+ * <p>This is used by GUIs to select a specific form by index.
+ *
+ * <p>Notes:
+ *
+ * <ul>
+ *   <li>{@code isBda=true} selects a {@link DemonForms} value.</li>
+ *   <li>{@code isBda=false} selects a {@link BreathingForms} value and updates the {@code PlayerStyle}
+ *       capability.</li>
+ * </ul>
+ *
+ * <p>This packet updates selection only; executing a form is handled elsewhere.
+ */
 public class SelectFormC2SPacket {
     private final int formIndex;
     private final boolean isBda;
@@ -29,6 +44,7 @@ public class SelectFormC2SPacket {
         buf.writeBoolean(this.isBda);
     }
 
+    /** Handles the packet on the logical server thread. */
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {

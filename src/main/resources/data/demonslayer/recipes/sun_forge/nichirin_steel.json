@@ -1,0 +1,10 @@
+{
+  "type": "demonslayer:sun_forge",
+  "ingredients": [
+    { "item": "demonslayer:scarlet_crimson_iron_sand" },
+    { "item": "minecraft:iron_ingot" }
+  ],
+  "result": { "item": "demonslayer:nichirin_steel", "count": 1 },
+  "cookTime": 100
+}
+

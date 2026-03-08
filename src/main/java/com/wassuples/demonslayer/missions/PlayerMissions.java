@@ -31,9 +31,8 @@ public class PlayerMissions {
         if (!isActive(mission.id()) && !hasCompleted(mission.id())) {
             Map<String, Integer> progress = new HashMap<>();
 
-            // Special handling for survival objectives
             for (MissionObjective objective : mission.objectives()) {
-                if (objective instanceof SurviveObjective) {
+                if (objective instanceof SurvivalObjective) {
                     progress.put(objective.getProgressKey(), (int)player.level.getGameTime());
                 }
                 if (objective instanceof KillObjective killObjective) {

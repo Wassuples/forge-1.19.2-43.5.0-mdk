@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -81,9 +82,9 @@ public class OctopusPotEntity extends Monster implements IAnimatable {
             );
 
             for (LivingEntity target : nearbyEntities) {
-                if (target == this || target.equals(owner)) {
-                    continue;
-                }
+                if (target == this) continue;
+                if (owner != null && target.equals(owner)) continue;
+                if (SummonAllies.areAllies(this, target)) continue;
 
                 if (this.distanceToSqr(target) < radius * radius) {
                     target.hurt(damageSource, damage);

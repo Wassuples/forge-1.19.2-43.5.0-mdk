@@ -13,6 +13,12 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Capability provider for {@link PlayerStyle}.
+ *
+ * <p>This capability stores the player's currently selected breathing style and form index.
+ * It is persisted via NBT and synced to the client via packets (see {@code PlayerStyleSyncS2CPacket}).
+ */
 public class PlayerStyleProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
     public static final ResourceLocation KEY = new ResourceLocation(DemonSlayer.MOD_ID, "style");
     // The actual capability provider.

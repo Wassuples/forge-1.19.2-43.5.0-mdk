@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.demon.DemonRank;
+import com.wassuples.demonslayer.entity.ai.AvoidWisteriaLeavesGoal;
 import com.wassuples.demonslayer.entity.ai.FormUserAttackGoal;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
@@ -49,6 +50,9 @@ public abstract class DemonEntity extends AbstractFormUsingEntity {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+
+        // Repelled by wisteria leaves.
+        this.goalSelector.addGoal(0, new AvoidWisteriaLeavesGoal(this, 4, 1.25D));
 
         this.goalSelector.addGoal(1, new FormUserAttackGoal(this, 1.0D, true));
 

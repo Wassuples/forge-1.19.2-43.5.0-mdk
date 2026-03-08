@@ -1,8 +1,10 @@
 package com.wassuples.demonslayer.missions;
 
+import com.google.gson.JsonObject;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.GsonHelper;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
@@ -59,5 +61,11 @@ public record ItemReward(ResourceLocation itemId, int count) implements MissionR
     @Override
     public RewardType<?> getType() {
         return RewardType.ITEM;
+    }
+
+    public static ItemReward fromJson(JsonObject json) {
+        ResourceLocation id = new ResourceLocation(GsonHelper.getAsString(json, "item"));
+        int count = GsonHelper.getAsInt(json, "count", 1);
+        return new ItemReward(id, count);
     }
 }

@@ -1,0 +1,21 @@
+{
+  "type": "story",
+  "title": "mission.demonslayer.final_selection.title",
+  "description": [
+    "mission.demonslayer.final_selection.desc_1"
+  ],
+  "objectives": [
+    {
+      "type": "demonslayer:survival",
+      "biome": "demonslayer:fujikasane_forest",
+      "duration_ticks": 168000,
+      "boss": "demonslayer:hand_demon",
+      "require_boss_alive": true,
+      "radius": 32.0
+    }
+  ],
+  "rewards": [
+  ],
+  "requirement": "civilian"
+}
+

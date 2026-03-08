@@ -34,15 +34,16 @@ public class PlayerStyleSyncS2CPacket {
             // This code runs on the CLIENT
             Player player = Minecraft.getInstance().player;
             if (player != null) {
-                // ADD THIS LINE - Update our static tracker with the correct value from the server.
-                ClientEvents.ClientForgeEvents.lastSyncedStyle = this.styleIndex;
-
                 player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
+                    // ADD THIS LINE - Update our static tracker with the correct value from the server.
+                    ClientEvents.ClientForgeEvents.lastSyncedStyle = this.styleIndex;
+
                     // This part remains the same from the last fix
+                    style.changeStyle(this.styleIndex);
                     style.setStyleIndex(this.styleIndex);
                     style.setFormIndex(this.formIndex);
                 });
-            }
+            };
         });
         return true;
     }

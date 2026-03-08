@@ -43,7 +43,10 @@ public class HashiraEntity extends AbstractFormUsingEntity {
     @Override
     public void addAdditionalSaveData(CompoundTag pCompound) {
         super.addAdditionalSaveData(pCompound);
-        pCompound.putInt("BreathingStyle", this.getBreathingStyle().ordinal());
+        BreathingStyles style = this.getBreathingStyle();
+        if (style != null) {
+            pCompound.putInt("BreathingStyle", style.ordinal());
+        }
     }
 
     @Override

@@ -35,13 +35,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class DemonHierarchyManager extends SavedData {
     private final Map<DemonRank, UUID> kizukiSlots = new EnumMap<>(DemonRank.class);
     private final List<UUID> rankedFodder = new ArrayList<>();
     private final Map<UUID, DemonTrait> demonDataCache = new HashMap<>();
     @Nullable private BloodBattle activeBattle = null;
+    private boolean initialized = false;
 
     public record BattleContext(ResourceLocation biome, long timeOfDay) {}
     private enum IntelLevel { NONE, PARTIAL, FULL }
@@ -61,8 +61,52 @@ public class DemonHierarchyManager extends SavedData {
 
     public DemonHierarchyManager() {}
 
+    /**
+     * IMPORTANT: Do not do worldgen/population work in the constructor.
+     * SavedData can be constructed in scenarios where the backing NBT isn't yet loaded,
+     * or the instance is created temporarily. Initialization is handled lazily in get().
+     */
     public DemonHierarchyManager(ServerLevel level) {
-        initialPopulation(level);
+        // Intentionally empty.
+    }
+
+    public Collection<DemonTrait> getAllDemonTraits() {
+        // Return an unmodifiable view to prevent external mutation of the internal cache
+        return Collections.unmodifiableCollection(demonDataCache.values());
+    }
+
+    /**
+     * Finds a demon UUID by its displayed name.
+     *
+     * @param name Name to search for (case-insensitive). Matches either the short name ("Akaza")
+     *             or full name ("Akaza Upper Moon Three") depending on how the trait is stored.
+     */
+    public Optional<UUID> getDemonUUIDByName(String name) {
+        return Optional.ofNullable(findDemonUUIDByName(name));
+    }
+
+    /**
+     * Nullable variant used by older code paths.
+     */
+    @Nullable
+    public UUID findDemonUUIDByName(@Nullable String name) {
+        if (name == null) return null;
+        String lookup = name.trim().toLowerCase(Locale.ROOT);
+        if (lookup.isEmpty()) return null;
+
+        for (Map.Entry<UUID, DemonTrait> entry : demonDataCache.entrySet()) {
+            DemonTrait trait = entry.getValue();
+            if (trait == null) continue;
+
+            String traitName = trait.getName() != null ? trait.getName().trim().toLowerCase(Locale.ROOT) : "";
+            if (!traitName.isEmpty() && traitName.equals(lookup)) return entry.getKey();
+
+            // Some names are presented as "Name Title" in UI/commands
+            String fullName = (String.valueOf(trait.getName()) + " " + String.valueOf(trait.getTitle())).trim().toLowerCase(Locale.ROOT);
+            if (!fullName.isEmpty() && fullName.equals(lookup)) return entry.getKey();
+        }
+
+        return null;
     }
 
     public record DemonDisplayDataLists(List<DemonDisplayData> kizuki, List<DemonDisplayData> fodder) {}
@@ -406,6 +450,34 @@ public class DemonHierarchyManager extends SavedData {
         }
     }
 
+    /**
+     * Ensures the nemesis roster stays filled up to a target size.
+     *
+     * This method must be cheap and bounded; it should never spam-generate demons indefinitely.
+     */
+    private void refillDemonRoster(ServerLevel level) {
+        // "Fodder" excludes the moon-rank slots.
+        final int targetFodderCount = 20;
+        if (level == null) return;
+
+        // Safety clamp: never generate more than this many in a single call.
+        final int maxToGenerateThisCall = 5;
+
+        int needed = targetFodderCount - rankedFodder.size();
+        if (needed <= 0) return;
+
+        int toGenerate = Math.min(needed, maxToGenerateThisCall);
+        for (int i = 0; i < toGenerate; i++) {
+            System.out.println("[Nemesis System] Generating a procedural demon to fill roster.");
+
+            NemesisDemonEntity demon = new NemesisDemonEntity(ModEntityTypes.NEMESIS_DEMON.get(), level);
+            DemonGenerator.initializeProcedural(demon, level);
+
+            // Important: we only register it into SavedData; we are NOT spawning it into the world here.
+            demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> this.addDemon(demon.getUUID(), (DemonTrait) trait));
+        }
+    }
+
     private void broadcastToPlayers(ServerLevel level, Component message) {
         if (level != null) {
             level.getServer().getPlayerList().broadcastSystemMessage(message, false);
@@ -699,6 +771,9 @@ public class DemonHierarchyManager extends SavedData {
     }
 
     public void initialPopulation(ServerLevel level) {
+        if (initialized) return;
+        initialized = true;
+
         System.out.println("[Nemesis System] First world load! Populating the demon roster...");
         BlueprintLoader.loadBlueprints();
 
@@ -744,63 +819,17 @@ public class DemonHierarchyManager extends SavedData {
         setDirty();
     }
 
-    private void refillDemonRoster(ServerLevel level) {
-        int minRosterSize = level.getGameRules().getInt(ModGameRules.MIN_DEMON_ROSTER_SIZE);
-        if (this.demonDataCache.size() >= minRosterSize) return;
-
-        System.out.println("[Nemesis System] Roster below minimum. Checking for new demons...");
-        BlueprintLoader.loadBlueprints();
-
-        List<DemonBlueprint> allBlueprints = BlueprintLoader.getAllBlueprints();
-        Set<String> existingBlueprintIds = this.demonDataCache.values().stream()
-                .map(DemonTrait::getSourceBlueprintId)
-                .collect(Collectors.toSet());
-
-        for (DemonBlueprint blueprint : allBlueprints) {
-            if (this.demonDataCache.size() >= minRosterSize) break;
-            if (!existingBlueprintIds.contains(blueprint.id())) {
-                System.out.println("[Nemesis System] Found new blueprint: " + blueprint.id() + ". Spawning...");
-                NemesisDemonEntity demon = new NemesisDemonEntity(ModEntityTypes.NEMESIS_DEMON.get(), level);
-                DemonGenerator.initializeBlueprint(demon, blueprint, level);
-                demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
-                    if (blueprint.bloodPoints() > 0) {
-                        trait.addBloodPoints(blueprint.bloodPoints());
-                    }
-                    if (blueprint.taunts() != null) {
-                        trait.setBlueprintTaunts(blueprint.taunts());
-                    }
-                    if (blueprint.announcements() != null) {
-                        trait.setBlueprintAnnouncements(blueprint.announcements());
-                    }
-                    this.addDemon(demon.getUUID(), (DemonTrait) trait);
-                });
-            }
-        }
-
-        while (this.demonDataCache.size() < minRosterSize) {
-            System.out.println("[Nemesis System] Generating a procedural demon to fill roster.");
-            NemesisDemonEntity demon = new NemesisDemonEntity(ModEntityTypes.NEMESIS_DEMON.get(), level);
-            DemonGenerator.initializeProcedural(demon, level);
-            demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait ->
-                    this.addDemon(demon.getUUID(), (DemonTrait) trait));
-        }
-    }
-
-    public Optional<UUID> getDemonUUIDByName(String name) {
-        return demonDataCache.entrySet().stream()
-                .filter(entry -> entry.getValue().getName().equalsIgnoreCase(name))
-                .map(Map.Entry::getKey)
-                .findFirst();
-    }
-
-    public Collection<DemonTrait> getAllDemonTraits() {
-        return this.demonDataCache.values();
-    }
-
     public static DemonHierarchyManager get(ServerLevel level) {
         DimensionDataStorage storage = level.getServer().overworld().getDataStorage();
-        return storage.computeIfAbsent(nbt -> DemonHierarchyManager.load(nbt, level),
+        DemonHierarchyManager manager = storage.computeIfAbsent(nbt -> DemonHierarchyManager.load(nbt, level),
                 () -> new DemonHierarchyManager(level), "demon_hierarchy");
+
+        // Lazy init on first access, and only if we haven't been initialized yet.
+        if (!manager.initialized) {
+            manager.initialPopulation(level);
+        }
+
+        return manager;
     }
 
     @Override public @NotNull CompoundTag save(CompoundTag nbt) {
@@ -820,6 +849,7 @@ public class DemonHierarchyManager extends SavedData {
         nbt.put("demonDataCache", cacheTag);
 
         nbt.putInt("worldDayCounter", this.worldDayCounter);
+        nbt.putBoolean("initialized", this.initialized);
 
         return nbt;
     }
@@ -828,6 +858,7 @@ public class DemonHierarchyManager extends SavedData {
         DemonHierarchyManager manager = new DemonHierarchyManager();
 
         manager.worldDayCounter = nbt.getInt("worldDayCounter");
+        manager.initialized = nbt.getBoolean("initialized");
 
         // Load Kizuki
         CompoundTag kizukiTag = nbt.getCompound("kizukiSlots");
@@ -848,11 +879,7 @@ public class DemonHierarchyManager extends SavedData {
             manager.demonDataCache.put(UUID.fromString(key), trait);
         }
 
-        // Initial Population
-        if (manager.kizukiSlots.isEmpty() && !nbt.contains("kizukiSlots")) {
-            manager.initialPopulation(level);
-        }
-
+        // No side effects here; population happens lazily in get().
         return manager;
     }
 }

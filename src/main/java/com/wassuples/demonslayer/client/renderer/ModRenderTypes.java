@@ -34,4 +34,18 @@ public class ModRenderTypes extends RenderType {
 
         return create("info_box_background", DefaultVertexFormat.POSITION_COLOR, VertexFormat.Mode.QUADS, 256, false, true, state);
     }
+
+    public static RenderType heatLightningCracks(net.minecraft.resources.ResourceLocation cracksTexture) {
+        CompositeState state = CompositeState.builder()
+                .setShaderState(RENDERTYPE_ENTITY_TRANSLUCENT_SHADER)
+                .setTextureState(new TextureStateShard(cracksTexture, false, false))
+                .setTransparencyState(TRANSLUCENT_TRANSPARENCY)
+                .setLightmapState(LIGHTMAP)
+                .setOverlayState(OVERLAY)
+                .setDepthTestState(LEQUAL_DEPTH_TEST)
+                .setCullState(NO_CULL)
+                .createCompositeState(true);
+
+        return create("heat_lightning_cracks", DefaultVertexFormat.NEW_ENTITY, VertexFormat.Mode.QUADS, 256, true, true, state);
+    }
 }

@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.mojang.authlib.GameProfile;
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtUtils;
@@ -189,7 +190,11 @@ public class MistCloneEntity extends Monster {
             if (finalTarget == null) {
                 // Search for any other LivingEntity that isn't a player or another clone.
                 List<LivingEntity> nearbyMobs = this.level.getEntitiesOfClass(LivingEntity.class, searchBox,
-                        entity -> entity.isAlive() && entity != this && !(entity instanceof Player) && !entity.getTags().contains("mist_clone")
+                        entity -> entity.isAlive()
+                                && entity != this
+                                && !(entity instanceof Player)
+                                && !entity.getTags().contains("mist_clone")
+                                && !SummonAllies.areAllies(this.getOwner(), entity)
                 );
 
                 if (!nearbyMobs.isEmpty()) {

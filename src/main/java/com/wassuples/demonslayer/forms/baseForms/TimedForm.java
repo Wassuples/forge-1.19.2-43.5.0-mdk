@@ -15,7 +15,13 @@ public abstract class TimedForm extends ActiveForm {
     @Override
     public void onTick() {
         if (ticksActive >= duration) {
-            ActiveFormManager.stop(user, false);
+            // If this instance is running as the active form, stop normally.
+            // If it's being ticked as a sub-form inside another active form (e.g. SUN_13), do nothing here;
+            // the parent form controls step transitions.
+            ActiveForm active = ActiveFormManager.getActiveForm(user);
+            if (active == this) {
+                ActiveFormManager.stop(user, false);
+            }
         }
     }
 }

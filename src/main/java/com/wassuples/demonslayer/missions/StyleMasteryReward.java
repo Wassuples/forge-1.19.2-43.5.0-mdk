@@ -1,17 +1,24 @@
 package com.wassuples.demonslayer.missions;
 
+import com.google.gson.JsonObject;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.GsonHelper;
 
 import javax.annotation.Nullable;
 
 public record StyleMasteryReward(@Nullable BreathingStyles style, int amount) implements MissionReward {
     public StyleMasteryReward(FriendlyByteBuf buf) {
         this(buf.readBoolean() ? buf.readEnum(BreathingStyles.class) : null, buf.readInt());
+    }
+
+    public StyleMasteryReward(JsonObject json) {
+        this(json.has("style") ? BreathingStyles.valueOf(GsonHelper.getAsString(json, "style").toUpperCase()) : null,
+                GsonHelper.getAsInt(json, "amount"));
     }
 
     @Override
@@ -58,5 +65,9 @@ public record StyleMasteryReward(@Nullable BreathingStyles style, int amount) im
 
     public static StyleMasteryReward current(int amount) {
         return new StyleMasteryReward(null, amount);
+    }
+
+    public static StyleMasteryReward fromJson(JsonObject json) {
+        return new StyleMasteryReward(json);
     }
 }

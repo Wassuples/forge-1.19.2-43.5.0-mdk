@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
 import java.util.Optional;
 import java.util.UUID;
 
-import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
+import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamageExcluding;
 
 public class BodhisattvaEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
@@ -46,8 +46,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
 
     public BodhisattvaEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
-        this.noPhysics = true;
-        this.setNoGravity(true);
+        this.maxUpStep = 2.5f;
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -147,7 +146,10 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
 
     public void moveWithInput(Vec3 input) {
         Vec3 move = input.yRot(-this.getYRot() * ((float)Math.PI / 180F));
-        this.setDeltaMovement(move.scale(getAttributeValue(Attributes.MOVEMENT_SPEED)));
+        // Preserve current vertical movement (gravity) while applying new horizontal controls
+        double currentY = this.getDeltaMovement().y;
+        Vec3 scaledMove = move.scale(getAttributeValue(Attributes.MOVEMENT_SPEED));
+        this.setDeltaMovement(scaledMove.x, currentY, scaledMove.z);
 
         if (input.lengthSqr() > 0 && this.attackCooldown == 0) {
             setAnimationState(1);
@@ -194,7 +196,8 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
             Vec3 lookDir = this.getLookAngle();
             Vec3 centerOfCone = this.getEyePosition().add(lookDir.scale(d));
             double widthOfCone = d * 0.7;
-            dealAOEDamage(pilot, centerOfCone, widthOfCone, 2.0f, 0.2f);
+            // Attribute damage to the pilot but exclude this summon.
+            dealAOEDamageExcluding(pilot, centerOfCone, widthOfCone, 2.0f, 0.2f, this);
 
             for (int i = 0; i < 15; i++) {
                 Vec3 sideDir = new Vec3(-lookDir.z, 0, lookDir.x).normalize();
@@ -231,7 +234,8 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
 
         // Damage logic remains the same
         Vec3 centerOfSwipe = this.getEyePosition().add(this.getLookAngle().scale(8.0));
-        dealAOEDamage(pilot, centerOfSwipe, 8.0, 50.0f, 2.5f);
+        // Attribute damage to the pilot but exclude this summon.
+        dealAOEDamageExcluding(pilot, centerOfSwipe, 8.0, 50.0f, 2.5f, this);
     }
 
     @Override

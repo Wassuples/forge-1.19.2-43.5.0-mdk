@@ -40,5 +40,18 @@ public class ModOverworldRegion extends Region {
                         0.0f), // Offset
                 ModBiomes.FUJIKASANE_SLOPES
         );
+
+        // Mount Yoko
+        this.addBiome(mapper, Climate.parameters(
+                        // Keep this biome tightly in the "mountain peaks" neighborhood.
+                        Climate.Parameter.span(0.15f, 0.45f),  // Temperature (mild)
+                        Climate.Parameter.span(-0.15f, 0.25f), // Humidity
+                        Climate.Parameter.span(0.55f, 0.95f),  // Continentalness (inland/high)
+                        Climate.Parameter.span(-0.85f, -0.65f),  // Erosion (very low -> sharper terrain)
+                        Climate.Parameter.span(0.9f, 1.25f),      // Depth (extremely high vertices)
+                        Climate.Parameter.span(0.8f, 1.25f),      // Weirdness (extreme variance)
+                        0.0f),
+                ModBiomes.MOUNT_YOKO
+        );
     }
 }

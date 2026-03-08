@@ -8,8 +8,6 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
-import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
-import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
 public class WhirlpoolForm extends TimedForm {
@@ -30,7 +28,6 @@ public class WhirlpoolForm extends TimedForm {
         user.setDeltaMovement(user.getDeltaMovement().add(0, 1.2, 0));
         user.hurtMarked = true;
         level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_SPLASH, SoundSource.PLAYERS, 1.0f, 1.0f);
-        applyImmobility(user, duration);
     }
 
     @Override
@@ -43,10 +40,5 @@ public class WhirlpoolForm extends TimedForm {
 
         spawnParticleArc(user, ParticleTypes.SPLASH, 2.5, 360, 20);
         dealAOEDamage(user, user.position(), 3.0, 3.0f, 1.2f);
-    }
-
-    @Override
-    public void onStop() {
-        removeImmobility(user);
     }
 }

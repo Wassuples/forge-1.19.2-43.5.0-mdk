@@ -40,7 +40,10 @@ public class SunHaloDragonForm extends ActiveForm {
 
     @Override
     public void onTick() {
-        if(!user.isSprinting()) {
+        // Require sprinting ONLY when this form is running as the player's active form.
+        // When used as a sub-step (e.g., during SUN_13), we must not stop the parent chain.
+        boolean isStandaloneActive = ActiveFormManager.getActiveForm(user) == this;
+        if (isStandaloneActive && !user.isSprinting()) {
             ActiveFormManager.stop(user);
             return;
         }
@@ -49,7 +52,8 @@ public class SunHaloDragonForm extends ActiveForm {
             user.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
                 if (breath.getBreath() >= BREATH_COST_PER_TICK) {
                     breath.subBreath(BREATH_COST_PER_TICK);
-                } else {
+                } else if (isStandaloneActive) {
+                    // If we're the actual active form, stop. If we're a sub-form, parent handles breath rules.
                     ActiveFormManager.stop(user);
                 }
             });

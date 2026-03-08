@@ -1,8 +1,8 @@
 package com.wassuples.demonslayer.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.wassuples.demonslayer.DemonSlayer;
+import com.wassuples.demonslayer.client.DemonThreatEffects;
 import com.wassuples.demonslayer.events.ClientEvents;
 import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -14,15 +14,18 @@ public class VignetteHudOverlay {
 
     // This contains the exact same drawing logic as before, now as an IGuiOverlay.
     public static final IGuiOverlay HUD_VIGNETTE = (gui, poseStack, partialTick, screenWidth, screenHeight) -> {
-        // We still check our flag from ClientEvents to see if we should draw.
-        if (!ClientEvents.ClientForgeEvents.isVignetteActive) {
+        // Prefer the new threat-driven effects; fall back to legacy flag.
+        boolean active = DemonThreatEffects.isActive() || ClientEvents.ClientForgeEvents.isVignetteActive;
+        if (!active) {
             return;
         }
+
+        float alpha = DemonThreatEffects.isActive() ? DemonThreatEffects.getVignetteAlpha() : 0.4f;
 
         RenderSystem.disableDepthTest();
         RenderSystem.depthMask(false);
         RenderSystem.enableBlend();
-        RenderSystem.setShaderColor(1.0f, 0.1f, 0.1f, 0.4f); // Red tint, 40% opaque
+        RenderSystem.setShaderColor(1.0f, 0.1f, 0.1f, alpha);
         RenderSystem.setShaderTexture(0, VIGNETTE_TEXTURE);
 
         // Draw our vignette texture stretched across the entire screen.

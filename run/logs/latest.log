@@ -1,121 +1,181 @@
-[21Nov2025 02:03:07.137] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 1.19, --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 43.5.0, --fml.mcVersion, 1.19.2, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20220805.130853, --mixin.config, demonslayer.mixins.json]
-[21Nov2025 02:03:07.142] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.11 by Oracle Corporation; OS Windows 10 arch amd64 version 10.0
-[21Nov2025 02:03:07.280] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/96650/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23131!/ Service=ModLauncher Env=CLIENT
-[21Nov2025 02:03:07.597] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.19.2-43.5.0\127dd8c16243efb106d9c85717ca61eb55fbbfa3\javafmllanguage-1.19.2-43.5.0.jar is missing mods.toml file
-[21Nov2025 02:03:07.600] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.19.2-43.5.0\161b579c6f52a4441b04376763e7aedaf1a097f1\lowcodelanguage-1.19.2-43.5.0.jar is missing mods.toml file
-[21Nov2025 02:03:07.602] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.19.2-43.5.0\6ca236cd5718398c2ba7abef7cc7f1f6e21dbc38\mclanguage-1.19.2-43.5.0.jar is missing mods.toml file
-[21Nov2025 02:03:07.605] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.19.2-43.5.0\222e1c483f50a0b8b1397e833049b51445cc7dfb\fmlcore-1.19.2-43.5.0.jar is missing mods.toml file
-[21Nov2025 02:03:07.695] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
-[21Nov2025 02:03:08.907] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
-[21Nov2025 02:03:08.915] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --assetIndex, 1.19]
-[21Nov2025 02:03:09.003] [main/WARN] [mixin/]: Reference map 'demonslayer.refmap.json' for demonslayer.mixins.json could not be read. If this is a development environment you can ignore this message
-[21Nov2025 02:03:09.234] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
-[21Nov2025 02:03:09.235] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
-[21Nov2025 02:03:09.245] [main/INFO] [mixin/]: Remapping refMap player-animation-lib-minecraft_common-refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
-[21Nov2025 02:03:12.401] [pool-3-thread-1/INFO] [net.minecraft.util.datafix.DataFixers/]: Building unoptimized datafixer
-[21Nov2025 02:03:14.113] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/assets/.mcassetsroot' uses unexpected schema
-[21Nov2025 02:03:14.114] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/data/.mcassetsroot' uses unexpected schema
-[21Nov2025 02:03:14.124] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[21Nov2025 02:03:14.127] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
-[21Nov2025 02:03:14.226] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
-[21Nov2025 02:03:14.787] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 43.5.0, for MC 1.19.2 with MCP 20220805.130853
-[21Nov2025 02:03:14.787] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v43.5.0 Initialized
-[21Nov2025 02:03:15.874] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: [demonslayer]
-[21Nov2025 02:03:16.225] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: Default, Mod Resources
-[21Nov2025 02:03:16.565] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
-[21Nov2025 02:03:16.940] [Worker-Main-6/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/wisteria_poison.png not found
-[21Nov2025 02:03:16.958] [Worker-Main-5/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/paralyzing_poison.png not found
-[21Nov2025 02:03:16.960] [Worker-Main-6/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/forced_sleep.png not found
-[21Nov2025 02:03:16.996] [Render thread/INFO] [terrablender/]: Registered region minecraft:overworld to index 0 for type OVERWORLD
-[21Nov2025 02:03:16.996] [Render thread/INFO] [terrablender/]: Registered region minecraft:nether to index 0 for type NETHER
-[21Nov2025 02:03:16.996] [Render thread/INFO] [terrablender/]: Registered region demonslayer:overworld to index 1 for type OVERWORLD
-[21Nov2025 02:03:17.339] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: UP_TO_DATE Current: 43.5.0 Target: null
-[21Nov2025 02:03:20.595] [Worker-Main-7/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_giyu#inventory' referenced from: demonslayer:nichirin_blade_giyu#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_giyu.json
-[21Nov2025 02:03:20.595] [Worker-Main-7/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_shinobu#inventory' referenced from: demonslayer:nichirin_blade_shinobu#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_shinobu.json
-[21Nov2025 02:03:20.595] [Worker-Main-7/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:muzans_blood#inventory' referenced from: demonslayer:muzans_blood#inventory: java.io.FileNotFoundException: demonslayer:models/item/muzans_blood.json
-[21Nov2025 02:03:22.368] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
-[21Nov2025 02:03:22.368] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
-[21Nov2025 02:03:22.424] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Speakers (HyperX Cloud Stinger Core Wireless DTS)
-[21Nov2025 02:03:22.424] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
-[21Nov2025 02:03:22.554] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
-[21Nov2025 02:03:22.560] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x128x4 minecraft:textures/atlas/signs.png-atlas
-[21Nov2025 02:03:22.561] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
-[21Nov2025 02:03:22.561] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
-[21Nov2025 02:03:22.562] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
-[21Nov2025 02:03:22.562] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
-[21Nov2025 02:03:22.562] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
-[21Nov2025 02:03:23.146] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
-[21Nov2025 02:03:23.311] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
-[21Nov2025 02:03:23.313] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
-[21Nov2025 02:03:23.314] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
-[21Nov2025 02:03:24.147] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
-[21Nov2025 02:03:28.688] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 7 recipes
-[21Nov2025 02:03:29.296] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1179 advancements
-[21Nov2025 02:03:29.718] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.19.2
-[21Nov2025 02:03:29.718] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
-[21Nov2025 02:03:29.826] [Server thread/INFO] [terrablender/]: Initialized TerraBlender biomes for level stem minecraft:the_nether
-[21Nov2025 02:03:29.961] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
-[21Nov2025 02:03:31.787] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[21Nov2025 02:03:31.787] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[21Nov2025 02:03:31.787] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[21Nov2025 02:03:31.787] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[21Nov2025 02:03:32.011] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 3%
-[21Nov2025 02:03:32.500] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 56%
-[21Nov2025 02:03:32.629] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
-[21Nov2025 02:03:32.632] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 2647 ms
-[21Nov2025 02:03:32.709] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
-[21Nov2025 02:03:32.712] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
-[21Nov2025 02:03:32.830] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
-[21Nov2025 02:03:33.449] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
-[21Nov2025 02:03:33.512] [Server thread/INFO] [net.minecraftforge.common.AdvancementLoadFix/]: Using new advancement loading for net.minecraft.server.PlayerAdvancements@24016654
-[21Nov2025 02:03:33.532] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:897bc4bd] logged in with entity id 84 at (-16.681408616022225, -59.2032643993313, -5.99846899409677)
-[21Nov2025 02:03:33.589] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
-[21Nov2025 02:03:34.870] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 29 advancements
-[21Nov2025 02:03:38.061] [Render thread/WARN] [net.minecraft.client.renderer.texture.TextureManager/]: Failed to load texture: demonslayer:textures/gui/crow_dispatch.png
-java.io.FileNotFoundException: demonslayer:textures/gui/crow_dispatch.png
-	at net.minecraft.server.packs.resources.ResourceProvider.lambda$getResourceOrThrow$0(ResourceProvider.java:20) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at java.util.Optional.orElseThrow(Optional.java:403) ~[?:?]
-	at net.minecraft.server.packs.resources.ResourceProvider.getResourceOrThrow(ResourceProvider.java:20) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.renderer.texture.SimpleTexture$TextureImage.load(SimpleTexture.java:83) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.renderer.texture.SimpleTexture.getTextureImage(SimpleTexture.java:58) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.renderer.texture.SimpleTexture.load(SimpleTexture.java:29) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.renderer.texture.TextureManager.loadTexture(TextureManager.java:94) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.renderer.texture.TextureManager.register(TextureManager.java:65) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.renderer.texture.TextureManager.getTexture(TextureManager.java:117) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at com.mojang.blaze3d.systems.RenderSystem._setShaderTexture(RenderSystem.java:1216) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at com.mojang.blaze3d.systems.RenderSystem.setShaderTexture(RenderSystem.java:1209) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at com.wassuples.demonslayer.client.gui.CrowDispatchScreen.render(CrowDispatchScreen.java:104) ~[main/:?]
-	at net.minecraftforge.client.ForgeHooksClient.drawScreenInternal(ForgeHooksClient.java:444) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraftforge.client.ForgeHooksClient.drawScreen(ForgeHooksClient.java:437) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.renderer.GameRenderer.render(GameRenderer.java:896) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1115) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.Minecraft.run(Minecraft.java:700) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.main.Main.run(Main.java:212) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at net.minecraft.client.main.Main.main(Main.java:51) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2.jar:?]
-	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[?:?]
-	at jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[?:?]
-	at jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[?:?]
-	at java.lang.reflect.Method.invoke(Method.java:568) ~[?:?]
-	at net.minecraftforge.fml.loading.targets.ForgeClientUserdevLaunchHandler.lambda$launchService$0(ForgeClientUserdevLaunchHandler.java:25) ~[fmlloader-1.19.2-43.5.0.jar:?]
-	at cpw.mods.modlauncher.LaunchServiceHandlerDecorator.launch(LaunchServiceHandlerDecorator.java:30) ~[modlauncher-10.0.9.jar:?]
-	at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:53) ~[modlauncher-10.0.9.jar:?]
-	at cpw.mods.modlauncher.LaunchServiceHandler.launch(LaunchServiceHandler.java:71) ~[modlauncher-10.0.9.jar:?]
-	at cpw.mods.modlauncher.Launcher.run(Launcher.java:108) ~[modlauncher-10.0.9.jar:?]
-	at cpw.mods.modlauncher.Launcher.main(Launcher.java:78) ~[modlauncher-10.0.9.jar:?]
-	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
-	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
-	at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
-[21Nov2025 02:03:46.650] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!
-[21Nov2025 02:03:46.685] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
-[21Nov2025 02:03:46.685] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
-[21Nov2025 02:03:46.697] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
-[21Nov2025 02:03:46.733] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
-[21Nov2025 02:03:46.734] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
-[21Nov2025 02:03:46.734] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
-[21Nov2025 02:03:47.174] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World for testing movement]'/minecraft:overworld
-[21Nov2025 02:03:48.115] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World for testing movement]'/minecraft:the_end
-[21Nov2025 02:03:48.116] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[New World for testing movement]'/minecraft:the_nether
-[21Nov2025 02:03:48.129] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (New World for testing movement): All chunks are saved
-[21Nov2025 02:03:48.129] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[21Nov2025 02:03:48.129] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[21Nov2025 02:03:48.129] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[17Jan2026 12:23:20.559] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 1.19, --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 43.5.0, --fml.mcVersion, 1.19.2, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20220805.130853, --mixin.config, demonslayer.mixins.json]
+[17Jan2026 12:23:20.564] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.11 by Oracle Corporation; OS Windows 10 arch amd64 version 10.0
+[17Jan2026 12:23:20.700] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/96650/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23131!/ Service=ModLauncher Env=CLIENT
+[17Jan2026 12:23:21.028] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.19.2-43.5.0\127dd8c16243efb106d9c85717ca61eb55fbbfa3\javafmllanguage-1.19.2-43.5.0.jar is missing mods.toml file
+[17Jan2026 12:23:21.031] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.19.2-43.5.0\161b579c6f52a4441b04376763e7aedaf1a097f1\lowcodelanguage-1.19.2-43.5.0.jar is missing mods.toml file
+[17Jan2026 12:23:21.035] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.19.2-43.5.0\6ca236cd5718398c2ba7abef7cc7f1f6e21dbc38\mclanguage-1.19.2-43.5.0.jar is missing mods.toml file
+[17Jan2026 12:23:21.039] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.19.2-43.5.0\222e1c483f50a0b8b1397e833049b51445cc7dfb\fmlcore-1.19.2-43.5.0.jar is missing mods.toml file
+[17Jan2026 12:23:21.155] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[17Jan2026 12:23:22.459] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
+[17Jan2026 12:23:22.470] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --assetIndex, 1.19]
+[17Jan2026 12:23:22.554] [main/WARN] [mixin/]: Reference map 'demonslayer.refmap.json' for demonslayer.mixins.json could not be read. If this is a development environment you can ignore this message
+[17Jan2026 12:23:22.824] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
+[17Jan2026 12:23:22.825] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
+[17Jan2026 12:23:22.835] [main/INFO] [mixin/]: Remapping refMap player-animation-lib-minecraft_common-refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
+[17Jan2026 12:23:27.537] [pool-3-thread-1/INFO] [net.minecraft.util.datafix.DataFixers/]: Building unoptimized datafixer
+[17Jan2026 12:23:29.341] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/assets/.mcassetsroot' uses unexpected schema
+[17Jan2026 12:23:29.342] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2.jar%23189!/data/.mcassetsroot' uses unexpected schema
+[17Jan2026 12:23:29.353] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[17Jan2026 12:23:29.358] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
+[17Jan2026 12:23:29.466] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
+[17Jan2026 12:23:29.992] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 43.5.0, for MC 1.19.2 with MCP 20220805.130853
+[17Jan2026 12:23:29.993] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v43.5.0 Initialized
+[17Jan2026 12:23:31.340] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: [demonslayer]
+[17Jan2026 12:23:31.914] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: Default, Mod Resources
+[17Jan2026 12:23:32.371] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[17Jan2026 12:23:32.722] [Worker-Main-7/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/heat_lightning.png not found
+[17Jan2026 12:23:32.764] [Worker-Main-7/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/wisteria_poison.png not found
+[17Jan2026 12:23:32.779] [Worker-Main-7/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/paralyzing_poison.png not found
+[17Jan2026 12:23:32.779] [Worker-Main-5/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/forced_sleep.png not found
+[17Jan2026 12:23:33.338] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: UP_TO_DATE Current: 43.5.0 Target: null
+[17Jan2026 12:23:33.428] [Render thread/INFO] [terrablender/]: Registered region minecraft:overworld to index 0 for type OVERWORLD
+[17Jan2026 12:23:33.428] [Render thread/INFO] [terrablender/]: Registered region minecraft:nether to index 0 for type NETHER
+[17Jan2026 12:23:33.428] [Render thread/INFO] [terrablender/]: Registered region demonslayer:overworld to index 1 for type OVERWORLD
+[17Jan2026 12:23:36.116] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/scarlet_ore.json' missing model for variant: 'demonslayer:scarlet_ore#'
+[17Jan2026 12:23:36.116] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/scarlet_ore.json': java.lang.NullPointerException: Cannot invoke "net.minecraft.client.renderer.block.model.BlockModelDefinition.isMultiPart()" because "blockmodeldefinition" is null
+[17Jan2026 12:23:36.117] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/sun_forge.json' missing model for variant: 'demonslayer:sun_forge#'
+[17Jan2026 12:23:36.117] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/swordsmiths_table.json' missing model for variant: 'demonslayer:swordsmiths_table#'
+[17Jan2026 12:23:37.501] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_giyu#inventory' referenced from: demonslayer:nichirin_blade_giyu#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_giyu.json
+[17Jan2026 12:23:37.501] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_shinobu#inventory' referenced from: demonslayer:nichirin_blade_shinobu#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_shinobu.json
+[17Jan2026 12:23:37.501] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_mitsuri#inventory' referenced from: demonslayer:nichirin_blade_mitsuri#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_mitsuri.json
+[17Jan2026 12:23:37.501] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_obanai#inventory' referenced from: demonslayer:nichirin_blade_obanai#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_obanai.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_sanemi#inventory' referenced from: demonslayer:nichirin_blade_sanemi#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_sanemi.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_gyomei#inventory' referenced from: demonslayer:nichirin_blade_gyomei#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_gyomei.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_muichiro#inventory' referenced from: demonslayer:nichirin_blade_muichiro#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_muichiro.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_rengoku#inventory' referenced from: demonslayer:nichirin_blade_rengoku#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_rengoku.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_tengen#inventory' referenced from: demonslayer:nichirin_blade_tengen#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_tengen.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_jigoro#inventory' referenced from: demonslayer:nichirin_blade_jigoro#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_jigoro.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_kanae#inventory' referenced from: demonslayer:nichirin_blade_kanae#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_kanae.json
+[17Jan2026 12:23:37.502] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:muzans_blood#inventory' referenced from: demonslayer:muzans_blood#inventory: java.io.FileNotFoundException: demonslayer:models/item/muzans_blood.json
+[17Jan2026 12:23:37.503] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:raw_scarlet#inventory' referenced from: demonslayer:raw_scarlet#inventory: java.lang.NullPointerException: Cannot assign field "name" because "blockmodel" is null
+[17Jan2026 12:23:37.503] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:scarlet_crimson_iron_sand#inventory' referenced from: demonslayer:scarlet_crimson_iron_sand#inventory: java.lang.NullPointerException: Cannot assign field "name" because "blockmodel" is null
+[17Jan2026 12:23:37.503] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_steel#inventory' referenced from: demonslayer:nichirin_steel#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_steel.json
+[17Jan2026 12:23:37.503] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:fodder_demon_spawn_egg#inventory' referenced from: demonslayer:fodder_demon_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/fodder_demon_spawn_egg.json
+[17Jan2026 12:23:37.503] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lowly_demon_spawn_egg#inventory' referenced from: demonslayer:lowly_demon_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lowly_demon_spawn_egg.json
+[17Jan2026 12:23:37.503] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:common_demon_spawn_egg#inventory' referenced from: demonslayer:common_demon_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/common_demon_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:greater_demon_spawn_egg#inventory' referenced from: demonslayer:greater_demon_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/greater_demon_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:elite_demon_spawn_egg#inventory' referenced from: demonslayer:elite_demon_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/elite_demon_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:hand_demon_spawn_egg#inventory' referenced from: demonslayer:hand_demon_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/hand_demon_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_one_spawn_egg#inventory' referenced from: demonslayer:lower_moon_one_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_one_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_two_spawn_egg#inventory' referenced from: demonslayer:lower_moon_two_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_two_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_three_spawn_egg#inventory' referenced from: demonslayer:lower_moon_three_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_three_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_four_spawn_egg#inventory' referenced from: demonslayer:lower_moon_four_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_four_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_five_spawn_egg#inventory' referenced from: demonslayer:lower_moon_five_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_five_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_six_spawn_egg#inventory' referenced from: demonslayer:lower_moon_six_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_six_spawn_egg.json
+[17Jan2026 12:23:37.504] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_one_spawn_egg#inventory' referenced from: demonslayer:upper_moon_one_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_one_spawn_egg.json
+[17Jan2026 12:23:37.505] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_two_spawn_egg#inventory' referenced from: demonslayer:upper_moon_two_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_two_spawn_egg.json
+[17Jan2026 12:23:37.505] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_three_spawn_egg#inventory' referenced from: demonslayer:upper_moon_three_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_three_spawn_egg.json
+[17Jan2026 12:23:37.505] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_four_spawn_egg#inventory' referenced from: demonslayer:upper_moon_four_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_four_spawn_egg.json
+[17Jan2026 12:23:37.505] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_five_spawn_egg#inventory' referenced from: demonslayer:upper_moon_five_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_five_spawn_egg.json
+[17Jan2026 12:23:37.510] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:tamayo_spawn_egg#inventory' referenced from: demonslayer:tamayo_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/tamayo_spawn_egg.json
+[17Jan2026 12:23:37.512] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:scarlet_ore#inventory' referenced from: demonslayer:scarlet_ore#inventory: java.lang.NullPointerException: Cannot assign field "name" because "blockmodel" is null
+[17Jan2026 12:23:37.512] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:sun_forge#inventory' referenced from: demonslayer:sun_forge#inventory: java.io.FileNotFoundException: demonslayer:models/item/sun_forge.json
+[17Jan2026 12:23:37.512] [Worker-Main-8/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:swordsmiths_table#inventory' referenced from: demonslayer:swordsmiths_table#inventory: java.io.FileNotFoundException: demonslayer:models/item/swordsmiths_table.json
+[17Jan2026 12:23:37.856] [Worker-Main-9/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, unable to load demonslayer:textures/block/wisteria_sapling.png : java.io.IOException: Could not read info from the PNG file demonslayer:textures/block/wisteria_sapling.png Image not of any known type, or corrupt
+[17Jan2026 12:23:39.558] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
+[17Jan2026 12:23:39.558] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[17Jan2026 12:23:39.617] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Speakers (HyperX Cloud Stinger Core Wireless DTS)
+[17Jan2026 12:23:39.618] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
+[17Jan2026 12:23:39.736] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
+[17Jan2026 12:23:39.742] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x128x4 minecraft:textures/atlas/signs.png-atlas
+[17Jan2026 12:23:39.743] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[17Jan2026 12:23:39.743] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[17Jan2026 12:23:39.743] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[17Jan2026 12:23:39.743] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[17Jan2026 12:23:39.745] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[17Jan2026 12:23:40.338] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[17Jan2026 12:23:40.512] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[17Jan2026 12:23:40.514] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[17Jan2026 12:23:40.514] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[17Jan2026 12:23:40.891] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
+[17Jan2026 12:23:46.373] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 8 recipes
+[17Jan2026 12:23:47.023] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1179 advancements
+[17Jan2026 12:23:47.463] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.19.2
+[17Jan2026 12:23:47.463] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[17Jan2026 12:23:47.549] [Server thread/INFO] [terrablender/]: Initialized TerraBlender biomes for level stem minecraft:the_nether
+[17Jan2026 12:23:47.681] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
+[17Jan2026 12:23:49.724] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[17Jan2026 12:23:49.724] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[17Jan2026 12:23:49.724] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[17Jan2026 12:23:49.724] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[17Jan2026 12:23:49.725] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[17Jan2026 12:23:50.232] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 37%
+[17Jan2026 12:23:50.637] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[17Jan2026 12:23:50.659] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 2958 ms
+[17Jan2026 12:23:50.722] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
+[17Jan2026 12:23:50.724] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
+[17Jan2026 12:23:50.828] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
+[17Jan2026 12:23:51.371] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
+[17Jan2026 12:23:51.429] [Server thread/INFO] [net.minecraftforge.common.AdvancementLoadFix/]: Using new advancement loading for net.minecraft.server.PlayerAdvancements@186dc5e6
+[17Jan2026 12:23:51.452] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:e9b26321] logged in with entity id 12 at (-107.53715446062384, -60.0, -177.49725828861423)
+[17Jan2026 12:23:51.503] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
+[17Jan2026 12:23:52.996] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 187 advancements
+[17Jan2026 12:23:56.795] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$102#SUN_13 tick=741208 dim=minecraft:overworld buff=false
+[17Jan2026 12:23:56.796] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ThirteenthForm form=com.wassuples.demonslayer.styles.BreathingForms$102#SUN_13 player=Dev
+[17Jan2026 12:24:08.041] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$102#SUN_13 notifyClient=true tick=741433
+[17Jan2026 12:24:24.586] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$102#SUN_13 tick=741763 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:24.586] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ThirteenthForm form=com.wassuples.demonslayer.styles.BreathingForms$102#SUN_13 player=Dev
+[17Jan2026 12:24:35.791] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$102#SUN_13 notifyClient=true tick=741988
+[17Jan2026 12:24:40.890] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$91#SUN_2 tick=742090 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:40.890] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ClearBlueSkyForm form=com.wassuples.demonslayer.styles.BreathingForms$91#SUN_2 player=Dev
+[17Jan2026 12:24:41.890] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$91#SUN_2 notifyClient=false tick=742110
+[17Jan2026 12:24:41.940] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$92#SUN_3 tick=742111 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:41.940] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=RagingSunForm form=com.wassuples.demonslayer.styles.BreathingForms$92#SUN_3 player=Dev
+[17Jan2026 12:24:42.941] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$92#SUN_3 notifyClient=false tick=742131
+[17Jan2026 12:24:43.091] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$93#SUN_4 tick=742134 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:43.091] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=BurningBonesForm form=com.wassuples.demonslayer.styles.BreathingForms$93#SUN_4 player=Dev
+[17Jan2026 12:24:44.593] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$93#SUN_4 notifyClient=false tick=742164
+[17Jan2026 12:24:45.202] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$94#SUN_5 tick=742176 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:45.202] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=SettingSunForm form=com.wassuples.demonslayer.styles.BreathingForms$94#SUN_5 player=Dev
+[17Jan2026 12:24:46.441] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$94#SUN_5 notifyClient=false tick=742201
+[17Jan2026 12:24:46.746] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$95#SUN_6 tick=742207 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:46.746] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=SolarHeatHazeForm form=com.wassuples.demonslayer.styles.BreathingForms$95#SUN_6 player=Dev
+[17Jan2026 12:24:47.489] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$95#SUN_6 notifyClient=false tick=742222
+[17Jan2026 12:24:48.442] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$96#SUN_7 tick=742241 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:48.442] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=BeneficentRadianceForm form=com.wassuples.demonslayer.styles.BreathingForms$96#SUN_7 player=Dev
+[17Jan2026 12:24:49.691] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$96#SUN_7 notifyClient=false tick=742266
+[17Jan2026 12:24:50.290] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$97#SUN_8 tick=742278 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:50.290] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=SunflowerThrustForm form=com.wassuples.demonslayer.styles.BreathingForms$97#SUN_8 player=Dev
+[17Jan2026 12:24:52.492] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$97#SUN_8 notifyClient=true tick=742322
+[17Jan2026 12:24:53.542] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$98#SUN_9 tick=742343 dim=minecraft:overworld buff=false
+[17Jan2026 12:24:53.542] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=SunHaloDragonForm form=com.wassuples.demonslayer.styles.BreathingForms$98#SUN_9 player=Dev
+[17Jan2026 12:24:59.541] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$98#SUN_9 notifyClient=true tick=742463
+[17Jan2026 12:25:00.240] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$99#SUN_10 tick=742477 dim=minecraft:overworld buff=false
+[17Jan2026 12:25:00.240] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FireWheelForm form=com.wassuples.demonslayer.styles.BreathingForms$99#SUN_10 player=Dev
+[17Jan2026 12:25:00.841] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$99#SUN_10 notifyClient=true tick=742489
+[17Jan2026 12:25:01.393] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$100#SUN_11 tick=742500 dim=minecraft:overworld buff=false
+[17Jan2026 12:25:01.393] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FakeRainbowForm form=com.wassuples.demonslayer.styles.BreathingForms$100#SUN_11 player=Dev
+[17Jan2026 12:25:01.890] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$100#SUN_11 notifyClient=false tick=742510
+[17Jan2026 12:25:02.691] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 tick=742526 dim=minecraft:overworld buff=false
+[17Jan2026 12:25:02.691] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FlameDanceForm form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 player=Dev
+[17Jan2026 12:25:03.441] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 notifyClient=false tick=742541
+[17Jan2026 12:25:03.842] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 tick=742549 dim=minecraft:overworld buff=false
+[17Jan2026 12:25:03.842] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FlameDanceForm form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 player=Dev
+[17Jan2026 12:25:04.593] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 notifyClient=false tick=742564
+[17Jan2026 12:25:04.593] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 tick=742564 dim=minecraft:overworld buff=false
+[17Jan2026 12:25:04.593] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FlameDanceForm form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 player=Dev
+[17Jan2026 12:25:05.341] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 notifyClient=false tick=742579
+[17Jan2026 12:25:05.944] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 tick=742591 dim=minecraft:overworld buff=false
+[17Jan2026 12:25:05.944] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FlameDanceForm form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 player=Dev
+[17Jan2026 12:25:06.690] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 notifyClient=false tick=742606
+[17Jan2026 12:25:07.091] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 tick=742614 dim=minecraft:overworld buff=false
+[17Jan2026 12:25:07.091] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FlameDanceForm form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 player=Dev
+[17Jan2026 12:25:07.846] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$101#SUN_12 notifyClient=false tick=742629
+[17Jan2026 12:25:55.187] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[17Jan2026 12:25:55.200] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:overworld
+[17Jan2026 12:25:55.213] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_end
+[17Jan2026 12:25:55.214] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_nether
+[17Jan2026 12:25:56.280] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!
+[17Jan2026 12:25:56.340] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
+[17Jan2026 12:25:56.340] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
+[17Jan2026 12:25:56.348] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
+[17Jan2026 12:25:56.391] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
+[17Jan2026 12:25:56.391] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
+[17Jan2026 12:25:56.392] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
+[17Jan2026 12:25:56.679] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:overworld
+[17Jan2026 12:25:56.883] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_end
+[17Jan2026 12:25:56.884] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_nether
+[17Jan2026 12:25:56.899] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (Building World for Demon Slayer): All chunks are saved
+[17Jan2026 12:25:56.899] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[17Jan2026 12:25:56.899] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[17Jan2026 12:25:56.899] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved

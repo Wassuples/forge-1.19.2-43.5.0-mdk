@@ -36,6 +36,29 @@ public class DemonTrait implements IDemonTrait {
     private ResourceLocation territory = new ResourceLocation("plains");
     private BlockPos homePosition = BlockPos.ZERO;
 
+    private static final int MAX_MEMORIES = 64;
+
+    /**
+     * World time (ticks) when the demon was created (approximate).
+     */
+    private long birthTime = 0L;
+
+    /**
+     * World time (ticks) when the demon last fought in a notable battle.
+     */
+    private long lastBattleTime = 0L;
+
+    /**
+     * Bounded memory log (most recent last).
+     */
+    private final List<DemonMemory> memories = new ArrayList<>();
+
+    /**
+     * Fast indexes so we don't have to scan {@link #memories} every time.
+     */
+    private final EnumMap<MemoryType, Integer> memoryCounts = new EnumMap<>(MemoryType.class);
+    private final EnumMap<MemoryType, Long> lastMemoryTimes = new EnumMap<>(MemoryType.class);
+
     @Override public String getSourceBlueprintId() { return this.sourceBlueprintId; }
     @Override public void setSourceBlueprintId(String id) { this.sourceBlueprintId = id; }
 
@@ -106,6 +129,73 @@ public class DemonTrait implements IDemonTrait {
         }
     }
 
+    @Override
+    public long getBirthTime() {
+        return this.birthTime;
+    }
+
+    @Override
+    public void setBirthTime(long birthTime) {
+        this.birthTime = Math.max(0L, birthTime);
+    }
+
+    @Override
+    public long getLastBattleTime() {
+        return this.lastBattleTime;
+    }
+
+    @Override
+    public void setLastBattleTime(long time) {
+        this.lastBattleTime = Math.max(0L, time);
+    }
+
+    @Override
+    public List<DemonMemory> getMemories() {
+        return Collections.unmodifiableList(this.memories);
+    }
+
+    @Override
+    public void addMemory(DemonMemory memory) {
+        if (memory == null) return;
+
+        // keep the log bounded (drop oldest)
+        if (this.memories.size() >= MAX_MEMORIES) {
+            this.memories.remove(0);
+        }
+
+        this.memories.add(memory);
+
+        // update indexes
+        MemoryType type = memory.getType();
+        if (type != null) {
+            this.memoryCounts.put(type, this.memoryCounts.getOrDefault(type, 0) + 1);
+            long ts = memory.getTimestamp();
+            long prev = this.lastMemoryTimes.getOrDefault(type, 0L);
+            if (ts >= prev) {
+                this.lastMemoryTimes.put(type, ts);
+            }
+        }
+    }
+
+    @Override
+    public void clearMemories() {
+        this.memories.clear();
+        this.memoryCounts.clear();
+        this.lastMemoryTimes.clear();
+    }
+
+    @Override
+    public int getMemoryCount(MemoryType type) {
+        if (type == null) return 0;
+        return this.memoryCounts.getOrDefault(type, 0);
+    }
+
+    @Override
+    public long getLastMemoryTime(MemoryType type) {
+        if (type == null) return 0L;
+        return this.lastMemoryTimes.getOrDefault(type, 0L);
+    }
+
     @Override public CompoundTag serializeNBT() {
         CompoundTag nbt = new CompoundTag();
         nbt.putString("name", this.name);
@@ -119,6 +209,8 @@ public class DemonTrait implements IDemonTrait {
         nbt.putString("assignedBDA", this.assignedBDA.name());
         nbt.putString("territory", this.territory.toString());
         nbt.putString("sourceBlueprintId", this.sourceBlueprintId);
+        nbt.putLong("birthTime", this.birthTime);
+        nbt.putLong("lastBattleTime", this.lastBattleTime);
 
         CompoundTag tauntsTag = new CompoundTag();
         this.tauntMap.forEach((uuid, list) -> {
@@ -151,6 +243,26 @@ public class DemonTrait implements IDemonTrait {
             bpAnnouncementsTag.put(key, listTag);
         });
         nbt.put("blueprintAnnouncements", bpAnnouncementsTag);
+
+        // Memories
+        ListTag memoriesTag = new ListTag();
+        for (DemonMemory memory : this.memories) {
+            memoriesTag.add(memory.serializeNBT());
+        }
+        nbt.put("memories", memoriesTag);
+
+        // Fast indexes (redundant, but speeds up load and keeps behavior stable if log is truncated)
+        CompoundTag memoryCountsTag = new CompoundTag();
+        for (Map.Entry<MemoryType, Integer> e : this.memoryCounts.entrySet()) {
+            memoryCountsTag.putInt(e.getKey().name(), e.getValue());
+        }
+        nbt.put("memoryCounts", memoryCountsTag);
+
+        CompoundTag lastMemoryTimesTag = new CompoundTag();
+        for (Map.Entry<MemoryType, Long> e : this.lastMemoryTimes.entrySet()) {
+            lastMemoryTimesTag.putLong(e.getKey().name(), e.getValue());
+        }
+        nbt.put("lastMemoryTimes", lastMemoryTimesTag);
 
         return nbt;
     }
@@ -209,6 +321,69 @@ public class DemonTrait implements IDemonTrait {
             listTag.forEach(tag -> announcements.add(tag.getAsString()));
             this.blueprintAnnouncements.put(key, announcements);
         }
+
+        // Times (optional for backward compatibility)
+        if (nbt.contains("birthTime")) {
+            this.birthTime = Math.max(0L, nbt.getLong("birthTime"));
+        }
+        if (nbt.contains("lastBattleTime")) {
+            this.lastBattleTime = Math.max(0L, nbt.getLong("lastBattleTime"));
+        }
+
+        // Memories
+        this.memories.clear();
+        this.memoryCounts.clear();
+        this.lastMemoryTimes.clear();
+
+        if (nbt.contains("memories")) {
+            ListTag memoriesTag = nbt.getList("memories", 10); // 10 = CompoundTag
+            for (int i = 0; i < memoriesTag.size(); i++) {
+                if (this.memories.size() >= MAX_MEMORIES) break;
+                CompoundTag memTag = memoriesTag.getCompound(i);
+                try {
+                    DemonMemory memory = DemonMemory.deserializeNBT(memTag);
+                    this.memories.add(memory);
+                } catch (Exception ignored) {
+                }
+            }
+        }
+
+        // Prefer saved indexes if present; otherwise rebuild from log
+        if (nbt.contains("memoryCounts")) {
+            CompoundTag countsTag = nbt.getCompound("memoryCounts");
+            for (String key : countsTag.getAllKeys()) {
+                try {
+                    MemoryType type = MemoryType.valueOf(key);
+                    this.memoryCounts.put(type, countsTag.getInt(key));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+
+        if (nbt.contains("lastMemoryTimes")) {
+            CompoundTag timesTag = nbt.getCompound("lastMemoryTimes");
+            for (String key : timesTag.getAllKeys()) {
+                try {
+                    MemoryType type = MemoryType.valueOf(key);
+                    this.lastMemoryTimes.put(type, timesTag.getLong(key));
+                } catch (IllegalArgumentException ignored) {
+                }
+            }
+        }
+
+        if (this.memoryCounts.isEmpty() || this.lastMemoryTimes.isEmpty()) {
+            // Rebuild indexes from log as a fallback
+            for (DemonMemory memory : this.memories) {
+                if (memory == null || memory.getType() == null) continue;
+                MemoryType type = memory.getType();
+                this.memoryCounts.put(type, this.memoryCounts.getOrDefault(type, 0) + 1);
+                long ts = memory.getTimestamp();
+                long prev = this.lastMemoryTimes.getOrDefault(type, 0L);
+                if (ts >= prev) {
+                    this.lastMemoryTimes.put(type, ts);
+                }
+            }
+        }
     }
     @Override public void copyFrom(IDemonTrait source) {
         if (source instanceof DemonTrait sourceTrait) {
@@ -224,6 +399,8 @@ public class DemonTrait implements IDemonTrait {
             this.setAssignedBDA(sourceTrait.getAssignedBDA());
             this.setTerritory(sourceTrait.getTerritory());
             this.setHomePosition(sourceTrait.getHomePosition());
+            this.setBirthTime(sourceTrait.getBirthTime());
+            this.setLastBattleTime(sourceTrait.getLastBattleTime());
 
             this.quirks.clear();
             this.quirks.addAll(sourceTrait.getQuirks());
@@ -236,6 +413,15 @@ public class DemonTrait implements IDemonTrait {
 
             this.blueprintAnnouncements.clear();
             this.blueprintAnnouncements.putAll(sourceTrait.getBlueprintAnnouncements());
+
+            this.memories.clear();
+            this.memories.addAll(sourceTrait.memories);
+
+            this.memoryCounts.clear();
+            this.memoryCounts.putAll(sourceTrait.memoryCounts);
+
+            this.lastMemoryTimes.clear();
+            this.lastMemoryTimes.putAll(sourceTrait.lastMemoryTimes);
         }
     }
 }

@@ -57,7 +57,9 @@ public class SunflowerThrustForm extends ChargeableForm {
             this.direction = user.getLookAngle();
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.5f, 1.2f);
         } else {
-            ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) == this) {
+                ActiveFormManager.stop(user);
+            }
         }
     }
 
@@ -75,9 +77,13 @@ public class SunflowerThrustForm extends ChargeableForm {
         if (!hitTargets.isEmpty()) {
             this.hasHit = true;
             triggerImpact(hitTargets.get(0));
-            ActiveFormManager.stop(user);
-        } else if(ticksActive >= getReleaseDuration() -1) {
-            ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) == this) {
+                ActiveFormManager.stop(user);
+            }
+        } else if (ticksActive >= getReleaseDuration() - 1) {
+            if (ActiveFormManager.getActiveForm(user) == this) {
+                ActiveFormManager.stop(user);
+            }
         }
     }
 

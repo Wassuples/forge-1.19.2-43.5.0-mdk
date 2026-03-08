@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -56,7 +57,11 @@ public class ThreadWheelEntity extends Monster implements IAnimatable {
             return;
         }
 
-        this.level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.3D), e -> e != this && !(e instanceof DemonEntity))
+        this.level.getEntitiesOfClass(
+                        LivingEntity.class,
+                        this.getBoundingBox().inflate(0.3D),
+                        e -> e != this && !SummonAllies.areAllies(this, e)
+                )
                 .forEach(entity -> entity.hurt(DamageSource.MAGIC, 9.0F));
 
         if (this.tickCount % 4 == 0) {

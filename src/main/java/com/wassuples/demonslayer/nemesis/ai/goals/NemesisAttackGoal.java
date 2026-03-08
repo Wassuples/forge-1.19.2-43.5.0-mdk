@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.nemesis.ai.goals;
 
+import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
@@ -118,7 +119,8 @@ public class NemesisAttackGoal extends Goal {
             // A basic melee attack has a default priority of 1.
             if (bestForm != null && bestFormPriority > 1) {
                 bestForm.performAction(this.mob, serverLevel);
-                this.attackCooldown = (int)(bestForm.getCooldownTicks(this.mob) * this.cooldownModifier);
+                int cooldownTicks = (int) (bestForm.getCooldownTicks(this.mob) * this.cooldownModifier);
+                this.attackCooldown = PlayerCooldowns.applyFormsCooldownMultiplier(serverLevel, cooldownTicks);
             } else {
                 // If no form has a high enough priority, just do a basic physical attack.
                 performBasicAttack();

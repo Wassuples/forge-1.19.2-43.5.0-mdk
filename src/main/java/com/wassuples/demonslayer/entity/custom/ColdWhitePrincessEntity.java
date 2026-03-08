@@ -1,6 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
-// --- Add all necessary imports ---
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.Packet;
@@ -16,7 +16,6 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.AABB;
@@ -69,7 +68,12 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
     protected void registerGoals() {
         super.registerGoals();
         this.goalSelector.addGoal(1, new IcyBreathAttackGoal(this));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, LivingEntity.class, true, (entity) -> !isOwner(entity) && !(entity instanceof ColdWhitePrincessEntity)));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                this,
+                LivingEntity.class,
+                true,
+                (entity) -> !SummonAllies.areAllies(this, entity) && !(entity instanceof ColdWhitePrincessEntity)
+        ));
     }
 
     @Override
@@ -183,7 +187,11 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
                 
                 // Damage entities within the cone
                 AABB damageZone = new AABB(centerPoint, centerPoint).inflate(currentRadius);
-                List<LivingEntity> entitiesInCone = this.princess.level.getEntitiesOfClass(LivingEntity.class, damageZone, (entity) -> !this.princess.isOwner(entity) && entity != this.princess && entity.isAlive());
+                List<LivingEntity> entitiesInCone = this.princess.level.getEntitiesOfClass(
+                        LivingEntity.class,
+                        damageZone,
+                        (entity) -> !SummonAllies.areAllies(this.princess, entity) && entity != this.princess && entity.isAlive()
+                );
                 hitThisTick.addAll(entitiesInCone);
                 
                 // Freeze blocks within the cone

@@ -22,6 +22,9 @@ public class ModEffects {
     public static final RegistryObject<MobEffect> PARALYZING_POISON = MOB_EFFECTS.register("paralyzing_poison",
             () -> new ParalyzingPoisonEffect(MobEffectCategory.HARMFUL, 0x8A2BE2));
 
+    public static final RegistryObject<MobEffect> HEAT_LIGHTNING = MOB_EFFECTS.register("heat_lightning",
+            () -> new HeatLightningEffect(MobEffectCategory.HARMFUL, 0xFFE66B));
+
     public static void register(IEventBus eventBus) {
         MOB_EFFECTS.register(eventBus);
     }

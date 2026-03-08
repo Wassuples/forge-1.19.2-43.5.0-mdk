@@ -1,76 +1,124 @@
 package com.wassuples.demonslayer.forms.slayer.thunder;
 
 import com.mojang.math.Vector3f;
-import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
+import com.wassuples.demonslayer.util.CombatHelper;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
-import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
-import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
-import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
 public class RumbleAndFlashForm extends TimedForm {
-    private static final int DURATION = 80; // 4 seconds channeling
-    private static final double MAX_RANGE = 32.0;
-    private static final int TICKS_PER_BOLT = 15; // every 0.75 seconds
-    private static final float DAMAGE_PER_BOLT = 8.0f;
+    private static final int DURATION = 20; // Short duration for post-cast cooldown/animation
+    private static final int BOLT_COUNT = 7;
+    private static final double MAX_RANGE = 18.0;
+    private static final double CONE_SPREAD_DEGREES = 90.0;
+    private static final float DAMAGE = 14.0f;
     private static final DustParticleOptions YELLOW_LIGHTNING = new DustParticleOptions(new Vector3f(1.0f, 0.9f, 0.2f), 1.0f);
-
-    private LivingEntity target;
 
     public RumbleAndFlashForm(LivingEntity user, IForm form) {
         super(user, form, DURATION);
     }
 
-    // This method was missing and is essential for cleanup.
-    @Override
-    public void onStop() {
-        // Free the player from their stance when the form ends.
-        removeImmobility(user);
-        level.playSound(null, user.blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.7f, 1.5f);
-    }
-
     @Override
     public void onStart() {
-        this.target = getLookedAtEntity(user, MAX_RANGE);
+        // Play activation sound
+        level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THUNDER, SoundSource.PLAYERS, 1.5f, 1.2f);
+        level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.5f);
 
-        if (this.target == null) {
-            level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.7f, 1.5f);
-            ActiveFormManager.stop(user);
-            return;
-        }
-
-        applyImmobility(user, this.duration + 5);
-        level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0f, 1.2f);
+        fireLightningCone();
     }
 
-    @Override
-    public void onTick() {
-        super.onTick();
+    private void fireLightningCone() {
+        Vec3 start = user.getEyePosition().subtract(0, 0.3, 0);
+        Vec3 viewVec = user.getViewVector(1.0F);
 
-        if (target == null || !target.isAlive() || target.distanceTo(user) > MAX_RANGE + 4.0) {
-            ActiveFormManager.stop(user);
-            return;
+        // We only perturb yaw, keeping pitch roughly flat or following the look
+
+        // We want to fan out horizontally.
+        // We can rotate the look vector around the Y axis.
+
+        Set<Integer> hitEntities = new HashSet<>();
+        hitEntities.add(user.getId()); // Don't hit self
+
+        double halfSpread = CONE_SPREAD_DEGREES / 2.0;
+        double step = CONE_SPREAD_DEGREES / (BOLT_COUNT - 1);
+
+        for (int i = 0; i < BOLT_COUNT; i++) {
+            double angleOffset = -halfSpread + (i * step);
+            Vec3 dir = rotateY(viewVec, (float) Math.toRadians(angleOffset));
+
+            fireSingleBolt(start, dir, hitEntities);
+        }
+    }
+
+    private void fireSingleBolt(Vec3 start, Vec3 direction, Set<Integer> hitEntities) {
+        Vec3 end = start.add(direction.scale(MAX_RANGE));
+
+        // 1. Check for blocks (Walls)
+        HitResult blockHit = level.clip(new ClipContext(start, end, ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, user));
+        Vec3 actualEnd = end;
+
+        if (blockHit.getType() != HitResult.Type.MISS) {
+            actualEnd = blockHit.getLocation();
         }
 
-        if (ticksActive % 4 == 0) {
-            level.sendParticles(ParticleTypes.ELECTRIC_SPARK, user.getRandomX(0.8), user.getRandomY(), user.getRandomZ(0.8), 2, 0, 0, 0, 0);
-        }
+        // 2. Visuals
+        spawnLineParticles(level, YELLOW_LIGHTNING, start, actualEnd, (int)(start.distanceTo(actualEnd) * 2));
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, actualEnd.x, actualEnd.y, actualEnd.z, 3, 0.1, 0.1, 0.1, 0.05);
 
-        if (ticksActive > 0 && ticksActive % TICKS_PER_BOLT == 0) {
-            Vec3 skyPos = target.getEyePosition().add(0, 15, 0);
-            target.hurt(DamageSource.LIGHTNING_BOLT, DAMAGE_PER_BOLT);
+        // 3. Entity Damage
+        // Define a box around the ray to find entities
+        AABB searchBox = new AABB(start, actualEnd).inflate(1.5);
+        List<Entity> entitiesToCheck = level.getEntities(user, searchBox);
 
-            level.playSound(null, target.blockPosition(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.WEATHER, 0.8f, 2.0f);
-            spawnLineParticles(level, YELLOW_LIGHTNING, skyPos, target.getEyePosition(), 30);
+        for (Entity entity : entitiesToCheck) {
+            if (entity instanceof LivingEntity target && !hitEntities.contains(entity.getId())) {
+                // Precise check: is the entity strictly close to the line segment?
+                AABB targetBb = target.getBoundingBox().inflate(0.5);
+
+                // Check if the segment intersects the inflated bounding box
+                if (targetBb.clip(start, actualEnd).isPresent()) {
+                    hitEntities.add(target.getId());
+                    attackTarget(target);
+                }
+            }
         }
+    }
+
+    private void attackTarget(LivingEntity target) {
+        float damage = CombatHelper.calculateFinalDamage(user, DAMAGE);
+        target.hurt(DamageSource.LIGHTNING_BOLT, damage);
+
+        // Stun effect for getting hit by lightning
+        target.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 20, 4));
+
+        level.playSound(null, target.blockPosition(), SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.PLAYERS, 0.5f, 2.0f);
+    }
+
+    private Vec3 rotateY(Vec3 vec, float radians) {
+        float f = Mth.cos(radians);
+        float f1 = Mth.sin(radians);
+        double d0 = vec.x * (double)f + vec.z * (double)f1;
+        double d1 = vec.y;
+        double d2 = vec.z * (double)f - vec.x * (double)f1;
+        return new Vec3(d0, d1, d2);
     }
 }

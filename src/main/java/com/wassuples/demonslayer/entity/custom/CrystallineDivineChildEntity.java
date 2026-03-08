@@ -2,9 +2,10 @@ package com.wassuples.demonslayer.entity.custom;
 
 import com.mojang.authlib.GameProfile;
 import com.wassuples.demonslayer.entity.ai.DomaCloneAttackGoal;
+import com.wassuples.demonslayer.entity.tracking.CrystallineDivineChildTracker;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
-import net.minecraft.core.BlockPos;
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -30,6 +31,7 @@ import net.minecraft.world.level.block.Blocks;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.UUID;
 
 public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<CompoundTag> OWNER_PROFILE_TAG =
@@ -41,6 +43,7 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
 
 
     @Nullable private LivingEntity owner;
+    @Nullable private UUID ownerUUID;
 
     public CrystallineDivineChildEntity(EntityType<? extends CrystallineDivineChildEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -52,9 +55,29 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
         super.registerGoals();
 
         this.goalSelector.addGoal(1, new DomaCloneAttackGoal(this, 1.0D, true));
-        this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true, (entity) -> !isOwner(entity)));
-        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(this, Monster.class, true));
+
+        // Default retaliation, but ally protection is enforced in canAttack/wantsToAttack overrides.
+        this.targetSelector.addGoal(1, new HurtByTargetGoal(this).setAlertOthers());
+
+        // Don't ever target owner or owner's other summons.
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(
+                this,
+                Player.class,
+                true,
+                (entity) -> !isAlly(entity)
+        ));
+        this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
+                this,
+                Monster.class,
+                true,
+                (entity) -> !isAlly(entity)
+        ));
+    }
+
+    @Override
+    public boolean canAttack(LivingEntity target) {
+        if (isAlly(target)) return false;
+        return super.canAttack(target);
     }
 
     @Override
@@ -101,6 +124,12 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
 
     public void setOwner(@Nullable LivingEntity owner) {
         this.owner = owner;
+        this.ownerUUID = owner != null ? owner.getUUID() : null;
+
+        if (!this.level.isClientSide) {
+            CrystallineDivineChildTracker.register(this, owner);
+        }
+
         if (owner != null) {
             // Copy owner's stats
             copyAttribute(Attributes.MAX_HEALTH, owner);
@@ -108,8 +137,6 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
             this.setHealth(this.getMaxHealth());
         }
     }
-
-    public LivingEntity getOwner() { return this.owner; }
 
     private void copyAttribute(net.minecraft.world.entity.ai.attributes.Attribute attribute, LivingEntity owner) {
         AttributeInstance ownerInstance = owner.getAttribute(attribute);
@@ -119,7 +146,30 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
         }
     }
 
-    public boolean isOwner(LivingEntity entity) { return this.owner != null && this.owner.getUUID().equals(entity.getUUID()); }
+    public LivingEntity getOwner() { return this.owner; }
+
+    @Nullable
+    public UUID getOwnerUUID() {
+        return this.ownerUUID;
+    }
+
+    public boolean isOwner(LivingEntity entity) {
+        if (entity == null) return false;
+        UUID id = this.ownerUUID;
+        if (id == null && this.owner != null) {
+            id = this.owner.getUUID();
+        }
+        return id != null && id.equals(entity.getUUID());
+    }
+
+    /**
+     * Returns true if the given entity is the owner OR another summon that shares the same owner UUID.
+     */
+    public boolean isAlly(@Nullable LivingEntity entity) {
+        if (entity == null) return false;
+        if (isOwner(entity)) return true;
+        return SummonAllies.areAllies(this, entity);
+    }
 
     @Override
     protected void defineSynchedData() {
@@ -141,6 +191,30 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
 
     public void setIsNpcClone(boolean isNpc) { this.entityData.set(IS_NPC_CLONE, isNpc); }
     public boolean isNpcClone() { return this.entityData.get(IS_NPC_CLONE); }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag pCompound) {
+        super.addAdditionalSaveData(pCompound);
+        if (this.ownerUUID != null) {
+            pCompound.putUUID("OwnerUUID", this.ownerUUID);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag pCompound) {
+        super.readAdditionalSaveData(pCompound);
+        if (pCompound.hasUUID("OwnerUUID")) {
+            this.ownerUUID = pCompound.getUUID("OwnerUUID");
+        }
+    }
+
+    @Override
+    public void remove(RemovalReason reason) {
+        if (!this.level.isClientSide) {
+            CrystallineDivineChildTracker.unregister(this);
+        }
+        super.remove(reason);
+    }
 
     public static AttributeSupplier.Builder createAttributes() {
         return Monster.createMonsterAttributes()

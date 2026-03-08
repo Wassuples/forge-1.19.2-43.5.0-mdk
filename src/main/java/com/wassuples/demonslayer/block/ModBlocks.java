@@ -2,11 +2,11 @@ package com.wassuples.demonslayer.block;
 
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.item.ModItems;
+import com.wassuples.demonslayer.worldgen.tree.WisteriaSaplingGrower;
+import net.minecraft.util.valueproviders.UniformInt;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.RotatedPillarBlock;
+import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
@@ -23,10 +23,25 @@ public class ModBlocks {
             () -> new RotatedPillarBlock(BlockBehaviour.Properties.copy(Blocks.OAK_LOG)));
 
     public static final RegistryObject<Block> WISTERIA_LEAVES = registerBlock("wisteria_leaves",
-            () -> new Block(BlockBehaviour.Properties.copy(Blocks.OAK_LEAVES)));
+            () -> new LeavesBlock(BlockBehaviour.Properties.copy(Blocks.OAK_LEAVES)));
+
+    public static final RegistryObject<Block> WISTERIA_SAPLING = registerBlock("wisteria_sapling",
+            () -> new SaplingBlock(new WisteriaSaplingGrower(), BlockBehaviour.Properties.copy(Blocks.OAK_SAPLING)));
 
     public static final RegistryObject<Block> RANKING_BOARD = registerBlock("ranking_board",
             () -> new RankingBoardBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).noOcclusion()));
+
+    public static final RegistryObject<Block> SCARLET_ORE = registerBlock("scarlet_ore",
+            () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(Blocks.IRON_ORE)
+                    .strength(3.0F, 3.0F)
+                    .requiresCorrectToolForDrops(),
+                    UniformInt.of(0, 2)));
+
+    public static final RegistryObject<Block> SUN_FORGE = registerBlock("sun_forge",
+            () -> new SunForgeBlock(BlockBehaviour.Properties.copy(Blocks.IRON_BLOCK).noOcclusion()));
+
+    public static final RegistryObject<Block> SWORDSMITHS_TABLE = registerBlock("swordsmiths_table",
+            () -> new SwordsmithTableBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).noOcclusion()));
 
     private static <T extends Block> RegistryObject<T> registerBlock(String name, Supplier<T> block) {
         RegistryObject<T> toReturn = BLOCKS.register(name, block);
@@ -35,7 +50,7 @@ public class ModBlocks {
     }
 
     private static <T extends Block> void registerBlockItem(String name, RegistryObject<T> block) {
-        ModItems.ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties()));
+        ModItems.ITEMS.register(name, () -> new BlockItem(block.get(), new Item.Properties().tab(com.wassuples.demonslayer.item.ModCreativeModeTab.DEMON_SLAYER_TAB)));
     }
 
     public static void register(IEventBus eventBus) {

@@ -1,16 +1,26 @@
 package com.wassuples.demonslayer.missions;
 
+import com.google.gson.JsonObject;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.util.GsonHelper;
+import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
 
 public record KillObjective(EntityType<?> target, int count) implements MissionObjective {
     public KillObjective(FriendlyByteBuf buf) {
         this(EntityType.byString(buf.readUtf()).orElse(null), buf.readInt());
+    }
+
+    public static KillObjective fromJson(JsonObject json) {
+        ResourceLocation targetId = new ResourceLocation(GsonHelper.getAsString(json, "target"));
+        EntityType<?> type = EntityType.byString(targetId.toString()).orElseThrow(() -> new IllegalArgumentException("Unknown entity type " + targetId));
+        int count = GsonHelper.getAsInt(json, "count", 1);
+        return new KillObjective(type, count);
     }
 
     @Override

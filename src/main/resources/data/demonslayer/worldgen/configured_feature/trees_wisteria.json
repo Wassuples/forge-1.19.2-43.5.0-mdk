@@ -2,6 +2,7 @@
   "type": "minecraft:tree",
   "config": {
     "force_dirt": false,
+    "ignore_vines": true,
     "minimum_size": {
       "type": "minecraft:two_layers_feature_size",
       "limit": 1,
@@ -26,7 +27,10 @@
     "foliage_provider": {
       "type": "minecraft:simple_state_provider",
       "state": {
-        "Name": "demonslayer:wisteria_leaves"
+        "Name": "demonslayer:wisteria_leaves",
+        "Properties": {
+          "persistent": "false"
+        }
       }
     },
     "trunk_placer": {

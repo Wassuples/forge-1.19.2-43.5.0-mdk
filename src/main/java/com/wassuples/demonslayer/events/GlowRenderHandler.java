@@ -22,6 +22,8 @@ import net.minecraftforge.fml.common.Mod;
 
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class GlowRenderHandler {
+    private static final net.minecraft.resources.ResourceLocation HEAT_LIGHTNING_CRACKS_TEX =
+            new net.minecraft.resources.ResourceLocation(com.wassuples.demonslayer.DemonSlayer.MOD_ID, "textures/effect/heat_lightning_cracks.png");
 
     @SubscribeEvent
     public static void onRenderLivingPost(RenderLivingEvent.Post<LivingEntity, EntityModel<LivingEntity>> event) {
@@ -30,6 +32,11 @@ public class GlowRenderHandler {
 
         if (mc.player == null || entity.is(mc.player)) {
             return;
+        }
+
+        // Heat Lightning cracks overlay (non-particle)
+        if (com.wassuples.demonslayer.client.effects.HeatLightningClientEffects.shouldRenderCracks(entity.getId())) {
+            renderHeatLightningCracks(event);
         }
 
         entity.getCapability(GlowCapabilityProvider.GLOW_CAPABILITY).ifPresent(cap -> {
@@ -41,6 +48,41 @@ public class GlowRenderHandler {
                 renderHologramEffect(event);
             }
         });
+    }
+
+    private static void renderHeatLightningCracks(RenderLivingEvent.Post<LivingEntity, EntityModel<LivingEntity>> event) {
+        LivingEntity entity = event.getEntity();
+        PoseStack poseStack = event.getPoseStack();
+        MultiBufferSource bufferSource = event.getMultiBufferSource();
+        LivingEntityRenderer<LivingEntity, EntityModel<LivingEntity>> renderer = event.getRenderer();
+        EntityModel<LivingEntity> model = renderer.getModel();
+        int packedLight = event.getPackedLight();
+        float partialTicks = event.getPartialTick();
+
+        poseStack.pushPose();
+
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+
+        float bodyYaw = Mth.rotLerp(partialTicks, entity.yBodyRotO, entity.yBodyRot);
+        poseStack.mulPose(Vector3f.YP.rotationDegrees(180.0F - bodyYaw));
+        poseStack.scale(-1.0F, -1.0F, 1.0F);
+        poseStack.translate(0.0, -1.501, 0.0);
+
+        // Slightly inflate so it sits on top of the base skin.
+        float customScale = 1.02f;
+        poseStack.scale(customScale, customScale, customScale);
+
+        RenderType renderType = com.wassuples.demonslayer.client.renderer.ModRenderTypes.heatLightningCracks(HEAT_LIGHTNING_CRACKS_TEX);
+        VertexConsumer vc = bufferSource.getBuffer(renderType);
+        int overlay = LivingEntityRenderer.getOverlayCoords(entity, 0.0F);
+
+        // Yellow-white crack color; alpha controls intensity.
+        float alpha = 0.75f;
+        model.renderToBuffer(poseStack, vc, packedLight, overlay, 1.0f, 1.0f, 1.0f, alpha);
+
+        poseStack.popPose();
+        RenderSystem.disableBlend();
     }
 
     private static void renderHologramEffect(RenderLivingEvent.Post<LivingEntity, EntityModel<LivingEntity>> event) {

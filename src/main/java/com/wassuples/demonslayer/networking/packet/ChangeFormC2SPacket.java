@@ -2,18 +2,25 @@ package com.wassuples.demonslayer.networking.packet;
 
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
-import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.styles.BreathingForms;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobSpawnType;
 import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet that cycles the player's currently selected form.
+ *
+ * <p>Routing:
+ *
+ * <ul>
+ *   <li>If the player is in BDA mode, cycles {@code DemonForms} via the demon capability.</li>
+ *   <li>Otherwise, cycles {@code BreathingForms} via the style capability.</li>
+ * </ul>
+ *
+ * <p>This packet only changes selection; it does not execute the form.
+ */
 public class ChangeFormC2SPacket {
     public ChangeFormC2SPacket() {
 
@@ -27,6 +34,11 @@ public class ChangeFormC2SPacket {
 
     }
 
+    /**
+     * Handles the packet on the server.
+     *
+     * <p>Selection changes are performed server-side to keep the client authoritative state in sync.
+     */
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {

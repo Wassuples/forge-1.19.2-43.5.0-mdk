@@ -28,5 +28,19 @@ public final class ModGameRules {
             GameRuleFactory.createBooleanRule(true)
     );
 
+    /**
+     * Global cooldown multiplier for ALL breathing forms and demon forms.
+     *
+     * This gamerule is expressed as a percentage:
+     * - 0   = no cooldowns
+     * - 100 = default (no change)
+     * - 200 = double cooldowns
+     */
+    public static final GameRules.Key<GameRules.IntegerValue> FORMS_COOLDOWN_MULTIPLIER_PERCENT = GameRules.register(
+            "formsCooldownMultiplier",
+            GameRules.Category.MISC,
+            GameRuleFactory.createIntegerRule(100, 0)
+    );
+
     public static void register() {}
 }

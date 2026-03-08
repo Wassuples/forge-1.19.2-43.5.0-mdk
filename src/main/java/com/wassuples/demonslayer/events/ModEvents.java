@@ -13,23 +13,26 @@ import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.effects.ForcedSleepEffect;
 import com.wassuples.demonslayer.effects.ModEffects;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
-import com.wassuples.demonslayer.entity.custom.HashiraEntity;
-import com.wassuples.demonslayer.entity.custom.MotherEyeEntity;
-import com.wassuples.demonslayer.entity.custom.WaterPrisonEntity;
+import com.wassuples.demonslayer.entity.custom.*;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
+import com.wassuples.demonslayer.item.custom.HashiraSwordHelper;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
-import com.wassuples.demonslayer.missions.*;
+import com.wassuples.demonslayer.missions.Mission;
+import com.wassuples.demonslayer.missions.MissionObjective;
+import com.wassuples.demonslayer.missions.MissionRegistry;
+import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import com.wassuples.demonslayer.styles.DemonForms;
+import com.wassuples.demonslayer.util.DemonThreatHelper;
 import com.wassuples.demonslayer.util.ModUtils;
+import com.wassuples.demonslayer.util.WisteriaHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -40,7 +43,9 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.*;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
@@ -48,11 +53,15 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ClipContext;
-import net.minecraft.world.phys.*;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.HitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
 import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
+import net.minecraftforge.event.entity.living.LivingEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.event.entity.player.AttackEntityEvent;
@@ -76,9 +85,59 @@ public class ModEvents {
     private static final Map<UUID, CompoundTag> missionDeathData =new HashMap<>();
     private static final Map<UUID, CompoundTag> demonDeathData = new HashMap<>();
     private static final Map<UUID, CompoundTag> crowDeathData = new HashMap<>();
+    private static final Map<UUID, CompoundTag> cooldownDeathData = new HashMap<>();
 
     private static final UUID ENHANCED_VIGOR_MODIFIER_ID = UUID.fromString("a7a2f5a2-a3a4-492c-a8e2-89255ac3a7e4");
     private static final UUID DEMONIC_STRENGTH_MODIFIER_ID = UUID.fromString("f3b1f1a0-75da-4c4b-b72e-c4e9c7a6e12e");
+
+    private static final String DEMON_THREAT_TAG = "ds_threat_until";
+    private static final int THREAT_TIMEOUT_TICKS = 60; // ~3 seconds after last relevant hit
+
+    private static final int WISTERIA_SCAN_RADIUS = 4;
+    private static final int WISTERIA_POISON_DURATION_TICKS = 60; // refreshes while in range
+    private static final int WISTERIA_POISON_AMPLIFIER = 4;
+
+    private static final String TAMAYO_COOLDOWN_TAG = "demonslayer:tamayo_offer_cooldown";
+    private static final String TAMAYO_COOLDOWN_UNTIL_PREFIX = "demonslayer:tamayo_offer_until:";
+    private static final int TAMAYO_SCAN_INTERVAL_TICKS = 20; // 1s
+    private static final int TAMAYO_COOLDOWN_TICKS = 20 * 60; // 60s
+    private static final double TAMAYO_SCAN_RADIUS = 8.0D;
+    private static final float TAMAYO_CRITICAL_HEALTH = 1.0f; // half a heart
+
+    private static void startTamayoCooldown(ServerPlayer player) {
+        player.getTags().removeIf(t -> t.startsWith(TAMAYO_COOLDOWN_UNTIL_PREFIX));
+        player.addTag(TAMAYO_COOLDOWN_TAG);
+        long until = player.level.getGameTime() + TAMAYO_COOLDOWN_TICKS;
+        player.addTag(TAMAYO_COOLDOWN_UNTIL_PREFIX + until);
+    }
+
+    private static boolean isTamayoOnCooldown(ServerPlayer player) {
+        if (!player.getTags().contains(TAMAYO_COOLDOWN_TAG)) return false;
+        String untilTag = player.getTags().stream().filter(t -> t.startsWith(TAMAYO_COOLDOWN_UNTIL_PREFIX)).findFirst().orElse(null);
+        if (untilTag == null) return true;
+        try {
+            long until = Long.parseLong(untilTag.substring(TAMAYO_COOLDOWN_UNTIL_PREFIX.length()));
+            return player.level.getGameTime() < until;
+        } catch (NumberFormatException e) {
+            return true;
+        }
+    }
+
+    private static void tickTamayoCooldown(ServerPlayer player) {
+        if (!player.getTags().contains(TAMAYO_COOLDOWN_TAG)) return;
+        String untilTag = player.getTags().stream().filter(t -> t.startsWith(TAMAYO_COOLDOWN_UNTIL_PREFIX)).findFirst().orElse(null);
+        if (untilTag == null) return;
+        try {
+            long until = Long.parseLong(untilTag.substring(TAMAYO_COOLDOWN_UNTIL_PREFIX.length()));
+            if (player.level.getGameTime() >= until) {
+                player.getTags().remove(TAMAYO_COOLDOWN_TAG);
+                player.getTags().remove(untilTag);
+            }
+        } catch (NumberFormatException ignored) {
+            player.getTags().remove(TAMAYO_COOLDOWN_TAG);
+            player.getTags().remove(untilTag);
+        }
+    }
 
     @SubscribeEvent
     public static void onAttachCapabilities(AttachCapabilitiesEvent<Entity> event) {
@@ -153,6 +212,14 @@ public class ModEvents {
                 crow.saveNBTData(nbt);
                 crowDeathData.put(serverPlayer.getUUID(), nbt);
             });
+
+            // Save Cooldown data
+            serverPlayer.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).ifPresent(cooldowns -> {
+                CompoundTag nbt = new CompoundTag();
+                // store remaining ticks relative to current level time
+                cooldowns.saveNBTData(serverPlayer.level, nbt);
+                cooldownDeathData.put(serverPlayer.getUUID(), nbt);
+            });
         }
     }
 
@@ -194,6 +261,14 @@ public class ModEvents {
                 CompoundTag nbt = crowDeathData.get(player.getUUID());
                 player.getCapability(PlayerCrowProvider.PLAYER_CROW).ifPresent(data -> data.loadNBTData(nbt));
                 crowDeathData.remove(player.getUUID());
+            }
+
+            // Load Cooldown data
+            if (cooldownDeathData.containsKey(player.getUUID())) {
+                CompoundTag nbt = cooldownDeathData.get(player.getUUID());
+                player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS)
+                        .ifPresent(cooldowns -> cooldowns.loadNBTData(player.level, nbt));
+                cooldownDeathData.remove(player.getUUID());
             }
 
             // After loading the data on the server, sync it all to the client.
@@ -256,6 +331,31 @@ public class ModEvents {
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
         if (event.side == LogicalSide.SERVER && event.player instanceof ServerPlayer serverPlayer) {
             CrowManager.ensureCrowFor(serverPlayer);
+
+            // WISTERIA: demon players are poisoned near wisteria leaves (but not repelled).
+            if (event.phase == TickEvent.Phase.END && serverPlayer.tickCount % 10 == 0) {
+                serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                    if (demon.isDemon() && WisteriaHelper.isWisteriaLeavesNearby(serverPlayer.level, serverPlayer.blockPosition(), WISTERIA_SCAN_RADIUS)) {
+                        serverPlayer.addEffect(new MobEffectInstance(ModEffects.WISTERIA_POISON.get(), WISTERIA_POISON_DURATION_TICKS, WISTERIA_POISON_AMPLIFIER, true, true));
+                    }
+                });
+            }
+
+            // Demon threat expiry (runs server-side, cheap O(1))
+            if (event.phase == TickEvent.Phase.END) {
+                String tag = serverPlayer.getTags().stream().filter(t -> t.startsWith(DEMON_THREAT_TAG + ":")).findFirst().orElse(null);
+                if (tag != null) {
+                    try {
+                        long until = Long.parseLong(tag.substring((DEMON_THREAT_TAG + ":").length()));
+                        if (serverPlayer.level.getGameTime() >= until) {
+                            ModMessages.sendToPlayer(new DemonThreatS2CPacket(0.0f), serverPlayer);
+                            serverPlayer.getTags().remove(tag);
+                        }
+                    } catch (NumberFormatException ignored) {
+                        serverPlayer.getTags().remove(tag);
+                    }
+                }
+            }
 
             // SLAYER BREATH REGEN
             event.player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
@@ -404,19 +504,78 @@ public class ModEvents {
                     handleOverwhelmingAura(player, demon);
                 });
             }
+
+            // Tamayo offer cooldown expiry (cheap)
+            if (event.phase == TickEvent.Phase.END) {
+                tickTamayoCooldown(serverPlayer);
+            }
+
+            // Tamayo offer trigger: extremely low health + nearby + not demon + not on cooldown
+            if (event.phase == TickEvent.Phase.END && serverPlayer.tickCount % TAMAYO_SCAN_INTERVAL_TICKS == 0) {
+                if (serverPlayer.isAlive() && !serverPlayer.isCreative() && serverPlayer.getHealth() <= TAMAYO_CRITICAL_HEALTH) {
+                    serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                        if (demon.isDemon()) return;
+                        if (isTamayoOnCooldown(serverPlayer)) return;
+
+                        var box = serverPlayer.getBoundingBox().inflate(TAMAYO_SCAN_RADIUS);
+                        TamayoEntity tamayo = serverPlayer.level.getEntitiesOfClass(TamayoEntity.class, box)
+                                .stream()
+                                .findFirst()
+                                .orElse(null);
+                        if (tamayo == null) return;
+
+                        // Start cooldown immediately to prevent UI spam.
+                        startTamayoCooldown(serverPlayer);
+
+                        java.util.List<net.minecraft.network.chat.Component> pages = java.util.List.of(
+                                net.minecraft.network.chat.Component.literal("Wait... You're bleeding out. Please, hold still. I'm Tamayo.\n\nI can stabilize you — but what I offer isn't ordinary medicine."),
+                                net.minecraft.network.chat.Component.literal("I developed a transformation process independent of Muzan's direct blood creation.\n\nIt will turn you into a demon."),
+                                net.minecraft.network.chat.Component.literal("If you accept: your body will change. You'll gain strength and regeneration.\n\nBut you will also develop intense cravings, and sunlight will become lethal unless you later overcome it."),
+                                net.minecraft.network.chat.Component.literal("This is not a cure. It's a different kind of life — and it may cost you everything you value.\n\nI won't force this on you."),
+                                net.minecraft.network.chat.Component.literal("If you truly understand the risks and still want to live... say so.\n\nDo you consent to the transformation?")
+                        );
+
+                        ModMessages.sendToPlayer(new OpenTamayoOfferS2CPacket(tamayo.getId(), pages), serverPlayer);
+                    });
+                }
+            }
+        }
+    }
+
+
+
+    @SubscribeEvent
+    public static void onLivingTick(LivingEvent.LivingTickEvent event) {
+        if (event.getEntity().level.isClientSide()) return;
+        if (!(event.getEntity() instanceof DemonEntity demon)) return;
+
+        // Poison demon NPCs close to wisteria leaves.
+        if (demon.tickCount % 10 != 0) return;
+        if (WisteriaHelper.isWisteriaLeavesNearby(demon.level, demon.blockPosition(), WISTERIA_SCAN_RADIUS)) {
+            demon.addEffect(new MobEffectInstance(ModEffects.WISTERIA_POISON.get(), WISTERIA_POISON_DURATION_TICKS, WISTERIA_POISON_AMPLIFIER, true, true));
         }
     }
 
     private static void handleDemonPassives(ServerPlayer player, PlayerDemon demon) {
-        // Guard clause for non-demons
-        if (!demon.isDemon()) return;
-
-        // --- ENHANCED VIGOR (Max Health) ---
+        // Always remove our modifiers first so turning demon->human or resetting passives actually reverts stats.
         AttributeInstance maxHealth = player.getAttribute(Attributes.MAX_HEALTH);
         if (maxHealth != null) {
-            // Always remove the modifier first to ensure it's updated correctly if the tier changes
             maxHealth.removeModifier(ENHANCED_VIGOR_MODIFIER_ID);
-            if (demon.isDemon() && demon.isPassiveActive(DemonPassive.ENHANCED_VIGOR)) {
+        }
+
+        AttributeInstance attackDamage = player.getAttribute(Attributes.ATTACK_DAMAGE);
+        if (attackDamage != null) {
+            attackDamage.removeModifier(DEMONIC_STRENGTH_MODIFIER_ID);
+        }
+
+        // If not a demon anymore, we're done (attributes have been cleaned up).
+        if (!demon.isDemon()) {
+            return;
+        }
+
+        // --- ENHANCED VIGOR (Max Health) ---
+        if (maxHealth != null) {
+            if (demon.isPassiveActive(DemonPassive.ENHANCED_VIGOR)) {
                 int tier = demon.getPassiveTier(DemonPassive.ENHANCED_VIGOR);
                 if (tier > 0) {
                     AttributeModifier modifier = new AttributeModifier(ENHANCED_VIGOR_MODIFIER_ID, "Enhanced Vigor", tier * 2.0, AttributeModifier.Operation.ADDITION);
@@ -426,10 +585,8 @@ public class ModEvents {
         }
 
         // --- DEMONIC_STRENGTH (Melee Damage) ---
-        AttributeInstance attackDamage = player.getAttribute(Attributes.ATTACK_DAMAGE);
         if (attackDamage != null) {
-            attackDamage.removeModifier(DEMONIC_STRENGTH_MODIFIER_ID);
-            if (demon.isDemon() && demon.isPassiveActive(DemonPassive.DEMONIC_STRENGTH)) {
+            if (demon.isPassiveActive(DemonPassive.DEMONIC_STRENGTH)) {
                 int tier = demon.getPassiveTier(DemonPassive.DEMONIC_STRENGTH);
                 if (tier > 0) {
                     AttributeModifier modifier = new AttributeModifier(DEMONIC_STRENGTH_MODIFIER_ID, "Demonic Strength", tier * 1.0, AttributeModifier.Operation.ADDITION);
@@ -583,75 +740,86 @@ public class ModEvents {
                 event.setAmount(newDamage);
             }
         });
+
+        // === Demon intimidation effects (server-authoritative) ===
+        if (!target.level.isClientSide) {
+            var sourceEntity = event.getSource().getEntity();
+            if (sourceEntity instanceof LivingEntity attacker) {
+                // We only care about demon players as the "receiving" side, and demon entities or demon players as the opponent.
+                if (target instanceof ServerPlayer targetPlayer) {
+                    targetPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(targetDemon -> {
+                        if (!targetDemon.isDemon()) return;
+
+                        float targetStrength = DemonThreatHelper.getDemonStrengthScore(targetDemon);
+
+                        // Determine opponent strength.
+                        float opponentStrength = 0.0f;
+                        if (attacker instanceof ServerPlayer attackerPlayer) {
+                            attackerPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(attackerDemon -> {
+                                // only demon-vs-demon
+                                if (!attackerDemon.isDemon()) return;
+                                float opp = DemonThreatHelper.getDemonStrengthScore(attackerDemon);
+                                float intensity = DemonThreatHelper.computeThreatIntensity(targetStrength, opp);
+                                sendThreatIfRelevant(targetPlayer, intensity);
+                            });
+                        } else {
+                            // Mob demon types: approximate using their max health + attack damage if present.
+                            double maxHp = attacker.getMaxHealth();
+                            double atk = attacker.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE) != null
+                                    ? attacker.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE).getValue()
+                                    : 2.0;
+                            opponentStrength = (float) (maxHp * 25.0 + atk * 60.0);
+                            float intensity = DemonThreatHelper.computeThreatIntensity(targetStrength, opponentStrength);
+                            sendThreatIfRelevant(targetPlayer, intensity);
+                        }
+                    });
+                }
+
+                // Also if a demon player is the attacker hitting a stronger demon player/mob, apply to the attacker too.
+                if (sourceEntity instanceof ServerPlayer attackerPlayer) {
+                    attackerPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(attackerDemon -> {
+                        if (!attackerDemon.isDemon()) return;
+
+                        float attackerStrength = DemonThreatHelper.getDemonStrengthScore(attackerDemon);
+
+                        if (target instanceof ServerPlayer targetPlayer) {
+                            targetPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(targetDemon -> {
+                                if (!targetDemon.isDemon()) return;
+                                float opp = DemonThreatHelper.getDemonStrengthScore(targetDemon);
+                                float intensity = DemonThreatHelper.computeThreatIntensity(attackerStrength, opp);
+                                sendThreatIfRelevant(attackerPlayer, intensity);
+                            });
+                        } else {
+                            double maxHp = target.getMaxHealth();
+                            double atk = target.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE) != null
+                                    ? target.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE).getValue()
+                                    : 2.0;
+                            float opp = (float) (maxHp * 25.0 + atk * 60.0);
+                            float intensity = DemonThreatHelper.computeThreatIntensity(attackerStrength, opp);
+                            sendThreatIfRelevant(attackerPlayer, intensity);
+                        }
+                    });
+                }
+            }
+        }
     }
 
-    @SubscribeEvent
-    public static void onEntityDeath(LivingDeathEvent event) {
-        LivingEntity deadEntity = event.getEntity();
-
-        if (event.getSource().getEntity() instanceof ServerPlayer player) {
-            final ResourceLocation finalSelectionId = new ResourceLocation(DemonSlayer.MOD_ID, "story_final_selection");
-
-            player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
-                if (missions.isActive(finalSelectionId)) {
-                    if (event.getEntity().getType() == ModEntityTypes.HAND_DEMON.get()) {
-                        missions.updateProgress(finalSelectionId, "boss_defeated", 1);
-                        player.sendSystemMessage(Component.literal("You have vanquished the Hand Demon! Now, you must only survive the remaining time.").withStyle(ChatFormatting.GOLD));
-                        ModUtils.syncMissions(player);
-                    }
-                }
-            });
+    private static void sendThreatIfRelevant(ServerPlayer player, float intensity) {
+        // Clamp and only send meaningful updates.
+        if (intensity < 0.01f) {
+            // Send a 0 to tell the client to decay immediately when combat isn't threatening.
+            ModMessages.sendToPlayer(new DemonThreatS2CPacket(0.0f), player);
+            player.getTags().removeIf(t -> t.startsWith(DEMON_THREAT_TAG + ":"));
+            return;
         }
 
-        if (deadEntity instanceof Player && deadEntity.getTags().contains("mist_clone")) {
-            if (deadEntity.level instanceof ServerLevel serverLevel) {
-                serverLevel.sendParticles(ParticleTypes.POOF, deadEntity.getX(), deadEntity.getY(), deadEntity.getZ(),
-                        30, 0.5, 0.5, 0.5, 0.1);
-            }
-            deadEntity.level.playSound(null, deadEntity.blockPosition(), SoundEvents.GENERIC_EXTINGUISH_FIRE, SoundSource.PLAYERS, 0.8f, 1.5f);
-        }
+        intensity = Math.min(1.0f, Math.max(0.0f, intensity));
+        ModMessages.sendToPlayer(new DemonThreatS2CPacket(intensity), player);
 
-        if (event.getSource().getEntity() instanceof ServerPlayer player) {
-            player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                if (demon.isDemon()) {
-                    LivingEntity killedEntity = event.getEntity();
-                    int points = 0;
-
-                    if (killedEntity instanceof HashiraEntity hashira) {
-                        // Grant bonus points for killing a powerful enemy
-                        points = 50 + (hashira.getBreathingStyle().ordinal() * 5);
-
-                    } else if (killedEntity instanceof Player killedPlayer) {
-                        // Check if the killed player was a Demon Slayer
-                        killedPlayer.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(slayerProg -> {
-                            // Grant points based on the Slayer's rank
-                            int bpGained = 10 + slayerProg.getRank().ordinal() * 5;
-                            demon.addBloodPoints(bpGained);
-                            player.getFoodData().eat(10, 1.0f); // 5 shanks + saturation
-                            player.sendSystemMessage(Component.literal("You have consumed their essence. Gained " + bpGained + " blood points.").withStyle(ChatFormatting.DARK_RED), true);
-                            ModUtils.syncDemon(player);
-                        });
-                        // We return here because the 'points > 0' logic below would run redundantly
-                        return;
-
-                    } else if (killedEntity instanceof net.minecraft.world.entity.npc.Villager) {
-                        player.getFoodData().eat(10, 1.0f); // 5 shanks + saturation
-                        player.sendSystemMessage(Component.literal("You devour the human.").withStyle(ChatFormatting.DARK_RED), true);
-                    }
-
-                    if (points > 0) {
-                        demon.addBloodPoints(points);
-                        player.getFoodData().eat(10, 1.0f); // 5 shanks + saturation
-
-                        player.sendSystemMessage(Component.literal("You have consumed their essence. Gained " + points + " blood points.").withStyle(ChatFormatting.DARK_RED), true);
-                        // Sync changes to the client
-                        CompoundTag nbt = new CompoundTag();
-                        demon.saveNBTData(nbt);
-                        ModMessages.sendToPlayer(new PlayerDemonSyncS2CPacket(nbt), player);
-                    }
-                }
-            });
-        }
+        // Track an expiry moment using a simple entity tag with the server gameTime.
+        long until = player.level.getGameTime() + THREAT_TIMEOUT_TICKS;
+        player.getTags().removeIf(t -> t.startsWith(DEMON_THREAT_TAG + ":"));
+        player.addTag(DEMON_THREAT_TAG + ":" + until);
     }
 
     @SubscribeEvent
@@ -718,5 +886,39 @@ public class ModEvents {
                 progression.getFormMasteryMap()
         )));
     }
-}
 
+    @SubscribeEvent
+    public static void onHashiraDeathDropSword(LivingDeathEvent event) {
+        if (event.getEntity().level.isClientSide) {
+            return;
+        }
+
+        if (!(event.getEntity() instanceof HashiraEntity hashira)) {
+            return;
+        }
+
+        // Let players keep their loot logic separate; only spawn for real Hashira mobs.
+        ItemStack sword = HashiraSwordHelper.createSwordForStyle(hashira.getBreathingStyle());
+        if (sword.isEmpty()) {
+            return;
+        }
+
+        // Spawn with randomized durability (10% - 85% remaining).
+        if (sword.isDamageableItem()) {
+            int max = sword.getMaxDamage();
+            if (max > 0) {
+                // Remaining durability percentage in [10, 85]
+                int minPct = 10;
+                int maxPct = 85;
+                int pct = minPct + hashira.getRandom().nextInt((maxPct - minPct) + 1);
+
+                int remaining = Math.max(1, Math.round(max * (pct / 100.0f)));
+                int damage = Math.min(max - 1, max - remaining);
+                sword.setDamageValue(damage);
+            }
+        }
+
+        // Drop at the Hashira's position.
+        hashira.spawnAtLocation(sword);
+    }
+}

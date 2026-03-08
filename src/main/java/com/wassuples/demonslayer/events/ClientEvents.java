@@ -2,12 +2,9 @@ package com.wassuples.demonslayer.events;
 
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
-import com.wassuples.demonslayer.client.gui.FormSelectionScreen;
+import com.wassuples.demonslayer.client.gui.*;
 import com.wassuples.demonslayer.client.LesserEyeRendererManager;
-import com.wassuples.demonslayer.client.gui.BreathHudOverlay;
-import com.wassuples.demonslayer.client.gui.BreathingMenuScreen;
-import com.wassuples.demonslayer.client.gui.SleepQTEHandler;
-import com.wassuples.demonslayer.client.gui.VignetteHudOverlay;
+import com.wassuples.demonslayer.client.DemonThreatEffects;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.custom.BodhisattvaEntity;
@@ -71,6 +68,8 @@ public class ClientEvents {
             if (level == null || mc.player == null) {
                 return;
             }
+
+            DemonThreatEffects.clientTick();
 
             LesserEyeRendererManager.tick();
 
@@ -276,6 +275,7 @@ public class ClientEvents {
         public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
             event.registerAbove(VanillaGuiOverlay.PLAYER_HEALTH.id(), "breath", BreathHudOverlay.HUD_BREATH);
             event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "vignette", VignetteHudOverlay.HUD_VIGNETTE);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "red_static", RedStaticHudOverlay.HUD_RED_STATIC);
         }
     }
 

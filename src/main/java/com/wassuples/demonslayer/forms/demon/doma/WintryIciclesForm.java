@@ -4,6 +4,7 @@ import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +18,8 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
 
@@ -30,13 +33,21 @@ public class WintryIciclesForm extends TimedForm {
     public WintryIciclesForm(LivingEntity user, IForm form) {
         super(user, form, TELEGRAPH_DURATION + 10);
 
+        BlockPos targetBlockPos;
         BlockHitResult hitResult = (BlockHitResult) user.pick(MAX_RANGE, 0, false);
+
         if (hitResult.getType() == HitResult.Type.MISS) {
             Vec3 endPoint = user.getEyePosition().add(user.getLookAngle().scale(MAX_RANGE));
-            this.targetPoint = Vec3.atBottomCenterOf(level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(endPoint)));
+            targetBlockPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(endPoint));
         } else {
-            this.targetPoint = Vec3.atBottomCenterOf(hitResult.getBlockPos());
+            targetBlockPos = hitResult.getBlockPos();
         }
+
+        // Adjust Y to be on top of the block's collision shape so particles are visible
+        VoxelShape shape = level.getBlockState(targetBlockPos).getCollisionShape(level, targetBlockPos, CollisionContext.of(user));
+        double yOffset = shape.isEmpty() ? 0.0 : shape.max(Direction.Axis.Y);
+
+        this.targetPoint = Vec3.atBottomCenterOf(targetBlockPos).add(0, yOffset, 0);
     }
 
     @Override

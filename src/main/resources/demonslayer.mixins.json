@@ -4,7 +4,9 @@
   "package": "com.wassuples.demonslayer.mixin",
   "compatibilityLevel": "JAVA_17",
   "refmap": "demonslayer.refmap.json",
-  "mixins": [],
+  "mixins": [
+    "FireBlockAccessor"
+  ],
   "client": [
   ],
   "server": [],

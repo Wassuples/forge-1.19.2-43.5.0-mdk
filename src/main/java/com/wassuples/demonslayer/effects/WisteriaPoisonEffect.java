@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.effects;
 
 import com.mojang.math.Vector3f;
+import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.custom.DemonEntity;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -25,25 +26,29 @@ public class WisteriaPoisonEffect extends MobEffect {
 
         if (pLivingEntity instanceof Player) {
             isSusceptible = pLivingEntity.getCapability(PlayerDemonProvider.PLAYER_DEMON)
-                    .map(demon -> demon.isDemon())
+                    .map(PlayerDemon::isDemon)
                     .orElse(false);
         }
         else if (pLivingEntity instanceof DemonEntity) {
             isSusceptible = true;
         }
 
-        if (isSusceptible) {
-            float damage = 1.0F + (pAmplifier * 0.5F);
-
-            pLivingEntity.hurt(DamageSource.MAGIC, damage);
-
-            if (pLivingEntity.level instanceof ServerLevel serverLevel) {
-                final DustParticleOptions purplePoison = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
-                serverLevel.sendParticles(purplePoison, pLivingEntity.getX(), pLivingEntity.getY() + 1.0, pLivingEntity.getZ(), 15, 0.3, 0.5, 0.3, 0.1);
-            }
-            pLivingEntity.level.playSound(null, pLivingEntity.blockPosition(), SoundEvents.GENERIC_BURN, SoundSource.HOSTILE, 0.5f, 1.5f);
-
+        // Only demons are affected at all.
+        if (!isSusceptible) {
+            return;
         }
+
+        float damage = 1.0F + (pAmplifier * 0.5F);
+
+        // Lethal (can kill) and only applied to demons due to the susceptibility check above.
+        pLivingEntity.hurt(DamageSource.MAGIC, damage);
+
+        if (pLivingEntity.level instanceof ServerLevel serverLevel) {
+            final DustParticleOptions purplePoison = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.0f);
+            serverLevel.sendParticles(purplePoison, pLivingEntity.getX(), pLivingEntity.getY() + 1.0, pLivingEntity.getZ(), 15, 0.3, 0.5, 0.3, 0.1);
+        }
+        pLivingEntity.level.playSound(null, pLivingEntity.blockPosition(), SoundEvents.GENERIC_BURN, SoundSource.HOSTILE, 0.5f, 1.5f);
+
     }
 
     @Override

@@ -9,8 +9,16 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 /**
- * A client-to-server (C2S) packet sent when the player clicks the
- * "Switch to Style" button in the Breathing Menu GUI.
+ * Client-to-server (C2S) packet that changes the player's selected {@code BreathingStyles} index.
+ *
+ * <p>Typical source: Breathing Menu GUI.
+ *
+ * <p>Contract:
+ * <ul>
+ *   <li>Runs on the server thread (executed via {@code context.enqueueWork(...)}).</li>
+ *   <li>Updates the {@code PlayerStyle} capability.</li>
+ *   <li>Sends {@link PlayerStyleSyncS2CPacket} back to the player so the client GUI updates immediately.</li>
+ * </ul>
  */
 public class SwitchStyleC2SPacket {
     private final int styleIndex;
@@ -27,9 +35,7 @@ public class SwitchStyleC2SPacket {
         buf.writeInt(this.styleIndex);
     }
 
-    /**
-     * Handles the packet on the server side when it is received.
-     */
+    /** Handles the packet on the server side when it is received. */
     public boolean handle(Supplier<NetworkEvent.Context> supplier) {
         NetworkEvent.Context context = supplier.get();
         context.enqueueWork(() -> {

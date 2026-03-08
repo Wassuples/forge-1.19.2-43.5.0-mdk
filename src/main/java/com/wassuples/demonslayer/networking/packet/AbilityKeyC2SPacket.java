@@ -1,6 +1,5 @@
 package com.wassuples.demonslayer.networking.packet;
 
-import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.breathing.PlayerStyle;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
@@ -24,6 +23,7 @@ import java.util.function.Supplier;
 import static com.wassuples.demonslayer.util.CombatHelper.isPlayerHoldingNichirin;
 
 public class AbilityKeyC2SPacket {
+    private static final boolean DEBUG_FORMS = false;
 
     public enum KeyState {
         PRESS, RELEASE
@@ -49,12 +49,27 @@ public class AbilityKeyC2SPacket {
             ServerPlayer player = context.getSender();
             if (player == null) return;
 
+            PlayerCooldowns cooldowns = player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS)
+                    .orElseThrow(() -> new IllegalStateException("Missing PlayerCooldowns capability for player " + player.getName().getString()));
+
             // Handle key RELEASE for chargeable forms
             if (this.keyState == KeyState.RELEASE) {
                 ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
+
                 if (activeForm instanceof ChargeableForm chargeable) {
                     boolean wasFullyCharged = chargeable.chargeTicks >= chargeable.chargeGoal;
+                    IForm form = chargeable.getForm();
+
                     chargeable.release(wasFullyCharged);
+
+                    if (wasFullyCharged) {
+                        int cooldownTicks = form.getCooldownTicks(player);
+                        cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
+
+                        if (cooldownTicks > 0) {
+                            cooldowns.setOnCooldown(player.level, form, cooldownTicks);
+                        }
+                    }
                 }
                 return;
             }
@@ -69,52 +84,48 @@ public class AbilityKeyC2SPacket {
                                 .map(PlayerStyle::getCurrentForms)
                                 .orElse(null));
 
-                if (formToUse == null) return;
-
-                ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
-                PlayerCooldowns cooldowns = player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS).orElse(null);
-                if (cooldowns == null) {
-                    DemonSlayer.LOGGER.error("CRITICAL: Player {} is missing PlayerCooldowns capability!", player.getName().getString());
+                if (formToUse == null) {
                     return;
                 }
 
+                ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
+
                 // --- DEACTIVATION LOGIC ---
-                // If the player is trying to use the form that is already active, it's a deactivation attempt (for toggles).
+                // Only allow 'press again to toggle' behavior for forms that are intended to be toggled (buffs).
+                // For non-buff active forms (like WATER_2 TimedForm), pressing again should NOT re-trigger the action.
                 if (activeForm != null && activeForm.getForm() == formToUse) {
-                    formToUse.performAction(player, (ServerLevel) player.level);
-                    // No cooldown check/set on deactivation.
+                    if (activeForm.getForm().isBuff()) {
+                        formToUse.performAction(player, (ServerLevel) player.level);
+                    }
                     return;
                 }
 
                 // --- ACTIVATION LOGIC ---
-
-                // Guard: Another combat move is already in progress.
-                // We allow buffs to be activated over other buffs, but not combat moves.
                 if (activeForm != null && !activeForm.getForm().isBuff()) {
                     return;
                 }
 
-                // Guard: The form is on cooldown.
-                if (cooldowns.isOnCooldown(formToUse)) {
-                    int ticksLeft = cooldowns.getCooldownRemainingTicks(formToUse);
+                if (cooldowns.isOnCooldown(player.level, formToUse)) {
+                    int ticksLeft = cooldowns.getCooldownRemainingTicks(player.level, formToUse);
                     player.sendSystemMessage(Component.literal(formToUse.getDisplayName() + " is on cooldown for " + String.format("%.1f", ticksLeft / 20.0) + "s"), true);
                     return;
                 }
 
-                // Guard: Slayers need a Nichirin sword for non-BDA forms.
                 boolean isDemon = player.getCapability(PlayerDemonProvider.PLAYER_DEMON).map(PlayerDemon::isDemon).orElse(false);
                 if (!isDemon && (formToUse instanceof com.wassuples.demonslayer.styles.BreathingForms) && !isPlayerHoldingNichirin(player)) {
                     player.level.playSound(null, player.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.5f, 0.8f);
                     return;
                 }
 
-                // All checks passed. Perform the action.
                 formToUse.performAction(player, (ServerLevel) player.level);
 
-                // Set the cooldown. Forms can have a cooldown of 0.
-                int cooldownTicks = formToUse.getCooldownTicks(player);
-                if (cooldownTicks > 0) {
-                    cooldowns.setOnCooldown(formToUse, cooldownTicks);
+                if (formToUse.getInputType() == IForm.InputType.PRESS) {
+                    int cooldownTicks = formToUse.getCooldownTicks(player);
+                    cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
+
+                    if (cooldownTicks > 0) {
+                        cooldowns.setOnCooldownAtLeastOneTick(player.level, formToUse, cooldownTicks);
+                    }
                 }
             }
         });

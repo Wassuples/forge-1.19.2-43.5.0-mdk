@@ -9,14 +9,35 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
+/**
+ * Central networking channel registration for this mod.
+ *
+ * <p>Responsibilities:
+ *
+ * <ul>
+ *   <li>Creates the {@link SimpleChannel} used for all mod packets.</li>
+ *   <li>Registers packet types and their encoders/decoders/handlers.</li>
+ *   <li>Provides small convenience helpers for sending messages.</li>
+ * </ul>
+ *
+ * <p>Note: protocol versioning is currently permissive ({@code clientAcceptedVersions/serverAcceptedVersions}
+ * accept all). If you ever publish builds that may connect to different mod versions, consider tightening this.
+ */
 public class ModMessages {
     private static SimpleChannel INSTANCE;
 
     private static int packetId = 0;
+
+    /** @return the next unique packet ID for registration. */
     private static int id() {
         return packetId++;
     }
 
+    /**
+     * Registers all packets.
+     *
+     * <p>Expected to be called during mod init (common setup).
+     */
     public static void register() {
         SimpleChannel net = NetworkRegistry.ChannelBuilder
                 .named(new ResourceLocation(DemonSlayer.MOD_ID, "messages"))
@@ -242,16 +263,43 @@ public class ModMessages {
                 .encoder(OpenCrowDispatchS2CPacket::toBytes)
                 .consumerMainThread(OpenCrowDispatchS2CPacket::handle)
                 .add();
+
+        net.messageBuilder(DemonThreatS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(DemonThreatS2CPacket::new)
+                .encoder(DemonThreatS2CPacket::toBytes)
+                .consumerMainThread(DemonThreatS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(OpenTamayoOfferS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(OpenTamayoOfferS2CPacket::new)
+                .encoder(OpenTamayoOfferS2CPacket::toBytes)
+                .consumerMainThread(OpenTamayoOfferS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(TamayoOfferResponseC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(TamayoOfferResponseC2SPacket::new)
+                .encoder(TamayoOfferResponseC2SPacket::toBytes)
+                .consumerMainThread(TamayoOfferResponseC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(HeatLightningCracksS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .encoder(HeatLightningCracksS2CPacket::encode)
+                .decoder(HeatLightningCracksS2CPacket::new)
+                .consumerMainThread(HeatLightningCracksS2CPacket::handle)
+                .add();
     }
 
+    /** Sends a message from client to server. */
     public static <MSG> void sendToServer(MSG message) {
         INSTANCE.sendToServer(message);
     }
 
+    /** Sends a message from server to a specific player. */
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
         INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), message);
     }
 
+    /** Sends a message from server to all connected players. */
     public static <MSG> void sendToClients(MSG message) {
         INSTANCE.send(PacketDistributor.ALL.noArg(), message);
     }

@@ -2,7 +2,10 @@ package com.wassuples.demonslayer;
 
 import com.mojang.logging.LogUtils;
 import com.wassuples.demonslayer.block.ModBlocks;
+import com.wassuples.demonslayer.block.ModFlammableBlocks;
 import com.wassuples.demonslayer.client.gui.SleepQTEOverlay;
+import com.wassuples.demonslayer.client.gui.SunForgeScreen;
+import com.wassuples.demonslayer.client.gui.SwordsmithTableScreen;
 import com.wassuples.demonslayer.effects.ModEffects;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.*;
@@ -13,29 +16,33 @@ import com.wassuples.demonslayer.entity.renderers.hashira.*;
 import com.wassuples.demonslayer.events.ModEvents;
 import com.wassuples.demonslayer.gamerule.ModGameRules;
 import com.wassuples.demonslayer.item.ModItems;
-import com.wassuples.demonslayer.missions.MissionRegistry;
+import com.wassuples.demonslayer.missions.MissionReloadListener;
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.networking.ModMessages;
+import com.wassuples.demonslayer.recipe.ModRecipes;
 import com.wassuples.demonslayer.worldgen.biome.ModBiomes;
+import com.wassuples.demonslayer.worldgen.inventory.ModMenuTypes;
 import com.wassuples.demonslayer.worldgen.terrablender.ModOverworldRegion;
+import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.NoopRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
+import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
-import software.bernie.geckolib3.GeckoLib;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
-import terrablender.api.Regions;
-
 import org.slf4j.Logger;
+import software.bernie.geckolib3.GeckoLib;
+import terrablender.api.Regions;
 
 @Mod(DemonSlayer.MOD_ID)
 public class DemonSlayer {
@@ -46,17 +53,19 @@ public class DemonSlayer {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
         ModItems.register(modEventBus);
+        ModBlocks.register(modEventBus);
+        com.wassuples.demonslayer.block.entity.ModBlockEntities.register(modEventBus);
+        com.wassuples.demonslayer.worldgen.inventory.ModMenuTypes.register(modEventBus);
+        ModRecipes.register(modEventBus);
         ModGameRules.register();
         ModEntityTypes.register(modEventBus);
         ModEffects.register(modEventBus);
-        ModBlocks.register(modEventBus);
-        MissionRegistry.register();
-
         ModBiomes.register(modEventBus);
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::onAttributeCreate);
         modEventBus.addListener(this::registerTerraBlender);
+        MinecraftForge.EVENT_BUS.addListener(this::registerReloadListeners);
 
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(ModEvents.class);
@@ -72,6 +81,8 @@ public class DemonSlayer {
             SpawnPlacements.register(ModEntityTypes.GREATER_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
             SpawnPlacements.register(ModEntityTypes.ELITE_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
             SpawnPlacements.register(ModEntityTypes.CROW.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CrowEntity::checkCrowSpawnRules);
+
+            ModFlammableBlocks.register();
         });
 
         ModMessages.register();
@@ -82,6 +93,10 @@ public class DemonSlayer {
             Regions.register(new ModOverworldRegion(new ResourceLocation(MOD_ID, "overworld"), 5));
         });
     }
+
+    private void registerReloadListeners(final AddReloadListenerEvent event) {
+         event.addListener(new MissionReloadListener());
+     }
 
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
@@ -144,6 +159,13 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.UPPER_MOON_THREE.get(), UpperMoonThreeRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.UPPER_MOON_TWO.get(), UpperMoonTwoRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.UPPER_MOON_ONE.get(), UpperMoonOneRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TAMAYO.get(), TamayoRenderer::new);
+        }
+
+        @SubscribeEvent
+        public static void onClientModSetup(FMLClientSetupEvent event) {
+            MenuScreens.register(ModMenuTypes.SUN_FORGE_MENU.get(), SunForgeScreen::new);
+            MenuScreens.register(ModMenuTypes.SWORDSMITH_TABLE_MENU.get(), SwordsmithTableScreen::new);
         }
     }
 
@@ -195,6 +217,7 @@ public class DemonSlayer {
         event.put(ModEntityTypes.UPPER_MOON_THREE.get(), UpperMoonThreeEntity.createAttributes().build());
         event.put(ModEntityTypes.UPPER_MOON_TWO.get(), UpperMoonTwoEntity.createAttributes().build());
         event.put(ModEntityTypes.UPPER_MOON_ONE.get(), UpperMoonOneEntity.createAttributes().build());
+        event.put(ModEntityTypes.TAMAYO.get(), TamayoEntity.createAttributes().build());
 
 
     }

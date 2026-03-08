@@ -7,7 +7,7 @@ import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.List;
 
-public record Mission (
+public record Mission(
     ResourceLocation id,
     MissionType type,
     Component title,
@@ -19,6 +19,10 @@ public record Mission (
     public Mission(FriendlyByteBuf buf) {
         this(buf.readResourceLocation(), buf.readEnum(MissionType.class), buf.readComponent(), buf.readList(FriendlyByteBuf::readComponent),
                 buf.readList(ObjectiveType::fromBytes), buf.readList(RewardType::fromBytes), buf.readEnum(Rank.class));
+    }
+
+    public static Mission fromDefinition(MissionDefinition definition) {
+        return new Mission(definition.id(), definition.type(), definition.title(), definition.description(), definition.objectives(), definition.rewards(), definition.requirement());
     }
 
     public void toBytes(FriendlyByteBuf buf) {

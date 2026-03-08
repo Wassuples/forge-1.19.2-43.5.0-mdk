@@ -1,46 +1,60 @@
 package com.wassuples.demonslayer.forms;
 
 import com.google.common.collect.ImmutableMap;
+import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.effects.ForcedSleepEffect;
 import com.wassuples.demonslayer.effects.ModEffects;
-import com.wassuples.demonslayer.entity.custom.CrystallineDivineChildEntity;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.forms.baseForms.ChargeableForm;
-import com.wassuples.demonslayer.forms.demon.doma.CrystallineDivineChildForm;
+import com.wassuples.demonslayer.forms.demon.akaza.*;
+import com.wassuples.demonslayer.forms.demon.daki.EightLayeredObiSlashForm;
+import com.wassuples.demonslayer.forms.demon.doma.*;
+import com.wassuples.demonslayer.forms.demon.enmu.EyesOfSleepForm;
+import com.wassuples.demonslayer.forms.demon.enmu.WhispersHypnosisForm;
+import com.wassuples.demonslayer.forms.demon.gyokko.*;
+import com.wassuples.demonslayer.forms.demon.gyutaro.FlyingBloodSicklesForm;
+import com.wassuples.demonslayer.forms.demon.gyutaro.RampantArcRampageParry;
+import com.wassuples.demonslayer.forms.demon.gyutaro.RotatingCircularSlashesForm;
+import com.wassuples.demonslayer.forms.demon.hantengu.CompressedSoundWavesForm;
+import com.wassuples.demonslayer.forms.demon.hantengu.CountlessStrikingTreesForm;
+import com.wassuples.demonslayer.forms.demon.hantengu.CrazedCryOfThunderdeathForm;
+import com.wassuples.demonslayer.forms.demon.hantengu.WeepingSpearsForm;
+import com.wassuples.demonslayer.forms.demon.rui.CuttingThreadCageForm;
+import com.wassuples.demonslayer.forms.demon.rui.CuttingThreadRotationForm;
+import com.wassuples.demonslayer.forms.demon.rui.MurderousEyeBasketForm;
+import com.wassuples.demonslayer.forms.slayer.beast.*;
 import com.wassuples.demonslayer.forms.slayer.flame.*;
+import com.wassuples.demonslayer.forms.slayer.flower.HonorableShadowPlumParry;
+import com.wassuples.demonslayer.forms.slayer.flower.PeoniesOfFutilityForm;
+import com.wassuples.demonslayer.forms.slayer.flower.VermilionEyeForm;
+import com.wassuples.demonslayer.forms.slayer.flower.WhirlingPeachForm;
+import com.wassuples.demonslayer.forms.slayer.insect.BeeStingFlutterForm;
+import com.wassuples.demonslayer.forms.slayer.insect.ButterflyDanceCapriceForm;
+import com.wassuples.demonslayer.forms.slayer.insect.CentipedeDanceForm;
+import com.wassuples.demonslayer.forms.slayer.insect.DragonflyDanceForm;
+import com.wassuples.demonslayer.forms.slayer.love.*;
+import com.wassuples.demonslayer.forms.slayer.mist.*;
+import com.wassuples.demonslayer.forms.slayer.moon.*;
+import com.wassuples.demonslayer.forms.slayer.serpent.CoilChokeForm;
+import com.wassuples.demonslayer.forms.slayer.serpent.SlitheringSerpentForm;
+import com.wassuples.demonslayer.forms.slayer.serpent.VenomFangsForm;
+import com.wassuples.demonslayer.forms.slayer.sound.ResoundingSlashesForm;
+import com.wassuples.demonslayer.forms.slayer.sound.RoarForm;
+import com.wassuples.demonslayer.forms.slayer.sound.StringPerformanceForm;
+import com.wassuples.demonslayer.forms.slayer.stone.*;
+import com.wassuples.demonslayer.forms.slayer.sun.*;
+import com.wassuples.demonslayer.forms.slayer.thunder.*;
 import com.wassuples.demonslayer.forms.slayer.water.*;
 import com.wassuples.demonslayer.forms.slayer.wind.*;
-import com.wassuples.demonslayer.forms.slayer.thunder.*;
-import com.wassuples.demonslayer.forms.slayer.mist.*;
-import com.wassuples.demonslayer.forms.slayer.sound.*;
-import com.wassuples.demonslayer.forms.slayer.love.*;
-import com.wassuples.demonslayer.forms.slayer.insect.*;
-import com.wassuples.demonslayer.forms.slayer.stone.*;
-import com.wassuples.demonslayer.forms.slayer.flower.*;
-import com.wassuples.demonslayer.forms.slayer.serpent.*;
-import com.wassuples.demonslayer.forms.slayer.moon.*;
-import com.wassuples.demonslayer.forms.slayer.beast.*;
-import com.wassuples.demonslayer.forms.demon.rui.*;
-import com.wassuples.demonslayer.forms.demon.enmu.*;
-import com.wassuples.demonslayer.forms.demon.daki.*;
-import com.wassuples.demonslayer.forms.demon.gyutaro.*;
-import com.wassuples.demonslayer.forms.demon.gyokko.*;
-import com.wassuples.demonslayer.forms.demon.hantengu.*;
-import com.wassuples.demonslayer.forms.demon.akaza.*;
-import com.wassuples.demonslayer.forms.demon.doma.*;
-import com.wassuples.demonslayer.forms.slayer.sun.*;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.StopFormS2CPacket;
 import com.wassuples.demonslayer.styles.BreathingForms;
 import com.wassuples.demonslayer.styles.IForm;
-import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.level.Level;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -48,7 +62,6 @@ import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -59,6 +72,7 @@ import static com.wassuples.demonslayer.styles.DemonForms.*;
 
 @Mod.EventBusSubscriber(modid = "demonslayer", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public  class ActiveFormManager {
+    private static final boolean DEBUG_FORMS = true;
     private static final Map<UUID, ActiveForm> ACTIVE_FORMS = new HashMap<>();
     private static final Map<UUID, Map<IForm, ActiveForm>> BUFF_FORMS = new HashMap<>();
     private static final Map<IForm, BiFunction<LivingEntity, IForm, ActiveForm>> FORM_FACTORIES;
@@ -66,6 +80,10 @@ public  class ActiveFormManager {
 
     // --- Manager Public API ---
     public static void start(LivingEntity user, IForm form) {
+        if (DEBUG_FORMS && user instanceof ServerPlayer sp) {
+            DemonSlayer.LOGGER.info("[ActiveForm] start request player={} form={} tick={} dim={} buff={}",
+                    sp.getGameProfile().getName(), form.getClass().getName() + "#" + form, sp.level.getGameTime(), sp.level.dimension().location(), form.isBuff());
+        }
         if (form.isBuff()) {
             startBuffForm(user, form);
         } else {
@@ -77,6 +95,10 @@ public  class ActiveFormManager {
         if (ACTIVE_FORMS.containsKey(user.getUUID())) {
             ActiveForm existingForm = ACTIVE_FORMS.get(user.getUUID());
             if (!existingForm.isInterruptible()) {
+                if (DEBUG_FORMS && user instanceof ServerPlayer sp) {
+                    DemonSlayer.LOGGER.info("[ActiveForm] startActive blocked: existing not interruptible existingForm={} player={}",
+                            existingForm.getForm().getClass().getName() + "#" + existingForm.getForm(), sp.getGameProfile().getName());
+                }
                 return;
             }
         }
@@ -86,7 +108,13 @@ public  class ActiveFormManager {
         if (factory != null) {
             ActiveForm activeForm = factory.apply(user, form);
             ACTIVE_FORMS.put(user.getUUID(), activeForm);
+            if (DEBUG_FORMS && user instanceof ServerPlayer sp) {
+                DemonSlayer.LOGGER.info("[ActiveForm] started activeFormClass={} form={} player={}",
+                        activeForm.getClass().getSimpleName(), form.getClass().getName() + "#" + form, sp.getGameProfile().getName());
+            }
             activeForm.onStart();
+        } else if (DEBUG_FORMS && user instanceof ServerPlayer sp) {
+            DemonSlayer.LOGGER.warn("[ActiveForm] no factory for form={} player={}", form.getClass().getName() + "#" + form, sp.getGameProfile().getName());
         }
     }
     private static void startBuffForm(LivingEntity user, IForm form) {
@@ -111,9 +139,11 @@ public  class ActiveFormManager {
     public static void stop(LivingEntity user, boolean notifyClient) {
         ActiveForm form = ACTIVE_FORMS.remove(user.getUUID());
         if (form != null) {
-            System.out.println("[DEBUG] ==> Attempting to STOP and REMOVE form: " + form.getForm().getDisplayName());
+            if (DEBUG_FORMS && user instanceof ServerPlayer sp) {
+                DemonSlayer.LOGGER.info("[ActiveForm] stop player={} form={} notifyClient={} tick={}",
+                        sp.getGameProfile().getName(), form.getForm().getClass().getName() + "#" + form.getForm(), notifyClient, sp.level.getGameTime());
+            }
             form.onStop();
-            System.out.println("[DEBUG] Successfully STOPPED form: " + form.getForm().getDisplayName());
 
             if (notifyClient && user instanceof ServerPlayer player) {
                 ModMessages.sendToPlayer(new StopFormS2CPacket(), player);
@@ -207,25 +237,6 @@ public  class ActiveFormManager {
                 }
             }
         }
-
-        ActiveForm activeForm = getActiveForm(target);
-        if (activeForm instanceof CrystallineDivineChildForm) {
-            Level level = target.level;
-            List<CrystallineDivineChildEntity> clones = level.getEntitiesOfClass(CrystallineDivineChildEntity.class,
-                    target.getBoundingBox().inflate(128), e -> e.isOwner(target) && e.isAlive());
-
-            if (!clones.isEmpty()) {
-                CrystallineDivineChildEntity unluckyClone = clones.get(level.random.nextInt(clones.size()));
-                float originalDamage = event.getAmount();
-                event.setCanceled(true);
-                unluckyClone.hurt(event.getSource(), originalDamage * 4.0F);
-
-                level.playSound(null, target.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 0.8f, 1.2f);
-                if (level instanceof ServerLevel serverLevel) {
-                    serverLevel.sendParticles(ParticleTypes.END_ROD, target.getEyePosition().x, target.getEyePosition().y, target.getEyePosition().z, 20, 0.5, 0.5, 0.5, 0.1);
-                }
-            }
-        }
     }
 
     // --- Static Initializer for Form Factories ---
@@ -259,6 +270,7 @@ public  class ActiveFormManager {
                 .put(THUNDER_2, RiceSpiritForm::new)
                 .put(THUNDER_3, ThunderSwarmForm::new)
                 .put(THUNDER_4, DistantThunderForm::new)
+                .put(THUNDER_5, com.wassuples.demonslayer.forms.slayer.thunder.HeatLightningForm::new)
                 .put(THUNDER_6, RumbleAndFlashForm::new)
                 .put(THUNDER_7, HonoikazuchiNoKamiForm::new)
                 // MIST
@@ -376,3 +388,4 @@ public  class ActiveFormManager {
                 .build();
     }
 }
+

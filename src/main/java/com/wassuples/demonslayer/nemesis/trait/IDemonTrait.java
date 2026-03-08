@@ -65,4 +65,34 @@ public interface IDemonTrait {
     void copyFrom(IDemonTrait source);
     CompoundTag serializeNBT();
     void deserializeNBT(CompoundTag nbt);
+
+    /**
+     * World time (ticks) when this demon was created (approximate birth).
+     */
+    long getBirthTime();
+
+    void setBirthTime(long birthTime);
+
+    /**
+     * World time (ticks) when the demon last participated in a notable battle.
+     */
+    long getLastBattleTime();
+
+    void setLastBattleTime(long time);
+
+    /**
+     * Full memory log (bounded). Do not mutate directly.
+     */
+    List<DemonMemory> getMemories();
+
+    void addMemory(DemonMemory memory);
+
+    void clearMemories();
+
+    /**
+     * Fast stats to drive behavior/taunts without scanning the whole log.
+     */
+    int getMemoryCount(MemoryType type);
+
+    long getLastMemoryTime(MemoryType type);
 }

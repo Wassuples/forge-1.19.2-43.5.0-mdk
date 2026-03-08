@@ -13,14 +13,28 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Capability provider for {@link PlayerBreath}.
+ *
+ * <p>This provider is attached to player entities and is responsible for:
+ *
+ * <ul>
+ *   <li>Lazy creation of the {@link PlayerBreath} instance</li>
+ *   <li>Exposing the capability via Forge's {@link ICapabilityProvider}</li>
+ *   <li>Persisting the breath data via NBT</li>
+ * </ul>
+ */
 public class PlayerBreathProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
     public static final ResourceLocation KEY = new ResourceLocation(DemonSlayer.MOD_ID, "properties");
 
-    // The actual capability provider.
-    public static Capability<PlayerBreath> PLAYER_BREATH = CapabilityManager.get(new CapabilityToken<PlayerBreath>() { });
+    /** The capability token used to retrieve {@link PlayerBreath} instances from entities. */
+    public static final Capability<PlayerBreath> PLAYER_BREATH =
+            CapabilityManager.get(new CapabilityToken<PlayerBreath>() { });
+
     private PlayerBreath breath = null;
     private final LazyOptional<PlayerBreath> optional = LazyOptional.of(this::createPlayerBreath);
 
+    /** Lazily constructs the underlying {@link PlayerBreath} instance. */
     private PlayerBreath createPlayerBreath() {
         if(this.breath == null) {
             this.breath = new PlayerBreath();

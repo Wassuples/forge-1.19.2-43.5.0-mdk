@@ -323,6 +323,15 @@ public class ModEntityTypes {
                             .sized(0.6f, 0.9f)
                             .build(new ResourceLocation(DemonSlayer.MOD_ID, "crow").toString()));
 
+    //##########################################################
+    //              NPCs
+    //##########################################################
+    public static final RegistryObject<EntityType<TamayoEntity>> TAMAYO =
+            ENTITY_TYPES.register("tamayo",
+                    () -> EntityType.Builder.of(TamayoEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.9f)
+                            .build(new ResourceLocation(DemonSlayer.MOD_ID, "tamayo").toString()));
+
 
     public static void register(IEventBus eventBus) {
         ENTITY_TYPES.register(eventBus);

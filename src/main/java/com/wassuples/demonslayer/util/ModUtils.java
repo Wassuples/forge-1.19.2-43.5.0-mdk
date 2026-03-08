@@ -10,9 +10,27 @@ import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 
+/**
+ * Miscellaneous helper utilities used across the mod.
+ *
+ * <p>This class primarily contains <b>server-side</b> synchronization helpers which read a capability's
+ * current server state and send the appropriate S2C sync packet(s) to the owning player.
+ *
+ * <p>Design notes:
+ *
+ * <ul>
+ *   <li>These helpers should be called on the logical server.</li>
+ *   <li>They are intentionally tolerant: if a capability is missing, they do nothing.</li>
+ * </ul>
+ */
 public final class ModUtils {
     private ModUtils() {}
 
+    /**
+     * Sends the player's progression state to the client.
+     *
+     * <p>Includes rank, unlocked styles, and mastery maps.
+     */
     public static void syncProgression(ServerPlayer player) {
         player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
             ModMessages.sendToPlayer(new PlayerProgressionSyncS2CPacket(
@@ -25,6 +43,11 @@ public final class ModUtils {
         });
     }
 
+    /**
+     * Sends the player's mission data to the client.
+     *
+     * <p>Serialization is performed via the missions capability NBT.
+     */
     public static void syncMissions(ServerPlayer player) {
         player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
             CompoundTag nbt = new CompoundTag();
@@ -33,18 +56,21 @@ public final class ModUtils {
         });
     }
 
+    /** Sends the player's currently selected breathing style/form to the client. */
     public static void syncStyle(ServerPlayer player) {
         player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
             ModMessages.sendToPlayer(new PlayerStyleSyncS2CPacket(style.getForm(), style.getStyleIndex()), player);
         });
     }
 
+    /** Sends the player's current breath state to the client for UI display. */
     public static void syncBreath(ServerPlayer player) {
         player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
             ModMessages.sendToPlayer(new PlayerBreathSyncS2CPacket(breath.getBreath(), breath.getMaxBreath()), player);
         });
     }
 
+    /** Sends the player's demon state (BDA, passives, etc) to the client. */
     public static void syncDemon(ServerPlayer player) {
         player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             CompoundTag nbt = new CompoundTag();
@@ -53,6 +79,7 @@ public final class ModUtils {
         });
     }
 
+    /** Convenience method that calls all sync helpers for the player. */
     public static void syncAll(ServerPlayer player) {
         syncProgression(player);
         syncMissions(player);

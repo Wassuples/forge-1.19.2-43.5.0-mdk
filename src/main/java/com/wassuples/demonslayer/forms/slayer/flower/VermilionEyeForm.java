@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.forms.slayer.flower;
 
+import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.VignetteS2CPacket;
@@ -16,7 +17,7 @@ import net.minecraft.world.phys.AABB;
 import java.util.List;
 
 public class VermilionEyeForm extends TimedForm {
-    private static final int DURATION = 200; // 10 seconds of super mode
+    private static final int DURATION = 2000; // 100 seconds of super mode
     private static final int BURNOUT_DURATION = 300; // 15 seconds of debuffs after it ends
     private static final double AURA_RADIUS = 12.0;
 
@@ -51,7 +52,12 @@ public class VermilionEyeForm extends TimedForm {
 
     @Override
     public void onTick() {
-        super.onTick();
+        // Do NOT call super.onTick() because TimedForm calls ActiveFormManager.stop(user, false),
+        // which removes the *active* form, not this buff.
+        if (ticksActive >= DURATION) {
+            ActiveFormManager.stopBuffForm(user, form);
+            return;
+        }
 
         AABB auraBox = user.getBoundingBox().inflate(AURA_RADIUS);
         List<LivingEntity> nearbyEntities = level.getEntitiesOfClass(LivingEntity.class, auraBox, e -> e != user && e.isAlive());

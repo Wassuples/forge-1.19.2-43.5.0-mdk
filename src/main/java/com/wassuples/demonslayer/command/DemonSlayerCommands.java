@@ -1,6 +1,5 @@
 package com.wassuples.demonslayer.command;
 
-import com.google.common.collect.ImmutableList;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.BoolArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -31,7 +30,10 @@ import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
-import net.minecraft.network.chat.*;
+import net.minecraft.network.chat.ClickEvent;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.HoverEvent;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
@@ -252,9 +254,7 @@ public class DemonSlayerCommands {
                 //  RESET COMMAND 
                 .then(Commands.literal("reset")
                         .then(Commands.argument("targets", EntityArgument.players())
-                                .executes(ctx -> executeResetPlayer(ctx)))
-                )
-        );
+        )));
     }
 
     //  HELPER METHODS 
@@ -922,5 +922,5 @@ public class DemonSlayerCommands {
 
         source.sendSuccess(help, false);
         return 1;
-    }
-}
+}}
+

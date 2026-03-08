@@ -1,0 +1,10 @@
+{
+  "type": "demonslayer:sun_forge",
+  "ingredients": [
+    { "item": "demonslayer:raw_scarlet" },
+    { "item": "minecraft:iron_ingot" }
+  ],
+  "result": { "item": "demonslayer:scarlet_crimson_iron_sand", "count": 1 },
+  "cookTime": 100
+}
+

@@ -12,11 +12,20 @@
   "item.demonslayer.tengen_uzui_spawn_egg": "Tengen Uzui Spawn Egg",
   "item.demonslayer.jigoro_kuwajima_spawn_egg": "Jigoro Kuwajima Spawn Egg",
   "item.demonslayer.crow_spawn_egg": "Kasugai Crow Spawn Egg",
+  "item.demonslayer.tamayo_spawn_egg": "Tamayo Spawn Egg",
 
   "item.demonslayer.muzans_blood": "Muzan's Blood",
   "item.demonslayer.wisteria_log": "Wisteria Log",
+  "item.demonslayer.wisteria_sapling": "Wisteria Sapling",
+  "item.demonslayer.wisteria_leaves": "Wisteria Leaves",
 
   "block.demonslayer.wisteria_log": "Wisteria Log",
+  "block.demonslayer.wisteria_sapling": "Wisteria Sapling",
+  "block.demonslayer.wisteria_leaves": "Wisteria Leaves",
+  "block.demonslayer.scarlet_ore": "Scarlet Ore",
+  "block.demonslayer.sun_forge": "Sun Forge",
+  "block.demonslayer.swordsmiths_table": "Swordsmith's Table",
+  "block.demonslayer.ranking_board": "Ranking Board",
 
   "gamerule.doFormsGriefing": "Form Griefing",
   "gamerule.doFormsGriefing.description": "Determines if forms cause environmental damage.",
@@ -25,7 +34,9 @@
   "gamerule.minDemonRosterSize": "Minimum Demon Roster Size",
   "gamerule.minDemonRosterSize.description": "The minimum number of demons that must be present on the roster.",
 
-  "itemGroup.demonslayertab": "Demon Slayer",
+  "itemGroup.demonslayertab": "Kimetsu no Yaiba: Main Page",
+  "itemGroup.demonslayer_nichirin": "Kimetsu no Yaiba: Nichirin Swords",
+  "itemGroup.demonslayer_spawn_eggs": "Kimetsu no Yaiba: Spawn Eggs",
 
   "key.category.demonslayer.category": "Demon Slayer",
   "key.demonslayer.change_form": "Change Blade Form",
@@ -35,5 +46,43 @@
   "message.demonslayer.use_form": "Used Form!",
   "key.demonslayer.open_menu": "Open Breathing Menu",
 
-  "effect.demonslayer.wisteria_poison":  "Wisteria Poison"
+  "effect.demonslayer.wisteria_poison":  "Wisteria Poison",
+
+  "item.demonslayer.raw_scarlet": "Raw Scarlet",
+  "biome.demonslayer.mount_yoko": "Mount Yoko",
+  "item.demonslayer.scarlet_crimson_iron_sand": "Scarlet Crimson Iron Sand",
+  "item.demonslayer.nichirin_steel": "Nichirin Steel",
+
+  "item.demonslayer.fodder_demon_spawn_egg": "Fodder Demon Spawn Egg",
+  "item.demonslayer.lowly_demon_spawn_egg": "Lowly Demon Spawn Egg",
+  "item.demonslayer.common_demon_spawn_egg": "Common Demon Spawn Egg",
+  "item.demonslayer.greater_demon_spawn_egg": "Greater Demon Spawn Egg",
+  "item.demonslayer.elite_demon_spawn_egg": "Elite Demon Spawn Egg",
+  "item.demonslayer.hand_demon_spawn_egg": "Hand Demon Spawn Egg",
+
+  "item.demonslayer.lower_moon_one_spawn_egg": "Lower Moon One Spawn Egg",
+  "item.demonslayer.lower_moon_two_spawn_egg": "Lower Moon Two Spawn Egg",
+  "item.demonslayer.lower_moon_three_spawn_egg": "Lower Moon Three Spawn Egg",
+  "item.demonslayer.lower_moon_four_spawn_egg": "Lower Moon Four Spawn Egg",
+  "item.demonslayer.lower_moon_five_spawn_egg": "Lower Moon Five Spawn Egg",
+  "item.demonslayer.lower_moon_six_spawn_egg": "Lower Moon Six Spawn Egg",
+
+  "item.demonslayer.upper_moon_one_spawn_egg": "Upper Moon One Spawn Egg",
+  "item.demonslayer.upper_moon_two_spawn_egg": "Upper Moon Two Spawn Egg",
+  "item.demonslayer.upper_moon_three_spawn_egg": "Upper Moon Three Spawn Egg",
+  "item.demonslayer.upper_moon_four_spawn_egg": "Upper Moon Four Spawn Egg",
+  "item.demonslayer.upper_moon_five_spawn_egg": "Upper Moon Five Spawn Egg",
+
+  "item.demonslayer.nichirin_blade_giyu": "Giyu's Nichirin Blade (Water)",
+  "item.demonslayer.nichirin_blade_shinobu": "Shinobu's Nichirin Blade (Insect)",
+  "item.demonslayer.nichirin_blade_mitsuri": "Mitsuri's Nichirin Blade (Love)",
+  "item.demonslayer.nichirin_blade_obanai": "Obanai's Nichirin Blade (Serpent)",
+  "item.demonslayer.nichirin_blade_sanemi": "Sanemi's Nichirin Blade (Wind)",
+  "item.demonslayer.nichirin_blade_gyomei": "Gyomei's Nichirin Blade (Stone)",
+  "item.demonslayer.nichirin_blade_muichiro": "Muichiro's Nichirin Blade (Mist)",
+  "item.demonslayer.nichirin_blade_rengoku": "Rengoku's Nichirin Blade (Flame)",
+  "item.demonslayer.nichirin_blade_tengen": "Tengen's Nichirin Blade (Sound)",
+  "item.demonslayer.nichirin_blade_jigoro": "Jigoro's Nichirin Blade (Thunder)",
+  "item.demonslayer.nichirin_blade_kanae": "Kanae's Nichirin Blade (Flower)",
+  "item.demonslayer.ranking_board": "Ranking Board"
 }

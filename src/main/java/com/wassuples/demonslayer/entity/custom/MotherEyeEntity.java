@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.ClearLesserEyesS2CPacket;
 import com.wassuples.demonslayer.networking.packet.SyncLesserEyesS2CPacket;
@@ -83,8 +84,12 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
         double radius = 20.0;
 
         AABB searchArea = this.getBoundingBox().inflate(radius);
-        List<LivingEntity> targets = this.level.getEntitiesOfClass(LivingEntity.class, searchArea,
-                e -> e != this && e != getCaster());
+        Entity caster = getCaster();
+        List<LivingEntity> targets = this.level.getEntitiesOfClass(
+                LivingEntity.class,
+                searchArea,
+                e -> e != this && e != caster && (caster == null || !SummonAllies.areAllies(caster, e))
+        );
 
         for (LivingEntity target : targets) {
             if (target instanceof Player p && p.getInventory().getArmor(3).is(Items.CARVED_PUMPKIN)) {

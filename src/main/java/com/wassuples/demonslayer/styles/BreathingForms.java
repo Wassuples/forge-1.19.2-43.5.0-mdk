@@ -17,7 +17,6 @@ import com.wassuples.demonslayer.ranking.PlayerProgression;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
@@ -58,7 +57,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a singular, horizontal slash aiming to decapitate their target.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_1.png")) {
         @Override
@@ -78,7 +76,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps forward into the air and performs a front flip, releasing a singular vertical slash in a circular motion.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_2.png")) {
         @Override
@@ -95,7 +92,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user swings and bends their blade in a winding motion along with their body and dances in a flowing pattern, slicing everything in its path.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_3.png")) {
         @Override
@@ -112,7 +108,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a multitude of slashes in a flowing fashion to release multiple consecutive slashes.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_4.png")) {
         @Override
@@ -132,7 +127,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user changes the grip on their sword and decapitates the opponent in a single flowing strike that causes little to no pain. It is a “sword strike of kindness” used when the enemy willingly surrenders.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_5.png")) {
         @Override
@@ -168,7 +162,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user twists their body, using their blade to perform a fierce whirling motion which generates a whirlpool of air to shred apart anything caught within its current like a giant sharp blade.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_6.png")) {
         @Override
@@ -184,7 +177,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a precise, fast and accurate thrust with their blade.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_7.png")) {
         @Override
@@ -200,7 +192,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user cuts the target vertically in a flowing motion which is most effective when they are falling downward.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_8.png")) {
         @Override
@@ -220,7 +211,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user changes their footwork in a way that minimizes the landing time and surface needed when landing, allowing the user to move without limits. Ideal when fighting in a place with no solid foothold.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_9.png")) {
         @Override
@@ -240,7 +230,6 @@ public enum BreathingForms implements IForm {
             100,
             100,
             "The user charges toward the target whilst performing a continuous flowing attack with their blade which increases in strength and speed over time using momentum. The attacks seemingly take the form of a Japanese water dragon that accompanies the user in battle.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_10.png")) {
         @Override
@@ -261,7 +250,6 @@ public enum BreathingForms implements IForm {
             200,
             100,
             "The personal creation of the current Water Hashira, Giyu Tomioka. The user ceases all body movements and enters a state of complete tranquility, deflecting, blocking and cutting any incoming attacks with imperceptible speed with their blade. However, its effectiveness is limited as fast and numerous attacks can break through.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/water/water_11.png")) {
         @Override
@@ -282,7 +270,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes towards the target at tremendous speeds, before unleashing a singular horizontal slash directed at the targets neck for a decapitation.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_1.png")) {
         @Override
@@ -298,7 +285,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes an arcing vertical slash in an upwards motion, often brought up from a tail guard.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_2.png")) {
         @Override
@@ -319,7 +305,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs an arcing downwards vertical slash, often brought down from a high guard.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_3.png")) {
         @Override
@@ -339,7 +324,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular slash or multiple if needed, in a fluid circular motion to defend from incoming attacks and decapitate multiple targets.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_4.png")) {
         @Override
@@ -355,7 +339,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forth, bringing their blade into a high guard before performing a series of sword slashes which take the form of a flaming tiger enveloping the user.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_5.png")) {
         @Override
@@ -375,7 +358,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The most powerful Flame Breathing technique. The user assumes a high stance before performing an extremely high-speed dash towards the target and unleashing a singular, devastating slash. The technique is powerful enough to completely carve out the ground in its wake. In the movie and anime adaptation, this technique seemingly took the form of a flaming Japanese dragon that envelopes the user as they are charging towards the target.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flame/flame_9.png")) {
         @Override
@@ -396,7 +378,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forward at blinding speeds and slashes continuously in a horizontal cyclone pattern.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_1.png")) {
         @Override
@@ -412,7 +393,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user lifts the sword upwards towards the right, above their head and unleashes four vertical slashes at once down on the enemy resembling claws.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_2.png")) {
         @Override
@@ -433,7 +413,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes a whirlwind of slashes around their body that can defend them from incoming attacks and slice up their surroundings.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_3.png")) {
         @Override
@@ -449,7 +428,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases several whirlwind slashes above them from below their target.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_4.png")) {
         @Override
@@ -465,7 +443,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user creates several circular arched slashes that increase in size from above their target.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_5.png")) {
         @Override
@@ -481,7 +458,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user rotates their body in an uppercut movement, creating an arcing slash.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_6.png")) {
         @Override
@@ -505,7 +481,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air while swinging their blade which generates gale-force winds to shred their opponent apart.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_7.png")) {
         @Override
@@ -521,7 +496,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and swings their blade which generates circular torrents of wind that slices up the opponent instantly.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_8.png")) {
         @Override
@@ -537,7 +511,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user backflips into the air and while upside-down, unleashes a powerful gust of circular wind that slashes apart anything below.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/wind/wind_9.png")) {
         @Override
@@ -556,8 +529,7 @@ public enum BreathingForms implements IForm {
             1,
             50,
             100,
-            "The user unsheathes their katana, dashes forward at blinding speeds and decapitates their opponent faster than they can react, before sheathing it back. This technique is extremely reminiscent of Iaijutsu and its movements are described to be akin to \"lightning ripping through the air\".",
-            
+            "The user unsheathes their katana, dashes forward at blinding speeds and decapitates their opponent.",
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_1.png")) {
         @Override
@@ -573,7 +545,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases five arched slashes accompanied by lightning in quick succession.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_2.png")) {
         @Override
@@ -589,7 +560,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user surrounds the enemy with waves of arched lightning and attacks them from all directions.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_3.png")) {
         @Override
@@ -604,8 +574,7 @@ public enum BreathingForms implements IForm {
             1,
             50,
             100,
-            "The user generates a ball of electricity that releases waves of strong multi-directional lightning bolts from afar.",
-            
+            "The user charges electrical power and creates a destructive storm zone in front of them, unleashing a multitude of electric slashes that heavily damage anything inside and can blast through terrain.",
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_4.png")) {
         @Override
@@ -620,43 +589,12 @@ public enum BreathingForms implements IForm {
             1,
             50,
             100,
-            "The user unleashes a long-ranged upward sword slash accompanied by lightning.",
-            
+            "The user takes a stance and swings their blade upwards, electrocuting their opponent with lightning that cracks and burns their flesh.",
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_5.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            // 1. Perform a long-range raycast to find where the player is looking.
-            // A range of 256 is effectively infinite
-            net.minecraft.world.phys.BlockHitResult hitResult = (net.minecraft.world.phys.BlockHitResult) user.pick(256, 0, false);
-            if (hitResult.getType() == net.minecraft.world.phys.HitResult.Type.MISS) {
-                // If we're looking at the sky, do nothing.
-                return;
-            }
-
-            // 2. The player performs their slash animation. They are free to move.
-            performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 2.0f);
-            level.playSound(null, user.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 0.3f, 2.0f);
-
-            // 3. Find the ground position at the distant target location.
-            BlockPos groundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, hitResult.getBlockPos());
-            Vec3 groundCenter = Vec3.atBottomCenterOf(groundPos);
-
-            // 4. Trigger the eruption of sound, particles, and damage at the target location.
-            float DAMAGE = 15.0f;
-            double ERUPTION_RADIUS = 1.5;
-            double ERUPTION_HEIGHT = 6.0;
-            final DustParticleOptions YELLOW_LIGHTNING = new DustParticleOptions(new Vector3f(1.0f, 0.9f, 0.2f), 1.0f);
-            DamageSource damageSource = DamageSource.LIGHTNING_BOLT;
-
-            level.playSound(null, groundCenter.x, groundCenter.y, groundCenter.z, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.WEATHER, 1.0f, 1.3f);
-
-            for (int i = 0; i <= ERUPTION_HEIGHT * 2; i++) {
-                Vec3 particlePos = groundCenter.add(0, (double)i * 0.5, 0);
-                level.sendParticles(YELLOW_LIGHTNING, particlePos.x, particlePos.y, particlePos.z, 3, 0.2, 0.2, 0.2, 0);
-            }
-
-            dealVerticalColumnDamage(user, groundCenter, ERUPTION_RADIUS, ERUPTION_HEIGHT, DAMAGE);
+            ActiveFormManager.start(user, this);
         }
     },
     THUNDER_6(BreathingStyles.THUNDER,
@@ -914,7 +852,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user holds their twin swords apart and spins them rapidly around themselves, enabling the blades to destroy anything it makes contact with for powerful defensive capabilities around the user.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_4.png")) {
         @Override
@@ -930,7 +867,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user holds the chain of their twin swords and rotates the blades at high speed while charging forward. The spin of the blades without changing grip allows for continual slashes while still being in motion.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_5.png")) {
         @Override
@@ -950,7 +886,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes forward and performs a single slash that winds through the target, hitting multiple areas with one slice.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_1.png")) {
         @Override
@@ -966,7 +901,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular, long-winding swing, akin to a whipping motion, that cuts the target at multiple angles.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_2.png")) {
         @Override
@@ -982,7 +916,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and performs multiple arched slashes in quick succession.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_3.png")) {
         @Override
@@ -998,7 +931,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air before performing a somersault and releasing dozens of rapid, winding slashes from afar that essentially form a tornado of slashes.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_5.png")) {
         @Override
@@ -1014,7 +946,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user fully extends their sword to perform an arcing slash before retracting it and extending it once more, done in quick succession to form a layer of slashes.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/love/love_6.png")) {
         @Override
@@ -1034,7 +965,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and charges towards the opponent, stinging them multiple times with their blade to inject poison in just seemingly one strike.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_1.png")) {
         @Override
@@ -1050,7 +980,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes at their target at blinding speeds and uses the momentum of their speed to then strengthen a single thrust into their opponent and inject poison into them.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_2.png")) {
         @Override
@@ -1066,7 +995,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A six strike attack with which the user aims to strike and inject their target with multiple doses of poison at the target's weak spots (such as the neck, heart, torso, etc.) in order to kill them with a large dose of poison.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_3.png")) {
         @Override
@@ -1082,7 +1010,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "An attack with which the user uses their full speed to run a zigzag pattern that confuses their opponent in order to create an opening for them to directly stab their opponent's neck and inject poison to kill them, with the stab's force and power being further enhanced by the momentum of their speed. Doma noted that the sheer speed of this technique is strong enough to destroy an entire wooden bridge.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/insect/insect_4.png")) {
         @Override
@@ -1102,7 +1029,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user throws both the flail and axe towards their intended target and manipulates the chain by rotating it thus causing the axe and flail to also rotate in order to drill and grind right through their target.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_1.png")) {
         @Override
@@ -1118,7 +1044,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user throws both their axe and spiked flail for a pincer move before smashing down on the chain to cause the flail to then rebound and smash into their target from afar.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_2.png")) {
         @Override
@@ -1134,7 +1059,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user rapidly twirls and swings the chain around them to unleash an omnidirectional flurry of attacks with both the flail and axe. This technique can also be used to block and counter enemy attacks from all directions at once.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_3.png")) {
         @Override
@@ -1150,7 +1074,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user manipulates both the flail and axe weapons at both ends of the chain by swinging the chain on both sides in order to strike their opponents using a two pronged wide ranged attack.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_4.png")) {
         @Override
@@ -1166,7 +1089,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user utilizes a powerful barrage with their flail and axe, doing a great amount of damage. The axe is destined to hit first with the trajectory of the flail following from the opposite side and slamming it into the opponent.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/stone/stone_5.png")) {
         @Override
@@ -1186,7 +1108,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases several rotating sword slashes that deflects incoming physical attacks.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_2.png")) {
         @Override
@@ -1202,7 +1123,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user unleashes single sword slash that curves and twists gracefully.\n",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_4.png")) {
         @Override
@@ -1236,7 +1156,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Form: Peonies of Futility desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_5.png")) {
         @Override
@@ -1252,7 +1171,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A technique used after or during evasion, the user spins around moving with their body weight to deliver an attack.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_6.png")) {
         @Override
@@ -1268,12 +1186,16 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A focusing technique that raises the user's kinetic vision to its maximum, while using this technique the user perceives the world as if it were in slow motion. Usage of the technique, however, is highly dangerous, as the tremendous strain on the eyes could cause blood vessels to rupture and lead to partial or complete blindness. This technique is still usable even if the user only has one fully functional eye.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/flower/flower_7.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
             ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public boolean isBuff() {
+            return true;
         }
     },
 
@@ -1288,7 +1210,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a singular frontal horizontal slash aimed at their target in a winding motion.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_1.png")) {
         @Override
@@ -1329,7 +1250,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user dashes behind their opponent at blinding speed and aims to swiftly slice off their head from behind.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_2.png")) {
         @Override
@@ -1345,7 +1265,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user circles around their opponent while using their sword to slice them from all directions.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_3.png")) {
         @Override
@@ -1361,7 +1280,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps forward and performs a horizontal slash that slices through the target.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_4.png")) {
         @Override
@@ -1392,7 +1310,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user charges forth in a twisting and winding motion, curving their sword in multiple directions to strike multiple targets at once. This technique is capable of decapitating multiple enemies at once.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/serpent/serpent_5.png")) {
         @Override
@@ -1411,7 +1328,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "First Form: Dark Moon, Evening Palace desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_1.png")) {
         @Override
@@ -1439,7 +1355,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Second Form: Pearl Flower Moongazing desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_2.png")) {
         @Override
@@ -1455,7 +1370,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Third Form: Loathsome Moon, Chains desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_3.png")) {
         @Override
@@ -1484,7 +1398,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Form: Moon Spirit Calamitous Eddy desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_5.png")) {
         @Override
@@ -1500,7 +1413,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixth Form: Perpetual Night, Lonely Moon - Incessant desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_6.png")) {
         @Override
@@ -1516,7 +1428,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Seventh Form: Mirror of Misfortune, Moonlit desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_7.png")) {
         @Override
@@ -1532,7 +1443,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Eighth Form: Moon-Dragon Ringtail desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_8.png")) {
         @Override
@@ -1548,7 +1458,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Ninth Form: Waning Moonswaths desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_9.png")) {
         @Override
@@ -1564,7 +1473,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Tenth Form: Drilling Slashes, Moon Through Bamboo Leaves desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_10.png")) {
         @Override
@@ -1580,7 +1488,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fourteenth Form: Catastrophe, Tenman Crescent Moon desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_14.png")) {
         @Override
@@ -1596,7 +1503,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixteenth Form: Moonbow, Half Moon desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_16.png")) {
         @Override
@@ -1615,7 +1521,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "First Fang: Pierce desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_1.png")) {
         @Override
@@ -1650,7 +1555,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Second Fang: Slice desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_2.png")) {
         @Override
@@ -1679,7 +1583,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Third Fang: Devour desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_3.png")) {
         @Override
@@ -1705,7 +1608,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fourth Fang: Slice 'n' Dice desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_4.png")) {
         @Override
@@ -1721,7 +1623,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fifth Fang: Crazy Cutting desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_5.png")) {
         @Override
@@ -1743,7 +1644,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Sixth Fang: Palisade Bite desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_6.png")) {
         @Override
@@ -1759,7 +1659,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Seventh Form: Spatial Awareness desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_7.png")) {
         @Override
@@ -1779,7 +1678,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Eighth Form: Explosive Rush desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_8.png")) {
         @Override
@@ -1795,7 +1693,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Ninth Fang: Extending Bendy Slash desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_9.png")) {
         @Override
@@ -1811,7 +1708,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Tenth Fang: Whirling Fangs desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_10.png")) {
         @Override
@@ -1831,7 +1727,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Eleventh Fang: Sudden Throwing Strike desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_11.png")) {
         @Override
@@ -1869,7 +1764,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The most fundamental slash, from which all other techniques are born.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_1.png")) {
         @Override
@@ -1922,7 +1816,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user spins their body, releasing a 360° slash that purifies the battlefield.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_2.png")) {
         @Override
@@ -1938,7 +1831,6 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "Unleash two consecutive 360-degree slashes that incinerate incoming attacks.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_3.png")) {
         @Override
@@ -1954,7 +1846,6 @@ public enum BreathingForms implements IForm {
             50,
             400,
             "A spiraling slash that creates a defensive vortex to intercept frontal attacks.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_4.png")) {
         @Override
@@ -1970,7 +1861,6 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "A graceful backflip into the air to unleash a devastating horizontal slash below.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_5.png")) {
         @Override
@@ -1986,7 +1876,6 @@ public enum BreathingForms implements IForm {
             0,
             0,
             "Dash forward, masking the true length of your blade in a heat haze to land a surprising long-range strike.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_6.png")) {
         @Override
@@ -2002,7 +1891,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Spiral into the air while performing a swirling upward slash to strike the target.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_7.png")) {
         @Override
@@ -2018,7 +1906,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A devastating thrust that blooms with solar energy upon impact.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_8.png")) {
         @Override
@@ -2034,7 +1921,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Unleash a continuous, flowing attack in the form of a solar dragon.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_9.png")) {
         @Override
@@ -2050,7 +1936,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Fire Wheel desc.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_10.png")) {
         @Override
@@ -2066,7 +1951,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Perform a high-speed dash that creates afterimages to confuse enemies.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_11.png")) {
         @Override
@@ -2082,7 +1966,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "A two-strike combo starting with a vertical slash, followed by a horizontal one.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_12.png")) {
         @Override
@@ -2098,7 +1981,6 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "Continuously perform all twelve forms in rapid succession.",
-            
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sun/sun_13.png")) {
         @Override
@@ -2157,8 +2039,16 @@ public enum BreathingForms implements IForm {
 
     @Override public int getCooldownTicks(LivingEntity user) {
         Rank rank = getPlayerRank(user);
-        int reduction = rank.ordinal() * 5;
-        return Math.max(1, baseCooldown - reduction);
+        // Old scaling (rank.ordinal() * 5) made many forms reach ~0-1 tick cooldown at higher ranks.
+        // New scaling is gentler and also enforces a minimum floor so cooldowns remain meaningful.
+        //
+        // Contract:
+        // - baseCooldown is expressed in ticks at CIVILIAN rank.
+        // - Higher ranks reduce cooldown, but never below MIN_COOLDOWN_TICKS.
+        final int MIN_COOLDOWN_TICKS = 8; // 0.4s floor
+        final int REDUCTION_PER_RANK = 2; // 0.1s reduction per rank step
+        int reduction = rank.ordinal() * REDUCTION_PER_RANK;
+        return Math.max(MIN_COOLDOWN_TICKS, baseCooldown - reduction);
     }
     @Override public abstract void performAction(LivingEntity user, ServerLevel level);
 

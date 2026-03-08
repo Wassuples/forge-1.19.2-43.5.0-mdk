@@ -1,0 +1,31 @@
+{
+  "type": "story",
+  "title": "mission.demonslayer.story_final_selection.title",
+  "description": [
+    "mission.demonslayer.story_final_selection.desc_1",
+    "mission.demonslayer.story_final_selection.desc_2"
+  ],
+  "objectives": [
+    {
+      "type": "demonslayer:survival",
+      "biome": "demonslayer:fujikasane_forest",
+      "duration_ticks": 168000
+    }
+  ],
+  "rewards": [
+    {
+      "type": "demonslayer:rank",
+      "rank": "mizunoto"
+    },
+    {
+      "type": "demonslayer:item",
+      "item": "demonslayer:nichirin_blade",
+      "count": 1
+    },
+    {
+      "type": "demonslayer:style_mastery",
+      "amount": 150
+    }
+  ],
+  "requirement": "civilian"
+}

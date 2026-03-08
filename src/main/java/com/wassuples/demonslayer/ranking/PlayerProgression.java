@@ -14,7 +14,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class PlayerProgression {
-    private Rank rank = Rank.MIZUNOTO; // Default rank changed from CIVILIAN
+    private Rank rank = Rank.CIVILIAN;
     private final Set<BreathingStyles> unlockedStyles = new HashSet<>();
     private final Map<BreathingStyles, Integer> styleMastery = new HashMap<>();
 
@@ -168,7 +168,7 @@ public class PlayerProgression {
     public void loadNBTData(CompoundTag nbt) {
         if (nbt.contains("rank", 8)) {
             try { this.rank = Rank.valueOf(nbt.getString("rank")); }
-            catch (IllegalArgumentException e) { this.rank = Rank.MIZUNOTO; }
+            catch (IllegalArgumentException e) { this.rank = Rank.CIVILIAN; }
         }
 
         if (nbt.contains("unlockedStyles", 9)) {

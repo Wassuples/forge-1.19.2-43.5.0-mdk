@@ -50,6 +50,16 @@ public abstract class ActiveForm {
         onTick();
     }
 
+    /**
+     * Ticks this form as a sub-step of another form.
+     * This bypasses ActiveFormManager validation and is intended for composite forms (like chained combos)
+     * which want to reuse existing form logic without letting the sub-form stop the active parent form.
+     */
+    public void tickAsSubForm() {
+        this.ticksActive = user.tickCount - startTick;
+        onTick();
+    }
+
     // --- Methods to be overridden by implementations ---
     public void onStart() {
     }

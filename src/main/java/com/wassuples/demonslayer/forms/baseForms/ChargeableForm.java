@@ -32,7 +32,10 @@ public abstract class ChargeableForm extends ActiveForm {
     @Override
     public void onTick() {
         if (stopTick != -1 && user.tickCount >= stopTick) {
-            ActiveFormManager.stop(user);
+            // Only stop if this instance is actually the active form.
+            if (ActiveFormManager.getActiveForm(user) == this) {
+                ActiveFormManager.stop(user);
+            }
             return;
         }
 
@@ -70,7 +73,9 @@ public abstract class ChargeableForm extends ActiveForm {
         onChargeRelease(wasFullyCharged);
 
         if (getReleaseDuration() <= 0) {
-            ActiveFormManager.stop(user);
+            if (ActiveFormManager.getActiveForm(user) == this) {
+                ActiveFormManager.stop(user);
+            }
         } else {
             this.stopTick = user.tickCount + getReleaseDuration();
         }

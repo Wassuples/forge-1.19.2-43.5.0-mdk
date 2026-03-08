@@ -61,9 +61,13 @@ public class FireWheelForm extends TimedForm {
             level.playSound(null, this.impactCenter.x, this.impactCenter.y, this.impactCenter.z, SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.8f, 0.9f);
             spawnParticleArcInWorld(level, this.impactCenter.add(0, 1.0, 0), IMPACT_RADIUS, 180, 60, user.getYRot(), 90, ParticleTypes.LAVA);
 
-            DamageSource damageSource = (user instanceof Player p) ? DamageSource.playerAttack(p).setExplosion() : DamageSource.mobAttack(user).setExplosion();
             dealAOEDamage(user, this.impactCenter, IMPACT_RADIUS, DAMAGE, KNOCKBACK, false, true);
-            ActiveFormManager.stop(user);
+
+            DamageSource damageSource = (user instanceof Player p) ? DamageSource.playerAttack(p).setExplosion() : DamageSource.mobAttack(user).setExplosion();
+            // Only stop if this form is running as the active form.
+            if (ActiveFormManager.getActiveForm(user) == this) {
+                ActiveFormManager.stop(user);
+            }
         }
     }
 
