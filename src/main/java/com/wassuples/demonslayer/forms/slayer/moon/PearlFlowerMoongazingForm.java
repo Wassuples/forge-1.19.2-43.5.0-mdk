@@ -13,6 +13,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Moon Breathing form: Pearl Flower Moongazing.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class PearlFlowerMoongazingForm extends TimedForm {
     // --- CONSTANTS FOR TIMING ---
     private static final int X_SLASH_TICK = 3;

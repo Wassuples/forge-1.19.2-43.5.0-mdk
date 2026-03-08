@@ -14,6 +14,12 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Doma Blood Demon Art form: Crystalline Divine Child.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CrystallineDivineChildForm extends ChargeableForm {
     private static final int CLONE_CHARGE_TIME = 20; // 1s/clone
     private static final int MAX_CLONES = 6;

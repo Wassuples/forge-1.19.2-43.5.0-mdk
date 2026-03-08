@@ -9,6 +9,12 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Rui Blood Demon Art form: Cutting Thread Rotation.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CuttingThreadRotationForm extends TimedForm {
     public CuttingThreadRotationForm(LivingEntity user, IForm form) {
         super(user, form, 5);

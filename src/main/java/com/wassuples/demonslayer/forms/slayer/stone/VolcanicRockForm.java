@@ -21,6 +21,12 @@ import java.util.UUID;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Stone Breathing form: Volcanic Rock.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class VolcanicRockForm extends TimedForm {
     private static final int SWING_DURATION = 10; // The swing takes half a second to complete
     private static final double ATTACK_REACH = 6.0;

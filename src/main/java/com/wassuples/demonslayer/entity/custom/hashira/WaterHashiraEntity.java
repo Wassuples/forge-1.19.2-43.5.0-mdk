@@ -13,6 +13,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * NPC Hashira entity: Water Hashira.
+ *
+ * @see com.wassuples.demonslayer.entity.custom.HashiraEntity
+ */
 public class WaterHashiraEntity extends HashiraEntity {
     public WaterHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);

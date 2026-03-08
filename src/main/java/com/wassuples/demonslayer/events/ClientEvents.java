@@ -38,6 +38,17 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Client-side event handlers for input processing, rendering hooks, and HUD management.
+ *
+ * <p>Contains nested event subscriber classes for:
+ * <ul>
+ *   <li><b>Input handling</b> — keybind processing for form use, style switching, form cycling, BDA toggle</li>
+ *   <li><b>Rendering</b> — glow capability rendering, vignette effects, blinding mist, Bodhisattva ice overlay</li>
+ *   <li><b>HUD overlays</b> — breath bar, demon threat indicator, lesser eye rendering</li>
+ *   <li><b>Entity capabilities</b> — attaches glow capability to non-player living entities</li>
+ * </ul>
+ */
 public class ClientEvents {
     private static boolean abilityKeyIsDown = false;
     public static void resetAbilityKeyState() {

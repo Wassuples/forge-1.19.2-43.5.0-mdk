@@ -11,6 +11,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 
+/**
+ * Water Breathing form: Splashing Water Flow.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SplashingWaterFlowForm extends ActiveForm {
     private static final int BREATH_COST_PER_TICK = 1;
 

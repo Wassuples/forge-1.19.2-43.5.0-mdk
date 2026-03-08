@@ -33,6 +33,9 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Optional;
 import java.util.UUID;
 
+/**
+ * Custom entity: Crystalline Divine Child.
+ */
 public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<CompoundTag> OWNER_PROFILE_TAG =
             SynchedEntityData.defineId(CrystallineDivineChildEntity.class, EntityDataSerializers.COMPOUND_TAG);

@@ -12,6 +12,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealThrustDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 
+/**
+ * Daki Blood Demon Art form: Eight Layered Obi Slash.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class EightLayeredObiSlashForm extends TimedForm {
     private static final int NUMBER_OF_SLASHES = 8;
     private static final int TICKS_BETWEEN_SLASHES = 4; // Slightly slower than mist for a heavier feel

@@ -35,6 +35,9 @@ import java.util.UUID;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamageExcluding;
 
+/**
+ * Custom entity: Bodhisattva.
+ */
 public class BodhisattvaEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
 

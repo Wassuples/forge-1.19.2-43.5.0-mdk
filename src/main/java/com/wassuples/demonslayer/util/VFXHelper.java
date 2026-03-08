@@ -15,6 +15,24 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.isMoonBdaActive;
 
+/**
+ * Static visual effects utility methods for particle and sound spawning.
+ *
+ * <p>Provides server-side particle spawning helpers used by form implementations:
+ * <ul>
+ *   <li><b>Arcs</b> — {@code spawnParticleArc} spawns particles in a sweeping arc in front of the user</li>
+ *   <li><b>Lines</b> — {@code spawnLineParticles} draws a particle line between two points</li>
+ *   <li><b>Rings &amp; spirals</b> — various geometric particle patterns for ability VFX</li>
+ *   <li><b>Moon BDA overlay</b> — automatically adds purple moon particles when Crescent BDA is active</li>
+ * </ul>
+ *
+ * @see CombatHelper
+ * @see MovementHelper
+ */
+
+/**
+ * VFXHelper.
+ */
 public class VFXHelper {
     // =================================================================================
     // Particle Spawning Methods

@@ -19,6 +19,12 @@ import java.util.UUID;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Sun Breathing form: Solar Heat Haze.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SolarHeatHazeForm extends TimedForm {
     private static final int DURATION = 15;
     private static final double DASH_SPEED = 1.8;

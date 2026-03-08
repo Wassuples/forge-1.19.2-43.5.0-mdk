@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: example.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class ExampleC2SPacket {
     public ExampleC2SPacket() {
 

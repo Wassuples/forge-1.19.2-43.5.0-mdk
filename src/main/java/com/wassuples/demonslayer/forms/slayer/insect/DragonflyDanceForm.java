@@ -17,6 +17,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
+/**
+ * Insect Breathing form: Dragonfly Dance.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class DragonflyDanceForm extends TimedForm {
     // --- Constants ---
     private static final int STRIKES = 6;

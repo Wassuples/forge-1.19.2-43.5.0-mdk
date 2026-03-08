@@ -19,6 +19,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Moon Breathing form: Mirror Of Misfortune.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class MirrorOfMisfortuneForm extends TimedForm {
     private static final int DURATION = 40;
     private static final double MAX_RANGE = 30.0;

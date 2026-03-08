@@ -17,6 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Gyutaro Blood Demon Art form: Rotating Circular Slashes.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RotatingCircularSlashesForm extends TimedForm {
     private static final int WAVE_DURATION = 30; // The wave expands over 1.5 seconds
     private static final double MAX_RANGE = 15.0; // The wave travels 15 blocks

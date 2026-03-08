@@ -20,6 +20,12 @@ import java.util.UUID;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Akaza Blood Demon Art form: Flying Planet Thousand Wheels.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FlyingPlanetThousandWheelsForm extends TimedForm {
     private static final int DURATION = 12;
     private static final double ATTACK_RADIUS = 3.5;

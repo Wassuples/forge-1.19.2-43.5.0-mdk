@@ -14,6 +14,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnHeartShape;
 
+/**
+ * Love Breathing form: Catlove Shower.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CatloveShowerForm extends TimedForm {
     private static final int SLASH_DELAY = 5;
     private static final float LEAP_STRENGTH = 0.9f;

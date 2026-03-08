@@ -13,6 +13,13 @@ import net.minecraft.world.phys.Vec3;
 import javax.annotation.Nullable;
 import java.util.EnumSet;
 
+/**
+ * AI goal that keeps a Nemesis demon within its assigned home biome.
+ *
+ * <p>If the demon wanders too far from its {@link com.wassuples.demonslayer.nemesis.trait.DemonTrait#getHomeBiome()
+ * home biome}, this goal activates and pathfinds back toward a valid position. This creates
+ * territorial behavior where demons defend specific areas of the world.
+ */
 public class StayInBiomeGoal extends Goal {
     private BlockPos homePosition;
     private final NemesisDemonEntity mob;

@@ -9,6 +9,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.UUID;
 
+/**
+ * Persisted data for a player's companion Kasugai Crow.
+ *
+ * <p>Tracks the crow entity's UUID, whether it needs to be respawned, and the dimension
+ * the owner was last seen in. Serialized/deserialized via NBT.
+ *
+ * @see CrowManager
+ * @see PlayerCrowProvider
+ */
 public class PlayerCrowData {
     private UUID crowUuid;
     private boolean needsRespawn;

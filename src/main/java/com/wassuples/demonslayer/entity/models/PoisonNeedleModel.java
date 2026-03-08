@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.PoisonNeedleProjectileEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Poison Needle entity.
+ */
 public class PoisonNeedleModel extends AnimatedGeoModel<PoisonNeedleProjectileEntity> {
     @Override
     public ResourceLocation getModelResource(PoisonNeedleProjectileEntity object) {

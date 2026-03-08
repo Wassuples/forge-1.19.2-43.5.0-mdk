@@ -9,6 +9,9 @@ import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
+/**
+ * Client-side GeckoLib renderer for Compass Needle entity.
+ */
 public class CompassNeedleRenderer extends GeoEntityRenderer<CompassNeedleEntity> {
 
     public CompassNeedleRenderer(EntityRendererProvider.Context renderManager) {

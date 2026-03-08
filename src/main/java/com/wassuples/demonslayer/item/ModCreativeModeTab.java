@@ -3,6 +3,16 @@ package com.wassuples.demonslayer.item;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 
+/**
+ * Defines custom Creative Mode inventory tabs for the mod.
+ *
+ * <p>Tabs:
+ * <ul>
+ *   <li><b>Demon Slayer</b> — general mod items and materials</li>
+ *   <li><b>Nichirin</b> — all Nichirin sword variants</li>
+ *   <li><b>Spawn Eggs</b> — spawn eggs for mod entities</li>
+ * </ul>
+ */
 public class ModCreativeModeTab {
     public static final CreativeModeTab DEMON_SLAYER_TAB = new CreativeModeTab("demonslayertab") {
         @Override

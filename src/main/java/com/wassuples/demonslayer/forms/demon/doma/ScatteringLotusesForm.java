@@ -9,6 +9,12 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Doma Blood Demon Art form: Scattering Lotuses.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ScatteringLotusesForm extends ActiveForm {
     private static final int PROJECTILE_COUNT = 10;
     private static final float SPREAD = 12.0f; // Higher number = wider spread

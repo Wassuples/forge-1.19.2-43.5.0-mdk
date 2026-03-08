@@ -26,6 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Custom entity: Weeping Spear Projectile.
+ */
 public class WeepingSpearProjectileEntity extends AbstractArrow implements IAnimatable {
     private int life = 80;
     private final int maxPierces = 3;

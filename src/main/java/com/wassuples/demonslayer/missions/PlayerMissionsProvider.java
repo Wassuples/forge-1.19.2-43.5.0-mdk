@@ -13,6 +13,11 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Mission system: Player Missions Provider.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public class PlayerMissionsProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
     public static final ResourceLocation KEY = new ResourceLocation(DemonSlayer.MOD_ID, "missions");
     public static Capability<PlayerMissions> PLAYER_MISSIONS = CapabilityManager.get(new CapabilityToken<>() {});

@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.ColdWhitePrincessEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Cold White Princess entity.
+ */
 public class ColdWhitePrincessModel extends AnimatedGeoModel<ColdWhitePrincessEntity> {
     @Override
     public ResourceLocation getModelResource(ColdWhitePrincessEntity object) {

@@ -8,6 +8,11 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * Deferred registry for custom recipe serializers and recipe types.
+ *
+ * <p>Includes Sun Forge smelting and Swordsmith Table crafting recipes.
+ */
 public class ModRecipes {
     public static final DeferredRegister<RecipeSerializer<?>> SERIALIZERS =
             DeferredRegister.create(ForgeRegistries.RECIPE_SERIALIZERS, DemonSlayer.MOD_ID);

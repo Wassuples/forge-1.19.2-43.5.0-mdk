@@ -13,6 +13,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: tamayo offer response.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class TamayoOfferResponseC2SPacket {
     private final int tamayoEntityId;
     private final boolean accepted;

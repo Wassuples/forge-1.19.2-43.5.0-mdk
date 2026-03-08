@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Love Hashira entity.
+ */
 public class LoveHashiraRenderer extends HumanoidMobRenderer<LoveHashiraEntity, HashiraModel<LoveHashiraEntity>> {
     private static final ResourceLocation MITSURI_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/mitsuri.png");

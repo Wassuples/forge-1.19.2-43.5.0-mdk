@@ -12,6 +12,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
+/**
+ * Enmu Blood Demon Art form: Eyes Of Sleep.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class EyesOfSleepForm extends ActiveForm {
     private static final double MAX_SPAWN_RANGE = 20.0;
 

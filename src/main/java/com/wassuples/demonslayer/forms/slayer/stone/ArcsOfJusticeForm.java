@@ -17,6 +17,12 @@ import org.jetbrains.annotations.Nullable;
 
 import static com.wassuples.demonslayer.util.CombatHelper.*;
 
+/**
+ * Stone Breathing form: Arcs Of Justice.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ArcsOfJusticeForm extends TimedForm {
     // --- Constants ---
     private static final int AXE_IMPACT_TICK = 8;  // Axe hits quickly (0.4s)

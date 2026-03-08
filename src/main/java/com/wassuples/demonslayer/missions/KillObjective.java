@@ -11,6 +11,11 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.Map;
 
+/**
+ * Mission system: Kill Objective.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public record KillObjective(EntityType<?> target, int count) implements MissionObjective {
     public KillObjective(FriendlyByteBuf buf) {
         this(EntityType.byString(buf.readUtf()).orElse(null), buf.readInt());

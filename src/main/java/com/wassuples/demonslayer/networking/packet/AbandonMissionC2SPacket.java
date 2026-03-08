@@ -10,6 +10,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: abandon mission.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class AbandonMissionC2SPacket {
     private final ResourceLocation missionId;
 

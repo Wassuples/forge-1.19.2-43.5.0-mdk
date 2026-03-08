@@ -12,6 +12,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.*;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Flame Breathing form: Unknowing Fire.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class UnknowingFireForm extends TimedForm {
     private final Vec3 direction;
     private static final int DASH_DURATION = 8;

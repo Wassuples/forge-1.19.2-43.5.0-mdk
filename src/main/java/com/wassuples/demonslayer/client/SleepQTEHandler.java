@@ -11,7 +11,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
-
+/**
+ * Client-side component: Sleep QTEHandler.
+ */
 public class SleepQTEHandler {
     private static boolean isActive = false;
     private static List<Integer> keySequence = Collections.emptyList();

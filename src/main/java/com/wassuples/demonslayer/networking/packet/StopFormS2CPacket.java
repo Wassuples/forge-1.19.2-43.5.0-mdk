@@ -6,6 +6,12 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
 // This packet is sent from SERVER to CLIENT
+
+/**
+ * Server-to-client packet: stop form.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class StopFormS2CPacket {
 
     public StopFormS2CPacket() {

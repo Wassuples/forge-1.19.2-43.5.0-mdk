@@ -11,6 +11,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamageInYaw;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Flower Breathing form: Honorable Shadow Plum Parry.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.ParryForm
+ */
 public class HonorableShadowPlumParry extends ParryForm {
     private static final int PARRY_WINDOW = 20; // 1-second parry window
     private static final float COUNTER_DAMAGE = 15.0f;

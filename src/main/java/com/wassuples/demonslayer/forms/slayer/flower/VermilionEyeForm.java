@@ -16,6 +16,12 @@ import net.minecraft.world.phys.AABB;
 
 import java.util.List;
 
+/**
+ * Flower Breathing form: Vermilion Eye.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class VermilionEyeForm extends TimedForm {
     private static final int DURATION = 2000; // 100 seconds of super mode
     private static final int BURNOUT_DURATION = 300; // 15 seconds of debuffs after it ends

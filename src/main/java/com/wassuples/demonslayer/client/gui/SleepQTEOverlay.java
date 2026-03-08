@@ -7,7 +7,9 @@ import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
 import java.util.List;
 
-
+/**
+ * Client GUI component: Sleep QTEOverlay.
+ */
 public class SleepQTEOverlay {
     public static final IGuiOverlay HUD_SLEEP_QTE = (gui, poseStack, partialTick, width, height) -> {
         if (!SleepQTEHandler.isActive()) {

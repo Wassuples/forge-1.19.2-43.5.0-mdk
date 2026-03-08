@@ -11,6 +11,28 @@ import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
 import static com.wassuples.demonslayer.util.CombatHelper.isPlayerHoldingNichirin;
 
+/**
+ * Abstract base class for all server-side active forms managed by {@link ActiveFormManager}.
+ *
+ * <p>An active form has a lifecycle: {@link #onStart()} → {@link #onTick()} (each server tick)
+ * → {@link #onStop()}. The manager calls {@link #tick()} which validates preconditions
+ * (e.g. player must hold a Nichirin sword for breathing forms, must be a demon for BDA forms)
+ * before delegating to the subclass's {@link #onTick()}.
+ *
+ * <h2>Subclass hierarchy</h2>
+ * <ul>
+ *   <li>{@link TimedForm} — auto-stops after a fixed duration</li>
+ *   <li>{@link ParryForm} — a timed window that cancels incoming damage on parry</li>
+ *   <li>{@link ChargeableForm} — requires holding a key to charge, then releases</li>
+ * </ul>
+ *
+ * @see ActiveFormManager
+ * @see IForm
+ */
+
+/**
+ * for.
+ */
 public abstract class ActiveForm {
     protected final LivingEntity user;
     protected final ServerLevel level;

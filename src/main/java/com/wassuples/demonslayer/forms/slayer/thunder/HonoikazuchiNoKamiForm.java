@@ -16,6 +16,12 @@ import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Thunder Breathing form: Honoikazuchi No Kami.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class HonoikazuchiNoKamiForm extends TimedForm {
     private static final int CHARGE_PAUSE_DURATION = 15;
     private static final int DASH_DURATION_TICKS = 10;

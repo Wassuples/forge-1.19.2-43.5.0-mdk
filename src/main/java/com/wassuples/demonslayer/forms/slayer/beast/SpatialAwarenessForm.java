@@ -13,6 +13,12 @@ import net.minecraft.world.entity.LivingEntity;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Beast Breathing form: Spatial Awareness.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SpatialAwarenessForm extends ActiveForm {
     private static final double SENSE_RADIUS = 128.0;
     private static final int RESCAN_INTERVAL = 20; // Rescans every second

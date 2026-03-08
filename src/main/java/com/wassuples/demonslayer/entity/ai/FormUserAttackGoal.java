@@ -13,6 +13,9 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * AI goal: Form User Attack Goal.
+ */
 public class FormUserAttackGoal extends Goal {
     private final AbstractFormUsingEntity pMob;
     private final double speedModifier;

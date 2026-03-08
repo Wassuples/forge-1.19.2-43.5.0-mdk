@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Water Hashira entity.
+ */
 public class WaterHashiraRenderer extends HumanoidMobRenderer<WaterHashiraEntity, HashiraModel<WaterHashiraEntity>> {
     private static final ResourceLocation GIYU_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/giyu.png");

@@ -24,6 +24,20 @@ import net.minecraft.world.level.ServerLevelAccessor;
 
 import javax.annotation.Nullable;
 
+/**
+ * Abstract base class for all NPC demon entities (Fodder → Elite).
+ *
+ * <p>Extends {@link AbstractFormUsingEntity} with demon-specific data:
+ * <ul>
+ *   <li>Synched {@link DemonRank} and {@link BloodDemonArts} for client rendering</li>
+ *   <li>Night-only spawn rules via {@link #canSpawn}</li>
+ *   <li>Wisteria avoidance AI goal</li>
+ *   <li>Automatic targeting of players and Hashira NPCs</li>
+ * </ul>
+ *
+ * @see AbstractFormUsingEntity
+ * @see com.wassuples.demonslayer.entity.custom.demon.FodderDemonEntity
+ */
 public abstract class DemonEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<Integer> DATA_DEMON_RANK =
             SynchedEntityData.defineId(DemonEntity.class, EntityDataSerializers.INT);

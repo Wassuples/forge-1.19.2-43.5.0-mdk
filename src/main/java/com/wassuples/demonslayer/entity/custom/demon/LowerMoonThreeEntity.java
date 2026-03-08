@@ -8,6 +8,11 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.level.Level;
 
+/**
+ * NPC entity: Lower Moon Three.
+ *
+ * @see com.wassuples.demonslayer.entity.custom.DemonEntity
+ */
 public class LowerMoonThreeEntity extends DemonEntity {
     public LowerMoonThreeEntity(EntityType<? extends DemonEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);

@@ -12,6 +12,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Doma Blood Demon Art form: Cold White Princesses.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ColdWhitePrincessesForm extends ActiveForm {
     private static final double SPAWN_DISTANCE = 4.0;
 

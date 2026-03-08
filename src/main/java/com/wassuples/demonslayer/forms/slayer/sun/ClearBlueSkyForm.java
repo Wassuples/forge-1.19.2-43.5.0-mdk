@@ -19,6 +19,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Sun Breathing form: Clear Blue Sky.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ClearBlueSkyForm extends TimedForm {
     private static final int DURATION = 20;
     private static final double MAX_RADIUS = 15.0;

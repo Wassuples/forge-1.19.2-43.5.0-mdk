@@ -7,6 +7,9 @@ import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
+/**
+ * Client-side GeckoLib renderer for Hand Demon entity.
+ */
 public class HandDemonRenderer extends GeoEntityRenderer<HandDemonEntity> {
     public HandDemonRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new AnimatedGeoModel<HandDemonEntity>() {

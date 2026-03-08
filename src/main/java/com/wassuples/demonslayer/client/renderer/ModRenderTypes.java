@@ -5,6 +5,9 @@ import com.mojang.blaze3d.vertex.VertexFormat;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side component: Mod Render Types.
+ */
 public class ModRenderTypes extends RenderType {
 
     // Dummy constructor, required by the parent class.

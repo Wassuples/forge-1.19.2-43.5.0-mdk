@@ -23,6 +23,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+/**
+ * Custom entity: Poison Needle Projectile.
+ */
 public class PoisonNeedleProjectileEntity extends AbstractArrow implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
 

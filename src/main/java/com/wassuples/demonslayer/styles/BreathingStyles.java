@@ -1,7 +1,17 @@
 package com.wassuples.demonslayer.styles;
 
-import net.minecraft.ChatFormatting;
-
+/**
+ * Enumerates all Breathing Styles available to slayer-path players.
+ *
+ * <p>Each style groups a set of {@link BreathingForms} and can be unlocked, selected, and mastered
+ * via the {@link com.wassuples.demonslayer.ranking.PlayerProgression} capability. The first style
+ * ({@link #WATER}) is granted by default on player creation.
+ *
+ * <p>{@link #NONE} represents the absence of a style and should not be displayed in selection UIs.
+ *
+ * @see BreathingForms
+ * @see com.wassuples.demonslayer.breathing.PlayerStyle
+ */
 public enum BreathingStyles {
     NONE("NONE"),
     WIND("Wind Breathing"),

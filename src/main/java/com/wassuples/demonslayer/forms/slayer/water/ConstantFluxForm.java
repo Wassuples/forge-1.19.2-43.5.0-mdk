@@ -14,6 +14,12 @@ import net.minecraft.world.entity.LivingEntity;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 
+/**
+ * Water Breathing form: Constant Flux.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ConstantFluxForm extends ActiveForm {
     private static final DustParticleOptions BLUE_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.7f, 1.0f), 1.2f);
 

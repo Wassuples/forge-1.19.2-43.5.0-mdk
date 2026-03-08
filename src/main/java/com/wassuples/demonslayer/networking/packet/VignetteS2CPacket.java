@@ -6,6 +6,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: vignette.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class VignetteS2CPacket {
     private final boolean active;
 

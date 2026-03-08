@@ -20,6 +20,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnCycloneParticles;
 
+/**
+ * Wind Breathing form: Cold Mountain Wind.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ColdMountainWindForm extends TimedForm {
     private static final DustParticleOptions ICE_DUST = new DustParticleOptions(new Vector3f(0.7f, 0.9f, 1.0f), 1.0f);
 

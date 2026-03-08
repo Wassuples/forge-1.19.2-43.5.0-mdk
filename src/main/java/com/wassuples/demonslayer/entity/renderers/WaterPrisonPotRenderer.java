@@ -12,6 +12,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Water Prison Pot entity.
+ */
 public class WaterPrisonPotRenderer extends GeoEntityRenderer<WaterPrisonEntity> {
     public WaterPrisonPotRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new WaterPrisonPotModel());

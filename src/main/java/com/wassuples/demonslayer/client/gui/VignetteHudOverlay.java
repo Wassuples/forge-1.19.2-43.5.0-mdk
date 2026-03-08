@@ -8,6 +8,9 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
+/**
+ * Client GUI component: Vignette Hud Overlay.
+ */
 public class VignetteHudOverlay {
     private static final ResourceLocation VIGNETTE_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/vignette.png");

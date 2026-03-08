@@ -12,6 +12,9 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
+/**
+ * Custom entity: Tamayo.
+ */
 public class TamayoEntity extends HashiraEntity {
     public TamayoEntity(EntityType<? extends HashiraEntity> entityType, Level level) {
         super(entityType, level);

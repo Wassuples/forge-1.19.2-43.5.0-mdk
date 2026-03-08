@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.KillerGoldfishEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Killer Goldfish entity.
+ */
 public class KillerGoldfishModel extends AnimatedGeoModel<KillerGoldfishEntity> {
     @Override
     public ResourceLocation getModelResource(KillerGoldfishEntity object) {

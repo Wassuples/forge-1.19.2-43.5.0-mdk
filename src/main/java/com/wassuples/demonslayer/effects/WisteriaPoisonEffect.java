@@ -14,6 +14,14 @@ import net.minecraft.world.effect.MobEffectCategory;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
+/**
+ * Custom mob effect: Wisteria Poison.
+ *
+ * <p>A harmful effect that deals periodic damage to demons (both NPC {@link DemonEntity}
+ * and demon-path players). Has no effect on non-demon entities.
+ *
+ * @see ModEffects#WISTERIA_POISON
+ */
 public class WisteriaPoisonEffect extends MobEffect {
 
     public WisteriaPoisonEffect(MobEffectCategory pCategory, int pColor) {

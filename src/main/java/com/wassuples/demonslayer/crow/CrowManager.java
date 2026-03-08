@@ -7,6 +7,21 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Server-side manager for the player's companion Kasugai Crow.
+ *
+ * <p>Each slayer has a persistent companion crow entity that follows them. This manager handles:
+ * <ul>
+ *   <li>Spawning the crow behind and above the player on first join or respawn</li>
+ *   <li>Re-binding an existing crow entity if the player reconnects</li>
+ *   <li>Marking the crow for respawn when it dies</li>
+ *   <li>Triggering a respawn when the player sleeps</li>
+ * </ul>
+ *
+ * @see PlayerCrowData
+ * @see PlayerCrowProvider
+ * @see com.wassuples.demonslayer.entity.custom.CrowEntity
+ */
 public final class CrowManager {
     private static final double DEFAULT_OFFSET_BACK = 5.0D;
     private static final double DEFAULT_OFFSET_UP = 4.0D;

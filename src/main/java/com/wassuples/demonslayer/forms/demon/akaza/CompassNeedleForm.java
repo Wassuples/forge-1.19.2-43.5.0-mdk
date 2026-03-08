@@ -31,6 +31,12 @@ import java.util.stream.Collectors;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Akaza Blood Demon Art form: Compass Needle.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CompassNeedleForm extends ActiveForm {
     private Set<LivingEntity> currentTargets;
     private int rescanTimer = 0;

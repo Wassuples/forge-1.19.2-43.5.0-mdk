@@ -20,6 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Mission system: Mission Loader.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID)
 public final class MissionLoader {
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().disableHtmlEscaping().create();

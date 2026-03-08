@@ -14,6 +14,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.WorldHelper.destroyBlocksInFrontCone;
 
+/**
+ * Thunder Breathing form: Distant Thunder.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class DistantThunderForm extends TimedForm {
     // Casting window. Player can move while casting.
     private static final int DURATION = 30; // 1.5s

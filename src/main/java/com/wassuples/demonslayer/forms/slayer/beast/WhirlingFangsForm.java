@@ -17,6 +17,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Beast Breathing form: Whirling Fangs.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WhirlingFangsForm extends ActiveForm {
     private static final double DEFENSE_RADIUS = 3.0;
     private static final float DAMAGE_PER_TICK = 2.5f;

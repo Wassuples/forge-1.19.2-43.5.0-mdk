@@ -28,6 +28,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Custom entity: Mist Clone.
+ */
 public class MistCloneEntity extends Monster {
     private int lifeTicks = 0;
 

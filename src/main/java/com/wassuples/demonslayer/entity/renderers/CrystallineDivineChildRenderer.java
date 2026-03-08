@@ -13,6 +13,9 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.Optional;
 
+/**
+ * Client-side GeckoLib renderer for Crystalline Divine Child entity.
+ */
 public class CrystallineDivineChildRenderer extends HumanoidMobRenderer<CrystallineDivineChildEntity, PlayerModel<CrystallineDivineChildEntity>> {
     private static final ResourceLocation DOMA_CLONE_SKIN =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/doma.png");

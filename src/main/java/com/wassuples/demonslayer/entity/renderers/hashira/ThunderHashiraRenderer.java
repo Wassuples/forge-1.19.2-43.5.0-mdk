@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Thunder Hashira entity.
+ */
 public class ThunderHashiraRenderer extends HumanoidMobRenderer<ThunderHashiraEntity, HashiraModel<ThunderHashiraEntity>> {
     private static final ResourceLocation JIGORO_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/jigoro.png");

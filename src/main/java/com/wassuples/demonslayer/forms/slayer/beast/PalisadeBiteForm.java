@@ -15,6 +15,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 
+/**
+ * Beast Breathing form: Palisade Bite.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class PalisadeBiteForm extends TimedForm {
     private static final int DURATION = 12;
     private static final double ATTACK_RANGE = 10.0;

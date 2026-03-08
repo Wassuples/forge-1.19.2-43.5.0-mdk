@@ -11,6 +11,11 @@ import software.bernie.shadowed.eliotlash.mclib.math.functions.limit.Min;
 
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: player breath sync.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class PlayerBreathSyncS2CPacket {
     private final int breath;
     private final int maxBreath;

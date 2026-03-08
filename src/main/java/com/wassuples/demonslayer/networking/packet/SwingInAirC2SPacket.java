@@ -13,6 +13,11 @@ import java.util.function.Supplier;
 
 import static com.wassuples.demonslayer.util.CombatHelper.performNichirinSwingEffect;
 
+/**
+ * Client-to-server packet: swing in air.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class SwingInAirC2SPacket {
 
     public SwingInAirC2SPacket() { }

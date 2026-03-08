@@ -10,6 +10,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: open crow dispatch.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class OpenCrowDispatchS2CPacket {
     private final List<DemonDisplayData> kizuki;
     private final List<DemonDisplayData> fodder;

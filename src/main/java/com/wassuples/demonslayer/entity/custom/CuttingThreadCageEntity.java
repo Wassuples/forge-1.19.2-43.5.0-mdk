@@ -21,6 +21,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+/**
+ * Custom entity: Cutting Thread Cage.
+ */
 public class CuttingThreadCageEntity extends Monster implements IAnimatable {
     private static final EntityDataAccessor<Float> DATA_SCALE_ID = SynchedEntityData.defineId(CuttingThreadCageEntity.class, EntityDataSerializers.FLOAT);
     private int lifeTicks = 100; // Lasts for 5 seconds

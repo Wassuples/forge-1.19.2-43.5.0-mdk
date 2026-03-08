@@ -36,6 +36,20 @@ import java.util.Set;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Static combat utility methods used by all form implementations.
+ *
+ * <p>Provides the mod's core combat mechanics:
+ * <ul>
+ *   <li><b>Damage calculation</b> — {@link #calculateFinalDamage} applies demon passives, BDA bonuses, and rank scaling</li>
+ *   <li><b>Hit detection</b> — directional cone damage, thrust damage, AoE, raycast entity lookup</li>
+ *   <li><b>Weapon checks</b> — Nichirin sword detection, Hashira sword bonuses</li>
+ *   <li><b>Parry validation</b> — determines if a damage source can be parried</li>
+ * </ul>
+ *
+ * @see VFXHelper
+ * @see MovementHelper
+ */
 public class CombatHelper {
     /**
      * The single source of truth for damage.

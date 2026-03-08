@@ -2,6 +2,18 @@ package com.wassuples.demonslayer.styles;
 
 import net.minecraft.network.chat.Component;
 
+/**
+ * Enumerates all Blood Demon Arts (BDAs) available to demon-path players.
+ *
+ * <p>Each BDA groups a set of {@link DemonForms}. BDAs are unlocked by spending Blood Points
+ * through {@link com.wassuples.demonslayer.demon.DemonProgressionHelper#tryPurchaseBda} and can
+ * be upgraded in tiers for stronger forms.
+ *
+ * <p>{@link #NONE} represents no equipped BDA and is always considered "unlocked."
+ *
+ * @see DemonForms
+ * @see com.wassuples.demonslayer.demon.PlayerDemon
+ */
 public enum BloodDemonArts {
     NONE("None", "Unequip your Blood Demon Art."),
     CRESCENT("Crescent Moon Blades", "Originally Kokushibo's Blood Demon Art, the Upper Moon One."),

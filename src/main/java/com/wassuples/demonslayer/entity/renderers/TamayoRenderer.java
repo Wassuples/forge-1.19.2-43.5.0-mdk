@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Tamayo entity.
+ */
 public class TamayoRenderer extends HumanoidMobRenderer<TamayoEntity, HashiraModel<TamayoEntity>> {
     private static final ResourceLocation TAMAYO_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/tamayo.png");

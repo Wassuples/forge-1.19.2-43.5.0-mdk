@@ -28,6 +28,9 @@ import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.UUID;
 
+/**
+ * Custom entity: Killer Goldfish.
+ */
 public class KillerGoldfishEntity extends Monster implements IAnimatable {
 
     private final AnimationFactory factory = new AnimationFactory(this);

@@ -11,6 +11,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.MovementHelper.pushPlayer;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Water Breathing form: Flowing Dance.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FlowingDanceForm extends TimedForm {
     public FlowingDanceForm(LivingEntity user, IForm form) {
         super(user, form, 50);

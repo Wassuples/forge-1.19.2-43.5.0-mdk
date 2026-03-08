@@ -13,6 +13,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * NPC Hashira entity: Mist Hashira.
+ *
+ * @see com.wassuples.demonslayer.entity.custom.HashiraEntity
+ */
 public class MistHashiraEntity extends HashiraEntity {
     public MistHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);

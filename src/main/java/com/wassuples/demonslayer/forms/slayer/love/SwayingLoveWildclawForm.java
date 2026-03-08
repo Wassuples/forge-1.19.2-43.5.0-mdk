@@ -16,6 +16,12 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealVerticalColumnDamage;
 
+/**
+ * Love Breathing form: Swaying Love Wildclaw.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SwayingLoveWildclawForm extends TimedForm {
     private static final int DURATION = 60; // Tornado lasts for 3 seconds
     private static final float LEAP_STRENGTH = 1.1f;

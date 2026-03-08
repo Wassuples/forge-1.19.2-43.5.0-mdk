@@ -11,6 +11,9 @@ import net.minecraft.world.level.Level;
 
 import java.util.List;
 
+/**
+ * Custom entity: Blinding Mist Cloud.
+ */
 public class BlindingMistCloudEntity extends AreaEffectCloud {
     public BlindingMistCloudEntity(EntityType<? extends AreaEffectCloud> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);

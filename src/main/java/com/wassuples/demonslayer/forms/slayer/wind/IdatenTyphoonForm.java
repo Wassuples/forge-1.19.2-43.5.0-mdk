@@ -16,6 +16,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnVortexParticles;
 
+/**
+ * Wind Breathing form: Idaten Typhoon.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class IdatenTyphoonForm extends ActiveForm {
     private final BlockPos targetPos;
     private static final int VORTEX_DURATION = 20;

@@ -13,6 +13,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnCycloneParticles;
 
+/**
+ * Wind Breathing form: Dust Whirlwind Cutter.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class DustWhirlwindCutterForm extends TimedForm {
     private static final DustParticleOptions WIND_DUST = new DustParticleOptions(new Vector3f(0.8f, 1.0f, 0.8f), 1.0f);
     private static final DustParticleOptions GREEN_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.6f, 0.2f), 1.0f);

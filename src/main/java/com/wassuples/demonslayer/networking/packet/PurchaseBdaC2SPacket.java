@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: purchase bda.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class PurchaseBdaC2SPacket {
     private final BloodDemonArts bdaToPurchase;
 

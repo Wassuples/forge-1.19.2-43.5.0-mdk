@@ -19,6 +19,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Sun Breathing form: Sunflower Thrust.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SunflowerThrustForm extends ChargeableForm {
     private static final int DASH_DURATION = 8;
     private static final double DASH_SPEED = 3.0;

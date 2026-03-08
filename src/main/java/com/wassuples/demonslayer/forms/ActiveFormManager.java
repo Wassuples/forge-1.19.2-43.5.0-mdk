@@ -69,7 +69,32 @@ import java.util.function.BiFunction;
 import static com.wassuples.demonslayer.styles.BreathingForms.*;
 import static com.wassuples.demonslayer.styles.DemonForms.*;
 
-
+/**
+ * Central server-side manager for all active combat forms (both slayer and demon).
+ *
+ * <p>This class maintains a per-entity map of currently executing {@link ActiveForm} instances
+ * and ticks them each server tick. It supports two categories:
+ *
+ * <ul>
+ *   <li><b>Active forms</b> — one at a time per entity; starting a new one stops the previous</li>
+ *   <li><b>Buff forms</b> — multiple can run concurrently (e.g. passive auras)</li>
+ * </ul>
+ *
+ * <h2>Lifecycle</h2>
+ * <ol>
+ *   <li>{@link #start(LivingEntity, IForm)} — looks up the factory, instantiates the form, calls {@code onStart()}</li>
+ *   <li>Each server tick: {@code tick()} is called on active forms</li>
+ *   <li>{@link #stop(LivingEntity)} — calls {@code onStop()} and notifies the client</li>
+ * </ol>
+ *
+ * <h2>Form factories</h2>
+ * <p>The static {@code FORM_FACTORIES} map binds each {@link IForm} enum constant to a
+ * {@code BiFunction<LivingEntity, IForm, ActiveForm>} that constructs the correct subclass
+ * (e.g. {@code TimedForm}, {@code ChargeableForm}, {@code ParryForm}).
+ *
+ * @see ActiveForm
+ * @see IForm
+ */
 @Mod.EventBusSubscriber(modid = "demonslayer", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public  class ActiveFormManager {
     private static final boolean DEBUG_FORMS = true;

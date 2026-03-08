@@ -23,6 +23,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Enmu Blood Demon Art form: Whispers Hypnosis.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WhispersHypnosisForm extends ActiveForm {
     private static final int SLEEP_DURATION = 1200;
     private static final double MAX_RANGE = 16.0;

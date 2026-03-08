@@ -16,6 +16,9 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.Optional;
 
+/**
+ * Client-side GeckoLib renderer for Mist Clone entity.
+ */
 public class MistCloneRenderer extends HumanoidMobRenderer<MistCloneEntity, PlayerModel<MistCloneEntity>> {
     private static final ResourceLocation HASHIRA_CLONE_SKIN =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/muichiro.png");

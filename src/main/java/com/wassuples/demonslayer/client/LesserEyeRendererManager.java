@@ -12,6 +12,9 @@ import net.minecraft.world.level.Level;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Client-side component: Lesser Eye Renderer Manager.
+ */
 public class LesserEyeRendererManager {
 
     private static List<BlockPos> activeEyePositions = new ArrayList<>();

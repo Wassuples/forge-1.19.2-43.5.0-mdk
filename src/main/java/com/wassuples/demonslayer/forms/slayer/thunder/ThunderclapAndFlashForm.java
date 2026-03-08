@@ -20,6 +20,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Thunder Breathing form: Thunderclap And Flash.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ThunderclapAndFlashForm extends TimedForm {
     private static final int CHARGE_PAUSE_DURATION = 10;
     private static final double TELEPORT_RANGE = 27.0;

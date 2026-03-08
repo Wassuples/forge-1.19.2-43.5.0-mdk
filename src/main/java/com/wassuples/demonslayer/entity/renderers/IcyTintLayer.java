@@ -11,6 +11,9 @@ import net.minecraft.client.renderer.entity.layers.RenderLayer;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Icy Tint Layer.
+ */
 public class IcyTintLayer extends RenderLayer<CrystallineDivineChildEntity, PlayerModel<CrystallineDivineChildEntity>> {
     public IcyTintLayer(RenderLayerParent<CrystallineDivineChildEntity, PlayerModel<CrystallineDivineChildEntity>> pRenderer) {
         super(pRenderer);

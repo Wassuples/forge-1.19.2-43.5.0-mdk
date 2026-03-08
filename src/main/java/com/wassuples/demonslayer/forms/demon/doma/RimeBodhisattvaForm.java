@@ -17,6 +17,12 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Doma Blood Demon Art form: Rime Bodhisattva.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RimeBodhisattvaForm extends ActiveForm {
     public RimeBodhisattvaForm(LivingEntity user, IForm form) {
         super(user, form);

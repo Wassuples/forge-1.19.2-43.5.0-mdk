@@ -23,6 +23,12 @@ import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Akaza Blood Demon Art form: Ten Thousand Leaves Willow.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class TenThousandLeavesWillowForm extends TimedForm {
     private static final int DURATION = 20;
     private static final double MAX_RADIUS = 12.0;

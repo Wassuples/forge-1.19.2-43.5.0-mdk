@@ -11,6 +11,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 
+/**
+ * Gyutaro Blood Demon Art form: Flying Blood Sickles.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FlyingBloodSicklesForm extends TimedForm {
     private static final int SICKLE_COUNT = 6;
     private static final int TICKS_BETWEEN_SICKLES = 3;

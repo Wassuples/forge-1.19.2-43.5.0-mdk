@@ -77,6 +77,21 @@ import static com.wassuples.demonslayer.ranking.PlayerProgressionProvider.PLAYER
 import static com.wassuples.demonslayer.util.CombatHelper.performDemonAttack;
 import static com.wassuples.demonslayer.util.CombatHelper.performNichirinSwingEffect;
 
+/**
+ * Server-side Forge event handler for the Demon Slayer mod.
+ *
+ * <p>Subscribes to the Forge event bus and handles:
+ * <ul>
+ *   <li><b>Capability attachment</b> — attaches all player capabilities (breath, style, demon, progression, cooldowns, crow, missions)</li>
+ *   <li><b>Player lifecycle</b> — clones capabilities on respawn, syncs state on login/dimension change</li>
+ *   <li><b>Combat events</b> — demon sun damage, wisteria poison, form hurt delegation, passive ability effects</li>
+ *   <li><b>Entity events</b> — demon kill rewards (Blood Points), mission objective tracking</li>
+ *   <li><b>Command registration</b> — registers {@code /demonslayer} commands</li>
+ * </ul>
+ *
+ * @see ClientEvents
+ * @see com.wassuples.demonslayer.command.DemonSlayerCommands
+ */
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID)
 public class ModEvents {
     private static final Map<UUID, CompoundTag> styleDeathData = new HashMap<>();

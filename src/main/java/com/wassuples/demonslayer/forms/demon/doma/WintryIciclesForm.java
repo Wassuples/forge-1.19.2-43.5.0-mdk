@@ -23,6 +23,12 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 import java.util.List;
 
+/**
+ * Doma Blood Demon Art form: Wintry Icicles.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WintryIciclesForm extends TimedForm {
     private static final int TELEGRAPH_DURATION = 15;
     private static final double MAX_RANGE = 25.0;

@@ -10,7 +10,6 @@ import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.DemonPassive;
 import com.wassuples.demonslayer.demon.DemonProgressionHelper;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
-import com.wassuples.demonslayer.missions.*;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
@@ -31,6 +30,13 @@ import org.lwjgl.glfw.GLFW;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * The main player progression GUI opened by the {@link com.wassuples.demonslayer.util.KeyBinding#OPEN_MENU_KEY}.
+ *
+ * <p>Displays breathing style/form selection, mastery levels, demon BDA management,
+ * passive skill tree, rank information, and active missions. Supports both slayer
+ * and demon-path layouts depending on the player's current path.
+ */
 public class BreathingMenuScreen extends Screen {
     private static final float GUI_SCALE = 1.5f;
 
@@ -85,17 +91,7 @@ public class BreathingMenuScreen extends Screen {
     private final int moveListEntryHeight = 12;
     private int selectedFormIndex = -1;
 
-    private final List<Object> displayList = new ArrayList<>();
-    private final List<Mission> activeMissions = new ArrayList<>();
-    private final List<Mission> availableMissions = new ArrayList<>();
-    private final List<Mission> completedMissions = new ArrayList<>();
-    private Mission selectedMission = null;
-    private double missionListScroll = 0.0;
-    private int selectedDisplayIndex = -1;
-    private Button acceptMissionButton;
-    private Button abandonMissionButton;
-
-    private enum Tab { PROFILE, SKILL_TREE, MOVE_LIST, DEMON_PROGRESSION, MISSIONS }
+    private enum Tab { PROFILE, SKILL_TREE, MOVE_LIST, DEMON_PROGRESSION }
     private Tab currentTab = Tab.PROFILE;
 
     private BreathingStyles selectedStyleForMoveList = null;
@@ -103,7 +99,6 @@ public class BreathingMenuScreen extends Screen {
     private TabButton profileButton;
     private TabButton stylesButton;
     private TabButton demonProgressionButton;
-    private TabButton missionsButton;
     private Button switchStyleButton;
     private Button equipBdaButton;
 
@@ -188,11 +183,7 @@ public class BreathingMenuScreen extends Screen {
 
         this.profileButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart, topPos + tabYStart, 0, (b) -> this.currentTab = Tab.PROFILE));
         this.stylesButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + tabXSpacing, topPos + tabYStart, 20, (b) -> this.currentTab = Tab.SKILL_TREE));
-        this.missionsButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 2), topPos + tabYStart, 40, (b) -> {
-            this.currentTab = Tab.MISSIONS;
-            this.prepareMissionsList();
-        }));
-        this.demonProgressionButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 3), topPos + tabYStart, 60, (b) -> {
+        this.demonProgressionButton = this.addRenderableWidget(new TabButton(leftPos + tabXStart + (tabXSpacing * 2), topPos + tabYStart, 60, (b) -> {
             this.currentTab = Tab.DEMON_PROGRESSION;
             this.prepareBdaUpgradeList();
         }));
@@ -216,15 +207,7 @@ public class BreathingMenuScreen extends Screen {
         this.switchStyleButton = this.addRenderableWidget(new Button(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Switch Style"), (b) -> {
             if (this.selectedStyleForMoveList != null) ModMessages.sendToServer(new SwitchStyleC2SPacket(this.selectedStyleForMoveList.ordinal()));
         }));
-        this.acceptMissionButton = this.addRenderableWidget(new Button(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Accept"), (b) -> {
-            if (this.selectedMission != null) ModMessages.sendToServer(new AcceptMissionC2SPacket(this.selectedMission.id()));
-        }));
-        this.abandonMissionButton = this.addRenderableWidget(new Button(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Abandon"), (b) -> {
-            if (this.selectedMission != null) ModMessages.sendToServer(new AbandonMissionC2SPacket(this.selectedMission.id()));
-        }));
-
         this.prepareMoveList();
-        this.prepareMissionsList();
         this.prepareBdaUpgradeList();
 
         this.demonProgressionButton.visible = false;
@@ -246,11 +229,8 @@ public class BreathingMenuScreen extends Screen {
 
         this.profileButton.isActive = (this.currentTab == Tab.PROFILE);
         this.stylesButton.isActive = (this.currentTab == Tab.SKILL_TREE);
-        this.missionsButton.isActive = (this.currentTab == Tab.MISSIONS);
         this.demonProgressionButton.isActive = (this.currentTab == Tab.DEMON_PROGRESSION);
 
-        this.acceptMissionButton.visible = false;
-        this.abandonMissionButton.visible = false;
         this.switchStyleButton.visible = false;
         this.equipBdaButton.visible = false;
         this.purchaseBdaButton.visible = false;
@@ -260,12 +240,7 @@ public class BreathingMenuScreen extends Screen {
         this.bdaSubTabButton.visible = false;
         this.physiologySubTabButton.visible = false;
 
-        if (this.currentTab == Tab.MISSIONS) {
-            boolean missionIsActive = this.selectedMission != null && this.activeMissions.contains(this.selectedMission);
-            boolean missionIsAvailable = this.selectedMission != null && this.availableMissions.contains(this.selectedMission);
-            this.acceptMissionButton.visible = missionIsAvailable;
-            this.abandonMissionButton.visible = missionIsActive;
-        } else if (this.currentTab == Tab.MOVE_LIST) {
+        if (this.currentTab == Tab.MOVE_LIST) {
             this.switchStyleButton.visible = true;
             if (this.minecraft != null && this.minecraft.player != null) {
                 this.minecraft.player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
@@ -285,7 +260,6 @@ public class BreathingMenuScreen extends Screen {
             case PROFILE -> renderProfileTab(poseStack, x, y, mouseX, mouseY);
             case SKILL_TREE -> renderSkillTreeTab(poseStack, x, y);
             case MOVE_LIST -> renderMoveListTab(poseStack, x, y, mouseX, mouseY);
-            case MISSIONS -> renderMissionsTab(poseStack, x, y, mouseX, mouseY);
             case DEMON_PROGRESSION -> renderDemonProgressionTab(poseStack, x, y, mouseX, mouseY);
         }
 
@@ -297,125 +271,6 @@ public class BreathingMenuScreen extends Screen {
         }
     }
 
-    private void renderMissionsTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
-        if(this.minecraft == null) return;
-        int subWindowX = leftPos + subWindowXOffset;
-        int subWindowY = topPos + subWindowYOffset;
-        fill(poseStack, subWindowX, subWindowY, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
-
-        int listWidth = 100;
-        int detailX = subWindowX + listWidth + 5;
-        int listY = subWindowY + 5;
-        int listHeight = subWindowHeight - 10;
-
-        // Left Panel
-        RenderSystem.enableScissor((int)(subWindowX * minecraft.getWindow().getGuiScale()), (int)((this.height - (listY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
-        for (int i = 0; i < displayList.size(); i++) {
-            int entryY = listY + (i * moveListEntryHeight) - (int)missionListScroll;
-            if (entryY + moveListEntryHeight >= listY && entryY <= listY + listHeight) {
-                Object entry = displayList.get(i);
-                if (entry instanceof String header) {
-                    this.font.draw(poseStack, Component.literal(header).withStyle(ChatFormatting.YELLOW), subWindowX + 5, entryY + 2, goldColor);
-                } else if (entry instanceof Mission mission) {
-                    if (i == selectedDisplayIndex) {
-                        fill(poseStack, subWindowX, entryY, subWindowX + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
-                    }
-                    ChatFormatting format = mission.type() == MissionType.RANK_UP ? ChatFormatting.GOLD : ChatFormatting.WHITE;
-                    this.font.draw(poseStack, mission.title().copy().withStyle(format), subWindowX + 10, entryY + 2, textColor);
-                }
-            }
-        }
-        RenderSystem.disableScissor();
-
-        // Right Panel
-        if (selectedMission != null) {
-            int yOffset = subWindowY + 5;
-            this.font.drawWordWrap(selectedMission.title(), detailX, yOffset, subWindowWidth - listWidth - 10, goldColor);
-            yOffset += this.font.wordWrapHeight(selectedMission.title().getString(), subWindowWidth - listWidth - 10) + 4;
-            fill(poseStack, detailX, yOffset - 2, subWindowX + subWindowWidth - 5, yOffset - 1, grayColor);
-
-            for(Component line : selectedMission.description()) {
-                this.font.drawWordWrap(line, detailX, yOffset, subWindowWidth - listWidth - 10, textColor);
-                yOffset += this.font.wordWrapHeight(line.getString(), subWindowWidth - listWidth - 10);
-                yOffset += 2;
-            }
-            yOffset += 8;
-
-            this.font.draw(poseStack, "Objectives:", detailX, yOffset, textColor);
-            yOffset += 10;
-            for (MissionObjective obj : selectedMission.objectives()) {
-                this.font.draw(poseStack, "- " + obj.getDescription().getString(), detailX + 4, yOffset, textColor);
-                yOffset += 10;
-            }
-            yOffset += 4;
-
-            this.font.draw(poseStack, "Rewards:", detailX, yOffset, textColor);
-            yOffset += 10;
-            for (MissionReward reward : selectedMission.rewards()) {
-                this.font.draw(poseStack, "- " + reward.getDescription().getString(), detailX + 4, yOffset, textColor);
-                yOffset += 10;
-            }
-        }
-    }
-
-    public void prepareMissionsList() {
-        if (this.minecraft == null || this.minecraft.player == null) return;
-
-        this.minecraft.player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(playerMissions -> {
-            this.activeMissions.clear();
-            this.completedMissions.clear();
-            this.availableMissions.clear();
-
-            List<Mission> allMissions = MissionRegistry.getAllMissions();
-
-            for(Mission mission : allMissions) {
-                if (playerMissions.isActive(mission.id())) {
-                    this.activeMissions.add(mission);
-                } else if (playerMissions.hasCompleted(mission.id())) {
-                    this.completedMissions.add(mission);
-                } else {
-                    this.minecraft.player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
-                        boolean canStart = false;
-                        if (mission.type() == MissionType.RANK_UP) {
-                            canStart = progression.getRank().ordinal() == mission.requirement().ordinal() - 1;
-                        } else {
-                            canStart = progression.getRank().ordinal() >= mission.requirement().ordinal();
-                        }
-                        if(canStart) {
-                            this.availableMissions.add(mission);
-                        }
-                    });
-                }
-            }
-
-            this.displayList.clear();
-            if (!activeMissions.isEmpty()) {
-                this.displayList.add("--- ACTIVE ---");
-                this.displayList.addAll(activeMissions);
-            }
-            if (!availableMissions.isEmpty()) {
-                this.displayList.add("--- AVAILABLE ---");
-                this.displayList.addAll(availableMissions);
-            }
-            if (!completedMissions.isEmpty()) {
-                this.displayList.add("--- COMPLETED ---");
-                this.displayList.addAll(completedMissions);
-            }
-
-            if (this.selectedDisplayIndex >= this.displayList.size() || this.selectedDisplayIndex == -1) {
-                this.selectedDisplayIndex = -1;
-                this.selectedMission = null;
-                for (int i = 0; i < displayList.size(); i++) {
-                    if (displayList.get(i) instanceof Mission) {
-                        this.selectedDisplayIndex = i;
-                        this.selectedMission = (Mission) displayList.get(i);
-                        break;
-                    }
-                }
-            }
-            this.missionListScroll = 0;
-        });
-    }
 
     private void renderProfileTab(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
         int entityRenderX = leftPos + playerModelXOffset;
@@ -891,26 +746,6 @@ public class BreathingMenuScreen extends Screen {
                 }
             }
         }
-        if (this.currentTab == Tab.MISSIONS && this.availableMissions != null) {
-            int leftPos = (this.width - this.windowWidth) / 2;
-            int topPos = (this.height - this.windowHeight) / 2;
-            int listX = leftPos + subWindowXOffset;
-            int listY = topPos + subWindowYOffset + 5;
-            int listWidth = 100;
-            int listHeight = subWindowHeight - 10;
-
-            if (pMouseX >= listX && pMouseX < listX + listWidth && pMouseY >= listY && pMouseY < listY + listHeight) {
-                int clickedIndex = (int) ((pMouseY - listY + missionListScroll) / moveListEntryHeight);
-                if (clickedIndex >= 0 && clickedIndex < displayList.size()) {
-                    Object selectedObject = displayList.get(clickedIndex);
-                    if (selectedObject instanceof Mission mission) {
-                        this.selectedDisplayIndex = clickedIndex;
-                        this.selectedMission = mission;
-                        return true;
-                    }
-                }
-            }
-        }
         if (this.currentTab == Tab.DEMON_PROGRESSION) {
             if (this.currentDemonTab == DemonSubTab.BDA) {
                 int contentTopY = (this.height - this.windowHeight) / 2 + subWindowYOffset + 32;
@@ -1098,43 +933,9 @@ public class BreathingMenuScreen extends Screen {
                 return true;
             }
         }
-        if (this.currentTab == Tab.MISSIONS && displayList != null && !displayList.isEmpty()) {
-            int direction = 0;
-            if (pKeyCode == GLFW.GLFW_KEY_DOWN) {
-                direction = 1;
-            } else if (pKeyCode == GLFW.GLFW_KEY_UP) {
-                direction = -1;
-            }
-
-            if (direction != 0) {
-                int newIndex = selectedDisplayIndex;
-
-                do {
-                    newIndex += direction;
-                } while (newIndex >= 0 && newIndex < displayList.size() && !(displayList.get(newIndex) instanceof Mission));
-
-                if (newIndex >= 0 && newIndex < displayList.size()) {
-                    selectedDisplayIndex = newIndex;
-                    selectedMission = (Mission) displayList.get(newIndex);
-                    this.ensureMissionIsVisible();
-                }
-                return true;
-            }
-        }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 
-    private void ensureMissionIsVisible() {
-        int listHeight = subWindowHeight - 10;
-        int itemTopY = this.selectedDisplayIndex * moveListEntryHeight;
-        int itemBottomY = itemTopY + moveListEntryHeight;
-
-        if (itemTopY < this.missionListScroll) {
-            this.missionListScroll = itemTopY;
-        } else if (itemBottomY > this.missionListScroll + listHeight) {
-            this.missionListScroll = itemBottomY - listHeight;
-        }
-    }
 
     private void ensureSelectionIsVisible() {
         int listHeight = 128 - 32;
@@ -1180,11 +981,6 @@ public class BreathingMenuScreen extends Screen {
         if (this.currentTab == Tab.MOVE_LIST && this.formsForSelectedStyle != null) {
             int maxScroll = Math.max(0, (formsForSelectedStyle.size() * moveListEntryHeight) - (128 - 32));
             this.moveListScroll = Mth.clamp(this.moveListScroll - (pDelta * 10), 0, maxScroll);
-            return true;
-        }
-        if (this.currentTab == Tab.MISSIONS && this.availableMissions != null) {
-            int maxScroll = Math.max(0, (displayList.size() * moveListEntryHeight) - (subWindowHeight - 10));
-            this.missionListScroll = Mth.clamp(this.missionListScroll - (pDelta * 10), 0, maxScroll);
             return true;
         }
         if (this.currentTab == Tab.DEMON_PROGRESSION && this.currentDemonTab == DemonSubTab.BDA) {

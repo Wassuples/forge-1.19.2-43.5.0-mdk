@@ -10,6 +10,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 
+/**
+ * Water Breathing form: Water Wheel.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WaterWheelForm extends TimedForm {
     public WaterWheelForm(LivingEntity user, IForm form) {
         super(user, form, 10);

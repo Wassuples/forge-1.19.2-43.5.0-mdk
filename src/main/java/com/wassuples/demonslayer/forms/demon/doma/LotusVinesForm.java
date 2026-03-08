@@ -16,6 +16,12 @@ import net.minecraft.world.phys.*;
 
 import java.util.List;
 
+/**
+ * Doma Blood Demon Art form: Lotus Vines.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class LotusVinesForm extends TimedForm {
     private static final int VINE_TRAVEL_DURATION = 15; // Vines take 0.75s to reach target
     private static final int GARDEN_LINGER_DURATION = 100; // The hazard lasts for 5 seconds

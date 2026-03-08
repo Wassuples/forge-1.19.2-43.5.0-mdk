@@ -19,6 +19,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Doma Blood Demon Art form: Frozen Lotus.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FrozenLotusForm extends TimedForm {
     // --- Constants ---
     private static final int DURATION = 20; // Form lasts 1s to let visuals linger

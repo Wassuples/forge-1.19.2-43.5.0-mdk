@@ -36,6 +36,9 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Custom entity: Cold White Princess.
+ */
 public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     @Nullable

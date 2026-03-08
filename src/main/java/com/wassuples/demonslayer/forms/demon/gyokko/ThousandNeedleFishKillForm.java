@@ -9,6 +9,12 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 
+/**
+ * Gyokko Blood Demon Art form: Thousand Needle Fish Kill.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ThousandNeedleFishKillForm extends ActiveForm {
     private static final int FISH_COUNT = 3;
     private static final double SPAWN_RADIUS = 3.0;

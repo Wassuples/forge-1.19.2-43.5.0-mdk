@@ -19,6 +19,12 @@ import java.util.UUID;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Moon Breathing form: Moon Dragon Ringtail.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class MoonDragonRingtailForm extends TimedForm {
     private static final int DURATION = 40;
     private static final double MAX_RANGE = 35.0;

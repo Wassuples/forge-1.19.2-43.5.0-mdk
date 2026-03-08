@@ -11,6 +11,32 @@ import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Server-authoritative capability data for a player on the <b>demon path</b>.
+ *
+ * <p>Tracks whether the player is a demon, their {@link DemonRank}, Blood Points currency,
+ * equipped {@link BloodDemonArts}, unlocked BDAs and their tiers, passive abilities, and
+ * the currently selected {@link DemonForms}.
+ *
+ * <h2>Persistence</h2>
+ * <p>Serialized/deserialized via {@link #saveNBTData(CompoundTag)} / {@link #loadNBTData(CompoundTag)}.
+ * State is copied on player death/respawn via {@link #copyFrom(PlayerDemon)}.
+ *
+ * <h2>Overcomer / Dishonored flags</h2>
+ * <ul>
+ *   <li><b>Overcomer</b> — a demon who has conquered sunlight weakness (narrative progression).</li>
+ *   <li><b>Dishonored</b> — a demon stripped of rank privileges (penalty mechanic).</li>
+ * </ul>
+ *
+ * @see DemonRank
+ * @see DemonPassive
+ * @see BloodDemonArts
+ * @see PlayerDemonProvider
+ */
+
+/**
+ * Player Demon.
+ */
 public class PlayerDemon {
     private boolean isDemon = false;
     private boolean isOvercomer = false;

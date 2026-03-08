@@ -1,6 +1,5 @@
 package com.wassuples.demonslayer.networking.packet;
 
-import com.wassuples.demonslayer.client.gui.BreathingMenuScreen;
 import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import net.minecraft.client.Minecraft;
 import net.minecraft.nbt.CompoundTag;
@@ -9,6 +8,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: player mission sync.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class PlayerMissionSyncS2CPacket {
 
     private final CompoundTag missionData;
@@ -33,10 +37,6 @@ public class PlayerMissionSyncS2CPacket {
             if (Minecraft.getInstance().player != null) {
                 Minecraft.getInstance().player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
                     missions.loadNBTData(this.missionData);
-
-                    if (Minecraft.getInstance().screen instanceof BreathingMenuScreen screen) {
-                        screen.prepareMissionsList();
-                    }
                 });
             }
         });

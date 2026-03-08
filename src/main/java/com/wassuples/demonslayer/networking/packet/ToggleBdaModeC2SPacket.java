@@ -13,6 +13,11 @@ import java.util.function.Supplier;
 
 import static com.wassuples.demonslayer.util.ModUtils.syncDemon;
 
+/**
+ * Client-to-server packet: toggle bda mode.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class ToggleBdaModeC2SPacket {
 
     public ToggleBdaModeC2SPacket() {

@@ -9,6 +9,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Lower Moon One entity.
+ */
 public class LowerMoonOneRenderer extends HumanoidMobRenderer<LowerMoonOneEntity, DemonModel<LowerMoonOneEntity>> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/lower_moon_one.png");

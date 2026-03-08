@@ -15,6 +15,18 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
+/**
+ * Abstract base for all NPCs that can use combat forms ({@link com.wassuples.demonslayer.styles.IForm}).
+ *
+ * <p>Provides the bridge between the entity AI system and the {@link ActiveFormManager}:
+ * <ul>
+ *   <li>Ticks any active form each server tick</li>
+ *   <li>Registers common AI goals (float, stroll, look around)</li>
+ *   <li>Exposes {@link #getBreathingStyle()} and {@link #getBloodDemonArt()} for subclass specialization</li>
+ * </ul>
+ *
+ * <p>Direct subclasses: {@link DemonEntity}, {@link HashiraEntity}
+ */
 public abstract class AbstractFormUsingEntity extends PathfinderMob {
 
     public AbstractFormUsingEntity(EntityType<? extends PathfinderMob> pEntityType, Level pLevel) {

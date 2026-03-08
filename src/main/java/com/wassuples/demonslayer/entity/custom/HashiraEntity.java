@@ -17,6 +17,17 @@ import net.minecraft.world.level.Level;
 
 import javax.annotation.Nullable;
 
+/**
+ * Base entity class for all Hashira (pillar) NPC slayers.
+ *
+ * <p>Each Hashira has a synched {@link BreathingStyles} that determines their combat forms
+ * and visual style. Hashira are powerful allies that target demons and hostile mobs.
+ *
+ * <p>Style-specific subclasses (e.g. {@code WaterHashiraEntity}) set their breathing style
+ * in the constructor and may override combat behavior.
+ *
+ * @see AbstractFormUsingEntity
+ */
 public class HashiraEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<Integer> DATA_BREATHING_STYLE =
             SynchedEntityData.defineId(HashiraEntity.class, EntityDataSerializers.INT);

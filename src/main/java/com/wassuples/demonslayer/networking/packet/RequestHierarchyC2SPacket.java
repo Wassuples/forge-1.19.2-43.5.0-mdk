@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: request hierarchy.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class RequestHierarchyC2SPacket {
 
     public RequestHierarchyC2SPacket() { }

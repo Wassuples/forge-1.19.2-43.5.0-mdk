@@ -15,6 +15,12 @@ import net.minecraft.world.entity.player.Player;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.isPlayerHoldingNichirin;
 
+/**
+ * Flame Breathing form: Flame Tiger.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FlameTigerForm extends ActiveForm {
     private static final DustParticleOptions ORANGE_DUST = new DustParticleOptions(new Vector3f(1.0f, 0.5f, 0.0f), 1.0f);
     private static final DustParticleOptions BLACK_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.1f, 0.1f), 1.2f);

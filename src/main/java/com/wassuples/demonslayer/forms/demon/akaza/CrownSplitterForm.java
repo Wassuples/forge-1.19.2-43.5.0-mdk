@@ -16,6 +16,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 
+/**
+ * Akaza Blood Demon Art form: Crown Splitter.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CrownSplitterForm extends TimedForm {
     private static final double ATTACK_RANGE = 5.0;
     private static final float PRIMARY_DAMAGE = 40.0f;

@@ -13,6 +13,17 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * AI goal for Nemesis demon combat — selects and executes Blood Demon Art forms based on
+ * the demon's trait, behavior, and current combat context.
+ *
+ * <p>Uses {@link IForm#getUsagePriority(IForm.CombatContext)} to rank available forms
+ * and chooses the highest-priority one that isn't on cooldown. Includes configurable
+ * approach speed and attack range.
+ *
+ * @see NemesisDemonEntity
+ * @see com.wassuples.demonslayer.nemesis.ai.Behavior
+ */
 public class NemesisAttackGoal extends Goal {
     protected final NemesisDemonEntity mob;
     private final double speedModifier;

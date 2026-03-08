@@ -10,6 +10,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Beast Breathing form: Crazy Cutting.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CrazyCuttingForm extends TimedForm {
     private static final int DURATION = 30;
     private static final double AOE_RADIUS = 4.5;

@@ -12,6 +12,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Mist Breathing form: Eight Layered Mist.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class EightLayeredMistForm extends TimedForm {
     private static final int NUMBER_OF_SLASHES = 8;
     private static final int TICKS_BETWEEN_SLASHES = 3; // A very fast slash every 0.15 seconds

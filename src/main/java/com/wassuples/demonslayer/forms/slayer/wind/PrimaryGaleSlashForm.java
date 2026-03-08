@@ -19,6 +19,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnCycloneParticles;
 
+/**
+ * Wind Breathing form: Primary Gale Slash.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class PrimaryGaleSlashForm extends ActiveForm {
     private Vec3 pos, vel;
     private static final DustParticleOptions GREEN_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.1f), 0.8f);

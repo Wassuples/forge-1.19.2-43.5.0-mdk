@@ -17,6 +17,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Akaza Blood Demon Art form: Air Type.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class AirTypeForm extends TimedForm {
     // --- Constants ---
     private static final double MAX_RANGE = 25.0;

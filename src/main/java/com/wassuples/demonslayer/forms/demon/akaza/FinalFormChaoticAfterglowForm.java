@@ -18,6 +18,12 @@ import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Akaza Blood Demon Art form: Final Chaotic Afterglow.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FinalFormChaoticAfterglowForm extends TimedForm {
     private static final int DURATION = 30;
     private static final double ATTACK_RADIUS = 16.0;

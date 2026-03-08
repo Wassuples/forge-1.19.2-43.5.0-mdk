@@ -12,6 +12,12 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
+/**
+ * Mist Breathing form: Lunar Dispersing Mist.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class LunarDispersingMist extends TimedForm {
     private static final int DURATION = 40; // 2 seconds of air time
     private static final float LEAP_STRENGTH = 1.2f;

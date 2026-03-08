@@ -82,6 +82,13 @@ dependencies {
     implementation fg.deobf('software.bernie.geckolib:geckolib-forge-1.19:3.1.19')
     implementation fg.deobf("curse.maven:playeranimator-658587:4418149")
     implementation fg.deobf("curse.maven:terrablender-563928:4618490")
+
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.9.3'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 

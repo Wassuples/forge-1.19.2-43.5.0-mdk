@@ -12,6 +12,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: accept mission.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class AcceptMissionC2SPacket {
     private final ResourceLocation missionId;
 

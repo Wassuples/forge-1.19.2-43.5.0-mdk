@@ -13,6 +13,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * NPC Hashira entity: Flame Hashira.
+ *
+ * @see com.wassuples.demonslayer.entity.custom.HashiraEntity
+ */
 public class FlameHashiraEntity extends HashiraEntity {
     public FlameHashiraEntity(EntityType<? extends HashiraEntity> pEntityType, Level level) {
         super(pEntityType, level);

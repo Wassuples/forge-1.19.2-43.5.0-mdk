@@ -1,5 +1,15 @@
 package com.wassuples.demonslayer.demon;
 
+/**
+ * Enumerates purchasable demon passive abilities.
+ *
+ * <p>Each passive has a maximum tier and provides scaling bonuses per tier. Passives are
+ * purchased with Blood Points through {@link DemonProgressionHelper#tryUnlockPassive} and
+ * can be toggled on/off via {@link PlayerDemon#setPassiveActive}.
+ *
+ * @see DemonProgressionHelper#PASSIVE_SKILL_COSTS
+ * @see PlayerDemon#getPassiveTier(DemonPassive)
+ */
 public enum DemonPassive {
     HYPER_REGENERATION("Hyper Regeneration", "Increases passive health regeneration.", 5),
     TOUGHENED_HIDE("Toughened Hide", "Grants passive damage resistance.", 5),

@@ -32,6 +32,9 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Custom entity: Thrown Nichirin.
+ */
 public class ThrownNichirinEntity extends Projectile implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     private int lifeTicks = 0;

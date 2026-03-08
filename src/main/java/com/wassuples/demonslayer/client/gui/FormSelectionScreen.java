@@ -16,6 +16,9 @@ import net.minecraft.util.Mth;
 
 import java.util.List;
 
+/**
+ * Client GUI component: Form Selection Screen.
+ */
 public class FormSelectionScreen extends Screen {
     private static final ResourceLocation WHEEL_BACKGROUND =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/wheel_background.png");

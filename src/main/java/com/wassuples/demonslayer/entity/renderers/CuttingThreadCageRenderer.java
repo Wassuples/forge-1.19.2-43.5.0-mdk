@@ -13,6 +13,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Cutting Thread Cage entity.
+ */
 public class CuttingThreadCageRenderer extends GeoEntityRenderer<CuttingThreadCageEntity> {
     public CuttingThreadCageRenderer(EntityRendererProvider.Context renderManager) {
         // The Model class is defined inside the renderer for simplicity

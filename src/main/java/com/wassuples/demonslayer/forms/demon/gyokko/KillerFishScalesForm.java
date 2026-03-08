@@ -23,6 +23,12 @@ import java.util.Set;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 
+/**
+ * Gyokko Blood Demon Art form: Killer Fish Scales.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class KillerFishScalesForm extends TimedForm {
     // --- CONSTANTS ---
     private static final int DURATION = 100; // 5 seconds

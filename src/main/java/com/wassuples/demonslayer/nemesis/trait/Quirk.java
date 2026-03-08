@@ -1,5 +1,15 @@
 package com.wassuples.demonslayer.nemesis.trait;
 
+/**
+ * Unique combat modifiers that differentiate individual Nemesis demons.
+ *
+ * <p>Each quirk provides a passive gameplay effect (e.g. bonus damage, damage resistance,
+ * life steal). Demons can have multiple quirks assigned during generation or acquired
+ * through growth. Quirks are displayed in the demon's info panel and influence AI behavior.
+ *
+ * @see DemonTrait
+ * @see com.wassuples.demonslayer.nemesis.growth.GrowthCalculator
+ */
 public enum Quirk {
     // Offensive Strengths
     HEAVY_HITTER("Heavy Hitter", "Melee attacks are stronger and have increased knockback."),

@@ -18,6 +18,12 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
+/**
+ * Insect Breathing form: Centipede Dance.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CentipedeDanceForm extends TimedForm {
     private static final int DASH_DURATION = 25;
     private static final double DASH_DISTANCE = 18.0;

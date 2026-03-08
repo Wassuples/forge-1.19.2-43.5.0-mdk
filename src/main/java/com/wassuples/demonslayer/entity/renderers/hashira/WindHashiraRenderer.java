@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Wind Hashira entity.
+ */
 public class WindHashiraRenderer extends HumanoidMobRenderer<WindHashiraEntity, HashiraModel<WindHashiraEntity>> {
     private static final ResourceLocation SANEMI_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/sanemi.png");

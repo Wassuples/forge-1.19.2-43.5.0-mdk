@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Common Demon entity.
+ */
 public class CommonDemonRenderer extends HumanoidMobRenderer<CommonDemonEntity, DemonModel<CommonDemonEntity>> {
 
     private static final ResourceLocation COMMON_DEMON_TEXTURE =

@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.models.ThrownNichirinModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import software.bernie.geckolib3.renderers.geo.GeoProjectilesRenderer;
 
+/**
+ * Client-side GeckoLib renderer for Thrown Nichirin entity.
+ */
 public class ThrownNichirinRenderer extends GeoProjectilesRenderer<ThrownNichirinEntity> {
     public ThrownNichirinRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new ThrownNichirinModel());

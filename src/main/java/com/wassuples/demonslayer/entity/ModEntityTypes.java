@@ -13,6 +13,18 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * Deferred registry for all custom {@link EntityType} instances in the mod.
+ *
+ * <p>Registers entity types for:
+ * <ul>
+ *   <li><b>Demons</b> — Fodder through Upper Moon tiers, plus Nemesis demons</li>
+ *   <li><b>Hashira</b> — NPC Hashira for each breathing style</li>
+ *   <li><b>Projectiles</b> — Blood Sickle, Lotus Shard, Poison Needle, thrown Nichirin, etc.</li>
+ *   <li><b>Summons</b> — Mist Clone, Bodhisattva, Crystalline Divine Child, Compass Needle, etc.</li>
+ *   <li><b>Companions</b> — Crow, Tamayo</li>
+ * </ul>
+ */
 public class ModEntityTypes {
     public static final DeferredRegister<EntityType<?>> ENTITY_TYPES =
             DeferredRegister.create(ForgeRegistries.ENTITY_TYPES, DemonSlayer.MOD_ID);

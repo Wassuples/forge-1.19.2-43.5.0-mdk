@@ -10,6 +10,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
+/**
+ * Client GUI component: Sun Forge Screen.
+ */
 public class SunForgeScreen extends AbstractContainerScreen<SunForgeMenu> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/sun_forge_gui.png");

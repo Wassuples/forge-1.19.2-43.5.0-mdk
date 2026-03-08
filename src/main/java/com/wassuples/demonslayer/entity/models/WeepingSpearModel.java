@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.WeepingSpearProjectileEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Weeping Spear entity.
+ */
 public class WeepingSpearModel extends AnimatedGeoModel<WeepingSpearProjectileEntity> {
     @Override
     public ResourceLocation getModelResource(WeepingSpearProjectileEntity object) {

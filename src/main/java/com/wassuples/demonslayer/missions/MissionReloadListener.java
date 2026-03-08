@@ -22,6 +22,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+/**
+ * Mission system: Mission Reload Listener.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public class MissionReloadListener implements PreparableReloadListener {
     private static final Logger LOGGER = DemonSlayer.LOGGER;
     private static final String DIRECTORY = "missions";

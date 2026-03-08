@@ -13,6 +13,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Beast Breathing form: Slice NDice.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SliceNDiceForm extends TimedForm {
     private static final int NUMBER_OF_HITS = 4;
     private static final int TICKS_PER_HIT = 6; // A very fast combo

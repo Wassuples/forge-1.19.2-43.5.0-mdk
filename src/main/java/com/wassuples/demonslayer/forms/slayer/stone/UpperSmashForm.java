@@ -20,6 +20,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Stone Breathing form: Upper Smash.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class UpperSmashForm extends ActiveForm {
     private enum Phase {LAUNCHING, WAITING, SMASHING}
 

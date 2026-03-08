@@ -43,6 +43,40 @@ import static com.wassuples.demonslayer.util.CombatHelper.*;
 import static com.wassuples.demonslayer.util.MovementHelper.pushPlayer;
 import static com.wassuples.demonslayer.util.VFXHelper.*;
 
+/**
+ * Enumerates all slayer Breathing Forms grouped by {@link BreathingStyles}.
+ *
+ * <p>Each constant is a self-contained combat ability that implements the {@link IForm} contract.
+ * Simple forms execute inline in {@link #performAction}; complex ones delegate to an
+ * {@link com.wassuples.demonslayer.forms.baseForms.ActiveForm} subclass via
+ * {@link com.wassuples.demonslayer.forms.ActiveFormManager#start}.
+ *
+ * <h2>Cost model</h2>
+ * <p>Breathing forms consume the player's {@link com.wassuples.demonslayer.breathing.PlayerBreath}
+ * resource. The cost is returned by {@link #getBreathCost()}.
+ *
+ * <h2>Enum constructor parameters (in order)</h2>
+ * <ol>
+ *   <li>{@code style} — the parent {@link BreathingStyles}</li>
+ *   <li>{@code displayName} — player-facing name</li>
+ *   <li>{@code inputType} — PRESS or HOLD</li>
+ *   <li>{@code chargeTicks} — hold duration (0 for PRESS forms)</li>
+ *   <li>{@code breathCost} — resource cost per use</li>
+ *   <li>{@code baseCooldownTicks} — server-side cooldown before scaling</li>
+ *   <li>{@code maxCooldownTicks} — upper bound after scaling</li>
+ *   <li>{@code description} — tooltip text</li>
+ *   <li>{@code animationDurationTicks} — client-side animation length</li>
+ *   <li>{@code icon} — GUI icon texture (optional, has default)</li>
+ * </ol>
+ *
+ * @see IForm
+ * @see BreathingStyles
+ * @see com.wassuples.demonslayer.breathing.PlayerStyle
+ */
+
+/**
+ * via.
+ */
 public enum BreathingForms implements IForm {
 
     // =================================================================================
@@ -605,7 +639,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user releases a series of powerful long-ranged lightning attacks that strike his opponent from afar.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_6.png")) {
         @Override
@@ -621,7 +655,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The personal creation of Zenitsu Agatsuma. The user dashes forward at blinding speeds and unleashes a singular forward slash at a low stance, which is seemingly accompanied by a yellow Japanese dragon shaped like a lightning bolt.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/thunder/thunder_7.png")) {
         @Override
@@ -641,7 +675,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a singular and powerful frontal thrust.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_1.png")) {
         @Override
@@ -668,7 +702,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs eight slashes in quick succession.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_2.png")) {
         @Override
@@ -684,7 +718,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user performs a powerful and swift circular slash that can blow away incoming projectiles.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_3.png")) {
         @Override
@@ -700,7 +734,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user takes a low stance before dashing toward the target and slashing them.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_4.png")) {
         @Override
@@ -716,7 +750,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user charges at their target at blistering speeds in a zig-zag motion while performing a barrage of continuous slashes in front and/or around them.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_5.png")) {
         @Override
@@ -732,7 +766,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user leaps into the air and performs a multitude of slashes in a somersaulting motion, decimating dozens of targets at once.\n",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_6.png")) {
         @Override
@@ -748,7 +782,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The personal creation of Muichiro Tokito. A movement-based technique designed to heavily disorientate the target, which is done so by fluctuating the user's tempo. When the user appears before the target, they move incredibly slow, but then accelerate to blistering speeds before getting hit, making it seem like they disappeared into a cloud of mist. When done repeatedly, it can disorientate the target to the point of making them think they are being covered in a thick layer of mist.",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/mist/mist_7.png")) {
         @Override
@@ -836,7 +870,7 @@ public enum BreathingForms implements IForm {
             50,
             100,
             "The user lifts their twin swords above their head and slams them down with great force, causing a loud sound resembling thunder as a result.\n",
-            
+
             20,
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/sound/sound_1.png")) {
         @Override

@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: upgrade bda.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class UpgradeBdaC2SPacket {
     private final BloodDemonArts bdaToUpgrade;
 

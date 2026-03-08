@@ -13,6 +13,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * AI goal: Doma Clone Attack Goal.
+ */
 public class DomaCloneAttackGoal extends Goal {
     private final CrystallineDivineChildEntity clone;
     private final double speedModifier;

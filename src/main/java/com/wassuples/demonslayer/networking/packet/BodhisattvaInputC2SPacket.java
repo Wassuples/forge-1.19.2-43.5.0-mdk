@@ -8,6 +8,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: bodhisattva input.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class BodhisattvaInputC2SPacket {
     private final Vec3 movement;
     private final boolean primaryAttack;

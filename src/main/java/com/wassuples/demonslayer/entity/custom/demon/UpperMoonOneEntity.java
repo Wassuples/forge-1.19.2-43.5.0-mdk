@@ -22,6 +22,11 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nullable;
 
+/**
+ * NPC entity: Upper Moon One.
+ *
+ * @see com.wassuples.demonslayer.entity.custom.DemonEntity
+ */
 public class UpperMoonOneEntity extends AbstractFormUsingEntity {
     private static final EntityDataAccessor<Integer> DATA_DEMON_RANK =
             SynchedEntityData.defineId(UpperMoonOneEntity.class, EntityDataSerializers.INT);

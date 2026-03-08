@@ -2,13 +2,23 @@ package com.wassuples.demonslayer.missions;
 
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.nbt.StringTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.stats.Stats;
 
 import java.util.*;
 
+/**
+ * Per-player capability tracking active and completed missions.
+ *
+ * <p>Active missions map a {@link net.minecraft.resources.ResourceLocation mission ID} to a map of
+ * objective keys → progress counts. Completed mission IDs are stored in a set to prevent re-acceptance.
+ *
+ * <p>Persisted via NBT; synced to the client for the Crow Dispatch UI.
+ *
+ * @see Mission
+ * @see PlayerMissionsProvider
+ */
 public class PlayerMissions {
     private final Map<ResourceLocation, Map<String, Integer>> activeMissions = new HashMap<>();
     private final Set<ResourceLocation> completedMissions = new HashSet<>();

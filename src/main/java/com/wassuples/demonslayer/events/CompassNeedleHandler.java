@@ -39,6 +39,9 @@ import net.minecraftforge.fml.common.Mod;
 
 import java.util.*;
 
+/**
+ * Event handler: Compass Needle Handler.
+ */
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class CompassNeedleHandler {
 

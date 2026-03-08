@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Lowly Demon entity.
+ */
 public class LowlyDemonRenderer extends HumanoidMobRenderer<LowlyDemonEntity, DemonModel<LowlyDemonEntity>> {
 
     private static final ResourceLocation LOWLY_DEMON_TEXTURE =

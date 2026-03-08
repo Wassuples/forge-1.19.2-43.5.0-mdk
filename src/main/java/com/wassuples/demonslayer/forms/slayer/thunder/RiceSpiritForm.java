@@ -13,6 +13,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Thunder Breathing form: Rice Spirit.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RiceSpiritForm extends TimedForm {
     private static final int NUMBER_OF_SLASHES = 5;
     private static final int TICKS_BETWEEN_SLASHES = 2; // 0.1s

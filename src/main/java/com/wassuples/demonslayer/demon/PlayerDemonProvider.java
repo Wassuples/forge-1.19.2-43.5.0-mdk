@@ -13,6 +13,18 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Forge capability provider for {@link PlayerDemon} data.
+ *
+ * <p>Attach this to players via {@link net.minecraftforge.event.AttachCapabilitiesEvent}.
+ * Use the static {@link #PLAYER_DEMON} capability token to retrieve the data:
+ *
+ * <pre>{@code
+ * player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> { ... });
+ * }</pre>
+ *
+ * @see PlayerDemon
+ */
 public class PlayerDemonProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
     public static final ResourceLocation KEY = new ResourceLocation(DemonSlayer.MOD_ID, "demon_data");
     public static Capability<PlayerDemon> PLAYER_DEMON = CapabilityManager.get(new CapabilityToken<>() {});

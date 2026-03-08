@@ -23,6 +23,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+/**
+ * Custom entity: Lotus Shard Projectile.
+ */
 public class LotusShardProjectileEntity extends Projectile implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
 

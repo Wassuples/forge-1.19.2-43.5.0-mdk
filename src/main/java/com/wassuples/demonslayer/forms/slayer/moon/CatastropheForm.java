@@ -20,6 +20,12 @@ import java.util.UUID;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Moon Breathing form: Catastrophe.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CatastropheForm extends TimedForm {
     private static final int DURATION = 30;
     private static final double MAX_RADIUS = 20.0;

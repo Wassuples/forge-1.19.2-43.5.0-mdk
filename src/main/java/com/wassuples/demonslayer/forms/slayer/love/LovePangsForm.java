@@ -19,6 +19,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 
+/**
+ * Love Breathing form: Love Pangs.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class LovePangsForm extends TimedForm {
     private static final double MAX_RANGE = 12.0;
     private static final double WHIP_SPEED = 2.0; // The speed in blocks per tick

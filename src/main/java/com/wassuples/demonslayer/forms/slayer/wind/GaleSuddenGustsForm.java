@@ -12,6 +12,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.MovementHelper.pushPlayer;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Wind Breathing form: Gale Sudden Gusts.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class GaleSuddenGustsForm extends ActiveForm {
     public GaleSuddenGustsForm(LivingEntity user, IForm form) {
         super(user, form);

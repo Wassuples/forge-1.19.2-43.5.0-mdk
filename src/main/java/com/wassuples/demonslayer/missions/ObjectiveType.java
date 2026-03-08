@@ -8,6 +8,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Mission system: Objective Type.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public class ObjectiveType<T extends MissionObjective> {
     public static final Map<ResourceLocation, ObjectiveType<?>> REGISTRY = new HashMap<>();
 

@@ -20,6 +20,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Stone Breathing form: Serpentinite Bipolar.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SerpentiniteBipolarForm extends TimedForm {
     private static final double MAX_RANGE = 12.0;
     private static final double TRAVEL_SPEED = 1.0;

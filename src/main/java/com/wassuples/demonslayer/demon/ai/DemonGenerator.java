@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+/**
+ * Demon AI: Demon Generator.
+ */
 public class DemonGenerator {
 
     private static final Random random = new Random();
@@ -49,6 +52,7 @@ public class DemonGenerator {
     public static void initializeProcedural(NemesisDemonEntity demon, ServerLevel level) {
         demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
             trait.setSourceBlueprintId("procedural");
+            trait.setBirthTime(level.getGameTime());
 
             Behavior chosenBehavior = getRandomElement(List.of(Behavior.values()));
             trait.setBehavior(chosenBehavior);
@@ -79,12 +83,16 @@ public class DemonGenerator {
             trait.setVigor(baseVigor);
             trait.setStrength(baseStrength);
             trait.setAgility(baseAgility);
+
+            // Intel-gathering ability (G4): derived from behavior + personality
+            trait.setBaseIntelGathering(calculateBaseIntel(chosenBehavior, trait.getPersonality()));
         });
     }
 
     public static void initializeBlueprint(NemesisDemonEntity demon, DemonBlueprint blueprint, ServerLevel level) {
         demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
             trait.setSourceBlueprintId(blueprint.id());
+            trait.setBirthTime(level.getGameTime());
             trait.setName(blueprint.name());
             trait.setTitle(blueprint.title());
             trait.setBehavior(blueprint.behavior());
@@ -101,6 +109,8 @@ public class DemonGenerator {
 
             trait.setBloodPoints(50 + random.nextInt(100));
             trait.setTerritory(getRandomElement(TERRITORIES));
+
+            trait.setBaseIntelGathering(calculateBaseIntel(blueprint.behavior(), blueprint.personality()));
         });
     }
 
@@ -135,5 +145,31 @@ public class DemonGenerator {
     private static Quirk getRandomWeakness() {
         List<Quirk> weaknesses = List.of(Quirk.BRITTLE, Quirk.FEAR_OF_WATER, Quirk.OVERCONFIDENT, Quirk.SUNLIGHT_SICKNESS);
         return getRandomElement(weaknesses);
+    }
+
+    /**
+     * Derives a demon's base intel-gathering ability from its Behavior
+     * and Personality. Range [0.05, 0.95]. Mirrors the old random roll
+     * logic in DemonHierarchyManager but computes a persistent value.
+     */
+    public static float calculateBaseIntel(Behavior behavior, Personality personality) {
+        float base = 0.20f;
+        switch (behavior) {
+            case STRATEGIST, CALM        -> base = 0.75f;
+            case AMBITIOUS, OVERLORD, SKIRMISHER -> base = 0.45f;
+            case DUELIST, STALWART       -> base = 0.30f;
+            case AGGRESSIVE              -> base = 0.15f;
+            case BERSERKER, COWARDLY     -> base = 0.05f;
+            default -> {} // keep 0.20
+        }
+        switch (personality) {
+            case CALCULATING, OBSERVANT, PATIENT, CAUTIOUS, PARANOID -> base += 0.15f;
+            case MANIPULATIVE, OPPORTUNISTIC, PROTECTIVE             -> base += 0.08f;
+            case COCKY, ARROGANT, RUTHLESS, MOCKING                  -> base -= 0.10f;
+            case FRENZIED, BLOODTHIRSTY, GLUTTONOUS                  -> base -= 0.15f;
+            case LAZY, WEARY                                         -> base -= 0.12f;
+            default -> {} // no modifier
+        }
+        return Math.max(0.05f, Math.min(0.95f, base));
     }
 }

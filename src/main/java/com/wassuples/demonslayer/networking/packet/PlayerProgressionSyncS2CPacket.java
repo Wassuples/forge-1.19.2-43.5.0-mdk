@@ -16,6 +16,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: player progression sync.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class PlayerProgressionSyncS2CPacket {
 
     private final int entityId;

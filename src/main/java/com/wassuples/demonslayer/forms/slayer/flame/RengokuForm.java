@@ -15,6 +15,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealLineDamage;
 import static com.wassuples.demonslayer.util.WorldHelper.carveFieryTrench;
 
+/**
+ * Flame Breathing form: Rengoku.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RengokuForm extends ChargeableForm {
     private static final int DASH_DURATION = 20;
     private Vec3 direction, prevPos;

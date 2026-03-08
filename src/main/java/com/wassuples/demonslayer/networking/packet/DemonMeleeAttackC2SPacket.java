@@ -13,6 +13,11 @@ import java.util.function.Supplier;
 
 import static com.wassuples.demonslayer.util.CombatHelper.performDemonAttack;
 
+/**
+ * Client-to-server packet: demon melee attack.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class DemonMeleeAttackC2SPacket {
 
     public DemonMeleeAttackC2SPacket() { }

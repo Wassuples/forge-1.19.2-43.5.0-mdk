@@ -20,6 +20,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Akaza Blood Demon Art form: Annihilation Type.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class AnnihilationTypeForm extends ChargeableForm {
     private static final int DASH_DURATION = 15; // faster dash than Rengoku
     private static final double DASH_SPEED = 4.0;   // Faster than Rengoku's

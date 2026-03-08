@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: player style sync.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class PlayerStyleSyncS2CPacket {
     private final int formIndex;
     private final int styleIndex;

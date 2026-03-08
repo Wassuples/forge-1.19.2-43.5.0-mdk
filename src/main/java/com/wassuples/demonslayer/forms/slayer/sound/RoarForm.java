@@ -13,6 +13,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Sound Breathing form: Roar.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RoarForm extends TimedForm {
     private static final int SLAM_DELAY = 10;
     private static final float SLAM_DAMAGE = 15.0f;

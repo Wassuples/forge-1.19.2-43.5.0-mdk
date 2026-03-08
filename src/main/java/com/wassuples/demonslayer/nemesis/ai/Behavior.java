@@ -1,5 +1,15 @@
 package com.wassuples.demonslayer.nemesis.ai;
 
+/**
+ * Combat behavior archetypes for Nemesis demons.
+ *
+ * <p>Each behavior determines how the demon's AI selects forms, manages distance,
+ * and reacts to health thresholds. Assigned during demon generation and influences
+ * {@link com.wassuples.demonslayer.styles.IForm#getUsagePriority} scoring.
+ *
+ * @see Personality
+ * @see NemesisDemonEntity
+ */
 public enum Behavior {
     // Offensive
     AGGRESSIVE,     // Seeks fights proactively.

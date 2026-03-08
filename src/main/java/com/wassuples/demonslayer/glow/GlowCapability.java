@@ -4,6 +4,12 @@ import net.minecraft.nbt.CompoundTag;
 
 import java.util.UUID;
 
+/**
+ * Default implementation of {@link IGlowCapability}.
+ *
+ * <p>Stores a hex color string, an optional exclusive viewer UUID, and a glowing flag.
+ * Persisted via NBT serialization.
+ */
 public class GlowCapability implements IGlowCapability {
     private String glowColor = "";
     private UUID exclusiveViewer = null;

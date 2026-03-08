@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Flame Hashira entity.
+ */
 public class FlameHashiraRenderer extends HumanoidMobRenderer<FlameHashiraEntity, HashiraModel<FlameHashiraEntity>> {
     private static final ResourceLocation KYOJURO_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/kyojuro.png");

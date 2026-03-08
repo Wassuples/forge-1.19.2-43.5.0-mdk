@@ -12,6 +12,12 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
+/**
+ * Beast Breathing form: Explosive Rush.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ExplosiveRushForm extends TimedForm {
     private static final int DURATION = 20;
     private static final double DASH_SPEED = 2.5;

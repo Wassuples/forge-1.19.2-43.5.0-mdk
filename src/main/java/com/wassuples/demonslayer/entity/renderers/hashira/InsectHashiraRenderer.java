@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Insect Hashira entity.
+ */
 public class InsectHashiraRenderer extends HumanoidMobRenderer<InsectHashiraEntity, HashiraModel<InsectHashiraEntity>> {
     private static final ResourceLocation SHINOBU_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/shinobu.png");

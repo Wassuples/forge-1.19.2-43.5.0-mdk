@@ -9,6 +9,17 @@ import com.wassuples.demonslayer.styles.BloodDemonArts;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * JSON-deserialized blueprint defining a canonical Nemesis demon's initial state.
+ *
+ * <p>Blueprints are loaded from {@code config/demonslayer/} by {@link BlueprintLoader} and
+ * used by the {@link com.wassuples.demonslayer.nemesis.DemonHierarchyManager} to populate
+ * Kizuki slots with lore-accurate demons (e.g. Rui, Akaza).
+ *
+ * <p>Fields include name, title, behavior, personality, BDA, quirks, base stats, and taunt lines.
+ *
+ * @see BlueprintLoader
+ */
 public class DemonBlueprint {
     public String id;
     public String name;

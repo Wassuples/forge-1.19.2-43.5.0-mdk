@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.OctopusPotEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Octopus Pot entity.
+ */
 public class OctopusPotModel extends AnimatedGeoModel<OctopusPotEntity> {
     @Override
     public ResourceLocation getModelResource(OctopusPotEntity object) {

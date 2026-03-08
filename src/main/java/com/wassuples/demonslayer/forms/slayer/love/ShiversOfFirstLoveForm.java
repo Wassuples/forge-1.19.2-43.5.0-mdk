@@ -14,6 +14,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Love Breathing form: Shivers Of First Love.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ShiversOfFirstLoveForm extends TimedForm {
     // --- Constants ---
     private static final int NUMBER_OF_SLASHES = 6;

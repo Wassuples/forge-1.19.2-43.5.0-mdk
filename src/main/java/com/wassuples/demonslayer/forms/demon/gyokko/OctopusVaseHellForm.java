@@ -13,6 +13,12 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 
+/**
+ * Gyokko Blood Demon Art form: Octopus Vase Hell.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class OctopusVaseHellForm extends ActiveForm {
     private static final double MAX_SPAWN_RANGE = 20.0;
 

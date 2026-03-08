@@ -5,6 +5,16 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Ordered hierarchy of demon ranks from weakest ({@link #FODDER}) to strongest ({@link #UPPER_MOON_1}).
+ *
+ * <p>Ranks above {@link #ELITE_DEMON} are "Moon" ranks and correspond to canonical Twelve Kizuki
+ * positions. Moon ranks have an associated {@link #getBlueprintId()} used by the nemesis blueprint
+ * system to spawn lore-accurate boss variants.
+ *
+ * @see PlayerDemon#getRank()
+ * @see DemonProgressionHelper#RANK_UP_COSTS
+ */
 public enum DemonRank {
     FODDER("Fodder Demon", ChatFormatting.DARK_GRAY),
     LOWLY_DEMON("Lowly Demon", ChatFormatting.GRAY),

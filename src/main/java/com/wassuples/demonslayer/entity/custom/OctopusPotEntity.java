@@ -25,6 +25,9 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Custom entity: Octopus Pot.
+ */
 public class OctopusPotEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     private final int lifeTime = 400;

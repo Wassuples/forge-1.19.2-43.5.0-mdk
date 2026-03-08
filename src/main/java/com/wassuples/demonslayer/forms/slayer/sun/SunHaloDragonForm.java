@@ -18,6 +18,12 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.*;
 
+/**
+ * Sun Breathing form: Sun Halo Dragon.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SunHaloDragonForm extends ActiveForm {
     private static final int BREATH_COST_PER_TICK = 2;
     private static final float DAMAGE_PER_TICK = 5.0f;

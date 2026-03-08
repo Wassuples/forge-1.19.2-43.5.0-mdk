@@ -19,6 +19,11 @@ import net.minecraft.world.phys.AABB;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Mission system: Survival Objective.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public final class SurvivalObjective implements MissionObjective {
     private static final String START_KEY = "start_ticks";
     private static final String BIOME_TICKS_KEY = "biome_ticks";

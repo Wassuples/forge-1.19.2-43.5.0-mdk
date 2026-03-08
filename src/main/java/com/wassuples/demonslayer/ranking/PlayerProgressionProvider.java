@@ -15,6 +15,15 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Forge capability provider for {@link PlayerProgression}.
+ *
+ * <p>Also contains {@link #grantMasteryOnUse(ServerPlayer, IForm)}, a convenience method
+ * that awards +1 mastery to both the specific form and its parent style/BDA whenever
+ * a form is successfully used.
+ *
+ * @see PlayerProgression
+ */
 public class PlayerProgressionProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
     public static final ResourceLocation KEY = ResourceLocation.fromNamespaceAndPath(DemonSlayer.MOD_ID, "progression");
     public static Capability<PlayerProgression> PLAYER_PROGRESSION = CapabilityManager.get(new CapabilityToken<>() {});

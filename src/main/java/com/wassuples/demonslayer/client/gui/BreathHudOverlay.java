@@ -1,7 +1,6 @@
 package com.wassuples.demonslayer.client.gui;
 
 import com.mojang.blaze3d.systems.RenderSystem;
-import com.mojang.blaze3d.vertex.PoseStack;
 import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import net.minecraft.client.Minecraft;
@@ -9,6 +8,12 @@ import net.minecraft.client.gui.GuiComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
 
+/**
+ * HUD overlay that renders the player's Breath resource bar on screen.
+ *
+ * <p>Registered as a Forge GUI overlay. Reads from
+ * {@link com.wassuples.demonslayer.breathing.PlayerBreathProvider} client-side data.
+ */
 public class BreathHudOverlay {
     private static final ResourceLocation BREATH_BAR_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/breath_bar.png");

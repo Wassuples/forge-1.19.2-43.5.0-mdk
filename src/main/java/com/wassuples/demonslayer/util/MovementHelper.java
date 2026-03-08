@@ -9,6 +9,19 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Static movement utility methods for form-related player/entity movement.
+ *
+ * <p>Provides:
+ * <ul>
+ *   <li>{@link #pushPlayer} — launches an entity along their look vector</li>
+ *   <li>{@link #applyImmobility} — roots the entity in place with knockback immunity</li>
+ *   <li>Other movement helpers for dashes, teleports, and gravitational effects</li>
+ * </ul>
+ *
+ * @see CombatHelper
+ * @see VFXHelper
+ */
 public class MovementHelper {
     /**
      * Pushes the player forward based on their look vector.

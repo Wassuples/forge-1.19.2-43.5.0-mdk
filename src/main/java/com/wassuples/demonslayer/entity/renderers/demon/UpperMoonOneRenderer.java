@@ -9,6 +9,10 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 // Change the model type in the class signature from DemonModel to HumanoidModel
+
+/**
+ * signature.
+ */
 public class UpperMoonOneRenderer extends HumanoidMobRenderer<UpperMoonOneEntity, HumanoidModel<UpperMoonOneEntity>> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/upper_moon_one.png");

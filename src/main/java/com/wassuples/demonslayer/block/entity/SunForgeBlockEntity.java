@@ -28,6 +28,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
+/**
+ * Block entity: Sun Forge Block Entity.
+ */
 public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
     private final ItemStackHandler itemHandler = new ItemStackHandler(3) {
         @Override

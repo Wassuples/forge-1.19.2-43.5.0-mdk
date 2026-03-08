@@ -13,6 +13,12 @@ import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Flame Breathing form: Flame Undulation Parry.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.ParryForm
+ */
 public class FlameUndulationParry extends ParryForm {
     public FlameUndulationParry(LivingEntity user, IForm form) {
         super(user, form, 30);

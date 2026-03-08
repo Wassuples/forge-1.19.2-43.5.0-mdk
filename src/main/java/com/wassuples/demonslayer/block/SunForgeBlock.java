@@ -18,6 +18,11 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraftforge.network.NetworkHooks;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Custom block: Sun Forge Block.
+ *
+ * @see com.wassuples.demonslayer.block.ModBlocks
+ */
 public class SunForgeBlock extends BaseEntityBlock {
     public SunForgeBlock(Properties properties) {
         super(properties);

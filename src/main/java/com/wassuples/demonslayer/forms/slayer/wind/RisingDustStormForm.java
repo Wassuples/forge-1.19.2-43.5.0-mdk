@@ -18,6 +18,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnCycloneParticles;
 
+/**
+ * Wind Breathing form: Rising Dust Storm.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RisingDustStormForm extends TimedForm {
     private static final DustParticleOptions GREEN_DUST = new DustParticleOptions(new Vector3f(0.1f, 0.9f, 0.1f), 1.5f);
 

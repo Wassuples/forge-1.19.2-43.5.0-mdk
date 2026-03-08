@@ -14,6 +14,12 @@ import org.jetbrains.annotations.Nullable;
 import static com.wassuples.demonslayer.util.CombatHelper.*;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Mist Breathing form: Shifting Flow Slash.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ShiftingFlowSlashForm extends TimedForm {
     private static final int PAUSE_DURATION = 4;
     private static final int DASH_DURATION = 10;

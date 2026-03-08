@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.CrowEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Crow entity.
+ */
 public class CrowModel extends AnimatedGeoModel<CrowEntity> {
     @Override
     public ResourceLocation getModelResource(CrowEntity object) {

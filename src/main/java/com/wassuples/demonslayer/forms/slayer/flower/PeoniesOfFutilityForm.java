@@ -11,6 +11,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Flower Breathing form: Peonies Of Futility.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class PeoniesOfFutilityForm extends TimedForm {
     private static final int NUMBER_OF_ATTACKS = 9;
     private static final int TICKS_BETWEEN_ATTACKS = 4;

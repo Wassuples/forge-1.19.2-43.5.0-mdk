@@ -8,6 +8,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: rank up.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class RankUpC2SPacket {
 
     public RankUpC2SPacket() {}

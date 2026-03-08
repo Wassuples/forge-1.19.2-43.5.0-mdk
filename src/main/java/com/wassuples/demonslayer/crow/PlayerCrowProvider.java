@@ -13,6 +13,14 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Forge capability provider for {@link PlayerCrowData}.
+ *
+ * <p>Attached to players to persist their companion crow state across sessions.
+ *
+ * @see PlayerCrowData
+ * @see CrowManager
+ */
 public class PlayerCrowProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
     public static final ResourceLocation KEY = new ResourceLocation(DemonSlayer.MOD_ID, "crow_data");
     public static Capability<PlayerCrowData> PLAYER_CROW = CapabilityManager.get(new CapabilityToken<>() {});
@@ -44,4 +52,3 @@ public class PlayerCrowProvider implements ICapabilityProvider, INBTSerializable
         createCrowData().loadNBTData(nbt);
     }
 }
-

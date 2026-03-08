@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.MotherEyeEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Mother Eye entity.
+ */
 public class MotherEyeModel extends AnimatedGeoModel<MotherEyeEntity> {
     @Override
     public ResourceLocation getModelResource(MotherEyeEntity object) {

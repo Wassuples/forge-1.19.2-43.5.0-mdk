@@ -11,6 +11,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.WorldHelper.destroyBlocksInRadius;
 
+/**
+ * Wind Breathing form: Clear Storm Wind Tree Parry.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.ParryForm
+ */
 public class ClearStormWindTreeParry extends ParryForm {
     public ClearStormWindTreeParry(LivingEntity user, IForm form) {
         super(user, form, 30);

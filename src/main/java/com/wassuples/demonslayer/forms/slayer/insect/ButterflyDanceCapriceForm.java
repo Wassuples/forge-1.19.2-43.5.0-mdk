@@ -19,6 +19,12 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
+/**
+ * Insect Breathing form: Butterfly Dance Caprice.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ButterflyDanceCapriceForm extends TimedForm {
     private static final int DASH_DURATION = 15;
     private static final double DASH_SPEED = 1.5;

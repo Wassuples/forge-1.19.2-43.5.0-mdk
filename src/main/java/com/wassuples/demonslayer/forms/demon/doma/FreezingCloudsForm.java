@@ -18,6 +18,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+/**
+ * Doma Blood Demon Art form: Freezing Clouds.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FreezingCloudsForm extends TimedForm {
     private static final int DURATION = 40;
     private static final double CLOUD_RANGE = 30.0;

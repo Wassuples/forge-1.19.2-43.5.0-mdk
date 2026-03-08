@@ -11,6 +11,15 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Forge capability provider for {@link IDemonTrait}.
+ *
+ * <p>Attached to {@link com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity} instances
+ * to store their unique identity, personality, and combat profile.
+ *
+ * @see IDemonTrait
+ * @see DemonTrait
+ */
 public class DemonTraitProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
 
     public static Capability<IDemonTrait> DEMON_TRAIT =

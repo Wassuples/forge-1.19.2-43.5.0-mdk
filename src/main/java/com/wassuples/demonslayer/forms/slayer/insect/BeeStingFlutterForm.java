@@ -15,6 +15,12 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
+/**
+ * Insect Breathing form: Bee Sting Flutter.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class BeeStingFlutterForm extends TimedForm {
     private enum Phase {DASHING, RECOILING}
 

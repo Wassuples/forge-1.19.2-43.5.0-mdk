@@ -15,6 +15,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.*;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Serpent Breathing form: Coil Choke.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CoilChokeForm extends TimedForm {
     private static final int DURATION = 60;
     private static final float DAMAGE_PER_PULSE = 3.0f;

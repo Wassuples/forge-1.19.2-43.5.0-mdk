@@ -15,6 +15,16 @@ import java.util.UUID;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Custom mob effect: Forced Sleep (Enmu's Blood Demon Art).
+ *
+ * <p>Immobilizes the target and triggers a client-side Sleep QTE. If the target
+ * fails the QTE (or is an NPC), they take damage. Tracks the caster UUID so
+ * damage is attributed correctly.
+ *
+ * @see ModEffects
+ * @see com.wassuples.demonslayer.client.gui.SleepQTEOverlay
+ */
 public class ForcedSleepEffect extends MobEffect {
     private static final Map<UUID, UUID> SLEEPING_ENTITIES_TO_CASTERS = Maps.newHashMap();
 

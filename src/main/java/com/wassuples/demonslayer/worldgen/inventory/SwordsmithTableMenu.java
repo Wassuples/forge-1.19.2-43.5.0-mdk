@@ -16,6 +16,9 @@ import net.minecraft.world.level.Level;
 
 import java.util.Optional;
 
+/**
+ * World generation: Swordsmith Table Menu.
+ */
 public class SwordsmithTableMenu extends CraftingMenu {
 
     private final ContainerLevelAccess access;

@@ -13,6 +13,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Octopus Pot entity.
+ */
 public class OctopusPotRenderer extends GeoEntityRenderer<OctopusPotEntity> {
     public OctopusPotRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new OctopusPotModel());

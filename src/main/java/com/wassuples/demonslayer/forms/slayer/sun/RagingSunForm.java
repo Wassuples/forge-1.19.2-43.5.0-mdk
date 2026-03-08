@@ -20,6 +20,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Sun Breathing form: Raging Sun.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RagingSunForm extends TimedForm {
     private static final int DURATION = 20;
     private static final int FIRST_SLASH_TICK = 2;

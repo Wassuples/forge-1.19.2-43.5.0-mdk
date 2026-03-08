@@ -11,6 +11,9 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 
+/**
+ * Client GUI component: Ranking Board Screen.
+ */
 public class RankingBoardScreen extends Screen {
     private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/ranking_board.png");
     private final List<DemonDisplayData> kizuki;

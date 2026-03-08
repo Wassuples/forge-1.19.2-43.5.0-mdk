@@ -21,6 +21,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Hantengu Blood Demon Art form: Crazed Cry Of Thunderdeath.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CrazedCryOfThunderdeathForm extends TimedForm {
     private static final int WIND_UP_TICKS = 60;
     private static final int LIGHTNING_START_TICKS = 80;

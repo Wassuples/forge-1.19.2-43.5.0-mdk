@@ -13,6 +13,30 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/**
+ * Capability data tracking a player's slayer/demon progression, style mastery, and form unlocks.
+ *
+ * <p>This is the central progression system for both slayer and demon paths:
+ *
+ * <ul>
+ *   <li><b>Slayer rank</b> — {@link Rank} from Civilian to Hashira</li>
+ *   <li><b>Style unlocks &amp; mastery</b> — which {@link BreathingStyles} are available, with mastery 0–1000</li>
+ *   <li><b>Form unlocks &amp; mastery</b> — which {@link BreathingForms} are available, with mastery 0–100</li>
+ *   <li><b>BDA mastery</b> — demon art mastery 0–1000 per {@link BloodDemonArts}</li>
+ *   <li><b>Demon form mastery</b> — per-{@link DemonForms} mastery 0–100</li>
+ *   <li><b>Dodge charge</b> — whether the player has an available dodge action</li>
+ * </ul>
+ *
+ * <h2>Defaults</h2>
+ * <p>New players start as {@link Rank#CIVILIAN} with {@link BreathingStyles#WATER} unlocked.
+ *
+ * @see PlayerProgressionProvider
+ * @see Rank
+ */
+
+/**
+ * Player Progression.
+ */
 public class PlayerProgression {
     private Rank rank = Rank.CIVILIAN;
     private final Set<BreathingStyles> unlockedStyles = new HashSet<>();

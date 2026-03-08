@@ -11,6 +11,11 @@ import net.minecraft.util.GsonHelper;
 
 import javax.annotation.Nullable;
 
+/**
+ * Mission system: Style Mastery Reward.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public record StyleMasteryReward(@Nullable BreathingStyles style, int amount) implements MissionReward {
     public StyleMasteryReward(FriendlyByteBuf buf) {
         this(buf.readBoolean() ? buf.readEnum(BreathingStyles.class) : null, buf.readInt());

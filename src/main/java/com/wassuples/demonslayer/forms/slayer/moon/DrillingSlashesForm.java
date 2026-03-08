@@ -20,6 +20,12 @@ import java.util.UUID;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Moon Breathing form: Drilling Slashes.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class DrillingSlashesForm extends TimedForm {
     private static final int DURATION = 30;
     private static final double MAX_RANGE = 30.0;

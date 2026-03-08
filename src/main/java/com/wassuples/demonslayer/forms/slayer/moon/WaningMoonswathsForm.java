@@ -18,6 +18,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Moon Breathing form: Waning Moonswaths.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WaningMoonswathsForm extends TimedForm {
     private static final int NUMBER_OF_STRIKES = 5;
     private static final int TICKS_PER_STRIKE = 6;

@@ -17,6 +17,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Stone Breathing form: Stone Skin Parry.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.ParryForm
+ */
 public class StoneSkinParry extends ParryForm {
     private static final int PARRY_WINDOW = 25; // 1.25-second parry window
     private static final float COUNTER_DAMAGE = 25.0f;

@@ -16,6 +16,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.*;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Thunder Breathing form: Thunder Swarm.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ThunderSwarmForm extends TimedForm {
     private static final int NUMBER_OF_DASHES = 8;
     private static final int TICKS_PER_PHASE = 4; // An attack every 0.2 seconds

@@ -22,6 +22,11 @@ import java.util.function.Supplier;
 
 import static com.wassuples.demonslayer.util.CombatHelper.isPlayerHoldingNichirin;
 
+/**
+ * Client-to-server packet: ability key.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class AbilityKeyC2SPacket {
     private static final boolean DEBUG_FORMS = false;
 

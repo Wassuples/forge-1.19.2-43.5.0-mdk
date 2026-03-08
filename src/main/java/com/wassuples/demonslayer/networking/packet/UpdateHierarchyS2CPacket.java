@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: update hierarchy.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class UpdateHierarchyS2CPacket {
     private final List<DemonDisplayData> kizuki;
     private final List<DemonDisplayData> fodder;

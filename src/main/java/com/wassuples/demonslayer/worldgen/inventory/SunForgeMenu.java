@@ -12,6 +12,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraftforge.common.capabilities.ForgeCapabilities;
 import net.minecraftforge.items.SlotItemHandler;
 
+/**
+ * World generation: Sun Forge Menu.
+ */
 public class SunForgeMenu extends AbstractContainerMenu {
     public final SunForgeBlockEntity blockEntity;
     private final Level level;

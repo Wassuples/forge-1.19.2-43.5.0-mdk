@@ -25,6 +25,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: use form.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class UseFormC2SPacket {
     private static final boolean DEBUG_FORMS = false;
 

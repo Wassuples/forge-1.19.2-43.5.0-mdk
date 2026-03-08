@@ -11,6 +11,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: spawn sonic beam.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class SpawnSonicBeamS2CPacket {
 
     private final Vec3 startPos;

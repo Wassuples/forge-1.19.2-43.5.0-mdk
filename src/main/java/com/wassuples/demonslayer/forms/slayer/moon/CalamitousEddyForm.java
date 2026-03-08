@@ -18,6 +18,12 @@ import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Moon Breathing form: Calamitous Eddy.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CalamitousEddyForm extends TimedForm {
     private static final int DURATION = 80;
     private static final double VORTEX_RADIUS = 7.0;

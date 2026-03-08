@@ -14,6 +14,12 @@ import net.minecraft.world.phys.Vec3;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Gyutaro Blood Demon Art form: Rampant Arc Rampage Parry.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.ParryForm
+ */
 public class RampantArcRampageParry extends ParryForm {
     private static final int PARRY_WINDOW = 25;
     private static final float COUNTER_DAMAGE = 20.0f;

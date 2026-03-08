@@ -6,10 +6,17 @@ import com.wassuples.demonslayer.nemesis.blueprint.DemonBlueprint;
 import com.wassuples.demonslayer.nemesis.trait.DemonTrait;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 
+/**
+ * Generates flavor text announcements for Nemesis system events (e.g. promotions, kills, daily simulation results).
+ *
+ * <p>Uses demon personality traits and blueprint data to produce immersive, context-sensitive
+ * announcements that are broadcast to all online players.
+ *
+ * @see DemonHierarchyManager#runDailySimulation
+ */
 public class SimulationAnnouncer {
     private static final Random random = new Random();
 

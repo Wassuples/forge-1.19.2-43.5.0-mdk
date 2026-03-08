@@ -1,5 +1,14 @@
 package com.wassuples.demonslayer.nemesis.ai;
 
+/**
+ * Personality archetypes that determine a Nemesis demon's dialogue tone and taunt style.
+ *
+ * <p>Each personality maps to a set of context-sensitive taunt lines delivered by the
+ * {@link com.wassuples.demonslayer.nemesis.taunt.TauntRenderer} during combat encounters.
+ *
+ * @see Behavior
+ * @see com.wassuples.demonslayer.nemesis.trait.DemonTrait
+ */
 public enum Personality {
     // --- Arrogant & Confident ---
     COCKY,          // "Is that all you've got, weakling?"

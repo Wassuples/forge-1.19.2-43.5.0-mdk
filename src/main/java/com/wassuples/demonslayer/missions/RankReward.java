@@ -8,6 +8,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.GsonHelper;
 
+/**
+ * Mission system: Rank Reward.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public record RankReward(Rank rank) implements MissionReward {
     public RankReward(FriendlyByteBuf buf) {
         this(buf.readEnum(Rank.class));

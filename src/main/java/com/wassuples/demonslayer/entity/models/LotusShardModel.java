@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.LotusShardProjectileEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Lotus Shard entity.
+ */
 public class LotusShardModel extends AnimatedGeoModel<LotusShardProjectileEntity> {
     @Override
     public ResourceLocation getModelResource(LotusShardProjectileEntity object) {

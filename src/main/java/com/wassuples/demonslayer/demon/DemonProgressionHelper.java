@@ -15,6 +15,33 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Static helper for all demon-path progression transactions (rank ups, passive unlocks, BDA purchases/upgrades).
+ *
+ * <p>All methods are server-side only and operate on the player's {@link PlayerDemon} capability.
+ * Each "try" method validates costs, deducts Blood Points, applies the change, provides chat
+ * feedback, and triggers a client sync packet.
+ *
+ * <h2>Cost tables</h2>
+ * <ul>
+ *   <li>{@link #RANK_UP_COSTS} — Blood Point cost to advance to the next {@link DemonRank}</li>
+ *   <li>{@link #BDA_PURCHASE_COSTS} — cost to unlock a new {@link com.wassuples.demonslayer.styles.BloodDemonArts}</li>
+ *   <li>{@link #BDA_UPGRADE_COSTS} — per-tier upgrade costs for each BDA</li>
+ *   <li>{@link #PASSIVE_SKILL_COSTS} — per-tier unlock costs for each {@link DemonPassive}</li>
+ * </ul>
+ *
+ * <h2>Blood Art Potency modifier</h2>
+ * <p>The {@link DemonPassive#BLOOD_ART_POTENCY} passive applies a 5% cost reduction and 1% damage bonus
+ * per tier, calculated by {@link #getBdaCostModifier} and {@link #getBdaDamageModifier}.
+ *
+ * @see PlayerDemon
+ * @see DemonRank
+ * @see DemonPassive
+ */
+
+/**
+ * Demon Progression Helper.
+ */
 public class DemonProgressionHelper {
     public static final Map<BloodDemonArts, Integer> BDA_MASTERY_GOALS = new ImmutableMap.Builder<BloodDemonArts, Integer>()
             .put(BloodDemonArts.THREADS, 5000)

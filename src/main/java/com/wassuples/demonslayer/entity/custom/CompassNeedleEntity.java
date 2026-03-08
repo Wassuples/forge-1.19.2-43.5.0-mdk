@@ -20,6 +20,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+/**
+ * Custom entity: Compass Needle.
+ */
 public class CompassNeedleEntity extends LivingEntity implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     private int lifeTicks = 40; // 2 seconds lifetime

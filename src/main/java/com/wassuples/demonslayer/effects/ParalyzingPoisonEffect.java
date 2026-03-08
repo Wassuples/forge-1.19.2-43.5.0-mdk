@@ -6,6 +6,14 @@ import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 
+/**
+ * Custom mob effect: Paralyzing Poison (Insect Breathing).
+ *
+ * <p>Applies escalating slowness and weakness on each tick, simulating progressive
+ * paralysis from Shinobu's poison techniques.
+ *
+ * @see ModEffects
+ */
 public class ParalyzingPoisonEffect extends MobEffect {
 
     public ParalyzingPoisonEffect(MobEffectCategory pCategory, int pColor) {

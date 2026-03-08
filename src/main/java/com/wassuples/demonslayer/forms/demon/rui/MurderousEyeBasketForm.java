@@ -24,6 +24,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Rui Blood Demon Art form: Murderous Eye Basket.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class MurderousEyeBasketForm extends ActiveForm {
     private enum Phase {FORMATION, TRAPPED, CONTRACTION}
 

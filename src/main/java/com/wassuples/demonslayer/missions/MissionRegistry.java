@@ -11,6 +11,17 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Global server-side registry of all available {@link Mission} instances.
+ *
+ * <p>Populated by {@link MissionReloadListener} from JSON datapacks on server start
+ * and {@code /reload}. Synced to clients on datapack sync events.
+ *
+ * <p>Provides lookup by ID, filtering by rank requirement, and random mission selection.
+ *
+ * @see Mission
+ * @see MissionReloadListener
+ */
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID)
 public class MissionRegistry {
     private static final Map<ResourceLocation, Mission> MISSIONS = new HashMap<>();

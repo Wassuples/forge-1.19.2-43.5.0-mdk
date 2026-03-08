@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.CompassNeedleEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Compass Needle entity.
+ */
 public class CompassNeedleModel extends AnimatedGeoModel<CompassNeedleEntity> {
     @Override
     public ResourceLocation getModelResource(CompassNeedleEntity object) {

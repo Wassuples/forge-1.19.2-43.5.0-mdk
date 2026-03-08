@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Network packet: update compass info.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class UpdateCompassInfoPacket {
 
     // Universal Stats

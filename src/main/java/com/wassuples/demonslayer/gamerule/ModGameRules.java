@@ -2,6 +2,17 @@ package com.wassuples.demonslayer.gamerule;
 
 import net.minecraft.world.level.GameRules;
 
+/**
+ * Registers custom game rules for tuning mod behavior.
+ *
+ * <p>Game rules:
+ * <ul>
+ *   <li>{@code doFormsGriefing} — whether forms can modify terrain (fire, ice, etc.)</li>
+ *   <li>{@code useCanonKizuki} — whether to use canonical Twelve Kizuki demon lore</li>
+ *   <li>{@code minDemonRosterSize} — minimum number of demons in the nemesis hierarchy</li>
+ *   <li>{@code formsCooldownMultiplier} — percentage scalar for all form cooldowns (100 = default)</li>
+ * </ul>
+ */
 public final class ModGameRules {
 
     public static final GameRules.Key<GameRules.BooleanValue> RULE_FORMS_GRIEFING = GameRules.register(

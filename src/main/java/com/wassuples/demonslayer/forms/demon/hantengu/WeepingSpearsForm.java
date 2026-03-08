@@ -11,6 +11,12 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 
+/**
+ * Hantengu Blood Demon Art form: Weeping Spears.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WeepingSpearsForm extends ActiveForm {
     private static final int SPEAR_COUNT = 6;
     private static final float SPREAD = 3.0f;

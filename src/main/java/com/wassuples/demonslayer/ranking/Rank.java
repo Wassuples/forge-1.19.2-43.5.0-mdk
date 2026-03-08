@@ -4,6 +4,14 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
+/**
+ * Ordered hierarchy of Demon Slayer Corps ranks from {@link #CIVILIAN} to {@link #HASHIRA}.
+ *
+ * <p>Follows the canonical 10-tier system (Mizunoto → Kinoe) plus Hashira at the top.
+ * Each rank has a display color used in chat messages and UI elements.
+ *
+ * @see PlayerProgression#getRank()
+ */
 public enum Rank {
     CIVILIAN("Civilian", ChatFormatting.DARK_GRAY),
     MIZUNOTO("Mizunoto", ChatFormatting.GRAY),

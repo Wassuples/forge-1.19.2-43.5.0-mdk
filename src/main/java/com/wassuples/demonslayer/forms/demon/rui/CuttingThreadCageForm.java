@@ -14,6 +14,12 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 
+/**
+ * Rui Blood Demon Art form: Cutting Thread Cage.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CuttingThreadCageForm extends TimedForm {
     private static final int DURATION = 5; // A very short form, as the cage does the work
 

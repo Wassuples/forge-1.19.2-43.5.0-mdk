@@ -35,6 +35,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * Custom entity: Mother Eye.
+ */
 public class MotherEyeEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     @Nullable

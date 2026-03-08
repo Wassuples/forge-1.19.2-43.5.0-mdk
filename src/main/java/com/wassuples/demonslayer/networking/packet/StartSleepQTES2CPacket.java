@@ -11,6 +11,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: start sleep qte.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class StartSleepQTES2CPacket {
     private final IntList keySequence;
 

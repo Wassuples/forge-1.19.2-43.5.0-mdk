@@ -16,6 +16,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.*;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleStreamWithWeave;
 
+/**
+ * Gyokko Blood Demon Art form: Ten Thousand Fish Barrage.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class TenThousandFishBarrageForm extends ActiveForm {
     private static final float DAMAGE_PER_HIT = 7.0f;
     private static final double RANGE = 25.0;

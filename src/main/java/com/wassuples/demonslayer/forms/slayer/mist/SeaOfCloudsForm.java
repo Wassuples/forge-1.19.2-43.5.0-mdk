@@ -14,6 +14,12 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
+/**
+ * Mist Breathing form: Sea Of Clouds.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SeaOfCloudsForm extends TimedForm {
     private static final int DASH_DURATION = 20; // A slighly shorter dash
     private static final double DASH_DISTANCE = 15.0; // The distance for the dash

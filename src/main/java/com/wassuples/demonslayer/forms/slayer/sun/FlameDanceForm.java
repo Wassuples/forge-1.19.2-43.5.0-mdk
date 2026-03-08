@@ -13,6 +13,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Sun Breathing form: Flame Dance.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class FlameDanceForm extends TimedForm {
     private static final int VERTICAL_SLASH_TICK = 4;
     private static final int HORIZONTAL_SLASH_TICK = 10;

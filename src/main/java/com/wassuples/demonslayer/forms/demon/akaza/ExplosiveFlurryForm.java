@@ -16,6 +16,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Akaza Blood Demon Art form: Explosive Flurry.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ExplosiveFlurryForm extends TimedForm {
     private static final int NUMBER_OF_KICKS = 5;
     private static final int TICKS_BETWEEN_KICKS = 3;

@@ -12,6 +12,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Crow entity.
+ */
 public class CrowRenderer extends GeoEntityRenderer<CrowEntity> {
     public CrowRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new CrowModel());

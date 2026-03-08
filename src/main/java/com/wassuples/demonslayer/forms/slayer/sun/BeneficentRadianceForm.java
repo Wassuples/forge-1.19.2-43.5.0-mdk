@@ -17,6 +17,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Sun Breathing form: Beneficent Radiance.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class BeneficentRadianceForm extends TimedForm {
     private static final int DURATION = 25;
     private static final double ASCENT_SPEED = 1.2;

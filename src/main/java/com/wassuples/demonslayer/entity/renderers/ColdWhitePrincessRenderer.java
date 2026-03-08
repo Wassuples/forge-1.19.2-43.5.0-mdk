@@ -6,6 +6,9 @@ import com.wassuples.demonslayer.entity.models.ColdWhitePrincessModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
+/**
+ * Client-side GeckoLib renderer for Cold White Princess entity.
+ */
 public class ColdWhitePrincessRenderer extends GeoEntityRenderer<ColdWhitePrincessEntity> {
     public ColdWhitePrincessRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new ColdWhitePrincessModel());

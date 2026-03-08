@@ -28,6 +28,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+/**
+ * Custom entity: Thread Wheel.
+ */
 public class ThreadWheelEntity extends Monster implements IAnimatable {
     private static final EntityDataAccessor<Float> DATA_INITIAL_YAW = SynchedEntityData.defineId(ThreadWheelEntity.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Boolean> DATA_ROTATION_STORED = SynchedEntityData.defineId(ThreadWheelEntity.class, EntityDataSerializers.BOOLEAN);

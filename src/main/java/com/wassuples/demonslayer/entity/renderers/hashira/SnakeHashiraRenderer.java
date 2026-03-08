@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Snake Hashira entity.
+ */
 public class SnakeHashiraRenderer extends HumanoidMobRenderer<SnakeHashiraEntity, HashiraModel<SnakeHashiraEntity>> {
     private static final ResourceLocation OBANAI_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/obanai.png");

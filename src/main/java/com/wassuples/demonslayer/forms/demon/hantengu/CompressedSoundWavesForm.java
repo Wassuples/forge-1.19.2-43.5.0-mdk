@@ -17,6 +17,12 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
 
+/**
+ * Hantengu Blood Demon Art form: Compressed Sound Waves.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CompressedSoundWavesForm extends ActiveForm {
     private static final double MAX_RANGE = 30.0;
     private static final int KNOCKOUT_DURATION = 140; // 7 seconds

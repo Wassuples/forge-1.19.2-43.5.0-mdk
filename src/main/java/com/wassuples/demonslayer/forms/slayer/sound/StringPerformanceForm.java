@@ -16,6 +16,12 @@ import java.util.UUID;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.rotateVec;
 
+/**
+ * Sound Breathing form: String Performance.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class StringPerformanceForm extends TimedForm {
     private static final int DURATION = 60; // 3 seconds of charging
     private static final float FORWARD_SPEED = 1.3f;

@@ -27,6 +27,10 @@ import java.util.concurrent.ConcurrentMap;
  * - If an entity isn't loaded, it will naturally be cleaned up when the chunk is loaded and the
  *   clone is registered again.
  */
+
+/**
+ * Crystalline Divine Child Tracker.
+ */
 public final class CrystallineDivineChildTracker {
     private static final ConcurrentMap<UUID, Set<UUID>> CLONES_BY_OWNER = new ConcurrentHashMap<>();
 

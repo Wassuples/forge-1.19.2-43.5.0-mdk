@@ -14,6 +14,11 @@ import net.minecraftforge.registries.RegistryObject;
 import java.util.Objects;
 import java.util.function.Supplier;
 
+/**
+ * Mission system: Item Reward.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public record ItemReward(ResourceLocation itemId, int count) implements MissionReward {
     public ItemReward(FriendlyByteBuf buf) {
         this(buf.readResourceLocation(), buf.readInt());

@@ -12,6 +12,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Mother Eye entity.
+ */
 public class MotherEyeRenderer extends GeoEntityRenderer<MotherEyeEntity> {
     public MotherEyeRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new MotherEyeModel());

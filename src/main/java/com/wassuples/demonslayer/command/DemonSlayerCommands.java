@@ -44,6 +44,26 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+/**
+ * Registers and implements all {@code /demonslayer} server commands.
+ *
+ * <p>Subcommands include:
+ * <ul>
+ *   <li>{@code setstyle} / {@code setrank} — change a player's breathing style or slayer rank</li>
+ *   <li>{@code setdemon} / {@code setdemonrank} — toggle demon status and set demon rank</li>
+ *   <li>{@code unlockform} / {@code unlockstyle} — grant forms/styles to a player</li>
+ *   <li>{@code givebloodpoints} — award Blood Points currency</li>
+ *   <li>{@code missions} — list, grant, or complete missions</li>
+ *   <li>{@code hierarchy} — view/modify the nemesis demon hierarchy</li>
+ *   <li>{@code debug} — various diagnostic subcommands</li>
+ * </ul>
+ *
+ * <p>Requires OP level 2. Registered via {@link net.minecraftforge.event.RegisterCommandsEvent}.
+ */
+
+/**
+ * Demon Slayer Commands.
+ */
 public class DemonSlayerCommands {
 
     private enum ModifyAction { SET, ADD }
@@ -128,7 +148,7 @@ public class DemonSlayerCommands {
                 .requires(source -> source.hasPermission(2))
                 .executes(ctx -> showHelp(ctx.getSource(), "main"))
 
-                //  HELP COMMAND 
+                //  HELP COMMAND
                 .then(Commands.literal("help")
                         .executes(ctx -> showHelp(ctx.getSource(), "main"))
                         .then(Commands.argument("topic", StringArgumentType.word())
@@ -136,7 +156,7 @@ public class DemonSlayerCommands {
                                 .executes(ctx -> showHelp(ctx.getSource(), StringArgumentType.getString(ctx, "topic"))))
                 )
 
-                //  GET COMMAND 
+                //  GET COMMAND
                 .then(Commands.literal("get")
                         .then(Commands.argument("target", EntityArgument.player())
                                 .executes(ctx -> getPlayerSummary(ctx.getSource(), EntityArgument.getPlayer(ctx, "target")))
@@ -153,7 +173,7 @@ public class DemonSlayerCommands {
                                         .executes(ctx -> getFormsListForStyle(ctx.getSource(), StringArgumentType.getString(ctx, "style_name")))))
                 )
 
-                //  EDIT COMMAND 
+                //  EDIT COMMAND
                 .then(Commands.literal("edit")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("breath")
@@ -198,7 +218,7 @@ public class DemonSlayerCommands {
                         )
                 )
 
-                //  NEMESIS COMMANDS 
+                //  NEMESIS COMMANDS
                 .then(Commands.literal("nemesis")
                         .executes(ctx -> showHelp(ctx.getSource(), "nemesis"))
                         .then(Commands.literal("info")
@@ -251,13 +271,13 @@ public class DemonSlayerCommands {
                         )
                 )
 
-                //  RESET COMMAND 
+                //  RESET COMMAND
                 .then(Commands.literal("reset")
                         .then(Commands.argument("targets", EntityArgument.players())
         )));
     }
 
-    //  HELPER METHODS 
+    //  HELPER METHODS
 
     /**
      * Gets the UUID of a combatant, checking both online players and nemesis demons.
@@ -275,7 +295,7 @@ public class DemonSlayerCommands {
         return manager.getDemonUUIDByName(name);
     }
 
-    //  EXECUTOR METHODS (FOR MULTI-TARGETING) 
+    //  EXECUTOR METHODS (FOR MULTI-TARGETING)
 
     private static int executeStartBattle(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
         CommandSourceStack source = ctx.getSource();
@@ -632,7 +652,7 @@ public class DemonSlayerCommands {
         return targets.size();
     }
 
-    //  LOGIC METHODS (FOR SINGLE PLAYER) 
+    //  LOGIC METHODS (FOR SINGLE PLAYER)
 
     private static void modifyPlayerBreath(ServerPlayer target, ModifyAction action, int amount, boolean isMax) {
         target.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
@@ -759,7 +779,7 @@ public class DemonSlayerCommands {
         ModUtils.syncAll(target);
     }
 
-    //  GET & LIST METHODS 
+    //  GET & LIST METHODS
 
     private static int getPlayerSummary(CommandSourceStack source, ServerPlayer target) {
         MutableComponent message = Component.literal("\n").withStyle(ChatFormatting.DARK_GRAY)
@@ -871,7 +891,7 @@ public class DemonSlayerCommands {
         }
     }
 
-    //  HELP METHOD 
+    //  HELP METHOD
 
     private static int showHelp(CommandSourceStack source, String topic) {
         MutableComponent help = Component.literal("\n Demon Slayer Help ").withStyle(ChatFormatting.GOLD);

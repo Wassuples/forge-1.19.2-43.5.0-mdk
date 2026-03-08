@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Mist Hashira entity.
+ */
 public class MistHashiraRenderer extends HumanoidMobRenderer<MistHashiraEntity, HashiraModel<MistHashiraEntity>> {
     private static final ResourceLocation MUICHIRO_TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/muichiro.png");

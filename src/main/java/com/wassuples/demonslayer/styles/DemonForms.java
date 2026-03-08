@@ -20,6 +20,26 @@ import net.minecraft.world.entity.player.Player;
 
 import java.util.List;
 
+/**
+ * Enumerates all Demon / Blood Demon Art forms available to demon-path players.
+ *
+ * <p>Each constant belongs to a specific {@link BloodDemonArts} style and implements the
+ * {@link IForm} contract. Forms are executed via {@link com.wassuples.demonslayer.forms.ActiveFormManager}
+ * and consume hunger rather than breath.
+ *
+ * <h2>AI usage</h2>
+ * <p>Each form overrides {@link IForm#getUsagePriority(CombatContext)} to let NPC demons
+ * (e.g. {@link com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity}) intelligently choose
+ * which form to use based on distance, health, and {@link com.wassuples.demonslayer.nemesis.ai.Behavior}.
+ *
+ * @see BloodDemonArts
+ * @see IForm
+ * @see com.wassuples.demonslayer.demon.PlayerDemon#cycleDemonForm()
+ */
+
+/**
+ * Demon Forms.
+ */
 public enum DemonForms implements IForm {
     THREADS_1(BloodDemonArts.THREADS,
             "Cutting Thread Cage",

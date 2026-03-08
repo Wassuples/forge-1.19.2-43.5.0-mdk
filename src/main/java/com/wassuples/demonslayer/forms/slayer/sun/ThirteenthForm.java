@@ -12,6 +12,12 @@ import net.minecraft.world.entity.LivingEntity;
 
 import static com.wassuples.demonslayer.styles.BreathingForms.*;
 
+/**
+ * Sun Breathing form: Thirteenth.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ThirteenthForm extends ActiveForm {
     private static final int BREATH_DRAIN_PER_SECOND = 30;
 

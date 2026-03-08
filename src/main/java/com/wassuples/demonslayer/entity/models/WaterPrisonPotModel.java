@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.WaterPrisonEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Water Prison Pot entity.
+ */
 public class WaterPrisonPotModel extends AnimatedGeoModel<WaterPrisonEntity> {
     @Override
     public ResourceLocation getModelResource(WaterPrisonEntity object) {

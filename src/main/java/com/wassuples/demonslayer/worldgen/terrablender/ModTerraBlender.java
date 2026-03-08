@@ -4,6 +4,9 @@ import com.wassuples.demonslayer.DemonSlayer;
 import net.minecraft.resources.ResourceLocation;
 import terrablender.api.Regions;
 
+/**
+ * World generation: Mod Terra Blender.
+ */
 public class ModTerraBlender {
 
     public static void registerRegions() {

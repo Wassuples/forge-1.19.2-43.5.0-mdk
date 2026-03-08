@@ -11,6 +11,12 @@ import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.block.entity.BlockEntity;
 
+/**
+ * Static world-manipulation utilities for form environmental effects.
+ *
+ * <p>Methods that modify blocks (e.g. fire trenches, ice patches) respect the
+ * {@link com.wassuples.demonslayer.gamerule.ModGameRules#RULE_FORMS_GRIEFING} game rule.
+ */
 public class WorldHelper {
     /**
      * Carves a trench in the ground, setting it on fire.

@@ -12,6 +12,9 @@ import terrablender.api.RegionType;
 
 import java.util.function.Consumer;
 
+/**
+ * World generation: Mod Overworld Region.
+ */
 public class ModOverworldRegion extends Region {
     public ModOverworldRegion(ResourceLocation name, int weight) {
         super(name, RegionType.OVERWORLD, weight);

@@ -24,6 +24,9 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
+/**
+ * Custom entity: Water Prison.
+ */
 public class WaterPrisonEntity extends Monster implements IAnimatable {
 
     private final AnimationFactory factory = new AnimationFactory(this);

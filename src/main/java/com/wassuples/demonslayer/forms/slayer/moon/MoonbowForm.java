@@ -21,6 +21,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 import static com.wassuples.demonslayer.util.WorldHelper.destroyBlocksInRadius;
 
+/**
+ * Moon Breathing form: Moonbow.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class MoonbowForm extends TimedForm {
     private static final int TELEGRAPH_DURATION = 30;
     private static final int DESCENT_DURATION = 20;

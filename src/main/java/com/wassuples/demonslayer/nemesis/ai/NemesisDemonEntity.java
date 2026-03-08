@@ -29,6 +29,27 @@ import org.jetbrains.annotations.Nullable;
 import javax.annotation.Nonnull;
 import java.util.UUID;
 
+/**
+ * The living entity representing a named Nemesis demon in the world.
+ *
+ * <p>Unlike regular {@link com.wassuples.demonslayer.entity.custom.DemonEntity} mobs,
+ * a Nemesis demon is a unique, persistent character managed by the
+ * {@link com.wassuples.demonslayer.nemesis.DemonHierarchyManager}. It has:
+ * <ul>
+ *   <li>A {@link com.wassuples.demonslayer.nemesis.trait.DemonTrait} capability with personality, memories, and quirks</li>
+ *   <li>Dynamically scaled attributes based on rank, growth, and Blood Points</li>
+ *   <li>Behavioral AI that adapts based on {@link Personality} and {@link Behavior}</li>
+ *   <li>Taunt system — delivers context-aware dialogue during combat</li>
+ * </ul>
+ *
+ * @see com.wassuples.demonslayer.nemesis.DemonHierarchyManager
+ * @see com.wassuples.demonslayer.nemesis.trait.DemonTrait
+ * @see Personality
+ */
+
+/**
+ * Nemesis Demon Entity.
+ */
 public class NemesisDemonEntity extends Monster {
     private static final UUID AGGRESSIVE_FOLLOW_RANGE_MODIFIER_ID = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0");
 
@@ -247,4 +268,20 @@ public class NemesisDemonEntity extends Monster {
     // TODO Entity is silent, we need to override getAmbientSound, getHurtSound, getDeathSound, etc. to give it a voice. Each personality should have a different sound set.
     // TODO Implement demon-specific loot tables
     // TODO All entities look the same, we need to implement a way to change their appearance based on their traits, id, name, or other attribute (e.g., texture, model, size).
+
+    @Override
+    public void tick() {
+        super.tick();
+        // Update lastSeenTime on the hierarchy cache every ~10 seconds (C3)
+        if (!this.level.isClientSide && this.isAlive() && this.tickCount % 200 == 0) {
+            if (this.level instanceof ServerLevel serverLevel) {
+                com.wassuples.demonslayer.nemesis.DemonHierarchyManager manager =
+                        com.wassuples.demonslayer.nemesis.DemonHierarchyManager.get(serverLevel);
+                com.wassuples.demonslayer.nemesis.trait.DemonTrait trait = manager.getDemonTrait(this.getUUID());
+                if (trait != null) {
+                    trait.setLastSeenTime(serverLevel.getGameTime());
+                }
+            }
+        }
+    }
 }

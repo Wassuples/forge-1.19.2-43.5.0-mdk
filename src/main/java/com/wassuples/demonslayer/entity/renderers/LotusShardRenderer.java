@@ -12,6 +12,9 @@ import software.bernie.geckolib3.renderers.geo.GeoProjectilesRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Lotus Shard entity.
+ */
 public class LotusShardRenderer extends GeoProjectilesRenderer<LotusShardProjectileEntity> {
     public LotusShardRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new LotusShardModel());

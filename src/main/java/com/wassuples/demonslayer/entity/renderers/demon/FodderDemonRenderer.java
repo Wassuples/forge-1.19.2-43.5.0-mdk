@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Fodder Demon entity.
+ */
 public class FodderDemonRenderer extends HumanoidMobRenderer<FodderDemonEntity, DemonModel<FodderDemonEntity>> {
 
     private static final ResourceLocation FODDER_DEMON_TEXTURE =

@@ -10,6 +10,11 @@ import net.minecraftforge.network.NetworkEvent;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+/**
+ * Network packet: update glow data.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class UpdateGlowDataPacket {
     private final int entityId;
     private final boolean isGlowing;

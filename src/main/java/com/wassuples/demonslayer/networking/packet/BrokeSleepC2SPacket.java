@@ -9,6 +9,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Client-to-server packet: broke sleep.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class BrokeSleepC2SPacket {
     public BrokeSleepC2SPacket() {
     }

@@ -20,6 +20,9 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Client-side component: Compass Info Renderer.
+ */
 @Mod.EventBusSubscriber(value = Dist.CLIENT)
 public class CompassInfoRenderer {
 

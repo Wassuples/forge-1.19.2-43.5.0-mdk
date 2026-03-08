@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Greater Demon entity.
+ */
 public class GreaterDemonRenderer extends HumanoidMobRenderer<GreaterDemonEntity, DemonModel<GreaterDemonEntity>> {
 
     private static final ResourceLocation GREATER_DEMON_TEXTURE =

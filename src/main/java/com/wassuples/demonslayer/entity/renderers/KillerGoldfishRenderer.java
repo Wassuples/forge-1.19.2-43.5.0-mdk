@@ -12,6 +12,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Killer Goldfish entity.
+ */
 public class KillerGoldfishRenderer extends GeoEntityRenderer<KillerGoldfishEntity> {
     public KillerGoldfishRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new KillerGoldfishModel());

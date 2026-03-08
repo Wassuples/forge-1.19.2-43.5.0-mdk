@@ -10,6 +10,11 @@ import java.util.function.Supplier;
 
 import static com.wassuples.demonslayer.util.ModUtils.syncDemon;
 
+/**
+ * Client-to-server packet: equip bda.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class EquipBdaC2SPacket {
     private final BloodDemonArts bda;
 

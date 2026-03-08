@@ -13,6 +13,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Thread Wheel entity.
+ */
 public class ThreadWheelRenderer extends GeoEntityRenderer<ThreadWheelEntity> {
     public ThreadWheelRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new AnimatedGeoModel<>() {

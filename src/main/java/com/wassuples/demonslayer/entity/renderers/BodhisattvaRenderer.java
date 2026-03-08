@@ -13,6 +13,9 @@ import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Bodhisattva entity.
+ */
 public class BodhisattvaRenderer extends GeoEntityRenderer<BodhisattvaEntity> {
 
     public BodhisattvaRenderer(EntityRendererProvider.Context renderManager) {

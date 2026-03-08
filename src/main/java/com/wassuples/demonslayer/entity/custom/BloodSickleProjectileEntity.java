@@ -28,6 +28,9 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import javax.annotation.Nullable;
 import java.util.UUID;
 
+/**
+ * Custom entity: Blood Sickle Projectile.
+ */
 public class BloodSickleProjectileEntity extends Projectile implements IAnimatable {
 
     private final AnimationFactory factory = new AnimationFactory(this);

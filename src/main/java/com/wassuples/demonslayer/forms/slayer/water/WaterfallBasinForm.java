@@ -13,6 +13,12 @@ import net.minecraft.world.entity.LivingEntity;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
+/**
+ * Water Breathing form: Waterfall Basin.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WaterfallBasinForm extends ActiveForm {
     public WaterfallBasinForm(LivingEntity user, IForm form) {
         super(user, form);

@@ -11,6 +11,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealDirectionalDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
 
+/**
+ * Beast Breathing form: Extending Bendy Slash.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ExtendingBendySlashForm extends ChargeableForm {
     private static final int WIND_UP_DURATION = 10;
     private static final double ATTACK_RANGE = 9.0;

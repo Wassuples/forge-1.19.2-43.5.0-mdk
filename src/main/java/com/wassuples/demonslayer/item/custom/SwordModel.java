@@ -1,5 +1,10 @@
 package com.wassuples.demonslayer.item.custom;
 
+/**
+ * Custom item: Sword Model.
+ *
+ * @see com.wassuples.demonslayer.item.ModItems
+ */
 public enum SwordModel {
     DEFAULT("default", 0),
 

@@ -8,6 +8,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Elite Demon entity.
+ */
 public class EliteDemonRenderer extends HumanoidMobRenderer<EliteDemonEntity, DemonModel<EliteDemonEntity>> {
 
     private static final ResourceLocation ELITE_DEMON_TEXTURE =

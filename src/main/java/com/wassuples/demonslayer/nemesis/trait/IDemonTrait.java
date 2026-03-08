@@ -6,11 +6,23 @@ import com.wassuples.demonslayer.styles.BloodDemonArts;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Capability interface defining the identity and behavioral profile of a Nemesis demon.
+ *
+ * <p>Each Nemesis demon entity carries a trait that encodes its unique personality,
+ * combat behavior, Blood Demon Art, quirks, memories, relationships, emotional state,
+ * and growth statistics. This is the primary data source for AI decision-making,
+ * taunt generation, and progression tracking.
+ *
+ * @see DemonTrait
+ * @see DemonTraitProvider
+ */
 public interface IDemonTrait {
     String getSourceBlueprintId();
     void setSourceBlueprintId(String id);
@@ -68,17 +80,53 @@ public interface IDemonTrait {
 
     /**
      * World time (ticks) when this demon was created (approximate birth).
+     * Must be set exactly once at creation to {@code level.getGameTime()}.
      */
     long getBirthTime();
 
     void setBirthTime(long birthTime);
 
     /**
-     * World time (ticks) when the demon last participated in a notable battle.
+     * World time (ticks) when the demon last concluded a notable battle session.
+     * Updated only at battle-session end, never on individual hits.
      */
     long getLastBattleTime();
 
     void setLastBattleTime(long time);
+
+    /**
+     * World time (ticks) when this demon was last "seen" — either alive in a
+     * loaded chunk or processed by the daily simulation.
+     */
+    long getLastSeenTime();
+
+    void setLastSeenTime(long time);
+
+    // ── Time helpers (pure computation, not persisted) ──────────────────
+
+    /**
+     * Returns the demon's age in ticks: {@code currentTime - birthTime}.
+     */
+    default long getAge(long currentTime) {
+        return Math.max(0L, currentTime - getBirthTime());
+    }
+
+    /**
+     * Returns ticks since the last battle ended, or {@link Long#MAX_VALUE}
+     * if the demon has never fought.
+     */
+    default long getTimeSinceLastBattle(long currentTime) {
+        long last = getLastBattleTime();
+        return last <= 0L ? Long.MAX_VALUE : Math.max(0L, currentTime - last);
+    }
+
+    // ── Growth stats ────────────────────────────────────────────────────
+
+    /**
+     * Returns the demon's persistent combat statistics used for growth
+     * calculations.
+     */
+    GrowthStats getGrowthStats();
 
     /**
      * Full memory log (bounded). Do not mutate directly.
@@ -95,4 +143,49 @@ public interface IDemonTrait {
     int getMemoryCount(MemoryType type);
 
     long getLastMemoryTime(MemoryType type);
+
+    // ── Emotions (derived feelings) ─────────────────────────────────────
+
+    /**
+     * Returns the full mutable emotion state for this demon.
+     */
+    EmotionState getEmotionState();
+
+    /**
+     * Convenience: returns the current intensity of a single emotion.
+     */
+    float getEmotionIntensity(EmotionType type);
+
+    /**
+     * Applies passive decay to all emotions based on elapsed time.
+     * Should be called once per simulation day.
+     */
+    void applyEmotionDecay(long currentTime);
+
+    // ── Relationships (G2) ──────────────────────────────────────────────
+
+    /**
+     * Returns the relationship toward the given demon, or null if none exists.
+     */
+    @Nullable DemonRelationship getRelationship(UUID targetId);
+
+    /**
+     * Returns the relationship toward the given demon, creating one if absent.
+     */
+    DemonRelationship getOrCreateRelationship(UUID targetId);
+
+    /**
+     * Returns the full relationships map (unmodifiable view).
+     */
+    Map<UUID, DemonRelationship> getRelationships();
+
+    // ── Intel (G4) ──────────────────────────────────────────────────────
+
+    /**
+     * Base intel-gathering ability derived from Behavior + Personality.
+     * Range [0, 1]. Set once at creation, persisted.
+     */
+    float getBaseIntelGathering();
+
+    void setBaseIntelGathering(float value);
 }

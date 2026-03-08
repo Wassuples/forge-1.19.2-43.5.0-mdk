@@ -67,6 +67,9 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import javax.annotation.Nullable;
 import java.util.*;
 
+/**
+ * Custom entity: Crow.
+ */
 public class CrowEntity extends TamableAnimal implements IAnimatable {
     private static final EntityDataAccessor<Boolean> DATA_PERCHED = SynchedEntityData.defineId(CrowEntity.class, EntityDataSerializers.BOOLEAN);
     private static final EntityDataAccessor<Boolean> DATA_ALERTED = SynchedEntityData.defineId(CrowEntity.class, EntityDataSerializers.BOOLEAN);

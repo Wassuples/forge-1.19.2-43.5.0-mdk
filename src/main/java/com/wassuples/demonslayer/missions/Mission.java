@@ -7,6 +7,20 @@ import net.minecraft.network.FriendlyByteBuf;
 
 import java.util.List;
 
+/**
+ * Immutable representation of a Demon Slayer Corps mission.
+ *
+ * <p>Missions are loaded from JSON datapacks via {@link MissionReloadListener} and stored
+ * in {@link MissionRegistry}. Each mission has objectives to complete, rewards to grant,
+ * and a minimum {@link Rank} requirement.
+ *
+ * <p>Supports network serialization via {@link net.minecraft.network.FriendlyByteBuf} for
+ * client-side display in the Crow Dispatch screen.
+ *
+ * @see MissionRegistry
+ * @see MissionObjective
+ * @see MissionReward
+ */
 public record Mission(
     ResourceLocation id,
     MissionType type,

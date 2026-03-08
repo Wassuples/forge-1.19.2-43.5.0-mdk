@@ -8,6 +8,9 @@ import net.minecraft.world.level.biome.Biome;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.registries.DeferredRegister;
 
+/**
+ * World generation: Mod Biomes.
+ */
 public class ModBiomes {
     public static final DeferredRegister<Biome> BIOMES =
             DeferredRegister.create(Registry.BIOME_REGISTRY, DemonSlayer.MOD_ID);

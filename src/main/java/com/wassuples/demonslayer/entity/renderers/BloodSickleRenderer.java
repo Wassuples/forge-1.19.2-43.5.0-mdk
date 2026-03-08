@@ -12,6 +12,9 @@ import software.bernie.geckolib3.renderers.geo.GeoProjectilesRenderer;
 
 import javax.annotation.Nullable;
 
+/**
+ * Client-side GeckoLib renderer for Blood Sickle entity.
+ */
 public class BloodSickleRenderer extends GeoProjectilesRenderer<BloodSickleProjectileEntity> {
     public BloodSickleRenderer(EntityRendererProvider.Context renderManager) {
         super(renderManager, new BloodSickleModel());

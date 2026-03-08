@@ -14,6 +14,11 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.BlockHitResult;
 
+/**
+ * Custom block: Swordsmith Table Block.
+ *
+ * @see com.wassuples.demonslayer.block.ModBlocks
+ */
 public class SwordsmithTableBlock extends Block {
     public SwordsmithTableBlock(Properties properties) {
         super(properties);

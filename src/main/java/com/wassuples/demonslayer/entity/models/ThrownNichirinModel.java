@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.ThrownNichirinEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Thrown Nichirin entity.
+ */
 public class ThrownNichirinModel extends AnimatedGeoModel<ThrownNichirinEntity> {
     @Override
     public ResourceLocation getModelResource(ThrownNichirinEntity object) {

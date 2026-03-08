@@ -11,6 +11,15 @@ import net.minecraftforge.common.util.LazyOptional;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+/**
+ * Forge capability provider for {@link IGlowCapability}.
+ *
+ * <p>Attached to living entities to enable per-entity colored glow effects.
+ * Retrieve via:
+ * <pre>{@code
+ * entity.getCapability(GlowCapabilityProvider.GLOW_CAPABILITY).ifPresent(glow -> { ... });
+ * }</pre>
+ */
 public class GlowCapabilityProvider implements ICapabilityProvider, INBTSerializable<CompoundTag> {
 
     public static Capability<IGlowCapability> GLOW_CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {});

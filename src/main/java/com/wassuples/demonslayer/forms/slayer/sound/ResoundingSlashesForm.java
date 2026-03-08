@@ -16,6 +16,12 @@ import java.util.List;
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Sound Breathing form: Resounding Slashes.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class ResoundingSlashesForm extends TimedForm {
     // --- Constants ---
     private static final int DURATION = 100; // 5 seconds

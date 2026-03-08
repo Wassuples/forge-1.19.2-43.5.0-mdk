@@ -20,6 +20,9 @@ import net.minecraftforge.client.event.RenderLivingEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
+/**
+ * Event handler: Glow Render Handler.
+ */
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE, value = Dist.CLIENT)
 public class GlowRenderHandler {
     private static final net.minecraft.resources.ResourceLocation HEAT_LIGHTNING_CRACKS_TEX =

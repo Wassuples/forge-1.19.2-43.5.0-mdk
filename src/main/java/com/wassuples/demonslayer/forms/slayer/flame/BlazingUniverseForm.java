@@ -10,6 +10,12 @@ import net.minecraft.world.entity.LivingEntity;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
+/**
+ * Flame Breathing form: Blazing Universe.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class BlazingUniverseForm extends ActiveForm {
     public BlazingUniverseForm(LivingEntity user, IForm form) {
         super(user, form);

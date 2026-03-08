@@ -11,6 +11,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Water Breathing form: Dead Calm Parry.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.ParryForm
+ */
 public  class DeadCalmParry extends ParryForm {
     public DeadCalmParry(LivingEntity user, IForm form) {
         super(user, form, 30);

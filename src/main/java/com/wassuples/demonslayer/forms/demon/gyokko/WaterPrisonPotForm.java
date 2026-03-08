@@ -13,6 +13,12 @@ import net.minecraft.world.entity.LivingEntity;
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 
+/**
+ * Gyokko Blood Demon Art form: Water Prison Pot.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WaterPrisonPotForm extends ActiveForm {
     private static final double MAX_RANGE = 25.0;
 

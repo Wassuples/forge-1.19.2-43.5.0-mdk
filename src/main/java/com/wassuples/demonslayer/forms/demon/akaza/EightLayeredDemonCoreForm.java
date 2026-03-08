@@ -13,6 +13,12 @@ import net.minecraft.world.phys.Vec3;
 
 import java.util.List;
 
+/**
+ * Akaza Blood Demon Art form: Eight Layered Demon Core.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class EightLayeredDemonCoreForm extends TimedForm {
     private static final int NUMBER_OF_PUNCHES = 8;
     private static final int TICKS_BETWEEN_PUNCHES = 5;

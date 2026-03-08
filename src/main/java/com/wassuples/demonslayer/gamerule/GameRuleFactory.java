@@ -11,6 +11,13 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+/**
+ * Reflection-based factory for creating {@link GameRules.Type} instances.
+ *
+ * <p>Forge 1.19.2 does not expose the {@code GameRules.Type} constructor publicly.
+ * This factory uses reflection to access it, enabling registration of custom boolean
+ * and integer game rules via {@link ModGameRules}.
+ */
 public final class GameRuleFactory {
 
     private static Constructor<GameRules.Type> typeConstructor;

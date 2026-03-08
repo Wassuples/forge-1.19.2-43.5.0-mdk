@@ -44,11 +44,44 @@ import org.slf4j.Logger;
 import software.bernie.geckolib3.GeckoLib;
 import terrablender.api.Regions;
 
+/**
+ * Main entry point for the Demon Slayer Minecraft Forge mod.
+ *
+ * <p>This class bootstraps all mod subsystems during Forge's mod loading lifecycle:
+ *
+ * <ul>
+ *   <li><b>Registry</b> — items, blocks, block entities, menus, recipes, entities, effects, biomes</li>
+ *   <li><b>Networking</b> — custom packet channel via {@link ModMessages}</li>
+ *   <li><b>World generation</b> — TerraBlender biome region and spawn placements</li>
+ *   <li><b>Client rendering</b> — entity renderers, GUI overlays, menu screens</li>
+ *   <li><b>Data loading</b> — mission JSON reload listener</li>
+ * </ul>
+ *
+ * <h2>Architecture overview</h2>
+ * <p>Player state is stored in Forge capabilities (see {@code breathing/}, {@code demon/},
+ * {@code ranking/}, {@code cooldown/}, {@code crow/}, {@code glow/}, {@code missions/} packages).
+ * Client–server synchronization uses the packets in {@code networking.packet}. Combat forms are defined
+ * as enum constants implementing {@link com.wassuples.demonslayer.styles.IForm} and executed via
+ * {@link com.wassuples.demonslayer.forms.ActiveFormManager}.
+ *
+ * @see com.wassuples.demonslayer.styles.IForm
+ * @see com.wassuples.demonslayer.forms.ActiveFormManager
+ * @see com.wassuples.demonslayer.events.ModEvents
+ */
+
+/**
+ * bootstraps.
+ */
 @Mod(DemonSlayer.MOD_ID)
 public class DemonSlayer {
+    /** Mod identifier used for resource locations, capability keys, and network channels. */
     public static final String MOD_ID = "demonslayer";
     public static final Logger LOGGER = LogUtils.getLogger();
 
+    /**
+     * Registers all deferred registries on the mod event bus, wires event listeners, and
+     * initializes third-party libraries (GeckoLib for animated models).
+     */
     public DemonSlayer() {
         IEventBus modEventBus = FMLJavaModLoadingContext.get().getModEventBus();
 
@@ -72,6 +105,12 @@ public class DemonSlayer {
         GeckoLib.initialize();
     }
 
+    /**
+     * Common setup phase — runs after all registries are frozen.
+     *
+     * <p>Registers spawn placements for demon entities and crow, sets up flammable blocks,
+     * and initializes the network channel.
+     */
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             // This now compiles correctly because DemonEntity.canSpawn is generic
@@ -88,23 +127,32 @@ public class DemonSlayer {
         ModMessages.register();
     }
 
+    /** Registers the TerraBlender overworld biome region for Wisteria Forest generation. */
     private void registerTerraBlender(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
             Regions.register(new ModOverworldRegion(new ResourceLocation(MOD_ID, "overworld"), 5));
         });
     }
 
+    /** Registers the mission JSON reload listener so missions refresh on {@code /reload}. */
     private void registerReloadListeners(final AddReloadListenerEvent event) {
          event.addListener(new MissionReloadListener());
      }
 
+    /**
+     * Client-only event subscribers registered on the <b>mod</b> event bus.
+     *
+     * <p>Handles entity renderer registration, GUI overlay registration, and menu screen binding.
+     */
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
+        /** Registers HUD overlays (e.g. Sleep QTE) above all other GUI layers. */
         @SubscribeEvent
         public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
             event.registerAboveAll("sleep_qte", SleepQTEOverlay.HUD_SLEEP_QTE);
         }
 
+        /** Binds every custom entity type to its client-side renderer. */
         @SubscribeEvent
         public static void registerEntityRenderers(EntityRenderersEvent.RegisterRenderers event) {
             // MISC.
@@ -162,6 +210,7 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.TAMAYO.get(), TamayoRenderer::new);
         }
 
+        /** Binds menu types to their screen implementations (Sun Forge, Swordsmith Table). */
         @SubscribeEvent
         public static void onClientModSetup(FMLClientSetupEvent event) {
             MenuScreens.register(ModMenuTypes.SUN_FORGE_MENU.get(), SunForgeScreen::new);
@@ -169,6 +218,12 @@ public class DemonSlayer {
         }
     }
 
+    /**
+     * Registers attribute maps for all living entity types.
+     *
+     * <p>This must be called during the {@link EntityAttributeCreationEvent} to avoid
+     * {@code IllegalStateException} when entities spawn without attributes.
+     */
     public void onAttributeCreate(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.MIST_CLONE.get(), MistCloneEntity.createAttributes().build());
         event.put(ModEntityTypes.CUTTING_THREAD_CAGE.get(), CuttingThreadCageEntity.createAttributes().build());

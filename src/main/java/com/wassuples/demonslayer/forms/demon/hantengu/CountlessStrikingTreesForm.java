@@ -19,6 +19,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
 import static com.wassuples.demonslayer.util.MovementHelper.removeImmobility;
 
+/**
+ * Hantengu Blood Demon Art form: Countless Striking Trees.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CountlessStrikingTreesForm extends TimedForm {
     private static final int STRIKE_TICK_RATE = 8;
     private static final double AOE_RADIUS = 35.0;

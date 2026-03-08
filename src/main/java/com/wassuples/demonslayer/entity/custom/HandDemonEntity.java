@@ -35,6 +35,9 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 import java.util.EnumSet;
 import java.util.List;
 
+/**
+ * Custom entity: Hand Demon.
+ */
 public class HandDemonEntity extends Monster implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
 

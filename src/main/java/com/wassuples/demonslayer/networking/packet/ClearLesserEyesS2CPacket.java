@@ -7,6 +7,11 @@ import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.network.NetworkEvent;
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: clear lesser eyes.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class ClearLesserEyesS2CPacket {
 
     // This packet needs no data.

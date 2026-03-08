@@ -5,6 +5,9 @@ import com.wassuples.demonslayer.entity.custom.BloodSickleProjectileEntity;
 import net.minecraft.resources.ResourceLocation;
 import software.bernie.geckolib3.model.AnimatedGeoModel;
 
+/**
+ * GeckoLib animated model for the Blood Sickle entity.
+ */
 public class BloodSickleModel extends AnimatedGeoModel<BloodSickleProjectileEntity> {
     @Override
     public ResourceLocation getModelResource(BloodSickleProjectileEntity object) {

@@ -6,6 +6,11 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Map;
 
+/**
+ * Mission system: Mission Objective.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public interface MissionObjective {
     Component getDescription();
     boolean isComplete(ServerPlayer player, Map<String, Integer> progress);

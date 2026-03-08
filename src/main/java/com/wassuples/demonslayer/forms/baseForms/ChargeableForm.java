@@ -10,6 +10,28 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
 
+/**
+ * A form that requires the player to hold a key to charge, then releases an effect.
+ *
+ * <p>The lifecycle is:
+ * <ol>
+ *   <li>{@link #onChargeStart()} — called once when charging begins (user is slowed)</li>
+ *   <li>{@link #onChargingTick()} — called each tick while charging</li>
+ *   <li>{@link #release(boolean)} — triggered by key release; calls {@link #onChargeRelease(boolean)}</li>
+ *   <li>{@link #onReleaseTick()} — called each tick after release (for projectile travel, etc.)</li>
+ *   <li>{@link #onChargeEnd()} — cleanup when form stops</li>
+ * </ol>
+ *
+ * <p>If the user is hit during the charge phase and the form is interruptible, the charge is cancelled.
+ *
+ * @see ActiveForm
+ * @see ActiveFormManager#startCharge
+ * @see ActiveFormManager#releaseCharge
+ */
+
+/**
+ * Chargeable Form.
+ */
 public abstract class ChargeableForm extends ActiveForm {
     public int chargeGoal;
     public int chargeTicks = 0;

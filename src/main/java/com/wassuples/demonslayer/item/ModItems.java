@@ -14,6 +14,14 @@ import net.minecraftforge.registries.DeferredRegister;
 import net.minecraftforge.registries.ForgeRegistries;
 import net.minecraftforge.registries.RegistryObject;
 
+/**
+ * Deferred registry for all mod items.
+ *
+ * <p>Includes Nichirin swords, crafting materials, consumables (Muzan's Blood, wisteria items),
+ * and spawn eggs for all custom entities.
+ *
+ * @see ModCreativeModeTab
+ */
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS =
             DeferredRegister.create(ForgeRegistries.ITEMS, DemonSlayer.MOD_ID);

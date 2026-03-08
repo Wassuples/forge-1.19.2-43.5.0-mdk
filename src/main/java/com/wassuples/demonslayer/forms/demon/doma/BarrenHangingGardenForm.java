@@ -17,6 +17,12 @@ import java.util.List;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
+/**
+ * Doma Blood Demon Art form: Barren Hanging Garden.
+ *
+ * @see com.wassuples.demonslayer.styles.DemonForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class BarrenHangingGardenForm extends TimedForm {
     private static final int NUMBER_OF_WAVES = 8;
     private static final int TICKS_BETWEEN_WAVES = 2;

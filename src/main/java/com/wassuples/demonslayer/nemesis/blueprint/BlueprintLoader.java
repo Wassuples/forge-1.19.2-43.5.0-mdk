@@ -13,6 +13,15 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
+/**
+ * Loads {@link DemonBlueprint} JSON files from the {@code config/demonslayer/} directory.
+ *
+ * <p>Blueprints define canonical Kizuki demons. The loader reads all {@code .json} files,
+ * deserializes them via Gson, and indexes them by blueprint ID for use by
+ * {@link com.wassuples.demonslayer.nemesis.DemonHierarchyManager}.
+ *
+ * @see DemonBlueprint
+ */
 public class BlueprintLoader {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Gson GSON = new GsonBuilder().create();

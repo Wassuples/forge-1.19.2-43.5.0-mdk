@@ -9,6 +9,9 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
+/**
+ * Client-side GeckoLib renderer for Upper Moon Two entity.
+ */
 public class UpperMoonTwoRenderer extends HumanoidMobRenderer<UpperMoonTwoEntity, DemonModel<UpperMoonTwoEntity>> {
     private static final ResourceLocation TEXTURE =
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/upper_moon_two.png");

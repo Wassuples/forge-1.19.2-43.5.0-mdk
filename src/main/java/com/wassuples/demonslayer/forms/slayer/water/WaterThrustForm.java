@@ -12,6 +12,12 @@ import static com.wassuples.demonslayer.util.CombatHelper.dealThrustDamage;
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Water Breathing form: Water Thrust.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class WaterThrustForm extends ChargeableForm {
     public WaterThrustForm(LivingEntity user, IForm form) {
         super(user, form);

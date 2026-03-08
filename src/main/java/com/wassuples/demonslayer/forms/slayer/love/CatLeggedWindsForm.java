@@ -19,6 +19,12 @@ import java.util.UUID;
 
 import static com.wassuples.demonslayer.util.CombatHelper.performGenericAttack;
 
+/**
+ * Love Breathing form: Cat Legged Winds.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class CatLeggedWindsForm extends TimedForm {
     private enum Phase {OUTWARD, INWARD}
 

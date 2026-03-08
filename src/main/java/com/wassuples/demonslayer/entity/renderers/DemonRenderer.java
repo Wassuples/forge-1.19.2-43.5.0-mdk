@@ -8,6 +8,10 @@ import net.minecraft.client.renderer.entity.HumanoidMobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 // This is the base renderer for all generic demons.
+
+/**
+ * Client-side GeckoLib renderer for Demon entity.
+ */
 public class DemonRenderer extends HumanoidMobRenderer<DemonEntity, DemonModel<DemonEntity>> {
     public DemonRenderer(EntityRendererProvider.Context pContext) {
         super(pContext, new DemonModel<>(pContext.bakeLayer(ModelLayers.PLAYER)), 0.5f);

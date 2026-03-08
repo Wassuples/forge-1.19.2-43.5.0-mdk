@@ -25,6 +25,12 @@ import java.util.Set;
 
 import static com.wassuples.demonslayer.util.VFXHelper.spawnLineParticles;
 
+/**
+ * Thunder Breathing form: Rumble And Flash.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class RumbleAndFlashForm extends TimedForm {
     private static final int DURATION = 20; // Short duration for post-cast cooldown/animation
     private static final int BOLT_COUNT = 7;

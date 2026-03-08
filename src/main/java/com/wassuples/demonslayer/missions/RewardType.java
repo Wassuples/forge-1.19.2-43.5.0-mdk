@@ -9,6 +9,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Mission system: Reward Type.
+ *
+ * @see com.wassuples.demonslayer.missions.MissionRegistry
+ */
 public class RewardType<T extends MissionReward> {
     public static final Map<ResourceLocation, RewardType<?>> REGISTRY = new HashMap<>();
 

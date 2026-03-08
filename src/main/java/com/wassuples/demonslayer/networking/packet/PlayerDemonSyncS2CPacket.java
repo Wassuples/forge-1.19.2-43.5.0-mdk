@@ -10,6 +10,11 @@ import net.minecraftforge.network.NetworkEvent;
 
 import java.util.function.Supplier;
 
+/**
+ * Server-to-client packet: player demon sync.
+ *
+ * @see com.wassuples.demonslayer.networking.ModMessages
+ */
 public class PlayerDemonSyncS2CPacket {
     private final CompoundTag nbtData;
 

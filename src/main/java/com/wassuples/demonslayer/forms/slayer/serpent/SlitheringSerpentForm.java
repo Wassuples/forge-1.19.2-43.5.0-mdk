@@ -10,6 +10,12 @@ import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.dealAOEDamage;
 
+/**
+ * Serpent Breathing form: Slithering Serpent.
+ *
+ * @see com.wassuples.demonslayer.styles.BreathingForms
+ * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
+ */
 public class SlitheringSerpentForm extends TimedForm {
     private static final int DURATION = 30; // 1.5 second dash
     private static final double DASH_DISTANCE = 16.0;

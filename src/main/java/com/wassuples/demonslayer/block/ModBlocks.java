@@ -15,6 +15,13 @@ import net.minecraftforge.registries.RegistryObject;
 
 import java.util.function.Supplier;
 
+/**
+ * Deferred registry for all custom blocks in the mod.
+ *
+ * <p>Includes Wisteria wood set (log, planks, leaves, sapling), ores (tamahagane, scarlet ore),
+ * crafting stations ({@link SwordsmithTableBlock}, {@link SunForgeBlock}), and the
+ * {@link RankingBoardBlock}.
+ */
 public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS =
             DeferredRegister.create(ForgeRegistries.BLOCKS, DemonSlayer.MOD_ID);
