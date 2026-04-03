@@ -13,6 +13,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
@@ -392,7 +393,7 @@ public class NemesisSystemEvents {
         if (trait.hasQuirk(Quirk.SHOCKWAVE_STOMP) && target instanceof LivingEntity && demon.getRandom().nextFloat() < 0.18f) {
             final float splash = amount * 0.35f;
             level.getEntitiesOfClass(LivingEntity.class, demon.getBoundingBox().inflate(2.5D), e -> e != demon && e.isAlive())
-                    .forEach(entity -> entity.hurt(demon.damageSources().mobAttack(demon), splash));
+                    .forEach(entity -> entity.hurt(DamageSource.mobAttack(demon), splash));
         }
         if (trait.hasQuirk(Quirk.PACK_CALLER) && demon.getRandom().nextFloat() < 0.12f) {
             manager.tryMobilizeAlliesForFight(demon.getUUID(), target.getUUID(), target instanceof Player, level, demon.blockPosition(), 3);
