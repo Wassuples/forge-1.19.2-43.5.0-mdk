@@ -47,6 +47,7 @@ public class CuttingThreadCageForm extends TimedForm {
             CuttingThreadCageEntity cage = ModEntityTypes.CUTTING_THREAD_CAGE.get().create(level);
             if (cage != null) {
                 cage.setPos(targetPos);
+                cage.setOwner(user);
                 level.addFreshEntity(cage);
             }
         } else {

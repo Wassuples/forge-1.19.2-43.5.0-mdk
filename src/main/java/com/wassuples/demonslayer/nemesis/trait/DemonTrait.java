@@ -25,6 +25,7 @@ import java.util.*;
  */
 public class DemonTrait implements IDemonTrait {
     private String sourceBlueprintId = "procedural";
+    private String skinLocation = "";
 
     private String name = "Nameless";
     private String title = "the Weak";
@@ -106,6 +107,11 @@ public class DemonTrait implements IDemonTrait {
 
     @Override public String getSourceBlueprintId() { return this.sourceBlueprintId; }
     @Override public void setSourceBlueprintId(String id) { this.sourceBlueprintId = id; }
+
+    @Override public String getSkinLocation() { return this.skinLocation; }
+    @Override public void setSkinLocation(String skinLocation) {
+        this.skinLocation = skinLocation == null ? "" : skinLocation;
+    }
 
     @Override public ResourceLocation getTerritory() { return this.territory; }
     @Override public void setTerritory(ResourceLocation territory) { this.territory = territory; }
@@ -319,6 +325,7 @@ public class DemonTrait implements IDemonTrait {
         nbt.putString("assignedBDA", this.assignedBDA.name());
         nbt.putString("territory", this.territory.toString());
         nbt.putString("sourceBlueprintId", this.sourceBlueprintId);
+        nbt.putString("skinLocation", this.skinLocation);
         nbt.putLong("birthTime", this.birthTime);
         nbt.putLong("lastBattleTime", this.lastBattleTime);
         nbt.putLong("lastSeenTime", this.lastSeenTime);
@@ -397,6 +404,7 @@ public class DemonTrait implements IDemonTrait {
     }
     @Override public void deserializeNBT(CompoundTag nbt) {
         this.sourceBlueprintId = nbt.getString("sourceBlueprintId");
+        this.skinLocation = nbt.getString("skinLocation");
         this.name = nbt.getString("name");
         this.title = nbt.getString("title");
         this.vigor = nbt.getInt("vigor");
@@ -551,6 +559,7 @@ public class DemonTrait implements IDemonTrait {
     @Override public void copyFrom(IDemonTrait source) {
         if (source instanceof DemonTrait sourceTrait) {
             this.setSourceBlueprintId(sourceTrait.getSourceBlueprintId());
+            this.setSkinLocation(sourceTrait.getSkinLocation());
             this.setName(sourceTrait.getName());
             this.setTitle(sourceTrait.getTitle());
             this.setVigor(sourceTrait.getVigor());

@@ -28,9 +28,6 @@ import javax.annotation.Nullable;
 import java.util.EnumSet;
 import java.util.UUID;
 
-/**
- * Custom entity: Killer Goldfish.
- */
 public class KillerGoldfishEntity extends Monster implements IAnimatable {
 
     private final AnimationFactory factory = new AnimationFactory(this);
@@ -39,7 +36,6 @@ public class KillerGoldfishEntity extends Monster implements IAnimatable {
 
     public KillerGoldfishEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
-        this.setNoGravity(true);
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -52,8 +48,12 @@ public class KillerGoldfishEntity extends Monster implements IAnimatable {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(1, new SpitNeedlesGoal(this));
-        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true, (e) -> !SummonAllies.areAllies(this, e)));
-        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Monster.class, true, (e) -> !SummonAllies.areAllies(this, e) && !(e instanceof KillerGoldfishEntity)));
+
+        this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true,
+             (e) -> SummonAllies.canSummonTarget(this, e)));
+
+        this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Monster.class, true,
+             (e) -> SummonAllies.canSummonTarget(this, e) && !(e instanceof KillerGoldfishEntity)));
     }
 
     @Override
@@ -66,6 +66,11 @@ public class KillerGoldfishEntity extends Monster implements IAnimatable {
 
     public void setOwner(@Nullable LivingEntity owner) {
         this.ownerUUID = owner != null ? owner.getUUID() : null;
+    }
+
+    @Nullable
+    public UUID getOwnerUUID() {
+        return this.ownerUUID;
     }
 
     public boolean isOwner(Entity entity) {

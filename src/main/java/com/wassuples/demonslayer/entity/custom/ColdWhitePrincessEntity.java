@@ -75,7 +75,7 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
                 this,
                 LivingEntity.class,
                 true,
-                (entity) -> !SummonAllies.areAllies(this, entity) && !(entity instanceof ColdWhitePrincessEntity)
+                (entity) -> SummonAllies.canSummonTarget(this, entity) && !(entity instanceof ColdWhitePrincessEntity)
         ));
     }
 
@@ -166,20 +166,20 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
             if (this.attackTime % 4 == 0) {
                 this.princess.level.playSound(null, this.princess.getX(), this.princess.getEyeY(), this.princess.getZ(), SoundEvents.PLAYER_BREATH, SoundSource.HOSTILE, 1.5f, 0.5f);
             }
-            
+
             Vec3 breathOrigin = this.princess.getEyePosition().subtract(0, 0.2, 0);
             Vec3 direction = this.target.getEyePosition().subtract(breathOrigin).normalize();
             double breathLength = 15.0; // Long reach
             double coneAngle = 0.4; // How wide the cone gets
-            
+
             // Set to keep track of who we hit this tick to prevent multi-damage
             final Set<LivingEntity> hitThisTick = new HashSet<>();
-            
+
             // Create the cone effect
             for (double d = 1.0; d < breathLength; d += 0.5) {
                 double currentRadius = d * coneAngle;
                 Vec3 centerPoint = breathOrigin.add(direction.scale(d));
-                
+
                 // Spawn a ring of particles to form the cone
                 for (int i = 0; i < 8; i++) {
                     Vec3 randomOffset = new Vec3(this.princess.level.random.nextDouble() - 0.5, this.princess.level.random.nextDouble() - 0.5, this.princess.level.random.nextDouble() - 0.5)
@@ -187,16 +187,16 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
                     Vec3 particlePos = centerPoint.add(randomOffset);
                     this.princess.level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, -0.05, 0);
                 }
-                
+
                 // Damage entities within the cone
                 AABB damageZone = new AABB(centerPoint, centerPoint).inflate(currentRadius);
                 List<LivingEntity> entitiesInCone = this.princess.level.getEntitiesOfClass(
                         LivingEntity.class,
                         damageZone,
-                        (entity) -> !SummonAllies.areAllies(this.princess, entity) && entity != this.princess && entity.isAlive()
+                        (entity) -> entity != this.princess && entity.isAlive()
                 );
                 hitThisTick.addAll(entitiesInCone);
-                
+
                 // Freeze blocks within the cone
                 BlockPos centerBlockPos = new BlockPos(centerPoint);
                 for (BlockPos pos : BlockPos.betweenClosed(centerBlockPos.offset((int)-currentRadius, (int)-currentRadius, (int)-currentRadius), centerBlockPos.offset((int)currentRadius, (int)currentRadius, (int)currentRadius))) {
@@ -211,7 +211,7 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
                     }
                 }
             }
-            
+
             // Apply damage and effects to all entities hit in the cone this tick
             for (LivingEntity hitEntity : hitThisTick) {
                 hitEntity.hurt(DamageSource.mobAttack(this.princess), 2.0f);

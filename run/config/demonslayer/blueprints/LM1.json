@@ -1,32 +1,34 @@
-{
-  "id": "LM1",
-  "name": "Enmu",
-  "title": "the First Lower Moon",
-  "behavior": "STRATEGIST",
-  "personality": "MANIPULATIVE",
-  "bda": "SLEEP",
-  "quirks": [
-    "WIND_UP",
-    "PURIFIED_WEAKNESS",
-    "TENACIOUS"
-  ],
-  "stats": {
-    "vigor": 60,
-    "strength": 40,
-    "agility": 50
-  },
-  "taunts": {
-    "generic": [
-      "Oh, good evening, {player}. Ready for your dream?",
-      "You're back. Did you enjoy the dream I prepared for you last time?",
-      "The despair on your face when you died... it was exquisite. I must see it again."
-    ],
-    "tactical_kill": [
-      "You fell asleep so peacefully. It's a shame you had to wake up to such a terrible reality.",
-      "It's so easy to crush people's spirits when you can control their happiest moments."
-    ],
-    "low_health_comeback": [
-      "Waking me up from my work was a bad idea. People are always so much more miserable when they face reality."
-    ]
-  }
+﻿{
+    "id":  "LM1",
+    "name":  "Enmu",
+    "title":  "the First Lower Moon",
+    "behavior":  "STRATEGIST",
+    "personality":  "MANIPULATIVE",
+    "bda":  "SLEEP",
+    "quirks":  [
+                   "WIND_UP",
+                   "PURIFIED_WEAKNESS",
+                   "TENACIOUS"
+               ],
+    "stats":  {
+                  "vigor":  60,
+                  "strength":  40,
+                  "agility":  50
+              },
+    "taunts":  {
+                   "generic":  [
+                                   "Oh, good evening, {player}. Ready for your dream?",
+                                   "You're back. Did you enjoy the dream I prepared for you last time?",
+                                   "The despair on your face when you died... it was exquisite. I must see it again."
+                               ],
+                   "tactical_kill":  [
+                                         "You fell asleep so peacefully. It's a shame you had to wake up to such a terrible reality.",
+                                         "It's so easy to crush people's spirits when you can control their happiest moments."
+                                     ],
+                   "low_health_comeback":  [
+                                               "Waking me up from my work was a bad idea. People are always so much more miserable when they face reality."
+                                           ]
+               },
+    "skin_location":  "demonslayer:textures/entity/lower_moon_one.png"
 }
+

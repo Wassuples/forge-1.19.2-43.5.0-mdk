@@ -13,6 +13,8 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static com.wassuples.demonslayer.entity.ally.SummonAllies.isFriendlyForTargeting;
+
 /**
  * AI goal: Doma Clone Attack Goal.
  */
@@ -31,13 +33,13 @@ public class DomaCloneAttackGoal extends Goal {
     @Override
     public boolean canUse() {
         LivingEntity target = this.clone.getTarget();
-        return target != null && target.isAlive() && !this.clone.isAlly(target);
+        return target != null && target.isAlive() && !isFriendlyForTargeting(this.clone, target);
     }
 
     @Override
     public boolean canContinueToUse() {
         LivingEntity target = this.clone.getTarget();
-        return target != null && target.isAlive() && !this.clone.isAlly(target);
+        return target != null && target.isAlive() && !isFriendlyForTargeting(this.clone, target);
     }
 
     @Override public void start() {
@@ -48,7 +50,7 @@ public class DomaCloneAttackGoal extends Goal {
     @Override
     public void tick() {
         LivingEntity target = this.clone.getTarget();
-        if (target == null || !target.isAlive() || this.clone.isAlly(target)) return;
+        if (target == null || !target.isAlive() || isFriendlyForTargeting(this.clone, target)) return;
 
         this.clone.getLookControl().setLookAt(target, 30.0F, 30.0F);
         this.timeSinceLastAttack++;

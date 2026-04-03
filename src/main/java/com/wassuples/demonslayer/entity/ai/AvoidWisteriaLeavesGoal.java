@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.ai;
 
 import com.wassuples.demonslayer.util.WisteriaHelper;
+import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.goal.Goal;
 
@@ -16,6 +17,7 @@ public class AvoidWisteriaLeavesGoal extends Goal {
     private final PathfinderMob mob;
     private final int scanRadius;
     private final double fleeSpeed;
+    private BlockPos nearestLeafPos;
 
     public AvoidWisteriaLeavesGoal(PathfinderMob mob, int scanRadius, double fleeSpeed) {
         this.mob = mob;
@@ -29,23 +31,38 @@ public class AvoidWisteriaLeavesGoal extends Goal {
         if (!mob.isAlive() || mob.level.isClientSide()) return false;
         // Throttle scanning a bit.
         if (mob.tickCount % 10 != 0) return false;
-        return WisteriaHelper.isWisteriaLeavesNearby(mob.level, mob.blockPosition(), scanRadius);
+        nearestLeafPos = WisteriaHelper.findNearestWisteriaLeaves(mob.level, mob.blockPosition(), scanRadius);
+        return nearestLeafPos != null;
     }
 
     @Override
     public boolean canContinueToUse() {
         if (!mob.isAlive() || mob.level.isClientSide()) return false;
-        return WisteriaHelper.isWisteriaLeavesNearby(mob.level, mob.blockPosition(), scanRadius);
+        if (mob.tickCount % 10 == 0) {
+            nearestLeafPos = WisteriaHelper.findNearestWisteriaLeaves(mob.level, mob.blockPosition(), scanRadius);
+        }
+        return nearestLeafPos != null;
     }
 
     @Override
     public void start() {
-        // Push away from the center of the wisteria "cloud" by moving opposite current motion.
-        // If stationary, just pick a direction away from current look.
-        var look = mob.getLookAngle();
-        double dx = -look.x;
-        double dz = -look.z;
+        fleeFromNearestLeaf();
+    }
+
+    private void fleeFromNearestLeaf() {
+        BlockPos leaf = nearestLeafPos != null
+                ? nearestLeafPos
+                : WisteriaHelper.findNearestWisteriaLeaves(mob.level, mob.blockPosition(), scanRadius);
+        if (leaf == null) {
+            return;
+        }
+
+        // Flee directly away from the closest leaf block.
+        double dx = mob.getX() - (leaf.getX() + 0.5D);
+        double dz = mob.getZ() - (leaf.getZ() + 0.5D);
         double len = Math.sqrt(dx * dx + dz * dz);
+
+        // If we're basically centered, choose a random escape heading.
         if (len < 1.0e-4) {
             dx = mob.getRandom().nextDouble() - 0.5;
             dz = mob.getRandom().nextDouble() - 0.5;
@@ -62,8 +79,12 @@ public class AvoidWisteriaLeavesGoal extends Goal {
 
     @Override
     public void tick() {
+        if (mob.tickCount % 10 == 0) {
+            nearestLeafPos = WisteriaHelper.findNearestWisteriaLeaves(mob.level, mob.blockPosition(), scanRadius);
+        }
+
         if (mob.getNavigation().isDone()) {
-            start();
+            fleeFromNearestLeaf();
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
+import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -21,12 +22,17 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+import javax.annotation.Nullable;
+import java.util.UUID;
+
 /**
  * Custom entity: Cutting Thread Cage.
  */
 public class CuttingThreadCageEntity extends Monster implements IAnimatable {
     private static final EntityDataAccessor<Float> DATA_SCALE_ID = SynchedEntityData.defineId(CuttingThreadCageEntity.class, EntityDataSerializers.FLOAT);
     private int lifeTicks = 100; // Lasts for 5 seconds
+    @Nullable
+    private UUID ownerUUID;
 
     public CuttingThreadCageEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -47,7 +53,10 @@ public class CuttingThreadCageEntity extends Monster implements IAnimatable {
         if (!this.level.isClientSide) {
             if (this.tickCount % 10 == 0) {
                 double currentRadius = (this.getBbWidth() / 2.0f);
-                this.level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox(), (entity) -> !(entity instanceof DemonEntity))
+                this.level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox(),
+                                entity -> !(entity instanceof DemonEntity)
+                                        && !entity.getUUID().equals(this.ownerUUID)
+                                        && !SummonAllies.areAllies(this, entity))
                         .forEach(entity -> {
                             if (this.position().distanceToSqr(entity.position()) > (currentRadius - entity.getBbWidth()) * (currentRadius - entity.getBbWidth())) {
                                 entity.hurt(DamageSource.MAGIC, 10.0F);
@@ -81,6 +90,15 @@ public class CuttingThreadCageEntity extends Monster implements IAnimatable {
     public float getScale() { return this.entityData.get(DATA_SCALE_ID); }
     public void setScale(float scale) { this.entityData.set(DATA_SCALE_ID, scale); }
 
+    public void setOwner(@Nullable LivingEntity owner) {
+        this.ownerUUID = owner != null ? owner.getUUID() : null;
+    }
+
+    @Nullable
+    public UUID getOwnerUUID() {
+        return this.ownerUUID;
+    }
+
     @Override
     protected void defineSynchedData() {
         super.defineSynchedData();
@@ -90,8 +108,21 @@ public class CuttingThreadCageEntity extends Monster implements IAnimatable {
     // --- Boilerplate ---
     @Override public boolean isInvulnerableTo(DamageSource pSource) { return pSource == DamageSource.OUT_OF_WORLD || super.isInvulnerableTo(pSource); }
     @Override protected void registerGoals() {}
-    @Override public void readAdditionalSaveData(CompoundTag pCompound) { super.readAdditionalSaveData(pCompound); }
-    @Override public void addAdditionalSaveData(CompoundTag pCompound) { super.addAdditionalSaveData(pCompound); }
+    @Override
+    public void readAdditionalSaveData(CompoundTag pCompound) {
+        super.readAdditionalSaveData(pCompound);
+        if (pCompound.hasUUID("OwnerUUID")) {
+            this.ownerUUID = pCompound.getUUID("OwnerUUID");
+        }
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag pCompound) {
+        super.addAdditionalSaveData(pCompound);
+        if (this.ownerUUID != null) {
+            pCompound.putUUID("OwnerUUID", this.ownerUUID);
+        }
+    }
 
     // --- Geckolib Animation ---
     private final AnimationFactory factory = new AnimationFactory(this);

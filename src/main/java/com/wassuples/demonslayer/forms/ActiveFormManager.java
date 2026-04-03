@@ -295,7 +295,7 @@ public  class ActiveFormManager {
                 .put(THUNDER_2, RiceSpiritForm::new)
                 .put(THUNDER_3, ThunderSwarmForm::new)
                 .put(THUNDER_4, DistantThunderForm::new)
-                .put(THUNDER_5, com.wassuples.demonslayer.forms.slayer.thunder.HeatLightningForm::new)
+                .put(THUNDER_5, HeatLightningForm::new)
                 .put(THUNDER_6, RumbleAndFlashForm::new)
                 .put(THUNDER_7, HonoikazuchiNoKamiForm::new)
                 // MIST

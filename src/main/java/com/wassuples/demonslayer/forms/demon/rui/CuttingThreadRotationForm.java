@@ -28,6 +28,7 @@ public class CuttingThreadRotationForm extends TimedForm {
         if (wheel != null) {
             Vec3 spawnPos = user.position().add(user.getLookAngle().scale(1.5));
             wheel.moveTo(spawnPos.x, spawnPos.y + 0.5, spawnPos.z, user.getYRot(), user.getXRot());
+            wheel.setOwner(user);
 
             final double SPEED = 0.4;
             wheel.setDirection(user.getLookAngle(), SPEED);

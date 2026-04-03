@@ -1,12 +1,21 @@
-{
-  "taunts": {
-    "generic": [ "Is that all you've got, {player}? I was just getting warmed up!",
-      "Round two! Let's see if you can do better than last time." ],
-    "low_health_comeback": [ "Whoa, that was a lucky shot! You won't get another one, promise.",
-      "Heh, you actually made me try! Flattering." ],
-    "overkill": [ "Last time was what, one hit? Two? I lost count.",
-      "You're the practice dummy, right? Back for more?" ],
-    "tactical_kill": [ "Haha, you fell for that? Seriously?",
-      "I saw that coming a mile away. Try to be less predictable, {player}." ]
-  }
+﻿{
+    "taunts":  {
+                   "generic":  [
+                                   "Is that all you\u0027ve got, {player}? I was just getting warmed up!",
+                                   "Round two! Let\u0027s see if you can do better than last time."
+                               ],
+                   "low_health_comeback":  [
+                                               "Whoa, that was a lucky shot! You won\u0027t get another one, promise.",
+                                               "Heh, you actually made me try! Flattering."
+                                           ],
+                   "overkill":  [
+                                    "Last time was what, one hit? Two? I lost count.",
+                                    "You\u0027re the practice dummy, right? Back for more?"
+                                ],
+                   "tactical_kill":  [
+                                         "Haha, you fell for that? Seriously?",
+                                         "I saw that coming a mile away. Try to be less predictable, {player}."
+                                     ]
+               }
 }
+

@@ -6,6 +6,7 @@ import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -13,9 +14,12 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
+
+import java.util.UUID;
 
 /**
  * Doma Blood Demon Art form: Rime Bodhisattva.
@@ -36,6 +40,19 @@ public class RimeBodhisattvaForm extends ActiveForm {
     @Override
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 2.0f, 1.0f);
+
+        // Global singleton rule: this summoner can only ever have one Bodhisattva at a time.
+        if (!level.isClientSide) {
+            UUID owner = user.getUUID();
+            for (ServerLevel serverLevel : level.getServer().getAllLevels()) {
+                AABB worldBounds = new AABB(
+                        -30_000_000.0D, serverLevel.getMinBuildHeight(), -30_000_000.0D,
+                         30_000_000.0D, serverLevel.getMaxBuildHeight(),  30_000_000.0D
+                );
+                serverLevel.getEntitiesOfClass(BodhisattvaEntity.class, worldBounds, entity -> entity.isPilot(owner))
+                        .forEach(BodhisattvaEntity::discard);
+            }
+        }
 
         BodhisattvaEntity bodhisattva = ModEntityTypes.BODHISATTVA.get().create(level);
         if (bodhisattva != null) {

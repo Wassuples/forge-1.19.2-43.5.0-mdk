@@ -197,7 +197,7 @@ public class MistCloneEntity extends Monster {
                                 && entity != this
                                 && !(entity instanceof Player)
                                 && !entity.getTags().contains("mist_clone")
-                                && !SummonAllies.areAllies(this.getOwner(), entity)
+                                && !SummonAllies.isFriendlyForTargeting(this.getOwner(), entity)
                 );
 
                 if (!nearbyMobs.isEmpty()) {

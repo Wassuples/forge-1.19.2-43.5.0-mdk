@@ -22,8 +22,8 @@ public class ParalyzingPoisonEffect extends MobEffect {
 
     @Override
     public void applyEffectTick(LivingEntity pLivingEntity, int pAmplifier) {
-        pLivingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 4));
-        pLivingEntity.addEffect(new MobEffectInstance(MobEffects.JUMP, -25, 4));
+        pLivingEntity.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 25, 4 + pAmplifier, false, false));
+        pLivingEntity.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 25, 1 + pAmplifier, false, false));
     }
 
     @Override

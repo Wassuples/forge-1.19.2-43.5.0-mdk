@@ -86,6 +86,20 @@ public class PlayerDemon {
         this.currentDemonForm = availableForms.get(nextIndex);
     }
 
+    public void previousDemonForm() {
+        if (this.equippedBda == BloodDemonArts.NONE) return;
+
+        List<DemonForms> availableForms = Arrays.stream(DemonForms.values())
+                .filter(form -> form.getStyle() == this.equippedBda)
+                .collect(Collectors.toList());
+
+        if (availableForms.isEmpty()) return;
+
+        int currentIndex = availableForms.indexOf(this.currentDemonForm);
+        int previousIndex = (currentIndex - 1 + availableForms.size()) % availableForms.size();
+        this.currentDemonForm = availableForms.get(previousIndex);
+    }
+
     public boolean isDemon() {
         return isDemon;
     }
@@ -111,12 +125,32 @@ public class PlayerDemon {
     }
     public void setEquippedBda(BloodDemonArts bda) {
         this.equippedBda = bda;
+        this.ensureCurrentDemonFormMatchesEquippedBda();
     }
     public DemonForms getCurrentDemonForm() {
         return this.currentDemonForm;
     }
     public void setCurrentDemonForm(DemonForms form) {
-        this.currentDemonForm = form;
+        if (form.getStyle() == this.equippedBda) {
+            this.currentDemonForm = form;
+            return;
+        }
+        this.ensureCurrentDemonFormMatchesEquippedBda();
+    }
+
+    private void ensureCurrentDemonFormMatchesEquippedBda() {
+        if (this.equippedBda == BloodDemonArts.NONE) {
+            return;
+        }
+
+        if (this.currentDemonForm != null && this.currentDemonForm.getStyle() == this.equippedBda) {
+            return;
+        }
+
+        Arrays.stream(DemonForms.values())
+                .filter(form -> form.getStyle() == this.equippedBda)
+                .findFirst()
+                .ifPresent(form -> this.currentDemonForm = form);
     }
 
     public boolean isBdaModeActive() {
@@ -226,6 +260,7 @@ public class PlayerDemon {
         this.unlockedBdas.addAll(source.unlockedBdas);
         this.activePassives.clear();
         this.activePassives.addAll(source.activePassives);
+        this.ensureCurrentDemonFormMatchesEquippedBda();
     }
 
     public void saveNBTData(CompoundTag nbt) {
@@ -319,5 +354,7 @@ public class PlayerDemon {
                 } catch (IllegalArgumentException ignored) {}
             }
         }
+
+        this.ensureCurrentDemonFormMatchesEquippedBda();
     }
 }

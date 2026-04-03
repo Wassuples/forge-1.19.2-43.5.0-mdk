@@ -32,6 +32,7 @@ public class DemonBlueprint {
     @SerializedName("blood_points") public int bloodPoints;
     public Map<String, List<String>> taunts;
     public Map<String, List<String>> announcements;
+    @SerializedName("skin_location") public String skinLocation;
 
 
     public static class Stats {
@@ -51,4 +52,5 @@ public class DemonBlueprint {
     public int bloodPoints() { return bloodPoints; }
     public Map<String, List<String>> taunts() { return taunts; }
     public Map<String, List<String>> announcements() { return announcements; }
+    public String skinLocation() { return skinLocation; }
 }

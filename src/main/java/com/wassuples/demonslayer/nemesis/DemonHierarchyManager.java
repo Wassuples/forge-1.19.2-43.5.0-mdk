@@ -66,6 +66,7 @@ public class DemonHierarchyManager extends SavedData {
     private final Map<DemonRank, UUID> kizukiSlots = new EnumMap<>(DemonRank.class);
     private final List<UUID> rankedFodder = new ArrayList<>();
     private final Map<UUID, DemonTrait> demonDataCache = new HashMap<>();
+    private final Map<UUID, Set<UUID>> demonPacks = new HashMap<>();
     @Nullable private BloodBattle activeBattle = null;
     private boolean initialized = false;
 
@@ -108,6 +109,17 @@ public class DemonHierarchyManager extends SavedData {
      * Transient (not persisted); if server restarts mid-battle, it just ends.
      */
     private final transient Map<UUID, UUID> activeWorldBattles = new HashMap<>();
+    private final transient Map<UUID, ActiveAlliance> activeAlliances = new HashMap<>();
+
+    private static final int MAX_PACK_SIZE_HARD = 10;
+    private static final int MAX_ALLIES_PER_CALL_HARD = 5;
+    private static final int MAX_PACKS_PER_DAY = 2;
+
+    private record ActiveAlliance(Set<UUID> members, @Nullable UUID targetId, boolean targetIsPlayer, long expiresAt) {}
+
+    public record PackSnapshot(UUID leaderId, String leaderName, List<UUID> memberIds, List<String> memberNames, int averageStrengthScore) {}
+    public record AllianceSnapshot(UUID leaderId, String leaderName, List<UUID> memberIds, List<String> memberNames,
+                                   @Nullable UUID targetId, String targetName, boolean targetIsPlayer, long expiresAt) {}
 
     public DemonHierarchyManager() {}
 
@@ -118,6 +130,429 @@ public class DemonHierarchyManager extends SavedData {
      */
     public DemonHierarchyManager(ServerLevel level) {
         // Intentionally empty.
+    }
+
+    private void removeDemonFromSocialStructures(UUID demonId) {
+        demonPacks.entrySet().removeIf(entry -> {
+            Set<UUID> members = entry.getValue();
+            members.remove(demonId);
+            return members.size() < 2 || !members.contains(entry.getKey());
+        });
+
+        activeAlliances.entrySet().removeIf(entry ->
+                entry.getKey().equals(demonId) || entry.getValue().members().contains(demonId));
+    }
+
+    private void expireActiveAlliances(long currentTime) {
+        activeAlliances.entrySet().removeIf(entry -> entry.getValue().expiresAt() <= currentTime);
+    }
+
+    private void updateDemonPacks(long currentTime) {
+        demonPacks.entrySet().removeIf(entry -> {
+            Set<UUID> members = entry.getValue();
+            members.removeIf(id -> getDemonTrait(id) == null);
+            return members.size() < 2 || !members.contains(entry.getKey());
+        });
+
+        Set<UUID> assigned = new HashSet<>();
+        demonPacks.values().forEach(assigned::addAll);
+
+        Set<UUID> attemptedLeaders = new HashSet<>();
+        for (int i = 0; i < MAX_PACKS_PER_DAY; i++) {
+            UUID leaderId = chooseStrongestEligibleLeader(assigned, attemptedLeaders);
+            if (leaderId == null) {
+                break;
+            }
+            attemptedLeaders.add(leaderId);
+
+            DemonTrait leader = getDemonTrait(leaderId);
+            if (leader == null) continue;
+
+            int targetPackCap = getSoftLimitedPackCap(leader);
+            if (targetPackCap < 2) {
+                continue;
+            }
+
+            Set<UUID> members = new HashSet<>();
+            members.add(leaderId);
+
+            List<UUID> candidates = demonDataCache.keySet().stream()
+                    .filter(id -> !id.equals(leaderId) && !assigned.contains(id))
+                .sorted((a, b) -> Float.compare(
+                        compatibilityScore(leaderId, leader, b, getDemonTrait(b)),
+                        compatibilityScore(leaderId, leader, a, getDemonTrait(a))
+                ))
+                    .toList();
+
+            for (UUID candidateId : candidates) {
+                if (members.size() >= targetPackCap) {
+                    break;
+                }
+
+                DemonTrait candidate = getDemonTrait(candidateId);
+                if (candidate == null) continue;
+
+                float score = compatibilityScore(leaderId, leader, candidateId, candidate);
+                if (score < 0.45f) {
+                    continue;
+                }
+
+                if (!passesSoftMaintenanceRoll(leader, members.size() + 1, true)) {
+                    continue;
+                }
+
+                members.add(candidateId);
+
+                DemonRelationship forward = leader.getOrCreateRelationship(candidateId);
+                DemonRelationship reverse = candidate.getOrCreateRelationship(leaderId);
+                forward.addAlliance(0.03f);
+                reverse.addAlliance(0.03f);
+                forward.recordEncounter(currentTime);
+                reverse.recordEncounter(currentTime);
+            }
+
+            if (members.size() >= 2) {
+                assigned.addAll(members);
+                demonPacks.put(leaderId, members);
+            }
+        }
+    }
+
+    private List<UUID> findCompatibleAllies(UUID leaderId, UUID targetId, boolean targetIsPlayer, ServerLevel level, int maxAllies) {
+        DemonTrait leader = getDemonTrait(leaderId);
+        if (leader == null) return List.of();
+
+        int allyCap = getSoftLimitedAllyCallCap(leader, maxAllies);
+        if (allyCap <= 0) return List.of();
+
+        List<UUID> ordered = new ArrayList<>();
+        Set<UUID> used = new HashSet<>();
+
+        for (Map.Entry<UUID, Set<UUID>> pack : demonPacks.entrySet()) {
+            if (!pack.getValue().contains(leaderId)) continue;
+            for (UUID memberId : pack.getValue()) {
+                if (!memberId.equals(leaderId) && level.getEntity(memberId) == null && used.add(memberId)) {
+                    ordered.add(memberId);
+                }
+            }
+            break;
+        }
+
+        List<UUID> socialCandidates = demonDataCache.keySet().stream()
+                .filter(id -> !id.equals(leaderId) && !used.contains(id) && level.getEntity(id) == null)
+                .filter(id -> {
+                    DemonTrait candidate = getDemonTrait(id);
+                    if (candidate == null) return false;
+                    float score = compatibilityScore(leaderId, leader, id, candidate)
+                            + mutualEnemyBonus(leaderId, id, targetId, targetIsPlayer);
+                    return score >= 0.55f;
+                })
+                .sorted((a, b) -> Float.compare(
+                        compatibilityScore(leaderId, leader, b, getDemonTrait(b)) + mutualEnemyBonus(leaderId, b, targetId, targetIsPlayer),
+                        compatibilityScore(leaderId, leader, a, getDemonTrait(a)) + mutualEnemyBonus(leaderId, a, targetId, targetIsPlayer)
+                ))
+                .toList();
+
+        for (UUID id : socialCandidates) {
+            if (used.add(id)) {
+                ordered.add(id);
+            }
+        }
+
+        List<UUID> selected = new ArrayList<>();
+        for (UUID id : ordered) {
+            if (selected.size() >= allyCap) break;
+            if (!targetIsPlayer && id.equals(targetId)) continue;
+            if (!passesSoftMaintenanceRoll(leader, selected.size() + 1, false)) continue;
+            selected.add(id);
+        }
+
+        return selected;
+    }
+
+    private @Nullable UUID chooseStrongestEligibleLeader(Set<UUID> assigned, Set<UUID> attemptedLeaders) {
+        return demonDataCache.entrySet().stream()
+                .filter(e -> !assigned.contains(e.getKey()) && !attemptedLeaders.contains(e.getKey()))
+                .filter(e -> isPackLeaderCandidate(e.getValue()))
+                .max(Comparator.comparingInt(e -> getStrengthScore(e.getValue())))
+                .map(Map.Entry::getKey)
+                .orElse(null);
+    }
+
+    private int getStrengthScore(@Nullable DemonTrait trait) {
+        if (trait == null) return 0;
+        int statScore = (trait.getVigor() + trait.getStrength() + trait.getAgility()) * 12;
+        return Math.max(0, trait.getBloodPoints()) + statScore;
+    }
+
+    private int getSoftLimitedPackCap(DemonTrait leader) {
+        int base = behaviorPackCapBase(leader.getBehavior());
+        base += personalityPackCapMod(leader.getPersonality());
+
+        int strengthBonus = Math.min(2, getStrengthScore(leader) / 900);
+        return Math.max(2, Math.min(MAX_PACK_SIZE_HARD, base + strengthBonus));
+    }
+
+    private int getSoftLimitedAllyCallCap(DemonTrait leader, int requested) {
+        int base = behaviorAllyCapBase(leader.getBehavior());
+        base += personalityAllyCapMod(leader.getPersonality());
+
+        int strengthBonus = Math.min(1, getStrengthScore(leader) / 1200);
+        int cap = Math.max(1, Math.min(MAX_ALLIES_PER_CALL_HARD, base + strengthBonus));
+        return Math.min(cap, Math.max(0, requested));
+    }
+
+    private boolean passesSoftMaintenanceRoll(DemonTrait leader, int projectedSize, boolean packMode) {
+        if (projectedSize <= 2) {
+            return true;
+        }
+
+        float pressure = packMode ? 0.16f : 0.22f;
+        float strengthFactor = Math.min(0.35f, getStrengthScore(leader) / 2600.0f);
+        float leaderFactor = behaviorSoftLimitLeaderFactor(leader.getBehavior())
+                + personalitySoftLimitLeaderFactor(leader.getPersonality());
+
+        float chance = 0.86f - ((projectedSize - 2) * pressure) + strengthFactor + leaderFactor;
+        chance = Math.max(0.20f, Math.min(0.95f, chance));
+        return random.nextFloat() <= chance;
+    }
+
+    private float mutualEnemyBonus(UUID leaderId, UUID allyId, UUID targetId, boolean targetIsPlayer) {
+        DemonTrait leader = getDemonTrait(leaderId);
+        DemonTrait ally = getDemonTrait(allyId);
+        if (leader == null || ally == null || targetId == null) {
+            return 0.0f;
+        }
+
+        float bonus = 0.0f;
+
+        DemonRelationship leaderVsTarget = leader.getRelationship(targetId);
+        DemonRelationship allyVsTarget = ally.getRelationship(targetId);
+
+        if (leaderVsTarget != null && allyVsTarget != null) {
+            if (leaderVsTarget.getRivalryIntensity() > 0.22f && allyVsTarget.getRivalryIntensity() > 0.22f) {
+                bonus += 0.16f;
+            }
+            if (leaderVsTarget.getAllianceStrength() < -0.10f && allyVsTarget.getAllianceStrength() < -0.10f) {
+                bonus += 0.08f;
+            }
+        }
+
+        if (targetIsPlayer) {
+            if (leader.getEmotionState().getIntensity(EmotionType.HATE_PLAYER) > 0.35f
+                    && ally.getEmotionState().getIntensity(EmotionType.HATE_PLAYER) > 0.35f) {
+                bonus += 0.10f;
+            }
+        }
+
+        return Math.max(0.0f, Math.min(0.35f, bonus));
+    }
+
+    private float compatibilityScore(UUID aId, DemonTrait a, UUID bId, @Nullable DemonTrait b) {
+        if (a == null || b == null) return -1.0f;
+
+        float score = 0.25f;
+        score += behaviorAffinity(a.getBehavior(), b.getBehavior());
+        score += personalityAffinity(a.getPersonality(), b.getPersonality());
+        score += packJoinAffinityBonus(b);
+        score += (behaviorJoinBias(a.getBehavior()) + personalityJoinBias(a.getPersonality())) * 0.35f;
+
+        DemonRelationship rel = a.getRelationship(bId);
+        if (rel != null) {
+            score += rel.getAllianceStrength() * 0.35f;
+            score -= rel.getRivalryIntensity() * 0.45f;
+            score += rel.getIntelOnTarget() * 0.05f;
+        }
+
+        DemonRelationship reverse = b.getRelationship(aId);
+        if (reverse != null) {
+            score += reverse.getAllianceStrength() * 0.20f;
+            score -= reverse.getRivalryIntensity() * 0.30f;
+        }
+
+        return Math.max(-1.0f, Math.min(1.0f, score));
+    }
+
+    private float behaviorAffinity(Behavior a, Behavior b) {
+        float base = (behaviorCooperationBias(a) + behaviorCooperationBias(b)) * 0.5f;
+        if (a == b) return base + 0.35f;
+
+        EnumSet<Behavior> tactical = EnumSet.of(Behavior.STRATEGIST, Behavior.TRICKSTER, Behavior.CALM, Behavior.TERRITORIAL);
+        EnumSet<Behavior> command = EnumSet.of(Behavior.OVERLORD, Behavior.LOYALIST, Behavior.BODYGUARD);
+        EnumSet<Behavior> volatileSet = EnumSet.of(Behavior.BERSERKER, Behavior.COWARDLY, Behavior.SCAVENGER);
+
+        if (tactical.contains(a) && tactical.contains(b)) return base + 0.18f;
+        if (command.contains(a) && command.contains(b)) return base + 0.22f;
+        if ((a == Behavior.BERSERKER && b == Behavior.COWARDLY) || (a == Behavior.COWARDLY && b == Behavior.BERSERKER)) return base - 0.30f;
+        if (volatileSet.contains(a) && volatileSet.contains(b)) return base - 0.12f;
+
+        if ((a == Behavior.OVERLORD && b == Behavior.LOYALIST) || (a == Behavior.LOYALIST && b == Behavior.OVERLORD)) {
+            return base + 0.20f;
+        }
+
+        if ((a == Behavior.DUELIST && (b == Behavior.OVERLORD || b == Behavior.BODYGUARD || b == Behavior.LOYALIST))
+                || (b == Behavior.DUELIST && (a == Behavior.OVERLORD || a == Behavior.BODYGUARD || a == Behavior.LOYALIST))) {
+            return base - 0.18f;
+        }
+
+        return base;
+    }
+
+    private float personalityAffinity(Personality a, Personality b) {
+        float base = (personalityCohesionBias(a) + personalityCohesionBias(b)) * 0.5f;
+        if (a == b) return base + 0.20f;
+        if (arePersonalitiesClashing(a, b)) return base - 0.25f;
+
+        if ((a == Personality.DEVOTED && b == Personality.COMMANDING)
+                || (b == Personality.DEVOTED && a == Personality.COMMANDING)) {
+            return base + 0.16f;
+        }
+
+        if ((a == Personality.PROTECTIVE && b == Personality.CAUTIOUS)
+                || (b == Personality.PROTECTIVE && a == Personality.CAUTIOUS)) {
+            return base + 0.10f;
+        }
+
+        if ((a == Personality.BLOODTHIRSTY && b == Personality.CALCULATING)
+                || (b == Personality.BLOODTHIRSTY && a == Personality.CALCULATING)) {
+            return base - 0.12f;
+        }
+
+        if ((a == Personality.JESTING && b == Personality.MELODRAMATIC)
+                || (b == Personality.JESTING && a == Personality.MELODRAMATIC)) {
+            return base + 0.08f;
+        }
+
+        if ((a == Personality.STOIC && b == Personality.WHINING)
+                || (b == Personality.STOIC && a == Personality.WHINING)) {
+            return base - 0.10f;
+        }
+
+        return base;
+    }
+
+    private boolean isPackLeaderCandidate(DemonTrait trait) {
+        if (trait == null) return false;
+        return switch (trait.getBehavior()) {
+            case OVERLORD, LOYALIST, STRATEGIST, TERRITORIAL -> true;
+            default -> trait.getPersonality() == Personality.COMMANDING
+                    || trait.getPersonality() == Personality.CALCULATING
+                    || trait.getPersonality() == Personality.DECEPTIVE
+                    || trait.getPersonality() == Personality.MANIPULATIVE;
+        };
+    }
+
+    private float packJoinAffinityBonus(DemonTrait candidate) {
+        return behaviorJoinBias(candidate.getBehavior()) + personalityJoinBias(candidate.getPersonality());
+    }
+
+    private float behaviorCooperationBias(Behavior behavior) {
+        return switch (behavior) {
+            case OVERLORD -> 0.10f;
+            case LOYALIST -> 0.14f;
+            case BODYGUARD -> 0.12f;
+            case STRATEGIST -> 0.08f;
+            case TERRITORIAL -> 0.04f;
+            case CALM -> 0.06f;
+            case STALWART -> 0.05f;
+            case SKIRMISHER -> 0.02f;
+            case TRICKSTER -> 0.03f;
+            case AMBITIOUS -> -0.03f;
+            case AGGRESSIVE -> -0.01f;
+            case SADIST -> -0.04f;
+            case DUELIST -> -0.08f;
+            case BERSERKER -> -0.12f;
+            case COWARDLY -> -0.10f;
+            case SCAVENGER -> -0.06f;
+        };
+    }
+
+    private float behaviorJoinBias(Behavior behavior) {
+        return switch (behavior) {
+            case LOYALIST -> 0.22f;
+            case BODYGUARD -> 0.20f;
+            case OVERLORD, STRATEGIST, STALWART, CALM -> 0.08f;
+            case TERRITORIAL, SKIRMISHER, TRICKSTER, AGGRESSIVE -> 0.02f;
+            case AMBITIOUS, SCAVENGER -> -0.02f;
+            case DUELIST -> -0.05f;
+            case COWARDLY, BERSERKER -> -0.06f;
+            case SADIST -> -0.04f;
+        };
+    }
+
+    private int behaviorPackCapBase(Behavior behavior) {
+        return switch (behavior) {
+            case OVERLORD -> 5;
+            case LOYALIST -> 4;
+            case STRATEGIST, TERRITORIAL, STALWART -> 3;
+            case BODYGUARD, CALM, SKIRMISHER, TRICKSTER, AGGRESSIVE, AMBITIOUS -> 2;
+            case BERSERKER, DUELIST, COWARDLY, SCAVENGER, SADIST -> 1;
+        };
+    }
+
+    private int behaviorAllyCapBase(Behavior behavior) {
+        return switch (behavior) {
+            case OVERLORD -> 3;
+            case LOYALIST, STRATEGIST, TERRITORIAL, BODYGUARD -> 2;
+            case STALWART, CALM, SKIRMISHER, TRICKSTER, AGGRESSIVE, AMBITIOUS -> 1;
+            case BERSERKER, DUELIST, COWARDLY, SCAVENGER, SADIST -> 0;
+        };
+    }
+
+    private float behaviorSoftLimitLeaderFactor(Behavior behavior) {
+        return switch (behavior) {
+            case OVERLORD, LOYALIST -> 0.16f;
+            case BODYGUARD, STRATEGIST, TERRITORIAL, STALWART -> 0.08f;
+            case CALM, SKIRMISHER, TRICKSTER -> 0.03f;
+            case AGGRESSIVE, AMBITIOUS, SADIST -> -0.02f;
+            case COWARDLY, SCAVENGER, BERSERKER, DUELIST -> -0.08f;
+        };
+    }
+
+    private float personalityCohesionBias(Personality personality) {
+        return switch (personality) {
+            case COMMANDING, DEVOTED, PROTECTIVE, CALCULATING, PATIENT, STOIC, PHILOSOPHICAL -> 0.10f;
+            case OBSERVANT, CAUTIOUS, DECEPTIVE, MANIPULATIVE, OPPORTUNISTIC, FANATICAL -> 0.06f;
+            case COCKY, RUTHLESS, ARROGANT, MOCKING, CRUEL, JESTING, MELODRAMATIC -> -0.02f;
+            case BLOODTHIRSTY, FRENZIED, GLUTTONOUS, PARANOID, NERVOUS, WHINING, INSECURE, GRIEVING, WEARY, LAZY, HONOR_BOUND, YANDERE -> -0.05f;
+        };
+    }
+
+    private float personalityJoinBias(Personality personality) {
+        return switch (personality) {
+            case DEVOTED, PROTECTIVE, FANATICAL -> 0.12f;
+            case CALCULATING, DECEPTIVE, MANIPULATIVE, CAUTIOUS, PATIENT, STOIC, OBSERVANT -> 0.06f;
+            case COMMANDING, PHILOSOPHICAL, OPPORTUNISTIC, WEARY -> 0.02f;
+            case COCKY, ARROGANT, RUTHLESS, JESTING, MELODRAMATIC, CRUEL, GLUTTONOUS, GRIEVING, LAZY, YANDERE -> -0.02f;
+            case HONOR_BOUND, INSECURE, WHINING, NERVOUS, PARANOID, BLOODTHIRSTY, FRENZIED, MOCKING -> -0.05f;
+        };
+    }
+
+    private int personalityPackCapMod(Personality personality) {
+        return switch (personality) {
+            case COMMANDING, FANATICAL, PROTECTIVE, CALCULATING -> 1;
+            case LAZY, WHINING, INSECURE, PARANOID, NERVOUS -> -1;
+            default -> 0;
+        };
+    }
+
+    private int personalityAllyCapMod(Personality personality) {
+        return switch (personality) {
+            case COMMANDING, FANATICAL, PROTECTIVE, DECEPTIVE, MANIPULATIVE -> 1;
+            case HONOR_BOUND, LAZY, WHINING, INSECURE -> -1;
+            default -> 0;
+        };
+    }
+
+    private float personalitySoftLimitLeaderFactor(Personality personality) {
+        return switch (personality) {
+            case COMMANDING, FANATICAL, PROTECTIVE, CALCULATING -> 0.07f;
+            case DEVOTED, STOIC, PATIENT, OBSERVANT -> 0.04f;
+            case DECEPTIVE, MANIPULATIVE, OPPORTUNISTIC -> 0.02f;
+            case WHINING, INSECURE, LAZY, NERVOUS, PARANOID -> -0.05f;
+            case BLOODTHIRSTY, FRENZIED, ARROGANT, COCKY, CRUEL, YANDERE -> -0.03f;
+            default -> 0.0f;
+        };
     }
 
     public Collection<DemonTrait> getAllDemonTraits() {
@@ -141,6 +576,7 @@ public class DemonHierarchyManager extends SavedData {
      * Newest events are at the front. Evicts oldest if over capacity.
      */
     public void logStoryEvent(StoryEvent event) {
+        System.out.println("[NEMESIS DEBUG] STORY EVENT: " + event.getType() + " - " + event.renderFull());
         this.worldStoryLog.add(0, event);
         while (this.worldStoryLog.size() > MAX_STORY_LOG) {
             this.worldStoryLog.remove(this.worldStoryLog.size() - 1);
@@ -161,6 +597,123 @@ public class DemonHierarchyManager extends SavedData {
     /** Returns active world battles (J1). */
     public Map<UUID, UUID> getActiveWorldBattles() {
         return this.activeWorldBattles;
+    }
+
+    public List<PackSnapshot> getPackSnapshots() {
+        List<PackSnapshot> snapshots = new ArrayList<>();
+        for (Map.Entry<UUID, Set<UUID>> entry : demonPacks.entrySet()) {
+            UUID leaderId = entry.getKey();
+            Set<UUID> members = entry.getValue();
+            DemonTrait leaderTrait = getDemonTrait(leaderId);
+            if (leaderTrait == null || members == null || members.isEmpty()) continue;
+
+            List<UUID> memberIds = members.stream().sorted().toList();
+            List<String> memberNames = memberIds.stream()
+                    .map(this::getDemonTrait)
+                    .filter(Objects::nonNull)
+                    .map(DemonTrait::getName)
+                    .toList();
+
+            int avgStrength = memberIds.isEmpty() ? 0 :
+                    (int) memberIds.stream()
+                            .map(this::getDemonTrait)
+                            .filter(Objects::nonNull)
+                            .mapToInt(this::getStrengthScore)
+                            .average()
+                            .orElse(0.0);
+
+            snapshots.add(new PackSnapshot(
+                    leaderId,
+                    leaderTrait.getName(),
+                    memberIds,
+                    memberNames,
+                    avgStrength
+            ));
+        }
+
+        snapshots.sort(Comparator.comparingInt(PackSnapshot::averageStrengthScore).reversed());
+        return snapshots;
+    }
+
+    public List<AllianceSnapshot> getActiveAllianceSnapshots(ServerLevel level) {
+        List<AllianceSnapshot> snapshots = new ArrayList<>();
+        for (Map.Entry<UUID, ActiveAlliance> entry : activeAlliances.entrySet()) {
+            UUID leaderId = entry.getKey();
+            ActiveAlliance alliance = entry.getValue();
+            DemonTrait leaderTrait = getDemonTrait(leaderId);
+            if (leaderTrait == null || alliance == null) continue;
+
+            List<UUID> memberIds = alliance.members().stream().sorted().toList();
+            List<String> memberNames = memberIds.stream()
+                    .map(this::getDemonTrait)
+                    .filter(Objects::nonNull)
+                    .map(DemonTrait::getName)
+                    .toList();
+
+            String targetName = "Unknown";
+            if (alliance.targetId() != null) {
+                if (alliance.targetIsPlayer()) {
+                    ServerPlayer targetPlayer = level.getServer().getPlayerList().getPlayer(alliance.targetId());
+                    targetName = targetPlayer != null ? targetPlayer.getGameProfile().getName() : "Offline Player";
+                } else {
+                    DemonTrait targetTrait = getDemonTrait(alliance.targetId());
+                    targetName = targetTrait != null ? targetTrait.getName() : "Unknown Demon";
+                }
+            }
+
+            snapshots.add(new AllianceSnapshot(
+                    leaderId,
+                    leaderTrait.getName(),
+                    memberIds,
+                    memberNames,
+                    alliance.targetId(),
+                    targetName,
+                    alliance.targetIsPlayer(),
+                    alliance.expiresAt()
+            ));
+        }
+
+        snapshots.sort(Comparator.comparingLong(AllianceSnapshot::expiresAt));
+        return snapshots;
+    }
+
+    public Optional<UUID> getPackLeaderFor(UUID demonId) {
+        return demonPacks.entrySet().stream()
+                .filter(e -> e.getValue().contains(demonId))
+                .map(Map.Entry::getKey)
+                .findFirst();
+    }
+
+    public boolean forceRebuildPacks(ServerLevel level) {
+        updateDemonPacks(level.getGameTime());
+        setDirty();
+        return !demonPacks.isEmpty();
+    }
+
+    public boolean disbandPack(UUID leaderId) {
+        Set<UUID> removed = demonPacks.remove(leaderId);
+        if (removed == null) return false;
+
+        activeAlliances.remove(leaderId);
+        setDirty();
+        return true;
+    }
+
+    public int clearActiveAlliances() {
+        int count = activeAlliances.size();
+        activeAlliances.clear();
+        return count;
+    }
+
+    public float previewCompatibility(UUID demonAId, UUID demonBId) {
+        DemonTrait a = getDemonTrait(demonAId);
+        DemonTrait b = getDemonTrait(demonBId);
+        if (a == null || b == null) return -1.0f;
+        return compatibilityScore(demonAId, a, demonBId, b);
+    }
+
+    public float previewMutualEnemyBonus(UUID leaderId, UUID allyId, @Nullable UUID targetId, boolean targetIsPlayer) {
+        return mutualEnemyBonus(leaderId, allyId, targetId, targetIsPlayer);
     }
 
     /**
@@ -229,10 +782,11 @@ public class DemonHierarchyManager extends SavedData {
 
     public void runDailySimulation(ServerLevel level) {
         worldDayCounter++;
-        System.out.println("[Nemesis System] Running daily simulation for Day " + worldDayCounter);
+        System.out.println("[NEMESIS DEBUG] ═══ Starting Daily Simulation for Day " + worldDayCounter + " ═══");
 
         // Apply passive emotion decay for all demons
         long currentTime = level.getGameTime();
+        System.out.println("[NEMESIS DEBUG] Applying emotion decay and resetting growth budgets for " + demonDataCache.size() + " demons");
         for (DemonTrait trait : demonDataCache.values()) {
             trait.applyEmotionDecay(currentTime);
             trait.setLastSeenTime(currentTime);
@@ -240,27 +794,46 @@ public class DemonHierarchyManager extends SavedData {
         }
 
         // Decay intel + rivalry across all relationships (G4)
+        System.out.println("[NEMESIS DEBUG] Decaying relationships (intel -3%/day, rivalry -1%/day)");
         decayAllRelationships();
 
         // Build passive rivalries from personality clashes + adjacency (G2)
+        System.out.println("[NEMESIS DEBUG] Building passive rivalries from personality clashes and rank adjacency");
         buildPassiveRivalries();
 
+        // Maintain social structures used by coordinated hunts/battles.
+        updateDemonPacks(currentTime);
+        expireActiveAlliances(currentTime);
+
         // Fodder vs Fodder — scheme-driven (G3)
+        System.out.println("[NEMESIS DEBUG] Simulating Fodder vs Fodder battles");
         simulateFodderVsFodder(level);
 
-        // Challenger vs Kizuki. Every 3-4 days
+        // Challenger vs Kizuki.
         if (worldDayCounter > 0 && worldDayCounter % 3 == 0) { // every 3 days
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " is divisible by 3 - Simulating Challenger vs Kizuki battles");
             simulateChallengerVsKizuki(level);
+        } else {
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Skipping Challenger vs Kizuki battles (not divisible by 3)");
         }
 
         // Kizuki vs Kizuki. Every 9-10 days, and less likely
         if (worldDayCounter > 0 && worldDayCounter % 9 == 0 && random.nextFloat() < 0.5f) { // every 9 days, 50% chance
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " is divisible by 9 and 50% roll passed - Simulating Kizuki vs Kizuki battles");
             simulateKizukiVsKizuki(level);
+        } else if (worldDayCounter > 0 && worldDayCounter % 9 == 0) {
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " is divisible by 9 but 50% roll failed - Skipping Kizuki vs Kizuki battles");
+        } else {
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Skipping Kizuki vs Kizuki battles (not divisible by 9)");
         }
 
+        System.out.println("[NEMESIS DEBUG] Refilling demon roster (target: 20 fodder, current: " + rankedFodder.size() + ")");
         refillDemonRoster(level);
 
-        // Apply passive (age-based) growth for all surviving demons (E2)
+        System.out.println("[NEMESIS DEBUG] Filling ALL vacant Kizuki slots immediately");
+        fillVacantKizukiSlots(level);
+
+        System.out.println("[NEMESIS DEBUG] Applying passive growth to all " + demonDataCache.size() + " demons");
         long growthTime = level.getGameTime();
         for (Map.Entry<UUID, DemonTrait> entry : demonDataCache.entrySet()) {
             Optional<DemonRank> rank = getKizukiRank(entry.getKey());
@@ -268,27 +841,30 @@ public class DemonHierarchyManager extends SavedData {
                     rank.orElse(null));
         }
 
-        // Spread rumors about recent events to online players (H4)
         List<ServerPlayer> onlinePlayers = level.getServer().getPlayerList().getPlayers();
+        System.out.println("[NEMESIS DEBUG] Spreading rumors about " + worldStoryLog.size() + " story events to " + onlinePlayers.size() + " online players");
         playerIntelManager.spreadRumors(worldStoryLog, onlinePlayers,
                 this::getDemonTrait,
                 id -> getKizukiRank(id).isPresent());
 
-        // Prune old intel entries if story log has evicted old events
         if (!worldStoryLog.isEmpty()) {
             long oldestTimestamp = worldStoryLog.get(worldStoryLog.size() - 1).getTimestamp();
+            System.out.println("[NEMESIS DEBUG] Pruning old intel entries (cutoff: " + oldestTimestamp + ")");
             playerIntelManager.pruneOldIntel(oldestTimestamp);
         }
 
-        // Weekly digest (H3) — every 7 in-game days
         if (worldDayCounter % 7 == 0) {
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " is divisible by 7 - Sending weekly digest to " + onlinePlayers.size() + " players");
             for (ServerPlayer player : onlinePlayers) {
                 Component digest = playerIntelManager.generateWeeklyDigest(
                         player.getUUID(), worldStoryLog, level.getGameTime());
                 player.sendSystemMessage(digest);
             }
+        } else {
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Skipping weekly digest (not divisible by 7)");
         }
 
+        System.out.println("[NEMESIS DEBUG] ═══ Daily Simulation Complete for Day " + worldDayCounter + " ═══");
         setDirty();
     }
 
@@ -499,23 +1075,36 @@ public class DemonHierarchyManager extends SavedData {
         List<String> opponentTags = BDA_TAGS.getOrDefault(opponent.getAssignedBDA(), Collections.emptyList());
         boolean isNight = context.timeOfDay() >= 13000;
 
-        // Offensive Strengths
+        // Offensive strengths
         if (demon.hasQuirk(Quirk.HEAVY_HITTER)) damage *= 1.1f;
         if (demon.hasQuirk(Quirk.SHOCKWAVE_STOMP)) damage *= 1.1f;
         if (demon.hasQuirk(Quirk.VENOMOUS)) damage *= 1.1f;
         if (demon.hasQuirk(Quirk.EXECUTIONER)) damage *= 1.05f;
 
-        // Defensive Strengths
+        // Defensive strengths
         if (demon.hasQuirk(Quirk.BLOOD_SIPHON)) health *= 1.05f;
+        if (demon.hasQuirk(Quirk.ARROW_PROOF)) health *= 1.05f;
+        if (demon.hasQuirk(Quirk.UNSHAKABLE)) {
+            health *= 1.05f;
+            agility *= 0.97f;
+        }
+        if (demon.hasQuirk(Quirk.RAPID_RECOVERY)) {
+            health *= 1.08f;
+            agility *= 1.03f;
+        }
         if (demon.hasQuirk(Quirk.DEATH_DEFIANT)) health *= 1.2f;
         if (demon.hasQuirk(Quirk.TENACIOUS) && demon.getBloodPoints() < opponent.getBloodPoints()) {
             health *= 1.2f; // Underdog bonus
         }
 
-        // Mobility Strengths
+        // Mobility strengths
         if (demon.hasQuirk(Quirk.NIMBLE)) agility *= 1.1f;
+        if (demon.hasQuirk(Quirk.KEEN_Scent)) {
+            agility *= 1.05f;
+            damage *= 1.03f;
+        }
 
-        // Miscellaneous Strengths
+        // Miscellaneous strengths
         if (demon.hasQuirk(Quirk.PACK_CALLER)) { // Having allies is a major buff, but also gives Dishonored for blood battles.
             health *= 1.1f;
             damage *= 1.15f;
@@ -525,7 +1114,7 @@ public class DemonHierarchyManager extends SavedData {
             damage *= 1.1f;
         }
 
-        // Combat Weaknesses
+        // Combat weaknesses
         if (demon.hasQuirk(Quirk.BRITTLE) && opponentTags.contains("PHYSICAL_BLUNT")) {
             health *= 0.85f;
         }
@@ -534,12 +1123,20 @@ public class DemonHierarchyManager extends SavedData {
             damage *= 1.25f;
             health *= 0.7f;
         }
+        if (demon.hasQuirk(Quirk.WIND_UP)) {
+            damage *= 1.08f;
+            agility *= 0.88f;
+        }
         if (demon.hasQuirk(Quirk.BLIND_RAGE) && demon.getBloodPoints() < opponent.getBloodPoints()) {
             damage *= 1.1f;
             health *= 0.9f;
         }
+        if (demon.hasQuirk(Quirk.OBSESSIVE_HUNTER)) {
+            damage *= 1.05f;
+            agility *= 0.95f;
+        }
 
-        // Environmental Weaknesses
+        // Environmental weaknesses
         if (demon.hasQuirk(Quirk.SUNLIGHT_SICKNESS) && !isNight) {
             health *= 0.7f;
             agility *= 0.8f;
@@ -550,6 +1147,19 @@ public class DemonHierarchyManager extends SavedData {
         }
         if (demon.hasQuirk(Quirk.FLAMMABLE_FLESH) && (isHotBiome(context.biome) || opponentTags.contains("FIRE"))) {
             health *= 0.8f;
+        }
+        if (demon.hasQuirk(Quirk.PURIFIED_WEAKNESS)) {
+            health *= 0.92f;
+            damage *= 0.95f;
+        }
+        if (demon.hasQuirk(Quirk.SOUND_SENSITIVE) && opponentTags.contains("MIND_AFFECTING")) {
+            agility *= 0.85f;
+            health *= 0.95f;
+        }
+        if (demon.hasQuirk(Quirk.MAGPIE)) agility *= 0.92f;
+        if (demon.hasQuirk(Quirk.EASILY_TAUNTED)) {
+            agility *= 0.9f;
+            health *= 0.95f;
         }
 
         // Elemental Interactions
@@ -593,12 +1203,13 @@ public class DemonHierarchyManager extends SavedData {
      * come from actual combat encounters.
      */
     private void buildPassiveRivalries() {
-        // Adjacent Kizuki ranks build rivalry
+        // Adjacent Kizuki ranks build rivalry: lower-ranked demon rivals the one above
         DemonRank[] ranks = DemonRank.values();
         for (int i = 0; i < ranks.length - 1; i++) {
             if (!ranks[i].isMoonRank()) continue;
             UUID lowerId = kizukiSlots.get(ranks[i]);
-            UUID higherId = (i > 0 && ranks[i - 1].isMoonRank()) ? kizukiSlots.get(ranks[i - 1]) : null;
+            // ranks[i+1] is the next higher rank in power
+            UUID higherId = (i + 1 < ranks.length && ranks[i + 1].isMoonRank()) ? kizukiSlots.get(ranks[i + 1]) : null;
             if (lowerId == null || higherId == null) continue;
 
             DemonTrait lowerTrait = getDemonTrait(lowerId);
@@ -642,7 +1253,12 @@ public class DemonHierarchyManager extends SavedData {
             || (a == Personality.ARROGANT && b == Personality.ARROGANT)
             || (a == Personality.COMMANDING && b == Personality.COMMANDING)
             || (a == Personality.DEVOTED && b == Personality.MOCKING)
-            || (b == Personality.DEVOTED && a == Personality.MOCKING);
+            || (b == Personality.DEVOTED && a == Personality.MOCKING)
+            || ((a == Personality.STOIC && b == Personality.WHINING) || (b == Personality.STOIC && a == Personality.WHINING))
+            || ((a == Personality.CALCULATING && b == Personality.FRENZIED) || (b == Personality.CALCULATING && a == Personality.FRENZIED))
+            || ((a == Personality.PROTECTIVE && b == Personality.CRUEL) || (b == Personality.PROTECTIVE && a == Personality.CRUEL))
+            || ((a == Personality.PATIENT && b == Personality.BLOODTHIRSTY) || (b == Personality.PATIENT && a == Personality.BLOODTHIRSTY))
+            || ((a == Personality.CAUTIOUS && b == Personality.BLOODTHIRSTY) || (b == Personality.CAUTIOUS && a == Personality.BLOODTHIRSTY));
     }
 
     /**
@@ -714,7 +1330,10 @@ public class DemonHierarchyManager extends SavedData {
     // ── Simulation methods ──────────────────────────────────────────────
 
     private void simulateFodderVsFodder(ServerLevel level) {
-        if (rankedFodder.size() < 2) return;
+        if (rankedFodder.size() < 2) {
+            System.out.println("[NEMESIS DEBUG] Skipping Fodder vs Fodder - insufficient demons (" + rankedFodder.size() + " < 2)");
+            return;
+        }
 
         // Select aggressor: pick a random fodder demon, weighted by aggressiveness
         UUID aggressorId = null;
@@ -729,7 +1348,10 @@ public class DemonHierarchyManager extends SavedData {
                 break;
             }
         }
-        if (aggressorId == null || aggressorTrait == null) return;
+        if (aggressorId == null || aggressorTrait == null) {
+            System.out.println("[NEMESIS DEBUG] Fodder vs Fodder failed - no valid aggressor found");
+            return;
+        }
 
         // Use scheme scoring to pick target (G3)
         UUID defenderId = selectSchemeTarget(aggressorId, aggressorTrait, rankedFodder);
@@ -740,20 +1362,30 @@ public class DemonHierarchyManager extends SavedData {
             } while (defenderId.equals(aggressorId));
         }
 
+        DemonTrait defenderTrait = getDemonTrait(defenderId);
+        String defenderName = defenderTrait != null ? defenderTrait.getName() : "Unknown";
+        System.out.println("[NEMESIS DEBUG] Fodder vs Fodder: " + aggressorTrait.getName() + " vs " + defenderName);
+
         BattleResult result = simulateBattle(aggressorId, defenderId, level);
 
         DemonTrait winner = getDemonTrait(result.winnerId());
         DemonTrait loser = getDemonTrait(result.loserId());
         if (winner == null || loser == null) return;
 
+        System.out.println("[NEMESIS DEBUG] Battle result: " + winner.getName() + " defeated " + loser.getName() +
+            " (Winner TTK: " + String.format("%.1f", result.winnerTTK()) + "s, Loser TTK: " + String.format("%.1f", result.loserTTK()) + "s)");
+
         // Write battle outcome memories + growth stats for both fighters
         long time = level.getGameTime();
         SimOutcome outcome = writeSimulatedBattleOutcome(winner, loser, result, time);
+
+        System.out.println("[NEMESIS DEBUG] Battle outcome: " + outcome);
 
         if (outcome == SimOutcome.RETREAT) {
             // Loser survives — already lost BP in writeSimulatedBattleOutcome
             int pointsGained = Math.max(5, loser.getBloodPoints() / 20);
             winner.addBloodPoints(pointsGained);
+            System.out.println("[NEMESIS DEBUG] " + loser.getName() + " retreated, " + winner.getName() + " gains " + pointsGained + " BP");
 
             String announcement = SimulationAnnouncer.forFodderDuel(winner, loser, result.winnerTTK(), result.loserTTK());
             broadcastToPlayers(level, Component.literal(String.format(announcement, winner.getName(), loser.getName()) + " §7(opponent retreated)").withStyle(ChatFormatting.GRAY));
@@ -761,6 +1393,7 @@ public class DemonHierarchyManager extends SavedData {
             // Decisive win or humiliation — loser dies
             int pointsGained = Math.max(10, loser.getBloodPoints() / 10);
             winner.addBloodPoints(pointsGained);
+            System.out.println("[NEMESIS DEBUG] " + loser.getName() + " killed, " + winner.getName() + " gains " + pointsGained + " BP");
             killDemon(result.loserId());
 
             String announcement = SimulationAnnouncer.forFodderDuel(winner, loser, result.winnerTTK(), result.loserTTK());
@@ -769,26 +1402,40 @@ public class DemonHierarchyManager extends SavedData {
     }
 
     private void simulateChallengerVsKizuki(ServerLevel level) {
-        if (rankedFodder.isEmpty() || !kizukiSlots.containsKey(DemonRank.LOWER_MOON_6)) return;
+        if (rankedFodder.isEmpty() || !kizukiSlots.containsKey(DemonRank.LOWER_MOON_6)) {
+            System.out.println("[NEMESIS DEBUG] Skipping Challenger vs Kizuki - " +
+                (rankedFodder.isEmpty() ? "no fodder" : "no LM6"));
+            return;
+        }
 
         rankedFodder.sort(Comparator.comparingInt(uuid -> -getDemonTrait(uuid).getBloodPoints()));
         UUID challengerId = rankedFodder.get(0);
         UUID defenderId = kizukiSlots.get(DemonRank.LOWER_MOON_6);
 
-        BattleResult result = simulateBattle(challengerId, defenderId, level);
-
         DemonTrait challengerTrait = getDemonTrait(challengerId);
         DemonTrait lm6Trait = getDemonTrait(defenderId);
         if (challengerTrait == null || lm6Trait == null) return;
+
+        System.out.println("[NEMESIS DEBUG] Challenger vs Kizuki: " + challengerTrait.getName() +
+            " (BP: " + challengerTrait.getBloodPoints() + ") challenges " + lm6Trait.getName() +
+            " (LM6, BP: " + lm6Trait.getBloodPoints() + ")");
+
+        BattleResult result = simulateBattle(challengerId, defenderId, level);
 
         // Write battle outcome memories + growth stats for both
         long time = level.getGameTime();
         DemonTrait winner = result.winnerId().equals(challengerId) ? challengerTrait : lm6Trait;
         DemonTrait loser = result.winnerId().equals(challengerId) ? lm6Trait : challengerTrait;
+
+        System.out.println("[NEMESIS DEBUG] Battle result: " + winner.getName() + " defeated " + loser.getName() +
+            " (Winner TTK: " + String.format("%.1f", result.winnerTTK()) + "s, Loser TTK: " + String.format("%.1f", result.loserTTK()) + "s)");
+
         writeSimulatedBattleOutcome(winner, loser, result, time);
 
         if (result.winnerId().equals(challengerId)) {
             // Huzzah! A victory — also record hierarchy changes
+            System.out.println("[NEMESIS DEBUG] Challenger victory! " + challengerTrait.getName() +
+                " promoted to Lower Moon Six, " + lm6Trait.getName() + " demoted to fodder");
             challengerTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, defenderId, challengerId));
             challengerTrait.addMemory(DemonMemory.of(MemoryType.DEFEATED_KIZUKI, time, defenderId, challengerId));
             challengerTrait.addMemory(DemonMemory.of(MemoryType.KILLED_KIZUKI, time, defenderId, challengerId));
@@ -807,38 +1454,61 @@ public class DemonHierarchyManager extends SavedData {
             broadcastToPlayers(level, Component.literal(String.format(announcement,
                     challengerTrait.getName() + " " + challengerTrait.getTitle(),
                     lm6Trait.getName())).withStyle(ChatFormatting.RED));
+        } else {
+            System.out.println("[NEMESIS DEBUG] Challenger defeat: " + lm6Trait.getName() + " successfully defended Lower Moon Six");
         }
     }
 
     private void simulateKizukiVsKizuki(ServerLevel level) {
-        List<DemonRank> lowerMoons = Arrays.stream(DemonRank.values())
-                .filter(r -> r.ordinal() >= DemonRank.LOWER_MOON_6.ordinal() && r.ordinal() < DemonRank.LOWER_MOON_1.ordinal())
+        // All moon ranks EXCEPT the highest (UM1) can challenge the rank above them
+        List<DemonRank> challengerCandidates = Arrays.stream(DemonRank.values())
+                .filter(r -> r.isMoonRank() && r.ordinal() < DemonRank.UPPER_MOON_1.ordinal())
                 .toList();
 
-        if (lowerMoons.isEmpty()) return;
+        if (challengerCandidates.isEmpty()) {
+            System.out.println("[NEMESIS DEBUG] Skipping Kizuki vs Kizuki - no challenger candidates available");
+            return;
+        }
 
-        DemonRank challengerRank = lowerMoons.get(random.nextInt(lowerMoons.size()));
-        DemonRank defenderRank = DemonRank.values()[challengerRank.ordinal() - 1];
+        DemonRank challengerRank = challengerCandidates.get(random.nextInt(challengerCandidates.size()));
+        // Defender is one rank HIGHER in power (ordinal + 1)
+        DemonRank defenderRank = DemonRank.values()[challengerRank.ordinal() + 1];
 
         UUID challengerId = kizukiSlots.get(challengerRank);
         UUID defenderId = kizukiSlots.get(defenderRank);
 
-        if (challengerId == null || defenderId == null) return;
-
-        BattleResult result = simulateBattle(challengerId, defenderId, level);
+        if (challengerId == null || defenderId == null) {
+            System.out.println("[NEMESIS DEBUG] Skipping Kizuki vs Kizuki - missing demons for " +
+                challengerRank.getDisplayName().getString() + " or " + defenderRank.getDisplayName().getString());
+            return;
+        }
 
         DemonTrait challengerTrait = getDemonTrait(challengerId);
         DemonTrait defenderTrait = getDemonTrait(defenderId);
         if (challengerTrait == null || defenderTrait == null) return;
 
+        System.out.println("[NEMESIS DEBUG] Kizuki vs Kizuki: " + challengerTrait.getName() +
+            " (" + challengerRank.getDisplayName().getString() + ", BP: " + challengerTrait.getBloodPoints() + ") challenges " +
+            defenderTrait.getName() + " (" + defenderRank.getDisplayName().getString() + ", BP: " + defenderTrait.getBloodPoints() + ")");
+
+        BattleResult result = simulateBattle(challengerId, defenderId, level);
+
         // Write battle outcome memories + growth stats for both
         long time = level.getGameTime();
         DemonTrait winner = result.winnerId().equals(challengerId) ? challengerTrait : defenderTrait;
         DemonTrait loser = result.winnerId().equals(challengerId) ? defenderTrait : challengerTrait;
+
+        System.out.println("[NEMESIS DEBUG] Battle result: " + winner.getName() + " defeated " + loser.getName() +
+            " (Winner TTK: " + String.format("%.1f", result.winnerTTK()) + "s, Loser TTK: " + String.format("%.1f", result.loserTTK()) + "s)");
+
         writeSimulatedBattleOutcome(winner, loser, result, time);
 
         if (result.winnerId().equals(challengerId)) {
             // SHOCKING UPSET — record hierarchy changes
+            System.out.println("[NEMESIS DEBUG] SHOCKING UPSET! " + challengerTrait.getName() +
+                " promoted to " + defenderRank.getDisplayName().getString() + ", " +
+                defenderTrait.getName() + " killed, power vacuum triggered for " + challengerRank.getDisplayName().getString());
+
             challengerTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, defenderId, challengerId));
             challengerTrait.addMemory(DemonMemory.of(MemoryType.DEFEATED_KIZUKI, time, defenderId, challengerId));
             challengerTrait.addMemory(DemonMemory.of(MemoryType.KILLED_KIZUKI, time, defenderId, challengerId));
@@ -860,6 +1530,9 @@ public class DemonHierarchyManager extends SavedData {
                     challengerTrait.getName(),
                     defenderTrait.getName(),
                     defenderRank.getDisplayName().getString())).withStyle(ChatFormatting.DARK_PURPLE));
+        } else {
+            System.out.println("[NEMESIS DEBUG] Kizuki defense: " + defenderTrait.getName() +
+                " successfully defended " + defenderRank.getDisplayName().getString());
         }
     }
 
@@ -877,18 +1550,156 @@ public class DemonHierarchyManager extends SavedData {
         final int maxToGenerateThisCall = 5;
 
         int needed = targetFodderCount - rankedFodder.size();
-        if (needed <= 0) return;
-
-        int toGenerate = Math.min(needed, maxToGenerateThisCall);
-        for (int i = 0; i < toGenerate; i++) {
-            System.out.println("[Nemesis System] Generating a procedural demon to fill roster.");
-
-            NemesisDemonEntity demon = new NemesisDemonEntity(ModEntityTypes.NEMESIS_DEMON.get(), level);
-            DemonGenerator.initializeProcedural(demon, level);
-
-            // Important: we only register it into SavedData; we are NOT spawning it into the world here.
-            demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> this.addDemon(demon.getUUID(), (DemonTrait) trait));
+        if (needed <= 0) {
+            System.out.println("[NEMESIS DEBUG] Roster full: " + rankedFodder.size() + " fodder, no generation needed");
+            return;
         }
+
+        long gameTime = level.getGameTime();
+        int toGenerate = Math.min(needed, maxToGenerateThisCall);
+        System.out.println("[NEMESIS DEBUG] Roster refill: need " + needed + " fodder, generating " + toGenerate);
+        for (int i = 0; i < toGenerate; i++) {
+            UUID demonUUID = UUID.randomUUID();
+            DemonTrait trait = new DemonTrait();
+            DemonGenerator.initializeProceduralTrait(trait, gameTime);
+            this.addDemon(demonUUID, trait);
+        }
+    }
+
+    /**
+     * Fills ALL vacant Kizuki slots immediately by promoting from below.
+     * Loops until no more promotions can be made. For each vacant slot,
+     * if the rank directly below is occupied and the demon meets the BP
+     * threshold for the target rank, they are promoted upward and a power
+     * vacuum is triggered for their old slot (which cascades fodder in).
+     *
+     * <p>Lower Moon ranks have similar, low thresholds (they're close in power).
+     * Upper Moon ranks have dramatically higher thresholds, representing the
+     * massive power gap between Lower and Upper Moons.
+     */
+    private void fillVacantKizukiSlots(ServerLevel level) {
+        long time = level.getGameTime();
+        DemonRank[] allRanks = DemonRank.values();
+
+        // Keep looping until no more promotions happen in a full pass
+        boolean promotedAny;
+        do {
+            promotedAny = false;
+            // Walk from the lowest moon rank up to the highest
+            for (int ord = DemonRank.LOWER_MOON_6.ordinal(); ord <= DemonRank.UPPER_MOON_1.ordinal(); ord++) {
+                DemonRank targetRank = allRanks[ord];
+                if (!targetRank.isMoonRank()) continue;
+
+                // If this slot is already filled, skip
+                if (kizukiSlots.containsKey(targetRank)) continue;
+
+                // For LM6 (the lowest moon rank), try to promote top fodder directly
+                if (targetRank == DemonRank.LOWER_MOON_6) {
+                    int bpThreshold = getOrganicPromotionBpThreshold(targetRank);
+                    Optional<UUID> topFodderUUID = rankedFodder.stream()
+                            .filter(uuid -> {
+                                DemonTrait t = getDemonTrait(uuid);
+                                return t != null && t.getBloodPoints() >= bpThreshold;
+                            })
+                            .max(Comparator.comparingInt(uuid -> {
+                                DemonTrait t = getDemonTrait(uuid);
+                                return t != null ? t.getBloodPoints() : 0;
+                            }));
+
+                    if (topFodderUUID.isPresent()) {
+                        UUID promoterId = topFodderUUID.get();
+                        DemonTrait fodderTrait = getDemonTrait(promoterId);
+                        String fodderName = fodderTrait != null ? fodderTrait.getName() : "Unknown";
+                        int fodderBP = fodderTrait != null ? fodderTrait.getBloodPoints() : 0;
+
+                        System.out.println("[NEMESIS DEBUG] VACANCY FILL: Promoting fodder " + fodderName +
+                            " (BP: " + fodderBP + ", threshold: " + bpThreshold +
+                            ") to vacant " + targetRank.getDisplayName().getString());
+
+                        rankedFodder.remove(promoterId);
+                        kizukiSlots.put(targetRank, promoterId);
+
+                        if (fodderTrait != null) {
+                            fodderTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, promoterId));
+                            logStoryEvent(StoryEvent.promotion(time, promoterId,
+                                    fodderTrait.getName(), targetRank.getDisplayName().getString()));
+                        }
+
+                        broadcastToPlayers(level, Component.literal(
+                                "§5" + fodderName + " has risen to the rank of " + targetRank.getDisplayName().getString() + "!")
+                                .withStyle(ChatFormatting.DARK_PURPLE));
+
+                        promotedAny = true;
+                        setDirty();
+                    }
+                    continue;
+                }
+
+                // For all other moon ranks, look at the rank directly below
+                DemonRank belowRank = allRanks[ord - 1];
+                if (!belowRank.isMoonRank()) continue;
+
+                UUID belowDemonId = kizukiSlots.get(belowRank);
+                if (belowDemonId == null) continue; // rank below is also empty
+
+                DemonTrait belowTrait = getDemonTrait(belowDemonId);
+                if (belowTrait == null) continue;
+
+                int bpThreshold = getOrganicPromotionBpThreshold(targetRank);
+
+                if (belowTrait.getBloodPoints() >= bpThreshold) {
+                    System.out.println("[NEMESIS DEBUG] VACANCY FILL: " + belowTrait.getName() +
+                        " (BP: " + belowTrait.getBloodPoints() + ", threshold: " + bpThreshold +
+                        ") promoted from " + belowRank.getDisplayName().getString() +
+                        " to vacant " + targetRank.getDisplayName().getString());
+
+                    kizukiSlots.put(targetRank, belowDemonId);
+                    kizukiSlots.remove(belowRank);
+
+                    belowTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, belowDemonId));
+                    logStoryEvent(StoryEvent.promotion(time, belowDemonId,
+                            belowTrait.getName(), targetRank.getDisplayName().getString()));
+
+                    broadcastToPlayers(level, Component.literal(
+                            "§5" + belowTrait.getName() + " " + belowTrait.getTitle() +
+                            " has risen to the rank of " + targetRank.getDisplayName().getString() + "!")
+                            .withStyle(ChatFormatting.DARK_PURPLE));
+
+                    // The rank below is now vacant — handle it via cascade (pulls fodder up)
+                    handlePowerVacuum(belowRank);
+
+                    promotedAny = true;
+                    setDirty();
+                } else {
+                    System.out.println("[NEMESIS DEBUG] " + belowTrait.getName() + " in " +
+                        belowRank.getDisplayName().getString() + " not strong enough for vacant " +
+                        targetRank.getDisplayName().getString() + " (BP: " + belowTrait.getBloodPoints() +
+                        " < threshold: " + bpThreshold + ")");
+                }
+            }
+        } while (promotedAny);
+    }
+
+    /**
+     * Returns the BP threshold a demon needs to be promoted into the given rank.
+     *
+     * <p>Lower Moons are similar in power — low, uniform thresholds.
+     * Upper Moons have a VERY large gap, representing the canonical power
+     * difference between Lower and Upper Kizuki.
+     */
+    private int getOrganicPromotionBpThreshold(DemonRank rank) {
+        return switch (rank) {
+            case LOWER_MOON_6, LOWER_MOON_5,
+                 LOWER_MOON_4, LOWER_MOON_3,
+                 LOWER_MOON_2, LOWER_MOON_1 -> 200;
+            case UPPER_MOON_6 -> 450;
+            case UPPER_MOON_5 -> 650;
+            case UPPER_MOON_4 -> 900;
+            case UPPER_MOON_3 -> 1200;
+            case UPPER_MOON_2 -> 1600;
+            case UPPER_MOON_1 -> 2000;
+            default -> Integer.MAX_VALUE; // non-moon ranks cannot be promoted into
+        };
     }
 
     private void broadcastToPlayers(ServerLevel level, Component message) {
@@ -902,7 +1713,8 @@ public class DemonHierarchyManager extends SavedData {
     public void startBloodBattle(UUID challenger, UUID defender) {
         if (this.activeBattle == null) {
             this.activeBattle = new BloodBattle(challenger, defender);
-            System.out.println("Blood Battle initiated between Challenger " + challenger + " and Defender " + defender);
+            System.out.println("[NEMESIS DEBUG] BLOOD BATTLE INITIATED: challenger=" + challenger.toString().substring(0, 8) +
+                " vs defender=" + defender.toString().substring(0, 8));
             setDirty();
         }
     }
@@ -912,7 +1724,8 @@ public class DemonHierarchyManager extends SavedData {
             // Only record interference if: the attacker != original challenger
             if (!this.activeBattle.challenger.equals(attackerUUID)) {
                 this.activeBattle.interferers.add(attackerUUID);
-                System.out.println("Interference recorded in blood battle by " + attackerUUID);
+                System.out.println("[NEMESIS DEBUG] Blood Battle interference recorded: attacker=" + attackerUUID.toString().substring(0, 8) +
+                    " (total interferers: " + this.activeBattle.interferers.size() + ")");
                 setDirty();
             }
         }
@@ -924,7 +1737,7 @@ public class DemonHierarchyManager extends SavedData {
 
     public void endBloodBattle() {
         this.activeBattle = null;
-        System.out.println("Blood Battle has concluded.");
+        System.out.println("[NEMESIS DEBUG] Blood Battle has concluded and been cleared.");
         setDirty();
     }
 
@@ -956,19 +1769,27 @@ public class DemonHierarchyManager extends SavedData {
         DemonTrait trait = demonDataCache.get(demonUUID);
         if (trait == null) return;
 
+        System.out.println("[NEMESIS DEBUG] demonKillsPlayer: " + trait.getName() + " killed " + player.getGameProfile().getName());
 
         int playerBloodPoints = player.getCapability(PlayerDemonProvider.PLAYER_DEMON)
                 .map(PlayerDemon::getBloodPoints)
                 .orElse(0);
         int demonBloodPoints = trait.getBloodPoints();
+        int bpGain;
 
         if (demonBloodPoints < playerBloodPoints * 0.5f) { // DemonBP < 50% PlayerBP
-            trait.addBloodPoints(100); // Underdog
+            bpGain = 100; // Underdog
+            trait.addBloodPoints(bpGain);
         } else if (demonBloodPoints < playerBloodPoints * 0.8f) { // DemonBP < 80% PlayerBP
-            trait.addBloodPoints(85); // Underdog, but not as much
+            bpGain = 85; // Underdog, but not as much
+            trait.addBloodPoints(bpGain);
         } else { // DemonBP >= 80% PlayerBP
-            trait.addBloodPoints(60); // Not underdog
+            bpGain = 60; // Not underdog
+            trait.addBloodPoints(bpGain);
         }
+
+        System.out.println("[NEMESIS DEBUG] BP reward: +" + bpGain + " (demon BP: " + demonBloodPoints + " → " + trait.getBloodPoints() +
+            ", player BP: " + playerBloodPoints + ")");
 
         boolean hasEvolved = false;
         String tauntKey;
@@ -1017,6 +1838,7 @@ public class DemonHierarchyManager extends SavedData {
         trait.addPlayerTaunt(player.getUUID(), taunt);
 
         if (hasEvolved) {
+            System.out.println("[NEMESIS DEBUG] EVOLUTION: " + trait.getName() + " evolved! New title: " + trait.getTitle());
             String evolutionMsg = String.format("§cThrough bloodshed, %s has evolved, now known as %s, %s!",
                     trait.getName(), trait.getName(), trait.getTitle());
             broadcastToPlayers((ServerLevel) demon.level, Component.literal(evolutionMsg));
@@ -1028,23 +1850,47 @@ public class DemonHierarchyManager extends SavedData {
         logStoryEvent(StoryEvent.playerKilled(demon.level.getGameTime(), demonUUID,
                 trait.getName(), player.getUUID(), player.getGameProfile().getName()));
 
-        System.out.println("[Nemesis System] " + trait.getName() + " has killed a player and grown stronger.");
+        System.out.println("[NEMESIS DEBUG] " + trait.getName() + " has killed player " + player.getGameProfile().getName() + " and grown stronger.");
         setDirty();
     }
 
     public void killDemon(UUID demonUUID) {
         if (demonDataCache.containsKey(demonUUID)) {
+            DemonTrait trait = getDemonTrait(demonUUID);
+            String demonName = trait != null ? trait.getName() : "Unknown";
+            Optional<DemonRank> rank = getKizukiRank(demonUUID);
+
+            System.out.println("[NEMESIS DEBUG] DEMON KILLED: " + demonName +
+                (rank.isPresent() ? " (" + rank.get().getDisplayName().getString() + ")" : " (Fodder)") +
+                " permanently removed from hierarchy");
+
             rankedFodder.remove(demonUUID);
             demonDataCache.remove(demonUUID);
+            removeDemonFromSocialStructures(demonUUID);
 
             kizukiSlots.entrySet().removeIf(entry -> entry.getValue().equals(demonUUID));
 
-            System.out.println("A Nemesis Demon has been slain permanently.");
+            System.out.println("[NEMESIS DEBUG] A Nemesis Demon has been slain permanently.");
             setDirty();
+        } else {
+            System.out.println("[NEMESIS DEBUG] killDemon called for unknown demon UUID: " + demonUUID);
         }
     }
 
     public void setKizukiRank(DemonRank rank, UUID demonId) {
+        DemonTrait trait = getDemonTrait(demonId);
+        String demonName = trait != null ? trait.getName() : "Unknown";
+
+        // Remove from any existing rank
+        Optional<DemonRank> oldRank = getKizukiRank(demonId);
+        if (oldRank.isPresent()) {
+            System.out.println("[NEMESIS DEBUG] RANK CHANGE: " + demonName + " moved from " +
+                oldRank.get().getDisplayName().getString() + " to " + rank.getDisplayName().getString());
+        } else {
+            System.out.println("[NEMESIS DEBUG] RANK ASSIGNMENT: " + demonName + " assigned to " +
+                rank.getDisplayName().getString() + " (was fodder)");
+        }
+
         kizukiSlots.entrySet().removeIf(entry -> entry.getValue().equals(demonId));
         kizukiSlots.put(rank, demonId);
         rankedFodder.remove(demonId);
@@ -1060,34 +1906,62 @@ public class DemonHierarchyManager extends SavedData {
      * demon that meets the BP threshold. Each promoted demon gets a PROMOTED memory (F2).
      */
     public void handlePowerVacuum(DemonRank slainKizukiRank) {
-        long time = 0L; // Will be approximate; no level ref here, but memories still record 0
+        System.out.println("[NEMESIS DEBUG] ═══ POWER VACUUM: " + slainKizukiRank.getDisplayName().getString() + " slot vacant ═══");
+        long time = 0L; // Approximate; no level ref here, but memories still record 0
 
-        DemonRank currentRank = slainKizukiRank;
-        while (currentRank != null && currentRank.ordinal() >= DemonRank.LOWER_MOON_6.ordinal()) {
-            DemonRank nextLowerRank = DemonRank.values().length > currentRank.ordinal() + 1
-                    ? DemonRank.values()[currentRank.ordinal() + 1] : null;
+        DemonRank currentVacancy = slainKizukiRank;
 
-            if (nextLowerRank != null && nextLowerRank.isMoonRank() && kizukiSlots.containsKey(nextLowerRank)) {
-                UUID promoterUUID = kizukiSlots.get(nextLowerRank);
-                kizukiSlots.put(currentRank, promoterUUID);
-                kizukiSlots.remove(nextLowerRank);
-
-                // Write PROMOTED memory
-                DemonTrait promotedTrait = getDemonTrait(promoterUUID);
-                if (promotedTrait != null) {
-                    promotedTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, promoterUUID));
-                    logStoryEvent(StoryEvent.promotion(time, promoterUUID,
-                            promotedTrait.getName(), currentRank.getDisplayName().getString()));
+        // Walk downward through all moon ranks, promoting each demon one step up
+        while (currentVacancy != null && currentVacancy.isMoonRank()) {
+            // Find the next occupied rank below this vacancy
+            DemonRank nextOccupied = null;
+            for (int ord = currentVacancy.ordinal() - 1; ord >= DemonRank.LOWER_MOON_6.ordinal(); ord--) {
+                DemonRank candidate = DemonRank.values()[ord];
+                if (candidate.isMoonRank() && kizukiSlots.containsKey(candidate)) {
+                    nextOccupied = candidate;
+                    break;
                 }
-            } else {
-                // Try to promote top fodder into LOWER_MOON_6 (or whatever the lowest vacant rank is)
-                DemonRank targetSlot = currentRank;
-                // But only fill LOWER_MOON_6 from fodder — higher slots should cascade first
-                if (targetSlot.ordinal() > DemonRank.LOWER_MOON_6.ordinal()) {
-                    // Leave this slot empty; cascade can't fill it
+            }
+
+            if (nextOccupied != null) {
+                UUID promoterUUID = kizukiSlots.get(nextOccupied);
+                DemonTrait promotedTrait = getDemonTrait(promoterUUID);
+                String promotedName = promotedTrait != null ? promotedTrait.getName() : "Unknown";
+                int promoterBP = promotedTrait != null ? promotedTrait.getBloodPoints() : 0;
+
+                // Enforce BP threshold — a demon must be strong enough for the target rank
+                int bpThreshold = getOrganicPromotionBpThreshold(currentVacancy);
+                if (promoterBP < bpThreshold) {
+                    System.out.println("[NEMESIS DEBUG] Cascade BLOCKED: " + promotedName + " in " +
+                        nextOccupied.getDisplayName().getString() + " has " + promoterBP +
+                        " BP but needs " + bpThreshold + " for " + currentVacancy.getDisplayName().getString() +
+                        " — slot left empty");
                     break;
                 }
 
+                System.out.println("[NEMESIS DEBUG] Cascading promotion: " + promotedName + " from " +
+                    nextOccupied.getDisplayName().getString() + " to " + currentVacancy.getDisplayName().getString() +
+                    " (BP: " + promoterBP + " >= threshold: " + bpThreshold + ")");
+
+                kizukiSlots.put(currentVacancy, promoterUUID);
+                kizukiSlots.remove(nextOccupied);
+
+                // Write PROMOTED memory
+                if (promotedTrait != null) {
+                    promotedTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, promoterUUID));
+                    logStoryEvent(StoryEvent.promotion(time, promoterUUID,
+                            promotedTrait.getName(), currentVacancy.getDisplayName().getString()));
+                }
+                // Continue cascading — the promoted demon's old rank is now vacant
+                currentVacancy = nextOccupied;
+            } else {
+                // No more Kizuki below to cascade — try to promote top fodder into the lowest vacant moon rank
+                // The lowest vacant moon rank is always currentVacancy at this point,
+                // but we should specifically fill LM6 if it's empty (normal case)
+                DemonRank lowestVacantMoon = currentVacancy;
+
+                System.out.println("[NEMESIS DEBUG] No lower Kizuki to cascade for " + lowestVacantMoon.getDisplayName().getString() +
+                    " - attempting to promote top fodder (minimum BP: " + MINIMUM_BP_FOR_KIZUKI + ")");
                 Optional<UUID> topFodderUUID = rankedFodder.stream()
                         .filter(uuid -> {
                             DemonTrait t = getDemonTrait(uuid);
@@ -1100,22 +1974,32 @@ public class DemonHierarchyManager extends SavedData {
 
                 if (topFodderUUID.isPresent()) {
                     UUID promoterId = topFodderUUID.get();
-                    rankedFodder.remove(promoterId);
-                    kizukiSlots.put(DemonRank.LOWER_MOON_6, promoterId);
+                    DemonTrait fodderTrait = getDemonTrait(promoterId);
+                    String fodderName = fodderTrait != null ? fodderTrait.getName() : "Unknown";
+                    int fodderBP = fodderTrait != null ? fodderTrait.getBloodPoints() : 0;
 
-                    DemonTrait promotedTrait = getDemonTrait(promoterId);
-                    if (promotedTrait != null) {
-                        promotedTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, promoterId));
+                    System.out.println("[NEMESIS DEBUG] Promoting fodder to " + lowestVacantMoon.getDisplayName().getString() +
+                        ": " + fodderName + " (BP: " + fodderBP + ")");
+
+                    rankedFodder.remove(promoterId);
+                    kizukiSlots.put(lowestVacantMoon, promoterId);
+
+                    if (fodderTrait != null) {
+                        fodderTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, promoterId));
                         logStoryEvent(StoryEvent.promotion(time, promoterId,
-                                promotedTrait.getName(), DemonRank.LOWER_MOON_6.getDisplayName().getString()));
+                                fodderTrait.getName(), lowestVacantMoon.getDisplayName().getString()));
                     }
+                } else {
+                    System.out.println("[NEMESIS DEBUG] No qualifying fodder found for " + lowestVacantMoon.getDisplayName().getString() +
+                        " (need BP >= " + MINIMUM_BP_FOR_KIZUKI + ") - slot remains empty");
                 }
-                // If no fodder meets the threshold, the slot stays empty (organic fill later)
+
+                System.out.println("[NEMESIS DEBUG] Power vacuum cascade complete - " + lowestVacantMoon.getDisplayName().getString() +
+                    " slot " + (kizukiSlots.containsKey(lowestVacantMoon) ? "filled" : "remains empty"));
                 break;
             }
-            currentRank = nextLowerRank;
         }
-        System.out.println("[Nemesis System] Power vacuum resolved in the Kizuki ranks.");
+        System.out.println("[NEMESIS DEBUG] Power vacuum resolved in the Kizuki ranks.");
         setDirty();
     }
 
@@ -1127,9 +2011,9 @@ public class DemonHierarchyManager extends SavedData {
         if (!demonDataCache.containsKey(uuid)) {
             demonDataCache.put(uuid, trait);
             rankedFodder.add(uuid);
-            // We don't need to sort here every time, we can sort when needed
 
-            System.out.println("New Nemesis Demon registered: " + trait.getName() + " " + trait.getTitle());
+            System.out.println("[NEMESIS DEBUG] New demon registered: " + trait.getName() + " " + trait.getTitle() +
+                " (BP:" + trait.getBloodPoints() + ", " + trait.getBehavior() + "/" + trait.getPersonality() + ")");
             setDirty();
         }
     }
@@ -1141,6 +2025,150 @@ public class DemonHierarchyManager extends SavedData {
             }
         }
         return Optional.empty();
+    }
+
+    public void tickSocialAlliances(long gameTime) {
+        expireActiveAlliances(gameTime);
+
+        if (this.battleSessionTracker != null) {
+            activeAlliances.entrySet().removeIf(entry -> !this.battleSessionTracker.isInBattle(entry.getKey()));
+        }
+    }
+
+    public Optional<UUID> getDemonIdForRank(DemonRank rank) {
+        if (rank == null) {
+            return Optional.empty();
+        }
+
+        if (rank == DemonRank.FODDER) {
+            return getRandomFodderDemonId();
+        }
+
+        return Optional.ofNullable(kizukiSlots.get(rank));
+    }
+
+    public Optional<UUID> getRandomFodderDemonId() {
+        List<UUID> candidates = rankedFodder.stream()
+                .filter(id -> getDemonTrait(id) != null)
+                .toList();
+
+        if (candidates.isEmpty()) {
+            return Optional.empty();
+        }
+
+        return Optional.of(candidates.get(random.nextInt(candidates.size())));
+    }
+
+    public @Nullable UUID getAllianceLeader(UUID memberId, long currentTime) {
+        for (Map.Entry<UUID, ActiveAlliance> entry : activeAlliances.entrySet()) {
+            if (entry.getValue().expiresAt() > currentTime && entry.getValue().members().contains(memberId)) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    public void tryMobilizeAlliesForFight(UUID leaderId, @Nullable UUID targetId, boolean targetIsPlayer,
+                                          ServerLevel level, BlockPos anchor, int requestedAllies) {
+        if (leaderId == null || targetId == null) return;
+
+        if (this.battleSessionTracker != null && this.battleSessionTracker.isInBattle(leaderId)) {
+            return;
+        }
+
+        boolean isResponder = isAllianceMember(leaderId, level.getGameTime());
+
+        // Prevent cascading summons beyond depth 1
+        if (isResponder) {
+            UUID myLeader = getAllianceLeader(leaderId, level.getGameTime());
+            // If my leader is also a responder, I am depth 2 (Grandchild), so I cannot summon.
+            if (myLeader != null && isAllianceMember(myLeader, level.getGameTime())) {
+                System.out.println("[NEMESIS DEBUG] Mobilization blocked: " + leaderId + " is a secondary summon (depth 2+)");
+                return;
+            }
+        }
+
+        ActiveAlliance existing = activeAlliances.get(leaderId);
+        long now = level.getGameTime();
+        if (existing != null && existing.expiresAt() > now) {
+            return;
+        }
+
+        DemonTrait leaderTrait = getDemonTrait(leaderId);
+        if (leaderTrait == null) return;
+
+        int allyBudget = Math.max(0, Math.min(MAX_ALLIES_PER_CALL_HARD, requestedAllies));
+        if (allyBudget == 0) return;
+
+        List<UUID> candidates = findCompatibleAllies(leaderId, targetId, targetIsPlayer, level, allyBudget);
+
+        if (isResponder) {
+            Set<UUID> packMembers = demonPacks.getOrDefault(leaderId, Collections.emptySet());
+            candidates = candidates.stream()
+                    .filter(packMembers::contains)
+                    .toList();
+        }
+
+        if (candidates.isEmpty()) {
+            return;
+        }
+
+        net.minecraft.world.entity.Entity targetEntity = targetIsPlayer
+                ? level.getPlayerByUUID(targetId)
+                : level.getEntity(targetId);
+
+        if (!(targetEntity instanceof net.minecraft.world.entity.LivingEntity livingTarget)) {
+            return;
+        }
+
+        Set<UUID> committed = new HashSet<>();
+
+        for (UUID allyId : candidates) {
+            if (level.getEntity(allyId) != null) {
+                continue;
+            }
+
+            int distance = 40 + random.nextInt(41); // 40-80 blocks
+            double angle = random.nextDouble() * 2 * Math.PI;
+            int xOffset = (int) (Math.cos(angle) * distance);
+            int zOffset = (int) (Math.sin(angle) * distance);
+            BlockPos pos = anchor.offset(xOffset, 0, zOffset);
+
+            DemonTrait allyTrait = getDemonTrait(allyId);
+            String allyName = allyTrait != null ? allyTrait.getName() : "Unknown";
+            String reason = "Ally for " + leaderTrait.getName() + (isResponder ? " (Pack)" : "");
+
+            System.out.println("[NEMESIS DEBUG] Mobilizing ally: " + allyName +
+                " for leader " + leaderTrait.getName() +
+                (isResponder ? " (Pack member call)" : ""));
+
+            boolean spawned = spawnDemonFromData(allyId, level, pos, reason);
+            if (!spawned) continue;
+
+            net.minecraft.world.entity.Entity spawnedEntity = level.getEntity(allyId);
+            if (spawnedEntity instanceof NemesisDemonEntity allySpawned) {
+                allySpawned.setTarget(livingTarget);
+                committed.add(allyId);
+            }
+        }
+
+        if (!committed.isEmpty()) {
+            // Use battle session to track validity instead of arbitrary time limit
+            activeAlliances.put(leaderId, new ActiveAlliance(committed, targetId, targetIsPlayer, Long.MAX_VALUE));
+        }
+    }
+
+    /**
+     * Returns true if the given demon is currently a member (summoned ally) in an active alliance.
+     * Used to prevent cascading summons where summoned allies call their own reinforcements.
+     */
+    public boolean isAllianceMember(UUID demonId, long currentTime) {
+        for (ActiveAlliance alliance : activeAlliances.values()) {
+            if (alliance.expiresAt() > currentTime && alliance.members().contains(demonId)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void trySpawnHunterForPlayer(ServerPlayer player) {
@@ -1235,8 +2263,15 @@ public class DemonHierarchyManager extends SavedData {
 
         if (random.nextFloat() < finalChance) {
             if (((ServerLevel)player.level).getEntity(hunterId) == null) {
-                System.out.printf("[Nemesis System] Hunter %s is attempting to spawn. Final Chance: %.2f%%%n", hunterTrait.getName(), finalChance * 100);
-                spawnDemonFromData(hunterId, (ServerLevel) player.level, player.blockPosition().offset(-5 + random.nextInt(10), 0, -5 + random.nextInt(10)));
+                System.out.println("[NEMESIS DEBUG] HUNTER SPAWN: " + hunterTrait.getName() + " dispatched to hunt " +
+                    player.getGameProfile().getName() + " (chance=" + String.format("%.2f%%", finalChance * 100) +
+                    ", personality=" + hunterTrait.getPersonality() + ")");
+                boolean spawned = spawnDemonFromData(hunterId, (ServerLevel) player.level,
+                        player.blockPosition().offset(-5 + random.nextInt(10), 0, -5 + random.nextInt(10)), "Hunter Dispatch");
+                if (spawned) {
+                    tryMobilizeAlliesForFight(hunterId, player.getUUID(), true,
+                            (ServerLevel) player.level, player.blockPosition(), 2);
+                }
 
                 // Log story event (H1)
                 logStoryEvent(StoryEvent.hunterSent(((ServerLevel) player.level).getGameTime(),
@@ -1246,20 +2281,24 @@ public class DemonHierarchyManager extends SavedData {
         }
     }
 
-    public void spawnDemonFromData(UUID demonId, ServerLevel level, BlockPos pos) {
+    public boolean spawnDemonFromData(UUID demonId, ServerLevel level, BlockPos pos, String reason) {
         DemonTrait trait = getDemonTrait(demonId);
-        if (trait == null) return;
+        if (trait == null) return false;
+
+        if (level.getEntity(demonId) != null) {
+            return false;
+        }
 
         NemesisDemonEntity demon = new NemesisDemonEntity(ModEntityTypes.NEMESIS_DEMON.get(), level);
 
         demon.setUUID(demonId);
         demon.applyTraitData(trait);
         demon.setPos(pos.getX(), pos.getY(), pos.getZ());
-
         demon.setTarget(level.getNearestPlayer(demon, 100));
 
         level.addFreshEntity(demon);
-        System.out.println("Spawning hunter: " + trait.getName());
+        System.out.println("Spawning hunter: " + trait.getName() + " [Reason: " + reason + "]");
+        return true;
     }
 
     // ── World blood battles (J1) ────────────────────────────────────────
@@ -1270,7 +2309,12 @@ public class DemonHierarchyManager extends SavedData {
      */
     public void trySpawnWorldBattle(ServerLevel level) {
         // Don't spam world battles — max 1 active at a time
-        if (!activeWorldBattles.isEmpty()) return;
+        if (!activeWorldBattles.isEmpty()) {
+            System.out.println("[NEMESIS DEBUG] World battle skipped: one already active");
+            return;
+        }
+
+        System.out.println("[NEMESIS DEBUG] Attempting to spawn a world battle...");
 
         // Find two demons with a rivalry
         UUID demon1Id = null, demon2Id = null;
@@ -1343,6 +2387,9 @@ public class DemonHierarchyManager extends SavedData {
         level.addFreshEntity(entity1);
         level.addFreshEntity(entity2);
 
+        tryMobilizeAlliesForFight(demon1Id, demon2Id, false, level, pos1, 2);
+        tryMobilizeAlliesForFight(demon2Id, demon1Id, false, level, pos2, 2);
+
         activeWorldBattles.put(demon1Id, demon2Id);
 
         // Log story event
@@ -1363,6 +2410,7 @@ public class DemonHierarchyManager extends SavedData {
      * Called from NemesisSystemEvents when a demon in an active world battle dies.
      */
     public void handleWorldBattleConclusion(UUID deadDemonId, UUID killerDemonId, ServerLevel level) {
+        System.out.println("[NEMESIS DEBUG] ═══ WORLD BATTLE CONCLUDED ═══");
         // Verify this is a world battle
         UUID partner = activeWorldBattles.remove(deadDemonId);
         if (partner == null) {
@@ -1420,10 +2468,12 @@ public class DemonHierarchyManager extends SavedData {
             }
         }
 
+        // Get the loser's Kizuki rank BEFORE killing them (killDemon removes from kizukiSlots)
+        Optional<DemonRank> loserRank = getKizukiRank(deadDemonId);
+
         // Kill the loser demon
         killDemon(deadDemonId);
         // Handle power vacuum if the loser was Kizuki
-        Optional<DemonRank> loserRank = getKizukiRank(deadDemonId);
         loserRank.ifPresent(this::handlePowerVacuum);
 
         setDirty();
@@ -1440,49 +2490,80 @@ public class DemonHierarchyManager extends SavedData {
         if (initialized) return;
         initialized = true;
 
-        System.out.println("[Nemesis System] First world load! Populating the demon roster...");
+        System.out.println("[NEMESIS DEBUG] ═══ INITIAL POPULATION: First world load! Populating the demon roster... ═══");
         BlueprintLoader.loadBlueprints();
 
+        long gameTime = level.getGameTime();
+
         if (level.getGameRules().getBoolean(ModGameRules.USE_CANON_KIZUKI)) {
-            System.out.println("[Nemesis] Using canonical Kizuki blueprints...");
+            System.out.println("[NEMESIS DEBUG] Using canonical Kizuki blueprints...");
             for (DemonRank rank : DemonRank.values()) {
                 if (rank.isMoonRank()) {
                     DemonBlueprint bp = BlueprintLoader.getBlueprint(rank.getBlueprintId());
                     if (bp != null) {
-                        NemesisDemonEntity demon = new NemesisDemonEntity(ModEntityTypes.NEMESIS_DEMON.get(), level);
-                        DemonGenerator.initializeBlueprint(demon, bp, level);
-                        demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
-                            if (bp.bloodPoints() > 0) {
-                                trait.addBloodPoints(bp.bloodPoints());
-                            }
-                            if (bp.taunts() != null) {
-                                trait.setBlueprintTaunts(bp.taunts());
-                            }
-                            if (bp.announcements() != null) {
-                                trait.setBlueprintAnnouncements(bp.announcements());
-                            }
-                            this.addDemon(demon.getUUID(), (DemonTrait) trait);
-                            this.setKizukiRank(rank, demon.getUUID());
-                        });
+                        UUID demonUUID = UUID.randomUUID();
+                        DemonTrait trait = new DemonTrait();
+                        DemonGenerator.initializeBlueprintTrait(trait, bp, gameTime);
+
+                        if (bp.bloodPoints() > 0) {
+                            trait.addBloodPoints(bp.bloodPoints());
+                        }
+                        if (bp.taunts() != null) {
+                            trait.setBlueprintTaunts(bp.taunts());
+                        }
+                        if (bp.announcements() != null) {
+                            trait.setBlueprintAnnouncements(bp.announcements());
+                        }
+
+                        this.addDemon(demonUUID, trait);
+                        this.setKizukiRank(rank, demonUUID);
+                        System.out.println("[NEMESIS DEBUG] Populated " + rank.getDisplayName().getString() + " with " + trait.getName() + " " + trait.getTitle() +
+                            " (BP:" + trait.getBloodPoints() + ", V:" + trait.getVigor() + "/S:" + trait.getStrength() + "/A:" + trait.getAgility() + ")");
+                    } else {
+                        System.out.println("[NEMESIS DEBUG] WARNING: No blueprint found for " + rank.getBlueprintId() + ", generating procedural demon.");
+                        UUID demonUUID = UUID.randomUUID();
+                        DemonTrait trait = new DemonTrait();
+                        DemonGenerator.initializeProceduralTrait(trait, gameTime);
+                        ensureKizukiMinimumBp(trait, rank);
+                        this.addDemon(demonUUID, trait);
+                        this.setKizukiRank(rank, demonUUID);
                     }
                 }
             }
         } else {
-            System.out.println("[Nemesis System] Generating random Kizuki...");
+            System.out.println("[NEMESIS DEBUG] Generating random Kizuki (canonical blueprints disabled)...");
             for (DemonRank rank : DemonRank.values()) {
                 if (rank.isMoonRank()) {
-                    NemesisDemonEntity demon = new NemesisDemonEntity(ModEntityTypes.NEMESIS_DEMON.get(), level);
-                    DemonGenerator.initializeProcedural(demon, level);
-                    demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
-                        this.addDemon(demon.getUUID(), (DemonTrait) trait);
-                        this.setKizukiRank(rank, demon.getUUID());
-                    });
+                    UUID demonUUID = UUID.randomUUID();
+                    DemonTrait trait = new DemonTrait();
+                    DemonGenerator.initializeProceduralTrait(trait, gameTime);
+                    ensureKizukiMinimumBp(trait, rank);
+                    this.addDemon(demonUUID, trait);
+                    this.setKizukiRank(rank, demonUUID);
                 }
             }
         }
 
+        System.out.println("[NEMESIS DEBUG] Filling fodder roster...");
         refillDemonRoster(level);
+        System.out.println("[NEMESIS DEBUG] ═══ INITIAL POPULATION COMPLETE: " + kizukiSlots.size() + " Kizuki, " + rankedFodder.size() + " Fodder, " + demonDataCache.size() + " total demons ═══");
         setDirty();
+    }
+
+    private void ensureKizukiMinimumBp(DemonTrait trait, DemonRank rank) {
+        if (trait == null || rank == null || !rank.isMoonRank()) {
+            return;
+        }
+
+        int requiredBp = getOrganicPromotionBpThreshold(rank);
+        if (trait.getBloodPoints() < requiredBp) {
+            int variation = random.nextInt(51); // 0-50 variation
+            trait.setBloodPoints(requiredBp + variation);
+        }
+    }
+
+    public boolean isKizuki(UUID uuid) {
+        return kizukiSlots.containsValue(uuid);
     }
 
     public static DemonHierarchyManager get(ServerLevel level) {
@@ -1513,6 +2594,18 @@ public class DemonHierarchyManager extends SavedData {
         CompoundTag cacheTag = new CompoundTag();
         demonDataCache.forEach((uuid, trait) -> cacheTag.put(uuid.toString(), trait.serializeNBT()));
         nbt.put("demonDataCache", cacheTag);
+
+        CompoundTag packsTag = new CompoundTag();
+        demonPacks.forEach((leader, members) -> {
+            ListTag membersTag = new ListTag();
+            members.stream()
+                    .filter(demonDataCache::containsKey)
+                    .forEach(member -> membersTag.add(StringTag.valueOf(member.toString())));
+            if (!membersTag.isEmpty()) {
+                packsTag.put(leader.toString(), membersTag);
+            }
+        });
+        nbt.put("demonPacks", packsTag);
 
         nbt.putInt("worldDayCounter", this.worldDayCounter);
         nbt.putBoolean("initialized", this.initialized);
@@ -1553,6 +2646,28 @@ public class DemonHierarchyManager extends SavedData {
             DemonTrait trait = new DemonTrait();
             trait.deserializeNBT(cacheTag.getCompound(key));
             manager.demonDataCache.put(UUID.fromString(key), trait);
+        }
+
+        if (nbt.contains("demonPacks", 10)) {
+            CompoundTag packsTag = nbt.getCompound("demonPacks");
+            for (String key : packsTag.getAllKeys()) {
+                try {
+                    UUID leader = UUID.fromString(key);
+                    ListTag membersTag = packsTag.getList(key, 8);
+                    Set<UUID> members = new HashSet<>();
+                    for (int i = 0; i < membersTag.size(); i++) {
+                        try {
+                            UUID memberId = UUID.fromString(membersTag.getString(i));
+                            if (manager.demonDataCache.containsKey(memberId)) {
+                                members.add(memberId);
+                            }
+                        } catch (IllegalArgumentException ignored) {}
+                    }
+                    if (members.contains(leader) && members.size() >= 2) {
+                        manager.demonPacks.put(leader, members);
+                    }
+                } catch (IllegalArgumentException ignored) {}
+            }
         }
 
         // Load story log (H1)

@@ -19,8 +19,7 @@ import java.util.function.Supplier;
  * Deferred registry for all custom blocks in the mod.
  *
  * <p>Includes Wisteria wood set (log, planks, leaves, sapling), ores (tamahagane, scarlet ore),
- * crafting stations ({@link SwordsmithTableBlock}, {@link SunForgeBlock}), and the
- * {@link RankingBoardBlock}.
+ * crafting stations ({@link SwordsmithTableBlock}, {@link SunForgeBlock}).
  */
 public class ModBlocks {
     public static final DeferredRegister<Block> BLOCKS =
@@ -35,8 +34,6 @@ public class ModBlocks {
     public static final RegistryObject<Block> WISTERIA_SAPLING = registerBlock("wisteria_sapling",
             () -> new SaplingBlock(new WisteriaSaplingGrower(), BlockBehaviour.Properties.copy(Blocks.OAK_SAPLING)));
 
-    public static final RegistryObject<Block> RANKING_BOARD = registerBlock("ranking_board",
-            () -> new RankingBoardBlock(BlockBehaviour.Properties.copy(Blocks.OAK_PLANKS).noOcclusion()));
 
     public static final RegistryObject<Block> SCARLET_ORE = registerBlock("scarlet_ore",
             () -> new DropExperienceBlock(BlockBehaviour.Properties.copy(Blocks.IRON_ORE)

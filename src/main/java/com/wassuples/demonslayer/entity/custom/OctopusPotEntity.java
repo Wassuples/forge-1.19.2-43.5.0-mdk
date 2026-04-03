@@ -86,7 +86,7 @@ public class OctopusPotEntity extends Monster implements IAnimatable {
 
             for (LivingEntity target : nearbyEntities) {
                 if (target == this) continue;
-                if (owner != null && target.equals(owner)) continue;
+                if (target.equals(owner)) continue;
                 if (SummonAllies.areAllies(this, target)) continue;
 
                 if (this.distanceToSqr(target) < radius * radius) {
@@ -115,7 +115,7 @@ public class OctopusPotEntity extends Monster implements IAnimatable {
 
     // --- Animation ---
     private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
-        AnimationController<E> controller = event.getController();
+        AnimationController controller = event.getController();
         if (this.tickCount < 15) {
             controller.setAnimation(new AnimationBuilder().addAnimation("emerge", false));
         } else {

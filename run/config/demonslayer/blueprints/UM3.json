@@ -1,40 +1,42 @@
-{
-  "id": "UM3",
-  "name": "Akaza",
-  "title": "the Third Moon",
-  "behavior": "DUELIST",
-  "personality": "HONOR_BOUND",
-  "bda": "DESTRUCTIVE_DEATH",
-  "quirks": [
-    "HEAVY_HITTER",
-    "SHOCKWAVE_STOMP",
-    "KEEN_SCENT",
-    "OBSESSIVE_HUNTER"
-  ],
-  "stats": {
-    "vigor": 85,
-    "strength": 95,
-    "agility": 90
-  },
-  "taunts": {
-    "generic": [
-      "You're back, {player}! Good! The memory of our last fight is still fresh. Show me your progress!",
-      "Your fighting spirit is magnificent! Don't disappoint me this time!"
-    ],
-    "low_health_comeback": [
-      "You pushed me to the brink! That passion! It's wonderful! But you still lacked the will to finish it.",
-      "That last attack of yours was magnificent, but it was not enough. Show me more!",
-      "Yes! This is what a battle should be! But you cannot defeat me.",
-      "Become a demon, {player}! I've told you this before. We could train together for eternity!"
-    ],
-    "overkill": [
-      "You were weak then. Have you done anything to remedy that?",
-      "I ended our last fight with a single blow. Do not be so fragile again.",
-      "You have no strength. Why do you even bother?"
-    ],
-    "tactical_kill": [
-      "Your technique were sloppy. That is why you fell. Have you improved?",
-      "You lost your focus. In a true battle, that means death."
-    ]
-  }
+﻿{
+    "id":  "UM3",
+    "name":  "Akaza",
+    "title":  "the Third Moon",
+    "behavior":  "DUELIST",
+    "personality":  "HONOR_BOUND",
+    "bda":  "DESTRUCTIVE_DEATH",
+    "quirks":  [
+                   "HEAVY_HITTER",
+                   "SHOCKWAVE_STOMP",
+                   "KEEN_SCENT",
+                   "OBSESSIVE_HUNTER"
+               ],
+    "stats":  {
+                  "vigor":  85,
+                  "strength":  95,
+                  "agility":  90
+              },
+    "taunts":  {
+                   "generic":  [
+                                   "You\u0027re back, {player}! Good! The memory of our last fight is still fresh. Show me your progress!",
+                                   "Your fighting spirit is magnificent! Don\u0027t disappoint me this time!"
+                               ],
+                   "low_health_comeback":  [
+                                               "You pushed me to the brink! That passion! It\u0027s wonderful! But you still lacked the will to finish it.",
+                                               "That last attack of yours was magnificent, but it was not enough. Show me more!",
+                                               "Yes! This is what a battle should be! But you cannot defeat me.",
+                                               "Become a demon, {player}! I\u0027ve told you this before. We could train together for eternity!"
+                                           ],
+                   "overkill":  [
+                                    "You were weak then. Have you done anything to remedy that?",
+                                    "I ended our last fight with a single blow. Do not be so fragile again.",
+                                    "You have no strength. Why do you even bother?"
+                                ],
+                   "tactical_kill":  [
+                                         "Your technique were sloppy. That is why you fell. Have you improved?",
+                                         "You lost your focus. In a true battle, that means death."
+                                     ]
+               },
+    "skin_location":  "demonslayer:textures/entity/upper_moon_three.png"
 }
+

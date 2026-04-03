@@ -25,7 +25,6 @@
   "block.demonslayer.scarlet_ore": "Scarlet Ore",
   "block.demonslayer.sun_forge": "Sun Forge",
   "block.demonslayer.swordsmiths_table": "Swordsmith's Table",
-  "block.demonslayer.ranking_board": "Ranking Board",
 
   "gamerule.doFormsGriefing": "Form Griefing",
   "gamerule.doFormsGriefing.description": "Determines if forms cause environmental damage.",
@@ -33,31 +32,31 @@
   "gamerule.useCanonKizuki.description": "If true, the server will use the original 12 kizuki from the manga and anime. Otherwise, it will generate them randomly.",
   "gamerule.minDemonRosterSize": "Minimum Demon Roster Size",
   "gamerule.minDemonRosterSize.description": "The minimum number of demons that must be present on the roster.",
+  "gamerule.formsCooldownMultiplier": "Forms Cooldown Multiplier",
+  "gamerule.formsCooldownMultiplier.description": "Percentage multiplier for cooldowns of all forms. 100 = default cooldowns, 0 = no cooldown.",
 
   "itemGroup.demonslayertab": "Kimetsu no Yaiba: Main Page",
   "itemGroup.demonslayer_nichirin": "Kimetsu no Yaiba: Nichirin Swords",
   "itemGroup.demonslayer_spawn_eggs": "Kimetsu no Yaiba: Spawn Eggs",
 
   "key.category.demonslayer.category": "Demon Slayer",
-  "key.demonslayer.change_form": "Change Blade Form",
-  "key.demonslayer.use_form": "Use Blade Form",
+  "key.demonslayer.change_form": "Change Equipped Form",
+  "key.demonslayer.change_form_back": "Change Equipped Form (Backwards)",
+  "key.demonslayer.use_form": "Use Equipped Form",
   "key.demonslayer.bda_toggle": "Toggle BDAs",
 
   "message.demonslayer.use_form": "Used Form!",
   "key.demonslayer.open_menu": "Open Breathing Menu",
 
   "effect.demonslayer.wisteria_poison":  "Wisteria Poison",
+  "effect.demonslayer.paralyzing_poison": "Paralyzing Poison",
 
   "item.demonslayer.raw_scarlet": "Raw Scarlet",
   "biome.demonslayer.mount_yoko": "Mount Yoko",
   "item.demonslayer.scarlet_crimson_iron_sand": "Scarlet Crimson Iron Sand",
   "item.demonslayer.nichirin_steel": "Nichirin Steel",
 
-  "item.demonslayer.fodder_demon_spawn_egg": "Fodder Demon Spawn Egg",
-  "item.demonslayer.lowly_demon_spawn_egg": "Lowly Demon Spawn Egg",
-  "item.demonslayer.common_demon_spawn_egg": "Common Demon Spawn Egg",
-  "item.demonslayer.greater_demon_spawn_egg": "Greater Demon Spawn Egg",
-  "item.demonslayer.elite_demon_spawn_egg": "Elite Demon Spawn Egg",
+  "item.demonslayer.nemesis_demon_spawn_egg": "Nemesis Demon Spawn Egg",
   "item.demonslayer.hand_demon_spawn_egg": "Hand Demon Spawn Egg",
 
   "item.demonslayer.lower_moon_one_spawn_egg": "Lower Moon One Spawn Egg",
@@ -83,6 +82,5 @@
   "item.demonslayer.nichirin_blade_rengoku": "Rengoku's Nichirin Blade (Flame)",
   "item.demonslayer.nichirin_blade_tengen": "Tengen's Nichirin Blade (Sound)",
   "item.demonslayer.nichirin_blade_jigoro": "Jigoro's Nichirin Blade (Thunder)",
-  "item.demonslayer.nichirin_blade_kanae": "Kanae's Nichirin Blade (Flower)",
-  "item.demonslayer.ranking_board": "Ranking Board"
+  "item.demonslayer.nichirin_blade_kanae": "Kanae's Nichirin Blade (Flower)"
 }

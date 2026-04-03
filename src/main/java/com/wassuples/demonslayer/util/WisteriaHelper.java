@@ -4,6 +4,8 @@ import com.wassuples.demonslayer.block.ModBlocks;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.Level;
 
+import javax.annotation.Nullable;
+
 /**
  * Server-safe helpers for wisteria-related mechanics.
  */
@@ -30,6 +32,37 @@ public final class WisteriaHelper {
             }
         }
         return false;
+    }
+
+    /**
+     * Finds the closest Wisteria leaves block in a cube radius around {@code center}.
+     */
+    @Nullable
+    public static BlockPos findNearestWisteriaLeaves(Level level, BlockPos center, int radius) {
+        if (radius <= 0) return null;
+
+        BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
+        BlockPos nearest = null;
+        int bestDistSq = Integer.MAX_VALUE;
+
+        for (int dx = -radius; dx <= radius; dx++) {
+            for (int dy = -radius; dy <= radius; dy++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    pos.set(center.getX() + dx, center.getY() + dy, center.getZ() + dz);
+                    if (!level.getBlockState(pos).is(ModBlocks.WISTERIA_LEAVES.get())) {
+                        continue;
+                    }
+
+                    int distSq = dx * dx + dy * dy + dz * dz;
+                    if (distSq < bestDistSq) {
+                        bestDistSq = distSq;
+                        nearest = pos.immutable();
+                    }
+                }
+            }
+        }
+
+        return nearest;
     }
 }
 

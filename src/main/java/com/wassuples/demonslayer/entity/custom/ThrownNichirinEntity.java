@@ -12,7 +12,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MoverType;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.Projectile;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.Level;
@@ -28,13 +27,11 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+import javax.annotation.Nullable;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
-/**
- * Custom entity: Thrown Nichirin.
- */
 public class ThrownNichirinEntity extends Projectile implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     private int lifeTicks = 0;
@@ -45,14 +42,16 @@ public class ThrownNichirinEntity extends Projectile implements IAnimatable {
     private static final String THROW_KEY = "ThrowId";
 
     private UUID throwId = null;
+    private UUID ownerUuid = null;
     public void setThrowId(UUID id) { this.throwId = id; }
     public UUID getThrowId() { return this.throwId; }
+    public boolean isOwnedBy(UUID uuid) { return uuid != null && uuid.equals(this.ownerUuid); }
 
     @Override
     public void addAdditionalSaveData(CompoundTag tag) {
         super.addAdditionalSaveData(tag);
-        if (this.getOwner() != null) {
-            tag.putUUID(OWNER_KEY, this.getOwner().getUUID());
+        if (this.ownerUuid != null) {
+            tag.putUUID(OWNER_KEY, this.ownerUuid);
         }
         if (throwId != null) {
             tag.putUUID(THROW_KEY, throwId);
@@ -64,6 +63,7 @@ public class ThrownNichirinEntity extends Projectile implements IAnimatable {
         super.readAdditionalSaveData(tag);
         if (tag.hasUUID(OWNER_KEY)) {
             UUID ownerId = tag.getUUID(OWNER_KEY);
+            this.ownerUuid = ownerId;
             // this will only resolve on the client after the world knows the entity
             Entity possibleOwner = ((ServerLevel) this.level).getEntity(ownerId);
             if (possibleOwner instanceof LivingEntity le) {
@@ -82,8 +82,15 @@ public class ThrownNichirinEntity extends Projectile implements IAnimatable {
     public ThrownNichirinEntity(Level pLevel, LivingEntity pShooter) {
         super(ModEntityTypes.THROWN_NICHIRIN.get(), pLevel);
         this.setOwner(pShooter);
+        this.ownerUuid = pShooter.getUUID();
         this.setPos(pShooter.getEyePosition());
         this.setNoGravity(true);
+    }
+
+    @Override
+    public void setOwner(@Nullable Entity pOwner) {
+        super.setOwner(pOwner);
+        this.ownerUuid = pOwner == null ? null : pOwner.getUUID();
     }
 
     @Override

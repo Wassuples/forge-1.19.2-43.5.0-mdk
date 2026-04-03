@@ -1,13 +1,21 @@
 package com.wassuples.demonslayer.nemesis.ai;
 
 import com.wassuples.demonslayer.demon.ai.DemonGenerator;
+import com.wassuples.demonslayer.entity.ai.AvoidWisteriaLeavesGoal;
+import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
+import com.wassuples.demonslayer.nemesis.trait.DemonTrait;
+import com.wassuples.demonslayer.util.DemonSunlightHelper;
 import com.wassuples.demonslayer.nemesis.ai.goals.NemesisAttackGoal;
 import com.wassuples.demonslayer.nemesis.ai.goals.StayInBiomeGoal;
 import com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider;
 import com.wassuples.demonslayer.nemesis.trait.IDemonTrait;
+import com.wassuples.demonslayer.nemesis.trait.Quirk;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.entity.EntityType;
@@ -20,13 +28,18 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.*;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffectCategory;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.ServerLevelAccessor;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
+import java.util.Comparator;
 import java.util.UUID;
 
 /**
@@ -53,8 +66,66 @@ import java.util.UUID;
 public class NemesisDemonEntity extends Monster {
     private static final UUID AGGRESSIVE_FOLLOW_RANGE_MODIFIER_ID = UUID.fromString("020E0DFB-87AE-4653-9556-831010E291A0");
 
+    /**
+     * Synched data accessor for the source blueprint ID. An empty string means no blueprint (procedural demon).
+     * This is synced to the client so the renderer can pick the correct skin texture.
+     */
+    private static final EntityDataAccessor<String> DATA_BLUEPRINT_ID =
+            SynchedEntityData.defineId(NemesisDemonEntity.class, EntityDataSerializers.STRING);
+
+    private static final EntityDataAccessor<String> DATA_SKIN_LOCATION =
+            SynchedEntityData.defineId(NemesisDemonEntity.class, EntityDataSerializers.STRING);
+
     public NemesisDemonEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(DATA_BLUEPRINT_ID, "");
+        this.entityData.define(DATA_SKIN_LOCATION, "");
+    }
+
+    public String getBlueprintId() {
+        return this.entityData.get(DATA_BLUEPRINT_ID);
+    }
+
+    public void setBlueprintId(String id) {
+        this.entityData.set(DATA_BLUEPRINT_ID, id != null ? id : "");
+    }
+
+    public String getSkinLocation() {
+        return this.entityData.get(DATA_SKIN_LOCATION);
+    }
+
+    public void setSkinLocation(String skinLocation) {
+        this.entityData.set(DATA_SKIN_LOCATION, skinLocation != null ? skinLocation : "");
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        String bpId = this.getBlueprintId();
+        if (!bpId.isEmpty()) {
+            tag.putString("BlueprintId", bpId);
+        }
+
+        String skinLocation = this.getSkinLocation();
+        if (!skinLocation.isEmpty()) {
+            tag.putString("SkinLocation", skinLocation);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.contains("BlueprintId")) {
+            this.setBlueprintId(tag.getString("BlueprintId"));
+        }
+        if (tag.contains("SkinLocation")) {
+            this.setSkinLocation(tag.getString("SkinLocation"));
+        }
     }
 
     @Override
@@ -63,6 +134,7 @@ public class NemesisDemonEntity extends Monster {
         // This will be OVERWRITTEN by applyBehavioralAI when the trait is applied,
         // but it ensures the entity initializes correctly.
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new AvoidWisteriaLeavesGoal(this, 4, 1.25D));
         this.goalSelector.addGoal(2, new NemesisAttackGoal(this, 1.4D, true, 0.75f));
         this.goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 1.0D));
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this));
@@ -76,6 +148,10 @@ public class NemesisDemonEntity extends Monster {
         this.setCustomName(Component.literal(trait.getName() + " " + trait.getTitle()));
         this.setCustomNameVisible(true);
 
+        // Sync the blueprint ID to the client for skin selection
+        this.setBlueprintId(trait.getSourceBlueprintId());
+        this.setSkinLocation(trait.getSkinLocation());
+
         this.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(cap -> {
             cap.copyFrom(trait);
         });
@@ -85,21 +161,82 @@ public class NemesisDemonEntity extends Monster {
         var damageAttribute = this.getAttribute(Attributes.ATTACK_DAMAGE);
 
 
+        double healthMultiplier = 1.0D;
+        double damageMultiplier = 1.0D;
+        double speedMultiplier = 1.0D;
+        double followRangeBonus = 0.0D;
+        double knockbackResistanceBonus = 0.0D;
+
+        for (Quirk quirk : trait.getQuirks()) {
+            switch (quirk) {
+                case HEAVY_HITTER -> damageMultiplier *= 1.12D;
+                case BLOOD_SIPHON -> healthMultiplier *= 1.05D;
+                case SHOCKWAVE_STOMP -> damageMultiplier *= 1.08D;
+                case VENOMOUS -> damageMultiplier *= 1.06D;
+                case EXECUTIONER -> damageMultiplier *= 1.05D;
+                case FIRE_RESISTANT -> healthMultiplier *= 1.06D;
+                case FROST_BLOODED -> healthMultiplier *= 1.04D;
+                case ARROW_PROOF -> healthMultiplier *= 1.05D;
+                case TENACIOUS -> healthMultiplier *= 1.08D;
+                case UNSHAKABLE -> {
+                    healthMultiplier *= 1.05D;
+                    knockbackResistanceBonus += 0.30D;
+                }
+                case RAPID_RECOVERY -> healthMultiplier *= 1.04D;
+                case DEATH_DEFIANT -> healthMultiplier *= 1.10D;
+                case NIMBLE -> speedMultiplier *= 1.12D;
+                case NIGHT_STALKER -> speedMultiplier *= 1.05D;
+                case KEEN_Scent -> followRangeBonus += 10.0D;
+                case PACK_CALLER -> healthMultiplier *= 1.04D;
+                case FEAR_OF_WATER -> speedMultiplier *= 0.94D;
+                case BRITTLE -> healthMultiplier *= 0.90D;
+                case SUNLIGHT_SICKNESS -> healthMultiplier *= 0.92D;
+                case FLAMMABLE_FLESH -> healthMultiplier *= 0.90D;
+                case PURIFIED_WEAKNESS -> healthMultiplier *= 0.94D;
+                case OVERCONFIDENT -> speedMultiplier *= 0.95D;
+                case GLASS_CANNON -> {
+                    damageMultiplier *= 1.15D;
+                    healthMultiplier *= 0.78D;
+                }
+                case WIND_UP -> {
+                    damageMultiplier *= 1.06D;
+                    speedMultiplier *= 0.92D;
+                }
+                case BLIND_RAGE -> speedMultiplier *= 0.95D;
+                case OBSESSIVE_HUNTER -> speedMultiplier *= 0.97D;
+                case SOUND_SENSITIVE -> speedMultiplier *= 0.92D;
+                case MAGPIE -> speedMultiplier *= 0.95D;
+                case EASILY_TAUNTED -> speedMultiplier *= 0.94D;
+                case DISHONORED -> {
+                    healthMultiplier *= 0.92D;
+                    damageMultiplier *= 0.95D;
+                }
+            }
+        }
+
         if (healthAttribute != null) {
             // 10 base health + 5 health per vigor point, may change in future
-            double newHealth = 10.0 + (trait.getVigor() * 5.0);
+            double newHealth = (10.0 + (trait.getVigor() * 5.0)) * healthMultiplier;
             healthAttribute.setBaseValue(newHealth);
             this.setHealth(this.getMaxHealth());
         }
         if (speedAttribute != null) {
             // 0.23 base speed + a small bonus from agility
-            double newSpeed = 0.23 + (trait.getAgility() * 0.005);
+            double newSpeed = (0.23 + (trait.getAgility() * 0.005)) * speedMultiplier;
             speedAttribute.setBaseValue(newSpeed);
         }
         if (damageAttribute != null) {
             // 2 base damage + 1 damage per strength point
-            double newDamage = 2.0 + trait.getStrength();
+            double newDamage = (2.0 + trait.getStrength()) * damageMultiplier;
             damageAttribute.setBaseValue(newDamage);
+        }
+        var followRangeAttribute = this.getAttribute(Attributes.FOLLOW_RANGE);
+        if (followRangeAttribute != null && followRangeBonus > 0.0D) {
+            followRangeAttribute.setBaseValue(followRangeAttribute.getBaseValue() + followRangeBonus);
+        }
+        var knockbackAttribute = this.getAttribute(Attributes.KNOCKBACK_RESISTANCE);
+        if (knockbackAttribute != null && knockbackResistanceBonus > 0.0D) {
+            knockbackAttribute.setBaseValue(Math.min(1.0D, knockbackAttribute.getBaseValue() + knockbackResistanceBonus));
         }
 
         // This call is correct. It will clear the default goals
@@ -115,6 +252,7 @@ public class NemesisDemonEntity extends Monster {
 
         // Global Goals (applied to almost all behaviors)
         this.goalSelector.addGoal(0, new FloatGoal(this)); // Always float in water
+        this.goalSelector.addGoal(1, new AvoidWisteriaLeavesGoal(this, 4, 1.25D)); // Keep distance from wisteria leaves
         this.goalSelector.addGoal(8, new RandomLookAroundGoal(this)); // Look around when idle
 
         // Behavior-Specific Goals
@@ -249,25 +387,32 @@ public class NemesisDemonEntity extends Monster {
                                                             @Nonnull MobSpawnType pReason, @Nullable SpawnGroupData pSpawnData,
                                                             @Nullable CompoundTag pDataTag) {
 
-        // This logic is for natural/procedural spawns
-        if (pReason == MobSpawnType.NATURAL || pReason == MobSpawnType.CHUNK_GENERATION) {
-            if (pLevel instanceof ServerLevel serverLevel) {
-                DemonGenerator.initializeProcedural(this, serverLevel);
-            }
+        boolean isWorldSpawn = pReason == MobSpawnType.NATURAL || pReason == MobSpawnType.CHUNK_GENERATION;
+        ServerLevel serverLevel = pLevel instanceof ServerLevel level ? level : null;
+
+        if (isWorldSpawn && serverLevel != null) {
+            DemonGenerator.initializeProcedural(this, serverLevel);
         }
 
-        // This call will now apply the trait data (either procedural or default)
-        // to the entity, overriding the baseline goals from registerGoals().
-        // For command-spawned demons, applyTraitData() is called *before* this,
-        // so this call will just correctly re-apply their real AI.
         this.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(this::applyTraitData);
+
+        if (isWorldSpawn && serverLevel != null) {
+            DemonHierarchyManager manager = DemonHierarchyManager.get(serverLevel);
+            UUID demonId = this.getUUID();
+            if (manager.getDemonTrait(demonId) == null) {
+                this.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(traitCap -> {
+                    DemonTrait snapshot = new DemonTrait();
+                    snapshot.deserializeNBT(traitCap.serializeNBT());
+                    manager.addDemon(demonId, snapshot);
+                });
+            }
+        }
 
         return super.finalizeSpawn(pLevel, pDifficulty, pReason, pSpawnData, pDataTag);
     }
 
     // TODO Entity is silent, we need to override getAmbientSound, getHurtSound, getDeathSound, etc. to give it a voice. Each personality should have a different sound set.
     // TODO Implement demon-specific loot tables
-    // TODO All entities look the same, we need to implement a way to change their appearance based on their traits, id, name, or other attribute (e.g., texture, model, size).
 
     @Override
     public void tick() {
@@ -282,6 +427,59 @@ public class NemesisDemonEntity extends Monster {
                     trait.setLastSeenTime(serverLevel.getGameTime());
                 }
             }
+        }
+    }
+
+    @Override
+    public void aiStep() {
+        DemonSunlightHelper.applySunlightWeakness(this);
+        if (!this.level.isClientSide && this.tickCount % 20 == 0) {
+            this.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(this::applyQuirkRuntimeEffects);
+        }
+        super.aiStep();
+    }
+
+    private void applyQuirkRuntimeEffects(IDemonTrait trait) {
+        boolean isNight = this.level.getDayTime() % 24000L >= 13000L;
+
+        if (trait.hasQuirk(Quirk.NIGHT_STALKER) && isNight) {
+            this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, 80, 0, true, false));
+        }
+        if (trait.hasQuirk(Quirk.TENACIOUS) && this.getHealth() / Math.max(1.0F, this.getMaxHealth()) < 0.35F) {
+            this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, 80, 0, true, false));
+        }
+        if (trait.hasQuirk(Quirk.BLIND_RAGE) && this.getHealth() / Math.max(1.0F, this.getMaxHealth()) < 0.35F) {
+            this.addEffect(new MobEffectInstance(MobEffects.DAMAGE_BOOST, 80, 0, true, false));
+        }
+
+        if (trait.hasQuirk(Quirk.FEAR_OF_WATER) && this.isInWaterRainOrBubble()) {
+            this.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 80, 0, true, false));
+            this.addEffect(new MobEffectInstance(MobEffects.WEAKNESS, 80, 0, true, false));
+        }
+
+        if (trait.hasQuirk(Quirk.RAPID_RECOVERY) && this.tickCount % 40 == 0) {
+            this.getActiveEffects().stream()
+                    .filter(effect -> effect.getEffect().getCategory() == MobEffectCategory.HARMFUL)
+                    .map(MobEffectInstance::getEffect)
+                    .findFirst()
+                    .ifPresent(this::removeEffect);
+        }
+
+        if (trait.hasQuirk(Quirk.MAGPIE) && this.getTarget() != null && this.tickCount % 40 == 0) {
+            this.level.getEntitiesOfClass(ItemEntity.class, this.getBoundingBox().inflate(5.0D))
+                    .stream()
+                    .min(Comparator.comparingDouble(item -> item.distanceToSqr(this)))
+                    .ifPresent(item -> {
+                        this.setTarget(null);
+                        this.getNavigation().moveTo(item, 1.1D);
+                    });
+        }
+
+        if (!trait.hasQuirk(Quirk.DEATH_DEFIANT) || this.getTarget() != null) {
+            return;
+        }
+        if (this.tickCount % 40 == 0 && this.getHealth() > this.getMaxHealth() * 0.75F) {
+            this.getPersistentData().remove("nemesis_death_defiant_used");
         }
     }
 }

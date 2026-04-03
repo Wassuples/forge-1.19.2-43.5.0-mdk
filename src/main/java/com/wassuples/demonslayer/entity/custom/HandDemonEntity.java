@@ -1,5 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
+import com.wassuples.demonslayer.entity.ai.AvoidWisteriaLeavesGoal;
+import com.wassuples.demonslayer.util.DemonSunlightHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -58,6 +60,7 @@ public class HandDemonEntity extends Monster implements IAnimatable {
     @Override
     protected void registerGoals() {
         super.registerGoals();
+        this.goalSelector.addGoal(0, new AvoidWisteriaLeavesGoal(this, 4, 1.2D));
         this.goalSelector.addGoal(1, new MultiArmSlamGoal(this));
         this.goalSelector.addGoal(2, new DesperateGrabGoal(this));
         this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.8D));
@@ -65,6 +68,12 @@ public class HandDemonEntity extends Monster implements IAnimatable {
         this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
         this.targetSelector.addGoal(1, new HurtByTargetGoal(this));
         this.targetSelector.addGoal(2, new NearestAttackableTargetGoal<>(this, Player.class, true));
+    }
+
+    @Override
+    public void aiStep() {
+        DemonSunlightHelper.applySunlightWeakness(this);
+        super.aiStep();
     }
 
     // --- Sound Events ---

@@ -52,7 +52,7 @@ public class MissionRegistry {
 
                     List<Mission> filteredMissions = MISSIONS.values().stream()
                             .filter(mission -> {
-                                if (playerMissions.isActive(mission.id()) || playerMissions.hasCompleted(mission.id())) {
+                                if (playerMissions.isActive(mission.id()) || playerMissions.isCompleted(mission.id())) {
                                     return false;
                                 }
                                 if (mission.type() == MissionType.RANK_UP) {

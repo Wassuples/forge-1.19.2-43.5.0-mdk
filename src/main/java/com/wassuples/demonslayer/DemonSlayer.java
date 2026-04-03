@@ -113,12 +113,13 @@ public class DemonSlayer {
      */
     private void commonSetup(final FMLCommonSetupEvent event) {
         event.enqueueWork(() -> {
-            // This now compiles correctly because DemonEntity.canSpawn is generic
-            SpawnPlacements.register(ModEntityTypes.FODDER_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
-            SpawnPlacements.register(ModEntityTypes.LOWLY_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
-            SpawnPlacements.register(ModEntityTypes.COMMON_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
-            SpawnPlacements.register(ModEntityTypes.GREATER_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
-            SpawnPlacements.register(ModEntityTypes.ELITE_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, DemonEntity::canSpawn);
+            SpawnPlacements.register(ModEntityTypes.NEMESIS_DEMON.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    (entityType, level, spawnType, pos, random) -> {
+                        boolean isSolidGround = !level.getBlockState(pos.below()).isAir();
+                        float time = level.getTimeOfDay(1.0F);
+                        boolean isNightTime = time > 0.25F && time < 0.75F;
+                        return isSolidGround && isNightTime;
+                    });
             SpawnPlacements.register(ModEntityTypes.CROW.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CrowEntity::checkCrowSpawnRules);
 
             ModFlammableBlocks.register();
@@ -189,11 +190,6 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.THUNDER_HASHIRA.get(), ThunderHashiraRenderer::new);
             // DEMONS
             event.registerEntityRenderer(ModEntityTypes.NEMESIS_DEMON.get(), NemesisDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.FODDER_DEMON.get(), FodderDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.LOWLY_DEMON.get(), LowlyDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.COMMON_DEMON.get(), CommonDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.GREATER_DEMON.get(), GreaterDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.ELITE_DEMON.get(), EliteDemonRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.HAND_DEMON.get(), HandDemonRenderer::new);
             // MOONS
             event.registerEntityRenderer(ModEntityTypes.LOWER_MOON_SIX.get(), LowerMoonSixRenderer::new);
@@ -253,11 +249,6 @@ public class DemonSlayer {
         event.put(ModEntityTypes.THUNDER_HASHIRA.get(), HashiraEntity.createAttributes().build());
         // DEMONS
         event.put(ModEntityTypes.NEMESIS_DEMON.get(), NemesisDemonEntity.createAttributes().build());
-        event.put(ModEntityTypes.FODDER_DEMON.get(), FodderDemonEntity.createAttributes().build());
-        event.put(ModEntityTypes.LOWLY_DEMON.get(), LowlyDemonEntity.createAttributes().build());
-        event.put(ModEntityTypes.COMMON_DEMON.get(), CommonDemonEntity.createAttributes().build());
-        event.put(ModEntityTypes.GREATER_DEMON.get(), GreaterDemonEntity.createAttributes().build());
-        event.put(ModEntityTypes.ELITE_DEMON.get(), EliteDemonEntity.createAttributes().build());
         event.put(ModEntityTypes.HAND_DEMON.get(), HandDemonEntity.createAttributes().build());
         // LOWER MOONS
         event.put(ModEntityTypes.LOWER_MOON_SIX.get(), LowerMoonSixEntity.createAttributes().build());

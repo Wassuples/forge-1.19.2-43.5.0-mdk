@@ -48,6 +48,16 @@ public class PlayerProgression {
     private final Set<BreathingForms> unlockedForms = new HashSet<>();
     private final Map<BreathingForms, Integer> formMastery = new HashMap<>();
 
+    private int demonKills = 0;
+    private int demonKillsThisRank = 0;
+    private boolean killedKizuki = false;
+
+    public int getDemonKills() { return demonKills; }
+    public int getDemonKillsThisRank() { return demonKillsThisRank; }
+    public void incrementDemonKills() { demonKills++; demonKillsThisRank++; }
+    public boolean hasKilledKizuki() { return killedKizuki; }
+    public void recordKizukiKill() { killedKizuki = true; }
+
     private boolean hasDodgeCharge = false;
 
     public boolean hasDodgeCharge() {
@@ -58,11 +68,15 @@ public class PlayerProgression {
     }
 
     public PlayerProgression() {
-        this.unlockStyle(BreathingStyles.WATER);
+        this.unlockStyle(BreathingStyles.NONE);
+        this.setRank(Rank.CIVILIAN);
     }
 
     public Rank getRank() { return this.rank; }
-    public void setRank(Rank rank) { this.rank = rank; }
+    public void setRank(Rank rank) {
+        if (this.rank != rank) demonKillsThisRank = 0;
+        this.rank = rank;
+    }
 
     public boolean isStyleUnlocked(BreathingStyles style) { return unlockedStyles.contains(style); }
     public Set<BreathingStyles> getUnlockedStyles() { return this.unlockedStyles; }
@@ -85,7 +99,6 @@ public class PlayerProgression {
         unlockedStyles.add(style);
         styleMastery.putIfAbsent(style, 0);
     }
-
     public void unlockForm(BreathingForms form) {
         unlockedForms.add(form);
         formMastery.putIfAbsent(form, 0);
@@ -159,6 +172,10 @@ public class PlayerProgression {
         this.bdaMastery.putAll(source.bdaMastery);
         this.demonFormMastery.clear();
         this.demonFormMastery.putAll(source.demonFormMastery);
+
+        this.demonKills = source.demonKills;
+        this.demonKillsThisRank = source.demonKillsThisRank;
+        this.killedKizuki = source.killedKizuki;
     }
 
     public void saveNBTData(CompoundTag nbt) {
@@ -187,6 +204,10 @@ public class PlayerProgression {
         CompoundTag demonFormMasteryTag = new CompoundTag();
         demonFormMastery.forEach((form, mastery) -> demonFormMasteryTag.putInt(form.name(), mastery));
         nbt.put("demonFormMastery", demonFormMasteryTag);
+
+        nbt.putInt("demonKills", demonKills);
+        nbt.putInt("demonKillsThisRank", demonKillsThisRank);
+        nbt.putBoolean("killedKizuki", killedKizuki);
     }
 
     public void loadNBTData(CompoundTag nbt) {
@@ -248,5 +269,9 @@ public class PlayerProgression {
                 catch (IllegalArgumentException ignored) {}
             });
         }
+
+        demonKills = nbt.getInt("demonKills");
+        demonKillsThisRank = nbt.getInt("demonKillsThisRank");
+        killedKizuki = nbt.getBoolean("killedKizuki");
     }
 }

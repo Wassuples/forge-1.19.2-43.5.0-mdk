@@ -5,7 +5,6 @@ import com.wassuples.demonslayer.entity.ai.DomaCloneAttackGoal;
 import com.wassuples.demonslayer.entity.tracking.CrystallineDivineChildTracker;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
-import com.wassuples.demonslayer.entity.ally.SummonAllies;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -32,6 +31,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 import java.util.UUID;
+
+import static com.wassuples.demonslayer.entity.ally.SummonAllies.isFriendlyForTargeting;
 
 /**
  * Custom entity: Crystalline Divine Child.
@@ -67,19 +68,19 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
                 this,
                 Player.class,
                 true,
-                (entity) -> !isAlly(entity)
+                (entity) -> !isFriendlyForTargeting(this, entity)
         ));
         this.targetSelector.addGoal(3, new NearestAttackableTargetGoal<>(
                 this,
                 Monster.class,
                 true,
-                (entity) -> !isAlly(entity)
+                (entity) -> !isFriendlyForTargeting(this, entity)
         ));
     }
 
     @Override
     public boolean canAttack(LivingEntity target) {
-        if (isAlly(target)) return false;
+        if (isFriendlyForTargeting(this, target)) return false;
         return super.canAttack(target);
     }
 
@@ -163,15 +164,6 @@ public class CrystallineDivineChildEntity extends AbstractFormUsingEntity {
             id = this.owner.getUUID();
         }
         return id != null && id.equals(entity.getUUID());
-    }
-
-    /**
-     * Returns true if the given entity is the owner OR another summon that shares the same owner UUID.
-     */
-    public boolean isAlly(@Nullable LivingEntity entity) {
-        if (entity == null) return false;
-        if (isOwner(entity)) return true;
-        return SummonAllies.areAllies(this, entity);
     }
 
     @Override

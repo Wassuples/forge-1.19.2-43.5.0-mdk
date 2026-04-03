@@ -1,35 +1,37 @@
-{
-  "id": "UM6",
-  "name": "Gyutaro",
-  "title": "the Sixth Moon",
-  "behavior": "SADIST",
-  "personality": "GRIEVING",
-  "bda": "SASH",
-  "quirks": [
-    "VENOMOUS",
-    "GLASS_CANNON",
-    "DEATH_DEFIANT",
-    "PACK_CALLER"
-  ],
-  "stats": {
-    "vigor": 50,
-    "strength": 85,
-    "agility": 90
-  },
-  "taunts": {
-    "generic": [
-      "Nee hee hee... look at you, {player}. So pretty and healthy...",
-      "Nyeh Heh Heh!",
-      "I remember you. I hate that look on your face. I'm gonna carve it right off this time.",
-      "Came back for more misery? Good. I've got plenty to share."
-    ],
-    "poison_kill": [
-      "My sickles are dripping with a poison that will make you rot from the inside out... just like I did. Remember the feeling?",
-      "Nee hee... you looked so ugly when you were writhing on the ground."
-    ],
-    "low_health_comeback": [
-      "So you can fight, huh?! Is it because you've had everything handed to you?! I'll take it all away!",
-      "Yeah, hurt me! See what it's like! Now it's my turn!"
-    ]
-  }
+﻿{
+    "id":  "UM6",
+    "name":  "Gyutaro",
+    "title":  "the Sixth Moon",
+    "behavior":  "SADIST",
+    "personality":  "GRIEVING",
+    "bda":  "SASH",
+    "quirks":  [
+                   "VENOMOUS",
+                   "GLASS_CANNON",
+                   "DEATH_DEFIANT",
+                   "PACK_CALLER"
+               ],
+    "stats":  {
+                  "vigor":  50,
+                  "strength":  85,
+                  "agility":  90
+              },
+    "taunts":  {
+                   "generic":  [
+                                   "Nee hee hee... look at you, {player}. So pretty and healthy...",
+                                   "Nyeh Heh Heh!",
+                                   "I remember you. I hate that look on your face. I\u0027m gonna carve it right off this time.",
+                                   "Came back for more misery? Good. I\u0027ve got plenty to share."
+                               ],
+                   "poison_kill":  [
+                                       "My sickles are dripping with a poison that will make you rot from the inside out... just like I did. Remember the feeling?",
+                                       "Nee hee... you looked so ugly when you were writhing on the ground."
+                                   ],
+                   "low_health_comeback":  [
+                                               "So you can fight, huh?! Is it because you\u0027ve had everything handed to you?! I\u0027ll take it all away!",
+                                               "Yeah, hurt me! See what it\u0027s like! Now it\u0027s my turn!"
+                                           ]
+               },
+    "skin_location":  "demonslayer:textures/entity/upper_moon_six.png"
 }
+

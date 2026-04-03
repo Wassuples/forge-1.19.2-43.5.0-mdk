@@ -15,6 +15,7 @@ import com.wassuples.demonslayer.demon.DemonRank;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.missions.MissionRegistry;
+import com.wassuples.demonslayer.nemesis.DemonDisplayData;
 import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
 import com.wassuples.demonslayer.nemesis.trait.DemonTrait;
 import com.wassuples.demonslayer.nemesis.trait.Quirk;
@@ -39,6 +40,7 @@ import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -144,6 +146,7 @@ public class DemonSlayerCommands {
 
 
     public static void register(CommandDispatcher<CommandSourceStack> dispatcher) {
+        // Main demonslayer command tree (OP level 2 required)
         dispatcher.register(Commands.literal("demonslayer")
                 .requires(source -> source.hasPermission(2))
                 .executes(ctx -> showHelp(ctx.getSource(), "main"))
@@ -218,7 +221,7 @@ public class DemonSlayerCommands {
                         )
                 )
 
-                //  NEMESIS COMMANDS
+                //  OP-ONLY NEMESIS COMMANDS
                 .then(Commands.literal("nemesis")
                         .executes(ctx -> showHelp(ctx.getSource(), "nemesis"))
                         .then(Commands.literal("info")
@@ -269,12 +272,70 @@ public class DemonSlayerCommands {
                                                 .then(Commands.argument("targetPlayer", EntityArgument.player())
                                                         .executes(DemonSlayerCommands::executeSendHunter))))
                         )
+                        .then(Commands.literal("hierarchy")
+                                .executes(DemonSlayerCommands::executeShowHierarchy))
+                        .then(Commands.literal("simulate_day")
+                            .then(Commands.argument("days", IntegerArgumentType.integer())
+                                .executes(ctx -> executeSimulateDay(ctx, IntegerArgumentType.getInteger(ctx, "days")))))
+                        .then(Commands.literal("social")
+                                .executes(DemonSlayerCommands::executeShowSocialSummary)
+                                .then(Commands.literal("summary")
+                                        .executes(DemonSlayerCommands::executeShowSocialSummary))
+                                .then(Commands.literal("packs")
+                                        .executes(DemonSlayerCommands::executeShowPacks))
+                                .then(Commands.literal("alliances")
+                                        .executes(DemonSlayerCommands::executeShowAlliances))
+                                .then(Commands.literal("inspect")
+                                        .then(Commands.argument("demon_name", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .executes(DemonSlayerCommands::executeInspectSocial)))
+                                .then(Commands.literal("compat")
+                                        .then(Commands.argument("demon_a", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .then(Commands.argument("demon_b", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                        .executes(DemonSlayerCommands::executePreviewCompatibility))))
+                                .then(Commands.literal("compat_target_player")
+                                        .then(Commands.argument("leader", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .then(Commands.argument("ally", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                        .then(Commands.argument("target", EntityArgument.player())
+                                                                .executes(DemonSlayerCommands::executePreviewCompatibilityVsPlayer)))))
+                                .then(Commands.literal("compat_target_demon")
+                                        .then(Commands.argument("leader", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .then(Commands.argument("ally", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                        .then(Commands.argument("target", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                                .executes(DemonSlayerCommands::executePreviewCompatibilityVsDemon)))))
+                                .then(Commands.literal("mobilize_player")
+                                        .then(Commands.argument("leader", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .then(Commands.argument("target", EntityArgument.player())
+                                                        .executes(DemonSlayerCommands::executeMobilizePlayer)
+                                                        .then(Commands.argument("requested_allies", IntegerArgumentType.integer(1, 8))
+                                                                .executes(DemonSlayerCommands::executeMobilizePlayer)))))
+                                .then(Commands.literal("mobilize_demon")
+                                        .then(Commands.argument("leader", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .then(Commands.argument("target", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                        .executes(DemonSlayerCommands::executeMobilizeDemon)
+                                                        .then(Commands.argument("requested_allies", IntegerArgumentType.integer(1, 8))
+                                                                .executes(DemonSlayerCommands::executeMobilizeDemon)))))
+                                .then(Commands.literal("rebuild_packs")
+                                        .executes(DemonSlayerCommands::executeRebuildPacks))
+                                .then(Commands.literal("disband")
+                                        .then(Commands.argument("leader", StringArgumentType.string()).suggests(DEMON_NAME_SUGGESTIONS)
+                                                .executes(DemonSlayerCommands::executeDisbandPack)))
+                                .then(Commands.literal("clear_alliances")
+                                        .executes(DemonSlayerCommands::executeClearAlliances))
+                        )
                 )
 
                 //  RESET COMMAND
                 .then(Commands.literal("reset")
-                        .then(Commands.argument("targets", EntityArgument.players())
-        )));
+                        .then(Commands.argument("targets", EntityArgument.players()))
+                ));
+
+        // Separate public nemesis command (no OP required) for story viewing
+        dispatcher.register(Commands.literal("nemesis")
+                .then(Commands.literal("story")
+                        .executes(ctx -> executeShowStory(ctx, 10))
+                        .then(Commands.argument("count", IntegerArgumentType.integer(1, 50))
+                                .executes(ctx -> executeShowStory(ctx, IntegerArgumentType.getInteger(ctx, "count")))))
+        );
     }
 
     //  HELPER METHODS
@@ -365,8 +426,101 @@ public class DemonSlayerCommands {
         }
 
         // Spawn the demon near the player
-        manager.spawnDemonFromData(demonUUIDOpt.get(), targetPlayer.getLevel(), targetPlayer.blockPosition().north(3));
+        manager.spawnDemonFromData(demonUUIDOpt.get(), targetPlayer.getLevel(), targetPlayer.blockPosition().north(3), "Admin Command: send-hunter");
         source.sendSuccess(Component.literal("Sent " + demonName + " to hunt " + targetPlayer.getGameProfile().getName() + "."), true);
+        return 1;
+    }
+
+    private static int executeShowHierarchy(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+        DemonHierarchyManager.DemonDisplayDataLists data = manager.getDemonDisplayData();
+
+        MutableComponent msg = Component.literal("\n §6═══ Twelve Kizuki ═══\n").withStyle(ChatFormatting.GOLD);
+
+        for (DemonDisplayData d : data.kizuki()) {
+            if ("---".equals(d.name())) {
+                msg.append(Component.literal(" " + d.rank() + ": ").withStyle(ChatFormatting.GRAY))
+                   .append(Component.literal("(Empty)\n").withStyle(ChatFormatting.DARK_GRAY));
+            } else {
+                msg.append(Component.literal(" " + d.rank() + ": ").withStyle(ChatFormatting.GRAY))
+                   .append(Component.literal(d.name() + " ").withStyle(ChatFormatting.WHITE))
+                   .append(Component.literal(d.title()).withStyle(ChatFormatting.DARK_GRAY))
+                   .append(Component.literal(" (BP: " + d.bloodPoints() + ")\n").withStyle(ChatFormatting.RED));
+            }
+        }
+
+        if (!data.fodder().isEmpty()) {
+            msg.append(Component.literal(" §7── Top Fodder ──\n").withStyle(ChatFormatting.GRAY));
+            for (DemonDisplayData d : data.fodder()) {
+                msg.append(Component.literal("  " + d.name() + " " + d.title()).withStyle(ChatFormatting.DARK_GRAY))
+                   .append(Component.literal(" (BP: " + d.bloodPoints() + ")\n").withStyle(ChatFormatting.GRAY));
+            }
+        }
+
+        msg.append(Component.literal(" §6══════════════════\n").withStyle(ChatFormatting.GOLD));
+        source.sendSuccess(msg, false);
+        return 1;
+    }
+
+    private static int executeShowStory(CommandContext<CommandSourceStack> ctx, int count) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+        java.util.List<com.wassuples.demonslayer.nemesis.story.StoryEvent> log = manager.getWorldStoryLog();
+
+        if (log.isEmpty()) {
+            source.sendSuccess(Component.literal("No story events recorded yet.").withStyle(ChatFormatting.GRAY), false);
+            return 1;
+        }
+
+        // Check if executor is a player and their permission level
+        UUID playerId = null;
+        boolean hasOpAccess = source.hasPermission(2);
+        if (source.getEntity() instanceof ServerPlayer sp) {
+            playerId = sp.getUUID();
+        }
+
+        MutableComponent msg = Component.literal("\n §5═══ Nemesis Story Log ═══\n").withStyle(ChatFormatting.DARK_PURPLE);
+        int shown = 0;
+        com.wassuples.demonslayer.nemesis.story.PlayerIntelManager intelMgr = manager.getPlayerIntelManager();
+
+        for (com.wassuples.demonslayer.nemesis.story.StoryEvent event : log) {
+            if (shown >= count) break;
+
+            String rendered;
+            if (hasOpAccess) {
+                // OP players see everything with FULL intel tier
+                rendered = event.renderFull();
+            } else if (playerId != null) {
+                // Non-OP players respect their intel tier
+                rendered = intelMgr.renderForPlayer(event, playerId);
+                if (rendered == null) {
+                    // Player has no intel on this event — show as a hidden entry
+                    rendered = "§8[Unknown event]";
+                }
+            } else {
+                // Console/command block — show full
+                rendered = event.renderFull();
+            }
+
+            msg.append(Component.literal(" §7• " + rendered + "\n"));
+            shown++;
+        }
+
+        msg.append(Component.literal(" §5══════════════════════\n").withStyle(ChatFormatting.DARK_PURPLE));
+        msg.append(Component.literal(" Showing " + shown + " of " + log.size() + " events.").withStyle(ChatFormatting.GRAY));
+        source.sendSuccess(msg, false);
+        return 1;
+    }
+
+    private static int executeSimulateDay(CommandContext<CommandSourceStack> ctx, int days) {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+        for (int i = 0; i < days; i++) {
+            manager.runDailySimulation(level);
+        }
+        source.sendSuccess(Component.literal("Forced a daily simulation cycle. Check the story log for results.").withStyle(ChatFormatting.GREEN), true);
         return 1;
     }
 
@@ -718,12 +872,25 @@ public class DemonSlayerCommands {
     private static void modifyPlayerStyleMastery(ServerPlayer target, String styleOrAll, int amount, ModifyAction action) {
         target.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
             if ("all".equalsIgnoreCase(styleOrAll)) {
-                progression.getUnlockedStyles().forEach(style -> {
+                boolean unlockAllStyles = action == ModifyAction.SET && amount >= 1000;
+
+                BreathingStyles[] stylesToModify = unlockAllStyles
+                        ? BreathingStyles.values()
+                        : progression.getUnlockedStyles().toArray(new BreathingStyles[0]);
+
+                for (BreathingStyles style : stylesToModify) {
+                    if (unlockAllStyles && !progression.isStyleUnlocked(style)) {
+                        progression.unlockStyle(style);
+                    }
                     int currentMastery = progression.getStyleMastery(style);
                     progression.setStyleMastery(style, action == ModifyAction.SET ? amount : currentMastery + amount);
-                });
+                }
             } else {
                 BreathingStyles style = BreathingStyles.valueOf(styleOrAll.toUpperCase());
+                // Ensure the style is unlocked when granting mastery
+                if (!progression.isStyleUnlocked(style)) {
+                    progression.unlockStyle(style);
+                }
                 int currentMastery = progression.getStyleMastery(style);
                 progression.setStyleMastery(style, action == ModifyAction.SET ? amount : currentMastery + amount);
             }
@@ -754,6 +921,7 @@ public class DemonSlayerCommands {
     private static void setPlayerRank(ServerPlayer target, Rank newRank) {
         target.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
             progression.setRank(newRank);
+            ModUtils.applyRankStatBonuses(target, newRank);
             ModUtils.syncProgression(target);
         });
     }
@@ -919,9 +1087,13 @@ public class DemonSlayerCommands {
                         .append("\n  - ").append(Component.literal("Manage the Nemesis Demon system.").withStyle(ChatFormatting.GRAY))
                         .append("\n  - ").append(Component.literal("info <name>").withStyle(ChatFormatting.AQUA).append(Component.literal(": Get stats for a Nemesis.").withStyle(ChatFormatting.GRAY)))
                         .append("\n  - ").append(Component.literal("edit <name> ...").withStyle(ChatFormatting.AQUA).append(Component.literal(": Change Nemesis traits.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("hierarchy").withStyle(ChatFormatting.AQUA).append(Component.literal(": View the Twelve Kizuki roster.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("story [count]").withStyle(ChatFormatting.AQUA).append(Component.literal(": View recent story events.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("simulate_day").withStyle(ChatFormatting.AQUA).append(Component.literal(": Force a daily simulation cycle.").withStyle(ChatFormatting.GRAY)))
                         .append("\n  - ").append(Component.literal("battle start <challenger> <defender>").withStyle(ChatFormatting.AQUA).append(Component.literal(": Force a blood battle.").withStyle(ChatFormatting.GRAY)))
                         .append("\n  - ").append(Component.literal("battle end").withStyle(ChatFormatting.AQUA).append(Component.literal(": Force-end the current battle.").withStyle(ChatFormatting.GRAY)))
-                        .append("\n  - ").append(Component.literal("battle send_hunter <name> <player>").withStyle(ChatFormatting.AQUA).append(Component.literal(": Spawn a Nemesis to hunt a player.").withStyle(ChatFormatting.GRAY)));
+                        .append("\n  - ").append(Component.literal("battle send_hunter <name> <player>").withStyle(ChatFormatting.AQUA).append(Component.literal(": Spawn a Nemesis to hunt a player.").withStyle(ChatFormatting.GRAY)))
+                        .append("\n  - ").append(Component.literal("social ...").withStyle(ChatFormatting.AQUA).append(Component.literal(": Packs/alliances summary, inspect, compatibility previews, and mobilization tools.").withStyle(ChatFormatting.GRAY)));
                 break;
             default: // main help
                 help.append("\nBase command for managing Demon Slayer data.")
@@ -942,5 +1114,374 @@ public class DemonSlayerCommands {
 
         source.sendSuccess(help, false);
         return 1;
-}}
+    }
 
+    private static Optional<UUID> resolveDemonId(CommandSourceStack source, DemonHierarchyManager manager, String inputName, String argLabel) {
+        Optional<UUID> resolved = manager.getDemonUUIDByName(inputName);
+        if (resolved.isEmpty()) {
+            source.sendFailure(Component.literal("No nemesis demon found for " + argLabel + ": " + inputName));
+        }
+        return resolved;
+    }
+
+    private static String getDemonNameOrFallback(DemonHierarchyManager manager, UUID demonId) {
+        DemonTrait trait = manager.getDemonTrait(demonId);
+        if (trait != null && trait.getName() != null && !trait.getName().isBlank()) {
+            return trait.getName();
+        }
+        return demonId.toString().substring(0, 8);
+    }
+
+    private static int getRequestedAllies(CommandContext<CommandSourceStack> ctx, int fallback) {
+        try {
+            return IntegerArgumentType.getInteger(ctx, "requested_allies");
+        } catch (IllegalArgumentException ignored) {
+            return fallback;
+        }
+    }
+
+    private static int executeShowSocialSummary(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+
+        List<DemonHierarchyManager.PackSnapshot> packs = manager.getPackSnapshots();
+        List<DemonHierarchyManager.AllianceSnapshot> alliances = manager.getActiveAllianceSnapshots(level);
+
+        int packedDemons = packs.stream().mapToInt(p -> p.memberIds().size()).sum();
+        int allianceMembers = alliances.stream().mapToInt(a -> a.memberIds().size()).sum();
+
+        MutableComponent msg = Component.literal("\nNemesis Social Summary\n").withStyle(ChatFormatting.GOLD)
+                .append(Component.literal("Packs: ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(String.valueOf(packs.size())).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal(" | Packed demons: ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(String.valueOf(packedDemons)).withStyle(ChatFormatting.AQUA))
+                .append(Component.literal("\nActive alliances: ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(String.valueOf(alliances.size())).withStyle(ChatFormatting.LIGHT_PURPLE))
+                .append(Component.literal(" | Mobilized allies: ").withStyle(ChatFormatting.GRAY))
+                .append(Component.literal(String.valueOf(allianceMembers)).withStyle(ChatFormatting.LIGHT_PURPLE));
+
+        if (!packs.isEmpty()) {
+            DemonHierarchyManager.PackSnapshot topPack = packs.get(0);
+            msg.append(Component.literal("\nTop pack: ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal(topPack.leaderName()).withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" (size " + topPack.memberIds().size() + ", avg strength " + topPack.averageStrengthScore() + ")").withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        if (!alliances.isEmpty()) {
+            DemonHierarchyManager.AllianceSnapshot nextAlliance = alliances.get(0);
+            long ticksLeft = Math.max(0L, nextAlliance.expiresAt() - level.getGameTime());
+            msg.append(Component.literal("\nNext alliance expiry: ").withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal(nextAlliance.leaderName() + " in " + (ticksLeft / 20L) + "s").withStyle(ChatFormatting.LIGHT_PURPLE));
+        }
+
+        msg.append(Component.literal("\nUse /demonslayer nemesis social packs|alliances|inspect for details.").withStyle(ChatFormatting.DARK_GRAY));
+        source.sendSuccess(msg, false);
+        return 1;
+    }
+
+    private static int executeShowPacks(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+        List<DemonHierarchyManager.PackSnapshot> packs = manager.getPackSnapshots();
+
+        if (packs.isEmpty()) {
+            source.sendSuccess(Component.literal("No active packs currently exist.").withStyle(ChatFormatting.GRAY), false);
+            return 1;
+        }
+
+        MutableComponent msg = Component.literal("\nNemesis Packs\n").withStyle(ChatFormatting.GOLD);
+        for (int i = 0; i < packs.size(); i++) {
+            DemonHierarchyManager.PackSnapshot pack = packs.get(i);
+            String members = String.join(", ", pack.memberNames());
+            msg.append(Component.literal((i + 1) + ") ").withStyle(ChatFormatting.DARK_GRAY))
+                    .append(Component.literal(pack.leaderName()).withStyle(ChatFormatting.YELLOW))
+                    .append(Component.literal(" | size " + pack.memberIds().size() + " | avg strength " + pack.averageStrengthScore()).withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal("\n   Members: " + members + "\n").withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        source.sendSuccess(msg, false);
+        return 1;
+    }
+
+    private static int executeShowAlliances(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+        List<DemonHierarchyManager.AllianceSnapshot> alliances = manager.getActiveAllianceSnapshots(level);
+
+        if (alliances.isEmpty()) {
+            source.sendSuccess(Component.literal("No active temporary alliances.").withStyle(ChatFormatting.GRAY), false);
+            return 1;
+        }
+
+        MutableComponent msg = Component.literal("\nActive Alliances\n").withStyle(ChatFormatting.GOLD);
+        for (int i = 0; i < alliances.size(); i++) {
+            DemonHierarchyManager.AllianceSnapshot alliance = alliances.get(i);
+            long ticksLeft = Math.max(0L, alliance.expiresAt() - level.getGameTime());
+            String members = String.join(", ", alliance.memberNames());
+            String targetType = alliance.targetIsPlayer() ? "Player" : "Demon";
+
+            msg.append(Component.literal((i + 1) + ") ").withStyle(ChatFormatting.DARK_GRAY))
+                    .append(Component.literal(alliance.leaderName()).withStyle(ChatFormatting.LIGHT_PURPLE))
+                    .append(Component.literal(" -> " + targetType + ": " + alliance.targetName()).withStyle(ChatFormatting.GRAY))
+                    .append(Component.literal(" | allies " + alliance.memberIds().size() + " | expires in " + (ticksLeft / 20L) + "s").withStyle(ChatFormatting.DARK_GRAY))
+                    .append(Component.literal("\n   Members: " + members + "\n").withStyle(ChatFormatting.DARK_GRAY));
+        }
+
+        source.sendSuccess(msg, false);
+        return 1;
+    }
+
+    private static int executeInspectSocial(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+
+        String demonName = StringArgumentType.getString(ctx, "demon_name");
+        Optional<UUID> demonIdOpt = resolveDemonId(source, manager, demonName, "demon_name");
+        if (demonIdOpt.isEmpty()) return 0;
+
+        UUID demonId = demonIdOpt.get();
+        String canonicalName = getDemonNameOrFallback(manager, demonId);
+
+        List<DemonHierarchyManager.PackSnapshot> packs = manager.getPackSnapshots();
+        List<DemonHierarchyManager.AllianceSnapshot> alliances = manager.getActiveAllianceSnapshots(level);
+
+        MutableComponent msg = Component.literal("\nSocial Inspect: " + canonicalName + "\n").withStyle(ChatFormatting.GOLD);
+
+        Optional<UUID> leaderOpt = manager.getPackLeaderFor(demonId);
+        if (leaderOpt.isPresent()) {
+            UUID leaderId = leaderOpt.get();
+            DemonHierarchyManager.PackSnapshot pack = packs.stream().filter(p -> p.leaderId().equals(leaderId)).findFirst().orElse(null);
+            if (pack != null) {
+                boolean isLeader = leaderId.equals(demonId);
+                msg.append(Component.literal("Pack role: ").withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal(isLeader ? "Leader" : "Member").withStyle(ChatFormatting.AQUA))
+                        .append(Component.literal("\nLeader: " + pack.leaderName()).withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal("\nPack size: " + pack.memberIds().size()).withStyle(ChatFormatting.GRAY))
+                        .append(Component.literal("\nPack members: " + String.join(", ", pack.memberNames()) + "\n").withStyle(ChatFormatting.DARK_GRAY));
+            }
+        } else {
+            msg.append(Component.literal("Pack role: None\n").withStyle(ChatFormatting.GRAY));
+        }
+
+        List<DemonHierarchyManager.AllianceSnapshot> relevantAlliances = alliances.stream()
+                .filter(a -> a.leaderId().equals(demonId) || a.memberIds().contains(demonId))
+                .toList();
+
+        if (relevantAlliances.isEmpty()) {
+            msg.append(Component.literal("Alliance role: None").withStyle(ChatFormatting.GRAY));
+        } else {
+            msg.append(Component.literal("Alliance entries:\n").withStyle(ChatFormatting.GRAY));
+            for (DemonHierarchyManager.AllianceSnapshot a : relevantAlliances) {
+                boolean isLeader = a.leaderId().equals(demonId);
+                long ticksLeft = Math.max(0L, a.expiresAt() - level.getGameTime());
+                msg.append(Component.literal(" - " + (isLeader ? "Leader" : "Member") + " in " + a.leaderName() + " alliance vs " + a.targetName() + " (" + (ticksLeft / 20L) + "s)\n")
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+
+        source.sendSuccess(msg, false);
+        return 1;
+    }
+
+    private static int executePreviewCompatibility(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        String demonA = StringArgumentType.getString(ctx, "demon_a");
+        String demonB = StringArgumentType.getString(ctx, "demon_b");
+
+        Optional<UUID> aIdOpt = resolveDemonId(source, manager, demonA, "demon_a");
+        if (aIdOpt.isEmpty()) return 0;
+        Optional<UUID> bIdOpt = resolveDemonId(source, manager, demonB, "demon_b");
+        if (bIdOpt.isEmpty()) return 0;
+
+        float base = manager.previewCompatibility(aIdOpt.get(), bIdOpt.get());
+        if (base < -1.0f) {
+            source.sendFailure(Component.literal("Could not evaluate compatibility for those demons."));
+            return 0;
+        }
+
+        source.sendSuccess(Component.literal(String.format("Compatibility %s <-> %s: %.2f", demonA, demonB, base)).withStyle(ChatFormatting.AQUA), false);
+        return 1;
+    }
+
+    private static int executePreviewCompatibilityVsPlayer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        String leaderName = StringArgumentType.getString(ctx, "leader");
+        String allyName = StringArgumentType.getString(ctx, "ally");
+        ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
+
+        Optional<UUID> leaderIdOpt = resolveDemonId(source, manager, leaderName, "leader");
+        if (leaderIdOpt.isEmpty()) return 0;
+        Optional<UUID> allyIdOpt = resolveDemonId(source, manager, allyName, "ally");
+        if (allyIdOpt.isEmpty()) return 0;
+
+        float base = manager.previewCompatibility(leaderIdOpt.get(), allyIdOpt.get());
+        float bonus = manager.previewMutualEnemyBonus(leaderIdOpt.get(), allyIdOpt.get(), target.getUUID(), true);
+        float total = base + bonus;
+
+        source.sendSuccess(Component.literal(String.format(
+                "%s + %s vs player %s -> base %.2f, enemy bonus %.2f, total %.2f",
+                leaderName, allyName, target.getGameProfile().getName(), base, bonus, total
+        )).withStyle(ChatFormatting.LIGHT_PURPLE), false);
+        return 1;
+    }
+
+    private static int executePreviewCompatibilityVsDemon(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        String leaderName = StringArgumentType.getString(ctx, "leader");
+        String allyName = StringArgumentType.getString(ctx, "ally");
+        String targetName = StringArgumentType.getString(ctx, "target");
+
+        Optional<UUID> leaderIdOpt = resolveDemonId(source, manager, leaderName, "leader");
+        if (leaderIdOpt.isEmpty()) return 0;
+        Optional<UUID> allyIdOpt = resolveDemonId(source, manager, allyName, "ally");
+        if (allyIdOpt.isEmpty()) return 0;
+        Optional<UUID> targetIdOpt = resolveDemonId(source, manager, targetName, "target");
+        if (targetIdOpt.isEmpty()) return 0;
+
+        float base = manager.previewCompatibility(leaderIdOpt.get(), allyIdOpt.get());
+        float bonus = manager.previewMutualEnemyBonus(leaderIdOpt.get(), allyIdOpt.get(), targetIdOpt.get(), false);
+        float total = base + bonus;
+
+        source.sendSuccess(Component.literal(String.format(
+                "%s + %s vs demon %s -> base %.2f, enemy bonus %.2f, total %.2f",
+                leaderName, allyName, targetName, base, bonus, total
+        )).withStyle(ChatFormatting.LIGHT_PURPLE), false);
+        return 1;
+    }
+
+    private static int executeMobilizePlayer(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+
+        String leaderName = StringArgumentType.getString(ctx, "leader");
+        Optional<UUID> leaderIdOpt = resolveDemonId(source, manager, leaderName, "leader");
+        if (leaderIdOpt.isEmpty()) return 0;
+
+        ServerPlayer target = EntityArgument.getPlayer(ctx, "target");
+        int requestedAllies = getRequestedAllies(ctx, 2);
+
+        Optional<DemonHierarchyManager.AllianceSnapshot> before = manager.getActiveAllianceSnapshots(level).stream()
+                .filter(a -> a.leaderId().equals(leaderIdOpt.get()))
+                .findFirst();
+
+        manager.tryMobilizeAlliesForFight(leaderIdOpt.get(), target.getUUID(), true, level, target.blockPosition(), requestedAllies);
+
+        Optional<DemonHierarchyManager.AllianceSnapshot> after = manager.getActiveAllianceSnapshots(level).stream()
+                .filter(a -> a.leaderId().equals(leaderIdOpt.get()))
+                .findFirst();
+
+        if (after.isPresent()) {
+            DemonHierarchyManager.AllianceSnapshot alliance = after.get();
+            long ticksLeft = Math.max(0L, alliance.expiresAt() - level.getGameTime());
+            if (before.isPresent() && before.get().expiresAt() == alliance.expiresAt()) {
+                source.sendSuccess(Component.literal("Leader already has an active alliance targeting " + alliance.targetName() + " (" + (ticksLeft / 20L) + "s left).")
+                        .withStyle(ChatFormatting.GRAY), false);
+            } else {
+                source.sendSuccess(Component.literal("Mobilized " + alliance.memberIds().size() + " allies for " + leaderName + " against player " + target.getGameProfile().getName() + ".")
+                        .withStyle(ChatFormatting.GREEN), true);
+            }
+            return 1;
+        }
+
+        source.sendFailure(Component.literal("No allies mobilized. Ensure compatible demons exist and the target is valid."));
+        return 0;
+    }
+
+    private static int executeMobilizeDemon(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+
+        String leaderName = StringArgumentType.getString(ctx, "leader");
+        String targetName = StringArgumentType.getString(ctx, "target");
+
+        Optional<UUID> leaderIdOpt = resolveDemonId(source, manager, leaderName, "leader");
+        if (leaderIdOpt.isEmpty()) return 0;
+        Optional<UUID> targetIdOpt = resolveDemonId(source, manager, targetName, "target");
+        if (targetIdOpt.isEmpty()) return 0;
+
+        net.minecraft.world.entity.Entity targetEntity = level.getEntity(targetIdOpt.get());
+        if (!(targetEntity instanceof net.minecraft.world.entity.LivingEntity)) {
+            source.sendFailure(Component.literal("Target demon must be spawned in-world before mobilization: " + targetName));
+            return 0;
+        }
+
+        int requestedAllies = getRequestedAllies(ctx, 2);
+
+        Optional<DemonHierarchyManager.AllianceSnapshot> before = manager.getActiveAllianceSnapshots(level).stream()
+                .filter(a -> a.leaderId().equals(leaderIdOpt.get()))
+                .findFirst();
+
+        manager.tryMobilizeAlliesForFight(leaderIdOpt.get(), targetIdOpt.get(), false, level, targetEntity.blockPosition(), requestedAllies);
+
+        Optional<DemonHierarchyManager.AllianceSnapshot> after = manager.getActiveAllianceSnapshots(level).stream()
+                .filter(a -> a.leaderId().equals(leaderIdOpt.get()))
+                .findFirst();
+
+        if (after.isPresent()) {
+            DemonHierarchyManager.AllianceSnapshot alliance = after.get();
+            long ticksLeft = Math.max(0L, alliance.expiresAt() - level.getGameTime());
+            if (before.isPresent() && before.get().expiresAt() == alliance.expiresAt()) {
+                source.sendSuccess(Component.literal("Leader already has an active alliance targeting " + alliance.targetName() + " (" + (ticksLeft / 20L) + "s left).")
+                        .withStyle(ChatFormatting.GRAY), false);
+            } else {
+                source.sendSuccess(Component.literal("Mobilized " + alliance.memberIds().size() + " allies for " + leaderName + " against demon " + targetName + ".")
+                        .withStyle(ChatFormatting.GREEN), true);
+            }
+            return 1;
+        }
+
+        source.sendFailure(Component.literal("No allies mobilized. Ensure compatible demons exist and the target is valid."));
+        return 0;
+    }
+
+    private static int executeRebuildPacks(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        ServerLevel level = source.getLevel();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(level);
+
+        manager.forceRebuildPacks(level);
+        List<DemonHierarchyManager.PackSnapshot> packs = manager.getPackSnapshots();
+
+        source.sendSuccess(Component.literal("Rebuilt demon packs. Active packs: " + packs.size()).withStyle(ChatFormatting.GREEN), true);
+        return 1;
+    }
+
+    private static int executeDisbandPack(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        String leaderName = StringArgumentType.getString(ctx, "leader");
+        Optional<UUID> leaderIdOpt = resolveDemonId(source, manager, leaderName, "leader");
+        if (leaderIdOpt.isEmpty()) return 0;
+
+        boolean removed = manager.disbandPack(leaderIdOpt.get());
+        if (!removed) {
+            source.sendFailure(Component.literal("No active pack found for leader " + leaderName + "."));
+            return 0;
+        }
+
+        source.sendSuccess(Component.literal("Disbanded pack led by " + leaderName + ".").withStyle(ChatFormatting.YELLOW), true);
+        return 1;
+    }
+
+    private static int executeClearAlliances(CommandContext<CommandSourceStack> ctx) {
+        CommandSourceStack source = ctx.getSource();
+        DemonHierarchyManager manager = DemonHierarchyManager.get(source.getLevel());
+
+        int cleared = manager.clearActiveAlliances();
+        manager.setDirty();
+        source.sendSuccess(Component.literal("Cleared " + cleared + " active alliance(s).").withStyle(ChatFormatting.YELLOW), true);
+        return 1;
+    }
+}

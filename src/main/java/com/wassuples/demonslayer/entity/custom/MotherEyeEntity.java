@@ -88,10 +88,11 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
 
         AABB searchArea = this.getBoundingBox().inflate(radius);
         Entity caster = getCaster();
+        LivingEntity livingCaster = caster instanceof LivingEntity ? (LivingEntity) caster : null;
         List<LivingEntity> targets = this.level.getEntitiesOfClass(
                 LivingEntity.class,
                 searchArea,
-                e -> e != this && e != caster && (caster == null || !SummonAllies.areAllies(caster, e))
+                e -> e != this && e != caster && (livingCaster == null || !SummonAllies.isOwnedBy(e, livingCaster))
         );
 
         for (LivingEntity target : targets) {

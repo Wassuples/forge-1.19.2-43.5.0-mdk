@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ally.SummonAllies;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -28,6 +29,9 @@ import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
 import software.bernie.geckolib3.core.manager.AnimationData;
 import software.bernie.geckolib3.core.manager.AnimationFactory;
 
+import javax.annotation.Nullable;
+import java.util.UUID;
+
 /**
  * Custom entity: Thread Wheel.
  */
@@ -38,6 +42,8 @@ public class ThreadWheelEntity extends Monster implements IAnimatable {
 
     private int lifeTicks = 120;
     private Vec3 travelVector = Vec3.ZERO;
+    @Nullable
+    private UUID ownerUUID;
 
     public ThreadWheelEntity(EntityType<? extends Monster> entityType, Level level) {
         super(entityType, level);
@@ -63,7 +69,9 @@ public class ThreadWheelEntity extends Monster implements IAnimatable {
         this.level.getEntitiesOfClass(
                         LivingEntity.class,
                         this.getBoundingBox().inflate(0.3D),
-                        e -> e != this && !SummonAllies.areAllies(this, e)
+                        e -> e != this
+                                && !e.getUUID().equals(this.ownerUUID)
+                                && !SummonAllies.areAllies(this, e)
                 )
                 .forEach(entity -> entity.hurt(DamageSource.MAGIC, 9.0F));
 
@@ -103,6 +111,15 @@ public class ThreadWheelEntity extends Monster implements IAnimatable {
         this.travelVector = new Vec3(direction.x, 0, direction.z).normalize().scale(speed);
     }
 
+    public void setOwner(@Nullable LivingEntity owner) {
+        this.ownerUUID = owner != null ? owner.getUUID() : null;
+    }
+
+    @Nullable
+    public UUID getOwnerUUID() {
+        return this.ownerUUID;
+    }
+
     @Override
     protected void registerGoals() { }
 
@@ -134,6 +151,22 @@ public class ThreadWheelEntity extends Monster implements IAnimatable {
         super.defineSynchedData();
         this.entityData.define(DATA_INITIAL_YAW, 0.0F);
         this.entityData.define(DATA_ROTATION_STORED, false);
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        if (this.ownerUUID != null) {
+            tag.putUUID("OwnerUUID", this.ownerUUID);
+        }
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        if (tag.hasUUID("OwnerUUID")) {
+            this.ownerUUID = tag.getUUID("OwnerUUID");
+        }
     }
 
     private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {

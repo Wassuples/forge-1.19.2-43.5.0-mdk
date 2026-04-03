@@ -58,9 +58,14 @@ public class BattleSessionTracker {
                              float demonHealthPct, float opponentHealthPct,
                              boolean opponentIsPlayer, long currentTime) {
         SessionKey key = new SessionKey(demonId, opponentId);
+        boolean isNew = !activeSessions.containsKey(key);
         BattleSession session = activeSessions.computeIfAbsent(key,
                 k -> new BattleSession(demonId, opponentId, currentTime, opponentIsPlayer));
         session.recordDamage(amount, demonDealtDamage, demonHealthPct, opponentHealthPct, currentTime);
+        if (isNew) {
+            System.out.println("[NEMESIS DEBUG] Battle session STARTED: demon=" + demonId.toString().substring(0, 8) +
+                " vs opponent=" + opponentId.toString().substring(0, 8) + " (player=" + opponentIsPlayer + ")");
+        }
     }
 
     /**
@@ -70,6 +75,9 @@ public class BattleSessionTracker {
         SessionKey key = new SessionKey(demonId, opponentId);
         BattleSession session = activeSessions.get(key);
         if (session == null) return;
+
+        System.out.println("[NEMESIS DEBUG] Battle session DEATH: " + (demonDied ? "demon" : "opponent") +
+            " died (demon=" + demonId.toString().substring(0, 8) + ", opponent=" + opponentId.toString().substring(0, 8) + ")");
 
         if (demonDied) {
             session.markDemonDied();
@@ -86,6 +94,9 @@ public class BattleSessionTracker {
         SessionKey key = new SessionKey(demonId, opponentId);
         BattleSession session = activeSessions.get(key);
         if (session == null) return;
+
+        System.out.println("[NEMESIS DEBUG] Battle session FLEE: demon=" + demonId.toString().substring(0, 8) +
+            " fled from opponent=" + opponentId.toString().substring(0, 8));
 
         session.markDemonFled();
         finalizeSession(key, currentTime);
@@ -122,6 +133,12 @@ public class BattleSessionTracker {
         BattleOutcome outcome = BattleOutcome.derive(session, currentTime);
         DemonTrait trait = traitLookup.apply(key.demonId());
         if (trait == null) return;
+
+        System.out.println("[NEMESIS DEBUG] Battle session FINALIZED: demon=" + trait.getName() +
+            " outcome=" + outcome.memoryType() +
+            " (dmgDealt=" + String.format("%.1f", session.getDamageDealt()) +
+            ", dmgTaken=" + String.format("%.1f", session.getDamageTaken()) +
+            ", nearDeath=" + outcome.wasNearDeath() + ")");
 
         // 1. Write the outcome as a fact memory
         DemonMemory memory = outcome.toMemory(currentTime);

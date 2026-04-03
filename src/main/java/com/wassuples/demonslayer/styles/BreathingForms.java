@@ -1765,6 +1765,16 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/beast/beast_11.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
+            AABB worldBounds = new AABB(
+                    -30_000_000.0D, level.getMinBuildHeight(), -30_000_000.0D,
+                     30_000_000.0D, level.getMaxBuildHeight(),  30_000_000.0D
+            );
+            boolean hasActiveThrow = !level.getEntitiesOfClass(ThrownNichirinEntity.class, worldBounds,
+                    blade -> blade.isOwnedBy(user.getUUID())).isEmpty();
+            if (hasActiveThrow) {
+                return;
+            }
+
             UUID throwId = UUID.randomUUID();
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.2f, 1.0f);
             level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.5f);

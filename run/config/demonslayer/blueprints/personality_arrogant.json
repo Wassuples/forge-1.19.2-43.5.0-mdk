@@ -1,19 +1,30 @@
-{
-  "taunts": {
-    "generic": [
-      "Know your place, filth. You are nothing before me.",
-      "Have you returned to grovel, {player}?",
-      "An insect dares to challenge me twice?" ],
-    "low_health_comeback": [
-      "Your desperation was amusing, but ultimately futile.",
-      "To think a low-life like you almost scratched me. I will not be so careless again." ],
-    "fire_kill": [ "You burned like the trash you are.",
-      "The world is purer without your stench. Let's cleanse it again." ],
-    "poison_kill": [ "My blood is royal. It was an honor for you to be tainted by it.",
-      "Even my slightest touch is lethal to your kind." ],
-    "overkill": [ "I have already forgotten your name. Remind me why I should care?",
-      "You are a stain I had to wipe away. And you've returned." ],
-    "tactical_kill": [ "Your pathetic strategies are clear to one as supreme as I.",
-      "Every move you make is an insult to the art of combat." ]
-  }
+﻿{
+    "taunts":  {
+                   "generic":  [
+                                   "Know your place, filth. You are nothing before me.",
+                                   "Have you returned to grovel, {player}?",
+                                   "An insect dares to challenge me twice?"
+                               ],
+                   "low_health_comeback":  [
+                                               "Your desperation was amusing, but ultimately futile.",
+                                               "To think a low-life like you almost scratched me. I will not be so careless again."
+                                           ],
+                   "fire_kill":  [
+                                     "You burned like the trash you are.",
+                                     "The world is purer without your stench. Let\u0027s cleanse it again."
+                                 ],
+                   "poison_kill":  [
+                                       "My blood is royal. It was an honor for you to be tainted by it.",
+                                       "Even my slightest touch is lethal to your kind."
+                                   ],
+                   "overkill":  [
+                                    "I have already forgotten your name. Remind me why I should care?",
+                                    "You are a stain I had to wipe away. And you\u0027ve returned."
+                                ],
+                   "tactical_kill":  [
+                                         "Your pathetic strategies are clear to one as supreme as I.",
+                                         "Every move you make is an insult to the art of combat."
+                                     ]
+               }
 }
+

@@ -23,7 +23,7 @@ public class PlayerMissions {
     private final Map<ResourceLocation, Map<String, Integer>> activeMissions = new HashMap<>();
     private final Set<ResourceLocation> completedMissions = new HashSet<>();
 
-    public boolean hasCompleted(ResourceLocation missionId) {
+    public boolean isCompleted(ResourceLocation missionId) {
         return completedMissions.contains(missionId);
     }
 
@@ -38,7 +38,7 @@ public class PlayerMissions {
     }
 
     public void acceptMission(Mission mission, ServerPlayer player) {
-        if (!isActive(mission.id()) && !hasCompleted(mission.id())) {
+        if (!isActive(mission.id()) && !isCompleted(mission.id())) {
             Map<String, Integer> progress = new HashMap<>();
 
             for (MissionObjective objective : mission.objectives()) {

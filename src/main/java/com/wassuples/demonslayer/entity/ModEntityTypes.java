@@ -153,31 +153,6 @@ public class ModEntityTypes {
                             .sized(0.6f, 1.95f)
                             .build(new ResourceLocation(DemonSlayer.MOD_ID, "nemesis_demon").toString()));
 
-    public static final RegistryObject<EntityType<FodderDemonEntity>> FODDER_DEMON =
-            ENTITY_TYPES.register("fodder_demon",
-                    () -> EntityType.Builder.of(FodderDemonEntity::new, MobCategory.MONSTER)
-                            .sized(0.6f, 1.8f) // Slightly smaller than a player
-                            .build("fodder_demon"));
-
-    public static final RegistryObject<EntityType<LowlyDemonEntity>> LOWLY_DEMON =
-            ENTITY_TYPES.register("lowly_demon",
-                    () -> EntityType.Builder.of(LowlyDemonEntity::new, MobCategory.MONSTER)
-                            .sized(0.6f, 1.8f).build(new ResourceLocation(DemonSlayer.MOD_ID, "lowly_demon").toString()));
-
-    public static final RegistryObject<EntityType<CommonDemonEntity>> COMMON_DEMON =
-            ENTITY_TYPES.register("common_demon",
-                    () -> EntityType.Builder.of(CommonDemonEntity::new, MobCategory.MONSTER)
-                            .sized(0.6f, 1.8f).build(new ResourceLocation(DemonSlayer.MOD_ID, "common_demon").toString()));
-
-    public static final RegistryObject<EntityType<GreaterDemonEntity>> GREATER_DEMON =
-            ENTITY_TYPES.register("greater_demon",
-                    () -> EntityType.Builder.of(GreaterDemonEntity::new, MobCategory.MONSTER)
-                            .sized(0.6f, 1.8f).build(new ResourceLocation(DemonSlayer.MOD_ID, "greater_demon").toString()));
-
-    public static final RegistryObject<EntityType<EliteDemonEntity>> ELITE_DEMON =
-            ENTITY_TYPES.register("elite_demon",
-                    () -> EntityType.Builder.of(EliteDemonEntity::new, MobCategory.MONSTER)
-                            .sized(0.6f, 1.8f).build(new ResourceLocation(DemonSlayer.MOD_ID, "elite_demon").toString()));
 
     public static final RegistryObject<EntityType<HandDemonEntity>> HAND_DEMON =
             ENTITY_TYPES.register("hand_demon",

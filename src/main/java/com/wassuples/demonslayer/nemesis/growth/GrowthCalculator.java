@@ -73,6 +73,7 @@ public final class GrowthCalculator {
                                     @Nullable DemonRank rank) {
         int rankCap = getStatCapForRank(rank);
         GrowthStats stats = trait.getGrowthStats();
+        int oldV = trait.getVigor(), oldS = trait.getStrength(), oldA = trait.getAgility();
 
         // 1. Age-based passive growth
         applyAgeGrowth(trait, currentTime, rankCap, stats);
@@ -85,6 +86,15 @@ public final class GrowthCalculator {
 
         // 4. Quirk acquisition from streaks
         applyQuirkGrowth(trait, stats);
+
+        int dV = trait.getVigor() - oldV, dS = trait.getStrength() - oldS, dA = trait.getAgility() - oldA;
+        if (dV != 0 || dS != 0 || dA != 0) {
+            System.out.println("[NEMESIS DEBUG] Growth applied to " + trait.getName() +
+                ": V " + oldV + "→" + trait.getVigor() +
+                ", S " + oldS + "→" + trait.getStrength() +
+                ", A " + oldA + "→" + trait.getAgility() +
+                " (cap=" + rankCap + ", rank=" + (rank != null ? rank.name() : "FODDER") + ")");
+        }
     }
 
     // ── Age growth (E2: small passive) ──────────────────────────────────
@@ -206,7 +216,10 @@ public final class GrowthCalculator {
                     BloodDemonArts.HAEMO,
                     BloodDemonArts.SLEEP
             );
-            trait.setAssignedBDA(pool.get(RANDOM.nextInt(pool.size())));
+            BloodDemonArts newBda = pool.get(RANDOM.nextInt(pool.size()));
+            trait.setAssignedBDA(newBda);
+            System.out.println("[NEMESIS DEBUG] BDA UNLOCKED: " + trait.getName() + " acquired " + newBda.name() +
+                " (battles=" + stats.getBattleCount() + ", wins=" + stats.getWins() + ")");
         }
     }
 
@@ -219,14 +232,17 @@ public final class GrowthCalculator {
         if (streak >= QUIRK_STREAK_TIER3 && !trait.hasQuirk(Quirk.DEATH_DEFIANT)) {
             if (RANDOM.nextFloat() < 0.15f) {
                 trait.addQuirk(Quirk.DEATH_DEFIANT);
+                System.out.println("[NEMESIS DEBUG] QUIRK GAINED: " + trait.getName() + " acquired DEATH_DEFIANT (streak=" + streak + ")");
             }
         } else if (streak >= QUIRK_STREAK_TIER2 && !trait.hasQuirk(Quirk.BLOOD_SIPHON)) {
             if (RANDOM.nextFloat() < 0.20f) {
                 trait.addQuirk(Quirk.BLOOD_SIPHON);
+                System.out.println("[NEMESIS DEBUG] QUIRK GAINED: " + trait.getName() + " acquired BLOOD_SIPHON (streak=" + streak + ")");
             }
         } else if (streak >= QUIRK_STREAK_TIER1 && !trait.hasQuirk(Quirk.NIMBLE)) {
             if (RANDOM.nextFloat() < 0.25f) {
                 trait.addQuirk(Quirk.NIMBLE);
+                System.out.println("[NEMESIS DEBUG] QUIRK GAINED: " + trait.getName() + " acquired NIMBLE (streak=" + streak + ")");
             }
         }
 
@@ -234,6 +250,7 @@ public final class GrowthCalculator {
         if (stats.getCurrentWinStreak() == 0 && stats.getLosses() > stats.getWins() + 2) {
             if (!trait.hasQuirk(Quirk.OVERCONFIDENT) && RANDOM.nextFloat() < 0.15f) {
                 trait.addQuirk(Quirk.OVERCONFIDENT);
+                System.out.println("[NEMESIS DEBUG] QUIRK GAINED (weakness): " + trait.getName() + " acquired OVERCONFIDENT (losses=" + stats.getLosses() + ")");
             }
         }
     }

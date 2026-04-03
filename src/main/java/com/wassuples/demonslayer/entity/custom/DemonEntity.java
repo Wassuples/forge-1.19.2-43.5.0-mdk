@@ -5,6 +5,7 @@ import com.wassuples.demonslayer.entity.ai.AvoidWisteriaLeavesGoal;
 import com.wassuples.demonslayer.entity.ai.FormUserAttackGoal;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
+import com.wassuples.demonslayer.util.DemonSunlightHelper;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -77,11 +78,7 @@ public abstract class DemonEntity extends AbstractFormUsingEntity {
 
     @Override
     public void aiStep() {
-        if (this.isAlive() && this.level.isDay() && !this.level.isClientSide()) {
-            if (this.level.canSeeSky(this.blockPosition())) {
-                this.setSecondsOnFire(8);
-            }
-        }
+        DemonSunlightHelper.applySunlightWeakness(this);
         super.aiStep();
     }
 

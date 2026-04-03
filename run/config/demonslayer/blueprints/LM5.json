@@ -1,44 +1,46 @@
-{
-  "id": "LM5",
-  "name": "Rui",
-  "title": "of the Spider Family",
-  "behavior": "TERRITORIAL",
-  "personality": "COMMANDING",
-  "bda": "THREADS",
-  "blood_points": 4500,
-  "stats": {
-    "vigor": 35,
-    "strength": 30,
-    "agility": 45
-  },
-  "quirks": [
-    "PACK_CALLER",
-    "GLASS_CANNON",
-    "OBSESSIVE_HUNTER"
-  ],
-  "taunts": {
-    "generic": [
-      "You dare interrupt our family's peace?",
-      "You cannot sever these bonds.",
-      "Insignificant."
-    ],
-    "overkill": [
-      "This is the fate of all who defy my family.",
-      "You were not worthy of being in my presence."
-    ],
-    "low_health_comeback": [
-      "You thought you could win? How foolish.",
-      "My bonds are unbreakable. Your efforts are meaningless."
-    ]
-  },
-  "announcements": {
-    "fodder_duel_win_high_diff": [
-      "%s has effortlessly eliminated %s, a worthless insect caught in the spider's web.",
-      "The bonds of family are absolute. %s has executed %s for their weakness."
-    ],
-    "kizuki_upset": [
-      "Family bonds transcend rank. %s has dissected %s in a terrifying display, claiming the title of %s.",
-      "The hierarchy has been ensnared. %s has proven their superiority over %s, seizing the rank of %s."
-    ]
-  }
+﻿{
+    "id":  "LM5",
+    "name":  "Rui",
+    "title":  "of the Spider Family",
+    "behavior":  "TERRITORIAL",
+    "personality":  "COMMANDING",
+    "bda":  "THREADS",
+    "blood_points":  4500,
+    "stats":  {
+                  "vigor":  35,
+                  "strength":  30,
+                  "agility":  45
+              },
+    "quirks":  [
+                   "PACK_CALLER",
+                   "GLASS_CANNON",
+                   "OBSESSIVE_HUNTER"
+               ],
+    "taunts":  {
+                   "generic":  [
+                                   "You dare interrupt our family's peace?",
+                                   "You cannot sever these bonds.",
+                                   "Insignificant."
+                               ],
+                   "overkill":  [
+                                    "This is the fate of all who defy my family.",
+                                    "You were not worthy of being in my presence."
+                                ],
+                   "low_health_comeback":  [
+                                               "You thought you could win? How foolish.",
+                                               "My bonds are unbreakable. Your efforts are meaningless."
+                                           ]
+               },
+    "announcements":  {
+                          "fodder_duel_win_high_diff":  [
+                                                            "%s has effortlessly eliminated %s, a worthless insect caught in the spider's web.",
+                                                            "The bonds of family are absolute. %s has executed %s for their weakness."
+                                                        ],
+                          "kizuki_upset":  [
+                                               "Family bonds transcend rank. %s has dissected %s in a terrifying display, claiming the title of %s.",
+                                               "The hierarchy has been ensnared. %s has proven their superiority over %s, seizing the rank of %s."
+                                           ]
+                      },
+    "skin_location":  "demonslayer:textures/entity/lower_moon_five.png"
 }
+

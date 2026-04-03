@@ -246,18 +246,6 @@ public class ModMessages {
                 .consumerMainThread(AbilityKeyC2SPacket::handle)
                 .add();
 
-        net.messageBuilder(RequestHierarchyC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
-                .decoder(RequestHierarchyC2SPacket::new)
-                .encoder(RequestHierarchyC2SPacket::toBytes)
-                .consumerMainThread(RequestHierarchyC2SPacket::handle)
-                .add();
-
-        net.messageBuilder(UpdateHierarchyS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
-                .decoder(UpdateHierarchyS2CPacket::new)
-                .encoder(UpdateHierarchyS2CPacket::toBytes)
-                .consumerMainThread(UpdateHierarchyS2CPacket::handle)
-                .add();
-
         net.messageBuilder(OpenCrowDispatchS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(OpenCrowDispatchS2CPacket::new)
                 .encoder(OpenCrowDispatchS2CPacket::toBytes)

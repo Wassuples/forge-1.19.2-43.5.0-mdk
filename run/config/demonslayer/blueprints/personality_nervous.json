@@ -1,11 +1,20 @@
-{
-  "taunts": {
-    "generic": [ "Ah! It's you again, {player}! Please, just go away!",
-      "Wh-why are you back?! I don't want to fight again!" ],
-    "low_health_comeback": [ "You almost got me! That was too close! Don't do that again!",
-      "I-I'm much stronger now! Probably! So stay back!" ],
-    "overkill": [ "I won? How did I win so easily? It must have been a trick!",
-      "You're not going to just fall over again, are you? That's suspicious!" ],
-    "tactical_kill": [ "I-I didn't mean to hurt you, it just happened! P-please don't be mad!" ]
-  }
+﻿{
+    "taunts":  {
+                   "generic":  [
+                                   "Ah! It's you again, {player}! Please, just go away!",
+                                   "Wh-why are you back?! I don't want to fight again!"
+                               ],
+                   "low_health_comeback":  [
+                                               "You almost got me! That was too close! Don't do that again!",
+                                               "I-I'm much stronger now! Probably! So stay back!"
+                                           ],
+                   "overkill":  [
+                                    "I won? How did I win so easily? It must have been a trick!",
+                                    "You're not going to just fall over again, are you? That's suspicious!"
+                                ],
+                   "tactical_kill":  [
+                                         "I-I didn't mean to hurt you, it just happened! P-please don't be mad!"
+                                     ]
+               }
 }
+

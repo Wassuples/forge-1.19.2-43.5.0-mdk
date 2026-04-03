@@ -112,6 +112,7 @@ key_key.hotbar.7:key.keyboard.7
 key_key.hotbar.8:key.keyboard.8
 key_key.hotbar.9:key.keyboard.9
 key_key.demonslayer.change_form:key.keyboard.r
+key_key.demonslayer.change_form_back:key.keyboard.unknown
 key_key.demonslayer.use_form:key.mouse.4
 key_key.demonslayer.open_menu:key.keyboard.b
 key_key.demonslayer.bda_toggle:key.keyboard.v

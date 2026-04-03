@@ -27,6 +27,9 @@ public interface IDemonTrait {
     String getSourceBlueprintId();
     void setSourceBlueprintId(String id);
 
+    String getSkinLocation();
+    void setSkinLocation(String skinLocation);
+
     String getName();
     void setName(String name);
 

@@ -94,11 +94,15 @@ public class PlayerIntelManager {
                               java.util.function.Predicate<UUID> kizukiRankLookup) {
         if (storyLog.isEmpty() || players.isEmpty()) return;
 
+        System.out.println("[NEMESIS DEBUG] Spreading rumors: " + storyLog.size() + " events, " + players.size() + " players");
+
         // Only process events from the last 3 days
         long cutoff = storyLog.get(0).getTimestamp() - (3 * TICKS_PER_DAY);
+        int eventsProcessed = 0;
 
         for (StoryEvent event : storyLog) {
             if (event.getTimestamp() < cutoff) break;
+            eventsProcessed++;
 
             boolean isKizukiEvent = event.getInvolvedDemons().stream().anyMatch(kizukiRankLookup::test);
 
@@ -131,7 +135,11 @@ public class PlayerIntelManager {
                                     .filter(e -> e.getValue() == IntelTier.RUMOR)
                                     .map(Map.Entry::getKey)
                                     .findFirst();
-                            rumorToUpgrade.ifPresent(ts -> myIntel.put(ts, IntelTier.CONFIRMED));
+                            rumorToUpgrade.ifPresent(ts -> {
+                                myIntel.put(ts, IntelTier.CONFIRMED);
+                                System.out.println("[NEMESIS DEBUG] Crow intel upgrade: player " +
+                                    player.getGameProfile().getName() + " RUMOR→CONFIRMED for event at t=" + ts);
+                            });
                         }
                     }
                 });
@@ -155,6 +163,8 @@ public class PlayerIntelManager {
                 }
             }
         }
+
+        System.out.println("[NEMESIS DEBUG] Rumor spreading complete: " + eventsProcessed + " events processed within cutoff window");
     }
 
     // ── Weekly digest (H3) ──────────────────────────────────────────────
@@ -183,9 +193,13 @@ public class PlayerIntelManager {
         }
 
         if (counts.isEmpty()) {
+            System.out.println("[NEMESIS DEBUG] Weekly digest for " + playerId.toString().substring(0, 8) + ": nothing to report");
             return Component.literal("§7[Weekly Report] Nothing of note happened this week.")
                     .withStyle(ChatFormatting.GRAY);
         }
+
+        System.out.println("[NEMESIS DEBUG] Weekly digest for " + playerId.toString().substring(0, 8) +
+            ": " + counts.values().stream().mapToInt(Integer::intValue).sum() + " events, " + highlights.size() + " highlights");
 
         MutableComponent digest = Component.literal("§6═══ Weekly Nemesis Report ═══\n")
                 .withStyle(ChatFormatting.GOLD);

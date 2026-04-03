@@ -22,6 +22,8 @@ import com.wassuples.demonslayer.missions.Mission;
 import com.wassuples.demonslayer.missions.MissionObjective;
 import com.wassuples.demonslayer.missions.MissionRegistry;
 import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
+import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
+import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
@@ -185,12 +187,23 @@ public class ModEvents {
                 event.addCapability(PlayerCrowProvider.KEY, new PlayerCrowProvider());
             }
         }
+
+        // Attach DemonTrait capability to NemesisDemonEntity instances
+        if (event.getObject() instanceof com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity) {
+            event.addCapability(
+                    new ResourceLocation(DemonSlayer.MOD_ID, "demon_trait"),
+                    new com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider()
+            );
+        }
     }
 
     @SubscribeEvent
     public static void onPlayerDeath(LivingDeathEvent event) {
         // When a player dies, we save all their capability data to our maps.
         if (event.getEntity() instanceof ServerPlayer serverPlayer) {
+            // Stop any active form so it doesn't persist across death/respawn
+            ActiveFormManager.stop(serverPlayer);
+
             // Save Style data
             serverPlayer.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
                 CompoundTag nbt = new CompoundTag();
@@ -289,6 +302,10 @@ public class ModEvents {
             // After loading the data on the server, sync it all to the client.
             syncAllDataToClient(player);
             CrowManager.ensureCrowFor(player);
+
+            // Apply rank stat bonuses (max breath, max health) so they persist across death
+            player.getCapability(PLAYER_PROGRESSION).ifPresent(progression ->
+                    ModUtils.applyRankStatBonuses(player, progression.getRank()));
         }
     }
 
@@ -298,6 +315,10 @@ public class ModEvents {
         if (event.getEntity() instanceof ServerPlayer player) {
             syncAllDataToClient(player);
             CrowManager.ensureCrowFor(player);
+
+            // Apply rank stat bonuses (max breath, max health) so they persist across sessions
+            player.getCapability(PLAYER_PROGRESSION).ifPresent(progression ->
+                    ModUtils.applyRankStatBonuses(player, progression.getRank()));
         }
     }
 
@@ -347,13 +368,9 @@ public class ModEvents {
         if (event.side == LogicalSide.SERVER && event.player instanceof ServerPlayer serverPlayer) {
             CrowManager.ensureCrowFor(serverPlayer);
 
-            // WISTERIA: demon players are poisoned near wisteria leaves (but not repelled).
+            // WISTERIA: demon players are poisoned near wisteria leaves.
             if (event.phase == TickEvent.Phase.END && serverPlayer.tickCount % 10 == 0) {
-                serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                    if (demon.isDemon() && WisteriaHelper.isWisteriaLeavesNearby(serverPlayer.level, serverPlayer.blockPosition(), WISTERIA_SCAN_RADIUS)) {
-                        serverPlayer.addEffect(new MobEffectInstance(ModEffects.WISTERIA_POISON.get(), WISTERIA_POISON_DURATION_TICKS, WISTERIA_POISON_AMPLIFIER, true, true));
-                    }
-                });
+                applyWisteriaPoisonIfNear(serverPlayer);
             }
 
             // Demon threat expiry (runs server-side, cheap O(1))
@@ -461,6 +478,7 @@ public class ModEvents {
                                 // Grant rewards and complete the mission
                                 mission.rewards().forEach(reward -> reward.grant(serverPlayer));
                                 missions.completeMission(mission);
+                                ModUtils.checkAndApplyRankUp(serverPlayer);
                                 serverPlayer.sendSystemMessage(Component.literal("Mission Complete: ").withStyle(ChatFormatting.GOLD).append(mission.title()));
 
                                 // Sync the changes to the client
@@ -562,13 +580,33 @@ public class ModEvents {
     @SubscribeEvent
     public static void onLivingTick(LivingEvent.LivingTickEvent event) {
         if (event.getEntity().level.isClientSide()) return;
-        if (!(event.getEntity() instanceof DemonEntity demon)) return;
+        LivingEntity livingEntity = event.getEntity();
+        if (livingEntity instanceof Player) return;
 
         // Poison demon NPCs close to wisteria leaves.
-        if (demon.tickCount % 10 != 0) return;
-        if (WisteriaHelper.isWisteriaLeavesNearby(demon.level, demon.blockPosition(), WISTERIA_SCAN_RADIUS)) {
-            demon.addEffect(new MobEffectInstance(ModEffects.WISTERIA_POISON.get(), WISTERIA_POISON_DURATION_TICKS, WISTERIA_POISON_AMPLIFIER, true, true));
+        if (livingEntity.tickCount % 10 != 0) return;
+        applyWisteriaPoisonIfNear(livingEntity);
+    }
+
+    private static void applyWisteriaPoisonIfNear(LivingEntity livingEntity) {
+        if (!isWisteriaSusceptibleDemon(livingEntity)) return;
+        if (!WisteriaHelper.isWisteriaLeavesNearby(livingEntity.level, livingEntity.blockPosition(), WISTERIA_SCAN_RADIUS)) return;
+
+        livingEntity.addEffect(new MobEffectInstance(ModEffects.WISTERIA_POISON.get(), WISTERIA_POISON_DURATION_TICKS, WISTERIA_POISON_AMPLIFIER, true, true));
+    }
+
+    private static boolean isWisteriaSusceptibleDemon(LivingEntity livingEntity) {
+        if (livingEntity instanceof DemonEntity || livingEntity instanceof HandDemonEntity || livingEntity instanceof NemesisDemonEntity) {
+            return true;
         }
+
+        if (livingEntity instanceof Player player) {
+            return player.getCapability(PlayerDemonProvider.PLAYER_DEMON)
+                    .map(PlayerDemon::isDemon)
+                    .orElse(false);
+        }
+
+        return false;
     }
 
     private static void handleDemonPassives(ServerPlayer player, PlayerDemon demon) {
@@ -620,7 +658,7 @@ public class ModEvents {
         }
 
         // --- SUNLIGHT WEAKNESS & RESISTANCE ---
-        boolean isInSun = player.level.isDay() && !player.level.isRaining() && player.level.canSeeSky(player.blockPosition());
+        boolean isInSun = player.level.isDay() && player.level.canSeeSky(player.blockPosition());
         if (isInSun) {
             if (demon.isPassiveActive(DemonPassive.SUNLIGHT_RESISTANCE)) {
                 int tier = demon.getPassiveTier(DemonPassive.SUNLIGHT_RESISTANCE);
@@ -634,6 +672,11 @@ public class ModEvents {
             // either the passive is off, or the grace period has expired
             if (player.getRemainingFireTicks() <= 1) {
                 player.setSecondsOnFire(8);
+            }
+
+            // Rain puts out flames, but it should not negate sunlight lethality for demons.
+            if (player.level.isRainingAt(player.blockPosition()) && player.tickCount % 20 == 0) {
+                player.hurt(DamageSource.ON_FIRE, 1.0F);
             }
         } else {
             // If not in the sun, reset the grace period timer
@@ -880,6 +923,7 @@ public class ModEvents {
             serverPlayer.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> serverPlayer.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
                 BreathingStyles currentStyle = style.getCurrentStyles();
                 progression.addStyleMastery(currentStyle, 1);
+                ModUtils.checkAndApplyRankUp(serverPlayer);
                 ModMessages.sendToPlayer(new PlayerProgressionSyncS2CPacket(
                                 player.getId(),
                                 progression.getRank(),
@@ -935,5 +979,33 @@ public class ModEvents {
 
         // Drop at the Hashira's position.
         hashira.spawnAtLocation(sword);
+    }
+
+    @SubscribeEvent
+    public static void onDemonKilledByPlayer(LivingDeathEvent event) {
+        if (event.getEntity().level.isClientSide) return;
+        if (!(event.getSource().getEntity() instanceof ServerPlayer player)) return;
+
+        LivingEntity dead = event.getEntity();
+        boolean isDemon = dead instanceof DemonEntity
+            || dead instanceof HandDemonEntity
+            || dead instanceof NemesisDemonEntity
+            || (dead instanceof Player && dead.getCapability(PlayerDemonProvider.PLAYER_DEMON)
+            .map(PlayerDemon::isDemon).orElse(false));
+
+        if (!isDemon) return;
+
+        player.getCapability(PLAYER_PROGRESSION).ifPresent(progression -> {
+            progression.incrementDemonKills();
+
+            if (dead instanceof NemesisDemonEntity && dead.level instanceof ServerLevel serverLevel) {
+                DemonHierarchyManager manager = DemonHierarchyManager.get(serverLevel);
+                if (manager.isKizuki(dead.getUUID())) {
+                    progression.recordKizukiKill();
+                }
+            }
+        });
+
+        ModUtils.checkAndApplyRankUp(player);
     }
 }

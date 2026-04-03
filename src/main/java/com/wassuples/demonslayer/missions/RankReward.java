@@ -3,6 +3,7 @@ package com.wassuples.demonslayer.missions;
 import com.google.gson.JsonObject;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
+import com.wassuples.demonslayer.util.ModUtils;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,6 +33,7 @@ public record RankReward(Rank rank) implements MissionReward {
     public void grant(ServerPlayer player) {
         player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION)
                 .ifPresent(progress -> progress.setRank(rank));
+        ModUtils.applyRankStatBonuses(player, rank);
     }
 
     @Override

@@ -30,7 +30,7 @@ import java.util.UUID;
  * Custom entity: Weeping Spear Projectile.
  */
 public class WeepingSpearProjectileEntity extends AbstractArrow implements IAnimatable {
-    private int life = 80;
+    private int life = 360;
     private final int maxPierces = 3;
     private final List<UUID> hitEntities = new ArrayList<>();
 
@@ -79,9 +79,7 @@ public class WeepingSpearProjectileEntity extends AbstractArrow implements IAnim
 
     @Override
     protected void onHit(HitResult pResult) {
-        if (pResult.getType() == HitResult.Type.ENTITY) {
-            super.onHit(pResult);
-        }
+        super.onHit(pResult);
     }
 
     @Override

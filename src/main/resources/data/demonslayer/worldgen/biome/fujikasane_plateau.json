@@ -13,22 +13,10 @@
   "spawners": {
     "monster": [
       {
-        "type": "demonslayer:fodder_demon",
-        "weight": 80,
+        "type": "demonslayer:nemesis_demon",
+        "weight": 108,
         "minCount": 1,
         "maxCount": 3
-      },
-      {
-        "type": "demonslayer:lowly_demon",
-        "weight": 25,
-        "minCount": 1,
-        "maxCount": 2
-      },
-      {
-        "type": "demonslayer:elite_demon",
-        "weight": 3,
-        "minCount": 1,
-        "maxCount": 1
       }
     ],
     "creature": [

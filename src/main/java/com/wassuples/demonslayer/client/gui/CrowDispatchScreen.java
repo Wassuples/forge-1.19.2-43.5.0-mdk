@@ -12,9 +12,7 @@ import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.AbandonMissionC2SPacket;
 import com.wassuples.demonslayer.networking.packet.AcceptMissionC2SPacket;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Widget;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -23,9 +21,6 @@ import net.minecraft.util.Mth;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Combined UI for the crow messenger: ranking board list + missions tab preview.
- */
 public class CrowDispatchScreen extends Screen {
     private static final ResourceLocation BACKGROUND = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/crow_dispatch.png");
     private static final int WIDTH = 276;

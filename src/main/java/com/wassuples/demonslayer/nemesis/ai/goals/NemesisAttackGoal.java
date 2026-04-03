@@ -3,6 +3,7 @@ package com.wassuples.demonslayer.nemesis.ai.goals;
 import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider;
+import com.wassuples.demonslayer.nemesis.trait.Quirk;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.DemonForms;
 import com.wassuples.demonslayer.styles.IForm;
@@ -29,6 +30,7 @@ public class NemesisAttackGoal extends Goal {
     private final double speedModifier;
     private int attackCooldown;
     private int timeSinceLastAttack;
+    private int windUpTicks;
     private final boolean followTargetEvenIfNotSeen;
     private final float cooldownModifier;
 
@@ -55,6 +57,7 @@ public class NemesisAttackGoal extends Goal {
         this.mob.setAggressive(true);
         this.attackCooldown = 0;
         this.timeSinceLastAttack = 0;
+        this.windUpTicks = 0;
     }
 
     @Override
@@ -86,13 +89,24 @@ public class NemesisAttackGoal extends Goal {
         }
 
         // Attack
+        if (this.windUpTicks > 0) {
+            this.windUpTicks--;
+            return;
+        }
+
         if (this.attackCooldown > 0) {
             this.attackCooldown--;
             return;
         }
 
         if (distanceSq <= this.getAttackReachSqr(target)) {
-            chooseAndUseForm();
+            this.mob.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
+                if (trait.hasQuirk(Quirk.WIND_UP) && this.mob.getRandom().nextFloat() < 0.40f) {
+                    this.windUpTicks = 8;
+                } else {
+                    chooseAndUseForm();
+                }
+            });
         }
     }
 
@@ -131,6 +145,15 @@ public class NemesisAttackGoal extends Goal {
             if (bestForm != null && bestFormPriority > 1) {
                 bestForm.performAction(this.mob, serverLevel);
                 int cooldownTicks = (int) (bestForm.getCooldownTicks(this.mob) * this.cooldownModifier);
+                if (trait.hasQuirk(Quirk.NIMBLE) || trait.hasQuirk(Quirk.NIGHT_STALKER)) {
+                    cooldownTicks = (int) (cooldownTicks * 0.85f);
+                }
+                if (trait.hasQuirk(Quirk.OVERCONFIDENT)) {
+                    cooldownTicks = (int) (cooldownTicks * 1.20f);
+                }
+                if (trait.hasQuirk(Quirk.WIND_UP)) {
+                    cooldownTicks = (int) (cooldownTicks * 1.15f);
+                }
                 this.attackCooldown = PlayerCooldowns.applyFormsCooldownMultiplier(serverLevel, cooldownTicks);
             } else {
                 // If no form has a high enough priority, just do a basic physical attack.
@@ -140,8 +163,27 @@ public class NemesisAttackGoal extends Goal {
     }
 
     protected void performBasicAttack() {
-        this.mob.doHurtTarget(this.mob.getTarget());
-        this.attackCooldown = (int)(20 * this.cooldownModifier);
+        LivingEntity target = this.mob.getTarget();
+        if (target == null) {
+            return;
+        }
+
+        boolean landed = this.mob.doHurtTarget(target);
+        final int[] cooldownTicks = { (int) (20 * this.cooldownModifier) };
+
+        this.mob.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
+            if (trait.hasQuirk(Quirk.NIMBLE) || trait.hasQuirk(Quirk.NIGHT_STALKER)) {
+                cooldownTicks[0] = (int) (cooldownTicks[0] * 0.85f);
+            }
+            if (trait.hasQuirk(Quirk.WIND_UP)) {
+                cooldownTicks[0] = (int) (cooldownTicks[0] * 1.15f);
+            }
+            if (trait.hasQuirk(Quirk.OVERCONFIDENT) && !landed) {
+                cooldownTicks[0] = (int) (cooldownTicks[0] * 1.50f);
+            }
+        });
+
+        this.attackCooldown = Math.max(4, cooldownTicks[0]);
     }
 
     protected double getAttackReachSqr(LivingEntity pAttackTarget) {

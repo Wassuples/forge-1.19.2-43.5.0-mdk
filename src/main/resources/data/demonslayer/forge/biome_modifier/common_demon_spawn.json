@@ -2,7 +2,7 @@
   "type": "forge:add_spawns",
   "biomes": "#minecraft:is_overworld",
   "spawners": {
-    "type": "demonslayer:common_demon",
+    "type": "demonslayer:nemesis_demon",
     "weight": 50,
     "minCount": 1,
     "maxCount": 1

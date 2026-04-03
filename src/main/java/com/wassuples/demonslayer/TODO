@@ -2,73 +2,17 @@
 - Fix the timings for Sun13 aaaaaaaand:
     FlowerFinal, does not allow use of other forms while active. Nor can it be canceled early.
 
-    Cryo, Crystalline Divine Child. they try to attack your other summons, like Rime. But they can't damage.
-    Cryo, Maybe break CDC if strong enough single attack.
     Cryo, if poisoned CDC should cancel.
-    Cryo, Rime hurts itself
-
-    Gyokko, Thousand Needle Fish Kill summons floating.
-TODO Replace ranking board with the crows.
-TODO Make the crows give missions.
 
 ### HIGH PRIORITY
 - Demon's "filth" message should happen after, not before eating food.
-- Ranking doesn't work like it should. Enmu killed -> Kokushibo takes 1 and 2nd place -> everyone else goes down one rank.
 - Demons' form use should decrease hunger bars instead of breath or anything else. Even if they are using Breathing Styles.
 - Kokushibo not able to use their BDA properly. Change up the way all nemeses attack and use forms so that this can be fixed.
-- Make the canon Kizuki always use their own skins.
-- Only update leaderboard in-game after when it supposedly took place. (If fight in night, the battle occured at 9-12 PM or something.)
 - Wintry icicles telegraph not showing up on grass but showing up on snow?
-- Add missions and shit.
-- Fix commands
-- Bring back parry indicators for:
-  * Water11, Dead Calm
-  * Flame4, Blooming Flame
-  * Wind3, Clear Storm
-- Model and texture each Hashira's sword. Don't forget to register them in ModItems! Using the correct Nichirin Sword type buffs attacks of that type, so go to the TO-DO list in CombatHelper.java.
-- Wind4, Wind5
 
 ### MEDIUM PRIORITY
-- Cooldown still not working properly.
 - Add icons for demon progression.
 - When resetting a character with demon abilities (like extra health) the health doesn't reset. Some other things may not reset as well, you'll have to check it out.
-- Add animations, particles, and motions to all forms
-- Make Hashira spawn naturally, especially in Ubuyashiki Mansion
-- Hashira should have custom models for sword.
-- Thunder4 and Thunder6 are very similar (consider redesign)
-- Whirlpool and Flowing dance are clunky (improve mechanics)
-- Wind2 seems weird?
-- Model for Muzan Blood
 - Add a way to get Muzan Blood
-- Clean up GUI.
-- Water7 not needing to be held to activate.
-- Cryo - Rime -'s entity floats.
 
-### LOW PRIORITY
-- Make mod logo and add it to the B menu.
-- Add Wisteria logs and leaves to creative menu.
-- Add Wisteria saplings.
-- Demons should avoid Wisteria trees and/or plants.
-- Hashira drop blades
-- Wisteria logs do not burn.
-- Wisteria Leaves should drop sticks and leaves.
-- Empty or non-existent pool: demonslayer:mansion/perimeter_half_a
-- Make the Wisteria biomes (Mt. Fujikasane) better looking, and shit.
-- Highlight in Style select is incorrect.
-- Make gamerule to edit and manipulate cooldowns.
-
-
-### Future Content that WILL be added
-- Sword design and breathing style separation
-- Demon Slayer Mark: Unlocks when on very low health and fighting an upper moon
-- Nemesis System (https://chatgpt.com/c/6879342a-1574-8011-b489-c02c34fcbca7).
-
-### Future Content that MAY be added
-Mission Requests:
-- A demon Yorichii (First sun breather). You fight the first sun breather he is the demon.
-- Kokushibo before become demon.
-- Demon castle, but ALL OF THEM ARE AFTER YOU. They are out to jump your ass. All demons, all slayers, working together for a single goal, to KILL you.
-- Investigation missions, like batman AR detective stuff.
-- Killing Muzan gives you his power to control all demon.
-- Toon-force BDA
-- Gambling BDA
+Necessity of getDodgeCharge() and setDodgeCharge() in PlayerProgression.java? Only used in DD Compass Needle?? Why was it added in the first place?

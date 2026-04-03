@@ -1,18 +1,20 @@
-{
-  "id": "LM4",
-  "name": "Wakuraba",
-  "title": "the Fourth Lower Moon",
-  "behavior": "SKIRMISHER",
-  "personality": "CAUTIOUS",
-  "bda": "CRESCENT",
-  "quirks": [
-    "NIMBLE",
-    "RAPID_RECOVERY",
-    "FEAR_OF_WATER"
-  ],
-  "stats": {
-    "vigor": 30,
-    "strength": 35,
-    "agility": 50
-  }
+﻿{
+    "id":  "LM4",
+    "name":  "Wakuraba",
+    "title":  "the Fourth Lower Moon",
+    "behavior":  "SKIRMISHER",
+    "personality":  "CAUTIOUS",
+    "bda":  "CRESCENT",
+    "quirks":  [
+                   "NIMBLE",
+                   "RAPID_RECOVERY",
+                   "FEAR_OF_WATER"
+               ],
+    "stats":  {
+                  "vigor":  30,
+                  "strength":  35,
+                  "agility":  50
+              },
+    "skin_location":  "demonslayer:textures/entity/lower_moon_four.png"
 }
+

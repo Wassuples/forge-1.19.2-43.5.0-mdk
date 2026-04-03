@@ -1,18 +1,20 @@
-{
-  "id": "LM2",
-  "name": "Mukago",
-  "title": "the Fifth Lower Moon",
-  "behavior": "COWARDLY",
-  "personality": "NERVOUS",
-  "bda": "SASH",
-  "quirks": [
-    "UNSHAKABLE",
-    "TENACIOUS",
-    "SOUND_SENSITIVE"
-  ],
-  "stats": {
-    "vigor": 50,
-    "strength": 25,
-    "agility": 30
-  }
+﻿{
+    "id":  "LM2",
+    "name":  "Mukago",
+    "title":  "the Fifth Lower Moon",
+    "behavior":  "COWARDLY",
+    "personality":  "NERVOUS",
+    "bda":  "SASH",
+    "quirks":  [
+                   "UNSHAKABLE",
+                   "TENACIOUS",
+                   "SOUND_SENSITIVE"
+               ],
+    "stats":  {
+                  "vigor":  50,
+                  "strength":  25,
+                  "agility":  30
+              },
+    "skin_location":  "demonslayer:textures/entity/lower_moon_two.png"
 }
+

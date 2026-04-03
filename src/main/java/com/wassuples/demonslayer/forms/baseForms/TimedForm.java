@@ -32,7 +32,7 @@ public abstract class TimedForm extends ActiveForm {
             // the parent form controls step transitions.
             ActiveForm active = ActiveFormManager.getActiveForm(user);
             if (active == this) {
-                ActiveFormManager.stop(user, false);
+                ActiveFormManager.stop(user);
             }
         }
     }

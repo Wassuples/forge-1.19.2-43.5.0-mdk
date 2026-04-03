@@ -22,16 +22,23 @@ import java.util.function.Supplier;
  * <p>This packet only changes selection; it does not execute the form.
  */
 public class ChangeFormC2SPacket {
+    private final boolean reverse;
+
     public ChangeFormC2SPacket() {
+        this(false);
+    }
+
+    public ChangeFormC2SPacket(boolean reverse) {
+        this.reverse = reverse;
 
     }
 
     public ChangeFormC2SPacket(FriendlyByteBuf buf) {
-
+        this.reverse = buf.readBoolean();
     }
 
     public void toBytes(FriendlyByteBuf buf) {
-
+        buf.writeBoolean(reverse);
     }
 
     /**
@@ -49,12 +56,20 @@ public class ChangeFormC2SPacket {
             player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
                 if (demon.isBdaModeActive()) {
                     // --- BDA MODE IS ACTIVE ---
-                    demon.cycleDemonForm();
+                    if (reverse) {
+                        demon.previousDemonForm();
+                    } else {
+                        demon.cycleDemonForm();
+                    }
                     player.sendSystemMessage(Component.literal("Switched to " + demon.getCurrentDemonForm().getDisplayName()), true);
                 } else {
                     // --- BREATHING STYLE MODE IS ACTIVE ---
                     player.getCapability(PlayerStyleProvider.PLAYER_STYLE).ifPresent(style -> {
-                        style.nextForm();
+                        if (reverse) {
+                            style.previousForm();
+                        } else {
+                            style.nextForm();
+                        }
                         player.sendSystemMessage(Component.literal("Switched to " + style.getCurrentForms().getDisplayName()), true);
                     });
                 }

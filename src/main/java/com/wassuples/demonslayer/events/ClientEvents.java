@@ -134,6 +134,10 @@ public class ClientEvents {
                 ModMessages.sendToServer(new ToggleBdaModeC2SPacket());
             }
 
+            if (KeyBinding.CHANGE_BACK_KEY.consumeClick()) {
+                ModMessages.sendToServer(new ChangeFormC2SPacket(true));
+            }
+
             if (KeyBinding.OPEN_MENU_KEY.consumeClick()) {
                 if (mc.screen == null) {
                     mc.setScreen(new BreathingMenuScreen());
@@ -277,6 +281,7 @@ public class ClientEvents {
         @SubscribeEvent
         public static void onKeyRegister(RegisterKeyMappingsEvent event) {
             event.register(KeyBinding.CHANGE_KEY);
+            event.register(KeyBinding.CHANGE_BACK_KEY);
             event.register(KeyBinding.USE_KEY);
             event.register(KeyBinding.OPEN_MENU_KEY);
             event.register(KeyBinding.BDA_TOGGLE_KEY);

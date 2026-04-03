@@ -4,6 +4,8 @@ import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.custom.DemonEntity;
+import com.wassuples.demonslayer.entity.custom.HandDemonEntity;
+import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -37,7 +39,7 @@ public class WisteriaPoisonEffect extends MobEffect {
                     .map(PlayerDemon::isDemon)
                     .orElse(false);
         }
-        else if (pLivingEntity instanceof DemonEntity) {
+        else if (pLivingEntity instanceof DemonEntity || pLivingEntity instanceof HandDemonEntity || pLivingEntity instanceof NemesisDemonEntity) {
             isSusceptible = true;
         }
 

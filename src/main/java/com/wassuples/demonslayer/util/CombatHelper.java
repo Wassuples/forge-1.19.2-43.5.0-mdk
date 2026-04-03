@@ -52,7 +52,6 @@ import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArc;
  */
 public class CombatHelper {
     /**
-     * The single source of truth for damage.
      * @param user The entity dealing the damage.
      * @param baseDamage The base damage of the attack before any modifiers.
      * @return The final calculated damage.
@@ -103,7 +102,6 @@ public class CombatHelper {
     }
 
     /**
-     * The single source of truth for range.
      * @param user The entity dealing the damage.
      * @param baseRange The base range of the attack before any modifiers.
      * @return The final calculated range.
@@ -515,7 +513,9 @@ public class CombatHelper {
 
         AABB attackAABB = new AABB(centerPos, centerPos).inflate(finalRange);
         List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, attackAABB,
-                entity -> entity.isAlive() && entity != user && (exclude == null || !entity.is(exclude)));
+                entity -> entity.isAlive()
+                        && entity != user
+                        && (exclude == null || !entity.is(exclude)));
 
         for (LivingEntity target : targets) {
             Vec3 knockbackDir = centerPos.vectorTo(target.position()).normalize();

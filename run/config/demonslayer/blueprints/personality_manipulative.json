@@ -1,10 +1,17 @@
-{
-  "taunts": {
-    "generic": [ "Are you sure you want to do this, {player}? We could be friends.",
-      "You have such fire in your eyes. It's a shame I'll have to put it out again." ],
-    "low_health_comeback": [ "You see? When you get emotional, you make mistakes. That's why I won.",
-      "Your anger makes you strong... but predictable." ],
-    "tactical_kill": [ "It was so easy to lead you into that trap.",
-      "You dance so wonderfully on my strings." ]
-  }
+﻿{
+    "taunts":  {
+                   "generic":  [
+                                   "Are you sure you want to do this, {player}? We could be friends.",
+                                   "You have such fire in your eyes. It\u0027s a shame I\u0027ll have to put it out again."
+                               ],
+                   "low_health_comeback":  [
+                                               "You see? When you get emotional, you make mistakes. That\u0027s why I won.",
+                                               "Your anger makes you strong... but predictable."
+                                           ],
+                   "tactical_kill":  [
+                                         "It was so easy to lead you into that trap.",
+                                         "You dance so wonderfully on my strings."
+                                     ]
+               }
 }
+

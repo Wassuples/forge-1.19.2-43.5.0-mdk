@@ -3,14 +3,18 @@ package com.wassuples.demonslayer.demon.ai;
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.nemesis.ai.Behavior;
 import com.wassuples.demonslayer.nemesis.ai.Personality;
+import com.wassuples.demonslayer.nemesis.blueprint.NemesisSkinRegistry;
 import com.wassuples.demonslayer.nemesis.blueprint.DemonBlueprint;
 import com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider;
+import com.wassuples.demonslayer.nemesis.trait.IDemonTrait;
 import com.wassuples.demonslayer.nemesis.trait.Quirk;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.biome.Biomes;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -22,9 +26,6 @@ public class DemonGenerator {
 
     private static final Random random = new Random();
 
-    // TODO load from a config file, and expand
-    private static final List<String> NAMES = List.of("Akuma", "Kage", "Oni", "Yami", "Ketsu");
-    private static final List<String> TITLES = List.of("the Bloodied", "of the Cursed Peak", "the Shadow", "the Feaster");
     private static final List<ResourceLocation> TERRITORIES = List.of(
             Biomes.PLAINS.location(), Biomes.FOREST.location(), Biomes.TAIGA.location(),
             Biomes.SWAMP.location(), Biomes.SAVANNA.location(), Biomes.SNOWY_SLOPES.location(),
@@ -48,70 +49,123 @@ public class DemonGenerator {
             Map.entry(Behavior.LOYALIST, List.of(Personality.DEVOTED, Personality.FANATICAL)),
             Map.entry(Behavior.SADIST, List.of(Personality.CRUEL, Personality.MELODRAMATIC))
     );
+    private static final List<Quirk> PROCEDURAL_STRENGTH_QUIRKS = List.of(
+            Quirk.HEAVY_HITTER,
+            Quirk.BLOOD_SIPHON,
+            Quirk.SHOCKWAVE_STOMP,
+            Quirk.VENOMOUS,
+            Quirk.EXECUTIONER,
+            Quirk.FIRE_RESISTANT,
+            Quirk.FROST_BLOODED,
+            Quirk.ARROW_PROOF,
+            Quirk.TENACIOUS,
+            Quirk.UNSHAKABLE,
+            Quirk.RAPID_RECOVERY,
+            Quirk.DEATH_DEFIANT,
+            Quirk.NIMBLE,
+            Quirk.NIGHT_STALKER,
+            Quirk.KEEN_Scent,
+            Quirk.PACK_CALLER
+    );
+    private static final List<Quirk> PROCEDURAL_WEAKNESS_QUIRKS = List.of(
+            Quirk.FEAR_OF_WATER,
+            Quirk.BRITTLE,
+            Quirk.SUNLIGHT_SICKNESS,
+            Quirk.FLAMMABLE_FLESH,
+            Quirk.PURIFIED_WEAKNESS,
+            Quirk.OVERCONFIDENT,
+            Quirk.GLASS_CANNON,
+            Quirk.WIND_UP,
+            Quirk.BLIND_RAGE,
+            Quirk.OBSESSIVE_HUNTER,
+            Quirk.SOUND_SENSITIVE,
+            Quirk.MAGPIE,
+            Quirk.EASILY_TAUNTED
+    );
 
     public static void initializeProcedural(NemesisDemonEntity demon, ServerLevel level) {
         demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
-            trait.setSourceBlueprintId("procedural");
-            trait.setBirthTime(level.getGameTime());
-
-            Behavior chosenBehavior = getRandomElement(List.of(Behavior.values()));
-            trait.setBehavior(chosenBehavior);
-            trait.setPersonality(generatePersonality(chosenBehavior));
-            trait.setName(getRandomElement(NAMES));
-            trait.setTitle(getRandomElement(TITLES));
-            trait.setAssignedBDA(getRandomBda());
-            trait.setBloodPoints(5 + random.nextInt(15));
-            trait.setTerritory(getRandomElement(TERRITORIES));
-
-            // TODO make more random, maybe 2 strengths and 1 weakness or vice versa
-            Quirk strengthQuirk = getRandomStrength();
-            Quirk weaknessQuirk = getRandomWeakness();
-            trait.addQuirk(strengthQuirk);
-            trait.addQuirk(weaknessQuirk);
-
-            int baseVigor = 5, baseStrength = 5, baseAgility = 5;
-
-            if (strengthQuirk == Quirk.NIMBLE) baseAgility += 5;
-            if (strengthQuirk == Quirk.TENACIOUS) baseVigor += 5;
-            if (strengthQuirk == Quirk.HEAVY_HITTER) baseStrength += 5;
-            if (weaknessQuirk == Quirk.BRITTLE) baseVigor -= 2;
-            if (weaknessQuirk == Quirk.GLASS_CANNON) {
-                baseStrength += 7;
-                baseVigor -= 4;
-            }
-
-            trait.setVigor(baseVigor);
-            trait.setStrength(baseStrength);
-            trait.setAgility(baseAgility);
-
-            // Intel-gathering ability (G4): derived from behavior + personality
-            trait.setBaseIntelGathering(calculateBaseIntel(chosenBehavior, trait.getPersonality()));
+            initializeProceduralTrait(trait, level.getGameTime());
         });
+    }
+
+    /**
+     * Initializes a DemonTrait directly with procedural data, without requiring an entity.
+     * This is the preferred method for offline roster population.
+     */
+    public static void initializeProceduralTrait(IDemonTrait trait, long gameTime) {
+        trait.setSourceBlueprintId("procedural");
+        trait.setSkinLocation(NemesisSkinRegistry.pickRandomNonCanonSkin().toString());
+        trait.setBirthTime(gameTime);
+
+        Behavior chosenBehavior = getRandomElement(List.of(Behavior.values()));
+        trait.setBehavior(chosenBehavior);
+        trait.setPersonality(generatePersonality(chosenBehavior));
+        trait.setName(getRandomElement(DemonIdentityConfigLoader.getNames()));
+        trait.setTitle(getRandomElement(DemonIdentityConfigLoader.getTitles()));
+        trait.setAssignedBDA(getRandomBda());
+        trait.setBloodPoints(5 + random.nextInt(15));
+        trait.setTerritory(getRandomElement(TERRITORIES));
+
+        // Procedural demons roll either 2 strengths + 1 weakness, or 1 strength + 2 weaknesses.
+        boolean strengthLean = random.nextBoolean();
+        int strengthCount = strengthLean ? 2 : 1;
+        int weaknessCount = strengthLean ? 1 : 2;
+        List<Quirk> strengthQuirks = pickDistinctQuirks(PROCEDURAL_STRENGTH_QUIRKS, strengthCount);
+        List<Quirk> weaknessQuirks = pickDistinctQuirks(PROCEDURAL_WEAKNESS_QUIRKS, weaknessCount);
+        strengthQuirks.forEach(trait::addQuirk);
+        weaknessQuirks.forEach(trait::addQuirk);
+
+        List<Quirk> rolledQuirks = new ArrayList<>(strengthQuirks.size() + weaknessQuirks.size());
+        rolledQuirks.addAll(strengthQuirks);
+        rolledQuirks.addAll(weaknessQuirks);
+
+        int[] stats = applyGenerationStatModifiers(rolledQuirks, 5, 5, 5);
+        trait.setVigor(stats[0]);
+        trait.setStrength(stats[1]);
+        trait.setAgility(stats[2]);
+
+        // Intel-gathering ability (G4): derived from behavior + personality
+        trait.setBaseIntelGathering(calculateBaseIntel(chosenBehavior, trait.getPersonality()));
     }
 
     public static void initializeBlueprint(NemesisDemonEntity demon, DemonBlueprint blueprint, ServerLevel level) {
         demon.getCapability(DemonTraitProvider.DEMON_TRAIT).ifPresent(trait -> {
-            trait.setSourceBlueprintId(blueprint.id());
-            trait.setBirthTime(level.getGameTime());
-            trait.setName(blueprint.name());
-            trait.setTitle(blueprint.title());
-            trait.setBehavior(blueprint.behavior());
-            trait.setPersonality(blueprint.personality());
-            trait.setAssignedBDA(blueprint.bloodDemonArt());
-
-            if (blueprint.quirks() != null) {
-                blueprint.quirks().forEach(trait::addQuirk);
-            }
-
-            trait.setVigor(blueprint.stats().vigor);
-            trait.setStrength(blueprint.stats().strength);
-            trait.setAgility(blueprint.stats().agility);
-
-            trait.setBloodPoints(50 + random.nextInt(100));
-            trait.setTerritory(getRandomElement(TERRITORIES));
-
-            trait.setBaseIntelGathering(calculateBaseIntel(blueprint.behavior(), blueprint.personality()));
+            initializeBlueprintTrait(trait, blueprint, level.getGameTime());
         });
+    }
+
+    /**
+     * Initializes a DemonTrait directly from a blueprint, without requiring an entity.
+     * This is the preferred method for offline roster population from canonical blueprints.
+     */
+    public static void initializeBlueprintTrait(IDemonTrait trait, DemonBlueprint blueprint, long gameTime) {
+        trait.setSourceBlueprintId(blueprint.id());
+        if (NemesisSkinRegistry.parseSkinLocation(blueprint.skinLocation()) != null) {
+            trait.setSkinLocation(NemesisSkinRegistry.parseSkinLocation(blueprint.skinLocation()).toString());
+        } else {
+            var canonSkin = NemesisSkinRegistry.getCanonicalSkinForBlueprint(blueprint.id());
+            trait.setSkinLocation((canonSkin != null ? canonSkin : NemesisSkinRegistry.pickRandomNonCanonSkin()).toString());
+        }
+        trait.setBirthTime(gameTime);
+        trait.setName(blueprint.name());
+        trait.setTitle(blueprint.title());
+        trait.setBehavior(blueprint.behavior());
+        trait.setPersonality(blueprint.personality());
+        trait.setAssignedBDA(blueprint.bloodDemonArt());
+
+        if (blueprint.quirks() != null) {
+            blueprint.quirks().forEach(trait::addQuirk);
+        }
+
+        trait.setVigor(blueprint.stats().vigor);
+        trait.setStrength(blueprint.stats().strength);
+        trait.setAgility(blueprint.stats().agility);
+
+        trait.setBloodPoints(50 + random.nextInt(100));
+        trait.setTerritory(getRandomElement(TERRITORIES));
+
+        trait.setBaseIntelGathering(calculateBaseIntel(blueprint.behavior(), blueprint.personality()));
     }
 
 
@@ -137,14 +191,108 @@ public class DemonGenerator {
         return getRandomElement(availableBdas);
     }
 
-    private static Quirk getRandomStrength() {
-        List<Quirk> strengths = List.of(Quirk.NIMBLE, Quirk.HEAVY_HITTER, Quirk.TENACIOUS, Quirk.FIRE_RESISTANT);
-        return getRandomElement(strengths);
+    private static List<Quirk> pickDistinctQuirks(List<Quirk> pool, int count) {
+        if (pool.isEmpty() || count <= 0) {
+            return List.of();
+        }
+        List<Quirk> shuffled = new ArrayList<>(pool);
+        Collections.shuffle(shuffled, random);
+        return new ArrayList<>(shuffled.subList(0, Math.min(count, shuffled.size())));
     }
 
-    private static Quirk getRandomWeakness() {
-        List<Quirk> weaknesses = List.of(Quirk.BRITTLE, Quirk.FEAR_OF_WATER, Quirk.OVERCONFIDENT, Quirk.SUNLIGHT_SICKNESS);
-        return getRandomElement(weaknesses);
+    private static int[] applyGenerationStatModifiers(List<Quirk> quirks, int vigor, int strength, int agility) {
+        int outVigor = vigor;
+        int outStrength = strength;
+        int outAgility = agility;
+
+        for (Quirk quirk : quirks) {
+            switch (quirk) {
+                // Offensive strengths
+                case HEAVY_HITTER -> outStrength += 3;
+                case BLOOD_SIPHON -> {
+                    outVigor += 2;
+                    outStrength += 1;
+                }
+                case SHOCKWAVE_STOMP -> outStrength += 2;
+                case VENOMOUS -> {
+                    outStrength += 1;
+                    outAgility += 1;
+                }
+                case EXECUTIONER -> outStrength += 2;
+
+                // Defensive strengths
+                case FIRE_RESISTANT -> outVigor += 2;
+                case FROST_BLOODED -> {
+                    outVigor += 1;
+                    outAgility += 1;
+                }
+                case ARROW_PROOF -> outVigor += 2;
+                case TENACIOUS -> outVigor += 3;
+                case UNSHAKABLE -> outVigor += 2;
+                case RAPID_RECOVERY -> {
+                    outVigor += 2;
+                    outAgility += 1;
+                }
+                case DEATH_DEFIANT -> outVigor += 4;
+
+                // Mobility / utility strengths
+                case NIMBLE -> outAgility += 4;
+                case NIGHT_STALKER -> {
+                    outAgility += 2;
+                    outStrength += 1;
+                }
+                case KEEN_Scent -> {
+                    outStrength += 1;
+                    outAgility += 1;
+                }
+                case PACK_CALLER -> {
+                    outVigor += 2;
+                    outStrength += 1;
+                }
+
+                // Weaknesses
+                case FEAR_OF_WATER -> outAgility -= 2;
+                case BRITTLE -> outVigor -= 3;
+                case SUNLIGHT_SICKNESS -> {
+                    outVigor -= 2;
+                    outAgility -= 1;
+                }
+                case FLAMMABLE_FLESH -> outVigor -= 2;
+                case PURIFIED_WEAKNESS -> {
+                    outVigor -= 1;
+                    outStrength -= 1;
+                }
+                case OVERCONFIDENT -> outAgility -= 2;
+                case GLASS_CANNON -> {
+                    outStrength += 4;
+                    outVigor -= 4;
+                }
+                case WIND_UP -> {
+                    outStrength += 2;
+                    outAgility -= 2;
+                }
+                case BLIND_RAGE -> {
+                    outStrength += 1;
+                    outVigor -= 1;
+                    outAgility -= 2;
+                }
+                case OBSESSIVE_HUNTER -> outAgility -= 1;
+                case SOUND_SENSITIVE -> outAgility -= 2;
+                case MAGPIE -> {
+                    outStrength -= 1;
+                    outAgility -= 1;
+                }
+                case EASILY_TAUNTED -> {
+                    outVigor -= 1;
+                    outAgility -= 1;
+                }
+                case DISHONORED -> {
+                    // Not part of procedural pools; ignore if present from external edits.
+                }
+            }
+        }
+
+        return new int[] { outVigor, outStrength, outAgility };
     }
 
     /**
