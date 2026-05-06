@@ -9,6 +9,7 @@ import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.DemonPassive;
 import com.wassuples.demonslayer.demon.DemonProgressionHelper;
+import com.wassuples.demonslayer.demon.DemonRank;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
@@ -193,7 +194,7 @@ public class BreathingMenuScreen extends Screen {
         this.bdaSubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 60, subTabButtonY, 50, 20, Component.literal("BDA"), (b) -> this.currentDemonTab = DemonSubTab.BDA));
         this.physiologySubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 115, subTabButtonY, 70, 20, Component.literal("Physiology"), (b) -> this.currentDemonTab = DemonSubTab.PHYSIOLOGY));
 
-        this.rankUpButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("ASCEND"), (b) -> ModMessages.sendToServer(new RankUpC2SPacket())));
+        this.rankUpButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("CHALLENGE"), (b) -> ModMessages.sendToServer(new RankUpC2SPacket())));
         this.purchaseBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("Purchase"), (b) -> {
             if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new PurchaseBdaC2SPacket(this.selectedBdaForUpgrade));
         }));
@@ -503,21 +504,32 @@ public class BreathingMenuScreen extends Screen {
         int rightColumnX = contentX + 160;
 
         this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-            // Left: Rank Up Info
+            // Left: Rank Info
             font.draw(poseStack, "Current Rank: ", contentX, contentY, textColor);
             font.draw(poseStack, demon.getRank().getDisplayName(), contentX + font.width("Current Rank: "), contentY, 0xFFFFFF);
 
-            DemonProgressionHelper.getNextRank(demon.getRank()).ifPresentOrElse(nextRank -> {
-                int cost = DemonProgressionHelper.RANK_UP_COSTS.getOrDefault(demon.getRank(), -1);
-                font.draw(poseStack, "Next Rank: ", contentX, contentY + 12, textColor);
-                font.draw(poseStack, nextRank.getDisplayName(), contentX + font.width("Next Rank: "), contentY + 12, 0xFFFFFF);
-                Component costText = Component.literal("Cost: " + cost + " BDP").withStyle(demon.getBloodPoints() >= cost ? ChatFormatting.GREEN : ChatFormatting.RED);
-                font.draw(poseStack, costText, contentX, contentY + 24, 0xFFFFFF);
+            DemonRank currentRank = demon.getRank();
+            DemonProgressionHelper.getNextRank(currentRank).ifPresentOrElse(nextRank -> {
+                if (currentRank.isMoonRank()) {
+                    // Kizuki ranks: Show CHALLENGE button for Blood Battle
+                    font.draw(poseStack, "Next Rank: ", contentX, contentY + 12, textColor);
+                    font.draw(poseStack, nextRank.getDisplayName(), contentX + font.width("Next Rank: "), contentY + 12, 0xFFFFFF);
+                    font.draw(poseStack, Component.literal("Challenge the next rank in combat!").withStyle(ChatFormatting.YELLOW), contentX, contentY + 24, 0xFFFFFF);
 
-                this.rankUpButton.visible = true;
-                this.rankUpButton.active = demon.getBloodPoints() >= cost;
-                this.rankUpButton.x = leftPos + (windowWidth / 2) - (rankUpButton.getWidth() / 2);
-                this.rankUpButton.y = topPos + windowHeight - 40;
+                    this.rankUpButton.visible = true;
+                    this.rankUpButton.active = true;
+                    this.rankUpButton.x = leftPos + (windowWidth / 2) - (rankUpButton.getWidth() / 2);
+                    this.rankUpButton.y = topPos + windowHeight - 40;
+                } else {
+                    // Fodder ranks: Tied to reputation system, not BDP
+                    font.draw(poseStack, "Next Rank: ", contentX, contentY + 12, textColor);
+                    font.draw(poseStack, nextRank.getDisplayName(), contentX + font.width("Next Rank: "), contentY + 12, 0xFFFFFF);
+                    font.draw(poseStack, Component.literal("Progress via Reputation").withStyle(ChatFormatting.LIGHT_PURPLE), contentX, contentY + 24, 0xFFFFFF);
+                    font.draw(poseStack, Component.literal("(Demon Notoriety)").withStyle(ChatFormatting.GRAY), contentX, contentY + 36, 0xFFFFFF);
+
+                    // Hide the rank up button for Fodder ranks - progression is reputation-based
+                    this.rankUpButton.visible = false;
+                }
             }, () -> {
                 font.draw(poseStack, "You have reached the final rank.", contentX, contentY + 24, goldColor);
                 this.rankUpButton.visible = false;

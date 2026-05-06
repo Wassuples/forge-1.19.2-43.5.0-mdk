@@ -9,12 +9,16 @@ import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.custom.BodhisattvaEntity;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
+import com.wassuples.demonslayer.gravity.GravityDirection;
+import com.wassuples.demonslayer.gravity.GravityUtil;
+import com.wassuples.demonslayer.gravity.PlayerGravity;
 import com.wassuples.demonslayer.glow.GlowCapabilityProvider;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.styles.*;
 import com.wassuples.demonslayer.util.KeyBinding;
+import com.mojang.math.Vector3f;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -59,12 +63,41 @@ public class ClientEvents {
     public static class ClientForgeEvents {
         private static final int useKeyHoldTime = 0;
         public static boolean isVignetteActive = false;
+
+        @SubscribeEvent
+        public static void onRenderBlockOverlay(net.minecraftforge.client.event.RenderBlockScreenEffectEvent event) {
+            if (event.getOverlayType() == net.minecraftforge.client.event.RenderBlockScreenEffectEvent.OverlayType.BLOCK) {
+                Player player = event.getPlayer();
+                if (player == null) return;
+
+                player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+                    GravityDirection dir = gravity.getGravity();
+                    if (dir != GravityDirection.DOWN) {
+                        // Vanilla checks the block position exactly at the player's eye coordinates.
+                        // Because the player is completely flush against the custom gravity "floor" (the wall),
+                        // floating-point precision can cause the eye coordinate to round inside the solid wall.
+                        // We push the checked position mathematically 0.1 blocks away from the floor.
+                        Vec3 adjustedEyePos = player.getEyePosition().add(GravityUtil.getWorldUp(dir).scale(0.1));
+                        net.minecraft.core.BlockPos adjustedBlockPos = new net.minecraft.core.BlockPos(adjustedEyePos);
+                        net.minecraft.world.level.block.state.BlockState actualState = player.level.getBlockState(adjustedBlockPos);
+
+                        // If the mathematically adjusted block where our eyes ACTUALLY are is not view-blocking
+                        // (like air), we are suffering a rounding error. Cancel the fake suffocation.
+                        if (!actualState.isViewBlocking(player.level, adjustedBlockPos)) {
+                            event.setCanceled(true);
+                        }
+                    }
+                });
+            }
+        }
+
         private static final List<Entity> tempGlowers = new ArrayList<>();
         private static final ResourceLocation VIGNETTE_TEXTURE =
                 new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/vignette.png");
         private static final int HOLD_DURATION_TICKS = 10;
         private static int switchFormKeyHoldTicks = 0;
         private static boolean wasSwitchFormKeyDown = false;
+        private static final java.util.Set<Integer> gravityPosePushed = new java.util.HashSet<>();
 
         public static int lastSyncedStyle = -1;
 
@@ -79,6 +112,39 @@ public class ClientEvents {
             if (level == null || mc.player == null) {
                 return;
             }
+
+            mc.player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+                gravity.tickInterpolation();
+                gravity.tickTransientState();
+
+                GravityDirection direction = gravity.getGravity();
+                boolean creativeFlight = mc.player.getAbilities().flying && mc.player.getAbilities().mayfly;
+                boolean useCustomGravity = direction != GravityDirection.DOWN
+                        && !mc.player.isPassenger()
+                        && !mc.player.isSpectator()
+                        && !creativeFlight;
+
+                GravityUtil.refreshGravityHitbox(mc.player, direction);
+
+                if (useCustomGravity) {
+                    mc.player.setNoGravity(true);
+                    // Mirror server-side custom gravity locally to keep client movement packets consistent.
+                    boolean grounded = GravityUtil.updateGroundStateForCustomGravity(mc.player, direction, gravity.isSurfaceDetachActive());
+                    Vec3 vel = GravityUtil.applyCustomGravityStep(mc.player.getDeltaMovement(), direction, grounded);
+                    mc.player.setDeltaMovement(vel);
+
+                    if (grounded) {
+                        Vec3 down = GravityUtil.getWorldDown(direction);
+                        double downSpeed = vel.dot(down);
+                        Vec3 lateral = vel.subtract(down.scale(downSpeed)).scale(0.91D);
+                        mc.player.setDeltaMovement(down.scale(downSpeed).add(lateral));
+                    }
+
+                    mc.player.fallDistance = 0.0F;
+                } else if (mc.player.isNoGravity()) {
+                    mc.player.setNoGravity(false);
+                }
+            });
 
             DemonThreatEffects.clientTick();
 
@@ -250,6 +316,53 @@ public class ClientEvents {
 
                 event.setGreen(0.9f);
                 event.setBlue(0.95f);
+            }
+        }
+
+        @SubscribeEvent
+        public static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
+            Camera camera = event.getCamera();
+            if (!(camera.getEntity() instanceof Player player)) return;
+
+            player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+                GravityDirection direction = gravity.getGravity();
+                event.setRoll(event.getRoll() + GravityUtil.getCameraRollDegrees(direction));
+            });
+        }
+
+        @SubscribeEvent
+        public static void onRenderPlayerPre(RenderPlayerEvent.Pre event) {
+            event.getEntity().getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+                GravityDirection direction = gravity.getGravity();
+                if (direction == GravityDirection.DOWN) {
+                    return;
+                }
+
+                event.getPoseStack().pushPose();
+                gravityPosePushed.add(event.getEntity().getId());
+                applyGravityRotation(event.getPoseStack(), direction);
+            });
+        }
+
+        @SubscribeEvent
+        public static void onRenderPlayerPost(RenderPlayerEvent.Post event) {
+            if (gravityPosePushed.remove(event.getEntity().getId())) {
+                event.getPoseStack().popPose();
+            }
+        }
+
+        private static void applyGravityRotation(com.mojang.blaze3d.vertex.PoseStack poseStack, GravityDirection direction) {
+            // RenderPlayerEvent.Pre is already anchored at the entity origin. Rotating around that
+            // origin keeps the gravity foot-point fixed; the previous height translations were
+            // pushing the rotated model a full body-length away from the correct anchor.
+            switch (direction) {
+                case UP -> poseStack.mulPose(Vector3f.ZP.rotationDegrees(180.0f));
+                case NORTH -> poseStack.mulPose(Vector3f.XP.rotationDegrees(90.0f));
+                case SOUTH -> poseStack.mulPose(Vector3f.XP.rotationDegrees(-90.0f));
+                case WEST -> poseStack.mulPose(Vector3f.ZP.rotationDegrees(-90.0f));
+                case EAST -> poseStack.mulPose(Vector3f.ZP.rotationDegrees(90.0f));
+                default -> {
+                }
             }
         }
 

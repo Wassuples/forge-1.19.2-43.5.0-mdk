@@ -174,6 +174,12 @@ public class ModMessages {
                 .consumerMainThread(PlayerDemonSyncS2CPacket::handle)
                 .add();
 
+        net.messageBuilder(PlayerGravitySyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PlayerGravitySyncS2CPacket::new)
+                .encoder(PlayerGravitySyncS2CPacket::toBytes)
+                .consumerMainThread(PlayerGravitySyncS2CPacket::handle)
+                .add();
+
         net.messageBuilder(DemonMeleeAttackC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(DemonMeleeAttackC2SPacket::new)
                 .encoder(DemonMeleeAttackC2SPacket::toBytes)

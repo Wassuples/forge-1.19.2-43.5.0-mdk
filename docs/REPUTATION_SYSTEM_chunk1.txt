@@ -1,0 +1,660 @@
+﻿**REPUTATION & NOTORIETY SYSTEM**
+
+*Complete Technical Reference â€” Revision 2*
+
+com.wassuples.demonslayer.reputation
+
+Minecraft Forge 1.19.2  Â·  Demon Slayer Mod
+
+# **Table of Contents**
+1.  Overview & Design Philosophy
+
+2.  Architecture & Data Model
+
+3.  Rank vs. Reputation â€” The Hard Separation
+
+4.  Demon Slayer Rank System
+
+5.  The Four Reputation Dimensions
+
+6.  Reputation Tiers (Positive & Negative)
+
+7.  Faction Hard Lines â€” Permanent Blacklists
+
+8.  The Witness System
+
+9.  Active Concealment
+
+10. Witness Chance Modifier Table
+
+11. Reputation Events Table
+
+12. Tension, Flow State & Pacing
+
+13. Integration â€” Nemesis System
+
+14. Integration â€” Mission Branching (Full Spec)
+
+15. Integration â€” Style Masters & Minigames
+
+16. Integration â€” Persuasion System
+
+17. Persistence & Serialization
+
+18. Commands
+
+19. Class Reference Map
+
+# **1. Overview & Design Philosophy**
+The Reputation System is the world's memory of the player. It is a four-dimensional record â€” Corps, Tanjiro, Muzan, Demons â€” each measuring how a distinct faction interprets the player's actions. Reputation is entirely separate from Demon Slayer Rank, which is a purely mechanical achievement ladder. A Hashira can be despised by the Corps. A Mizunoto can be feared by every demon in the hierarchy.
+
+The system's central fantasy is the Double Agent: someone who plays all four factions simultaneously by controlling what each one knows. This is achievable but demands active, skilled management of the witness system, concealment tools, and atmospheric conditions. The design respects the Flow state â€” early game is low-stakes and exploratory, pressure builds naturally as the player's reputation grows into ranges that create contradiction.
+
+Core Design Pillars:
+
+Â· Rank and Reputation are separate systems. Never conflate them.
+
+Â· Every dimension supports a full negative range. Being unknown is not the floor.
+
+Â· Actions only reach a faction's ledger if a witness belonging to that faction reports them.
+
+Â· Concealment is always available but always costly in some form.
+
+Â· Demon-path players cannot hide anything from Muzan â€” the blood bond is absolute.
+
+Â· Some actions permanently destroy a faction relationship. These are hard to do accidentally.
+
+Â· Rewards are purely mechanical: stats, access, abilities, story branches. No cosmetics.
+
+# **2. Architecture & Data Model**
+## **World Singleton: ReputationManager (extends SavedData)**
+Saved to reputation.dat in the overworld data directory. Entry point: ReputationManager.get(ServerLevel). Loaded on world open, saved on dirty flag.
+
+**Class / Field**
+
+**Type**
+
+**Description**
+
+ReputationManager
+
+SavedData
+
+World-saved singleton. Owns all player records and witness queue.
+
+playerRecords
+
+Map<UUID, PlayerRepRecord>
+
+All player reputation data keyed by UUID.
+
+witnessEventQueue
+
+Queue<WitnessEvent>
+
+Pending witness reports processed on next daily tick.
+
+hardlineFlags
+
+Map<UUID, Set<HardlineFlag>>
+
+Permanent blacklist flags per player. Never cleared.
+
+## **Per-Player Record: PlayerRepRecord**
+**Field**
+
+**Type**
+
+**Description**
+
+corpsRep
+
+int (â€“500 to 1000)
+
+Standing with DSHQ. Negative = disgraced, hunted.
+
+tanjiroRep
+
+int (â€“500 to 1000)
+
+Affinity with Tanjiro and crew. Negative = actively avoided/combated.
+
+muzanRep
+
+int (â€“500 to 1000)
+
+Muzan's regard. Negative = he directs Kizuki to hunt the player.
+
+demonRep
+
+int (â€“500 to 1000)
+
+Demon Notoriety. Negative = known weakling, bullied.
+
+suspicion
+
+int (0â€“500)
+
+Corps internal suspicion sub-meter. Hidden from player.
+
+slayerRank
+
+SlayerRank
+
+Current official Demon Slayer rank (separate from corpsRep).
+
+killRecord
+
+KillRecord
+
+Kill counts by category, tracked per-rank for advancement gating.
+
+recentSins
+
+List<SinRecord>
+
+Unconfirmed sins (max 50). Eligible for 14-day fade.
+
+hardlineFlags
+
+Set<HardlineFlag>
+
+Permanent blacklist flags. Copied from ReputationManager.
+
+## **Supporting Types**
+**Class**
+
+**Package**
+
+**Purpose**
+
+WitnessEvent
+
+reputation.witness
+
+Immutable record of a witnessed action and its reporting chain.
+
+WitnessType
+
+reputation.witness
+
+Enum: CROW, VILLAGER, DEMON_SLAYER, DEMON_ALIVE, DEMON_DYING.
+
+WitnessScanner
+
+reputation.witness
+
+Stateless â€” scans entities near a BlockPos for active witnesses.
+
+SuppressionEntry
+
+reputation.concealment
+
+Active suppression effect: strength, target type, expiry tick.
+
+SinRecord
+
+reputation.concealment
+
+Unconfirmed sin entry eligible for natural 14-day fade.
+
+HardlineFlag
+
+reputation
+
+Enum of all permanent blacklist conditions. Set, never cleared.
+
+KillRecord
+
+reputation.rank
+
+Per-category kill counters used for rank advancement checks.
+
+SlayerRank
+
+reputation.rank
+
+Enum: MIZUNOTO through HASHIRA. Separate from corpsRep.
+
+RepEventType
+
+reputation
+
+Enum of all reputation-affecting action types (50+ entries).
+
+RepDeltaCalculator
+
+reputation
+
+Stateless â€” computes dimension deltas for a given RepEventType.
+
+CorpsSuspicionManager
+
+reputation.corps
+
+Manages suspicion sub-meter and Investigation event triggers.
+
+Faction
+
+reputation
+
+Enum: DSHQ, TANJIRO_CREW, MUZAN, DEMON_WORLD.
+
+# **3. Rank vs. Reputation â€” The Hard Separation**
+These are two completely independent systems that happen to share the same player. They never directly modify each other. Rank is a kill-based achievement system. Reputation is a relationship and social record. A player who has killed 1000 demons as a Kinoe is a Hashira regardless of whether the Corps despises them. A player with maximum Corps Rep is not automatically a higher rank.
+
+**Property**
+
+**Demon Slayer Rank**
+
+**Reputation Dimensions**
+
+What it measures
+
+Combat achievement: kill counts and feats
+
+Faction relationships: how each group views the player
+
+How it changes
+
+Kill count thresholds + specific combat feats
+
+Witnessed actions reported by faction-aligned entities
+
+Can it go negative?
+
+No â€” floor is Mizunoto
+
+Yes â€” all four dimensions support negative ranges
+
+Is it hidden?
+
+No â€” rank is always visible to the player
+
+Partially â€” suspicion is hidden; Muzan tier is vague
+
+Can it be lost?
+
+No â€” rank is permanent once earned
+
+Yes â€” rep changes constantly based on actions
+
+Affects each other?
+
+Rank grants access; rep changes NPC dialogue
+
+Rep never directly changes rank, only social outcomes
+
+Key consequence of separation:
+
+A player disgraced by the Corps (corpsRep â€“300) who is being hunted by Hashira
+
+can still be a Hashira themselves. The Corps cannot strip rank â€” it is earned through
+
+blood. They can exile, hunt, and refuse to acknowledge a Hashira-ranked player,
+
+but the rank itself does not decrease.
+
+# **4. Demon Slayer Rank System**
+Rank advancement is gated exclusively on kill counts achieved while holding the current rank. The only exception is Hashira, which adds an alternate feat-based path. Corps Reputation has no bearing on rank advancement.
+
+**Rank**
+
+**Kills Required (at current rank)**
+
+**Alternate Path**
+
+**Notes**
+
+Mizunoto
+
+0 (starting rank)
+
+None
+
+All players begin here after completing Final Selection.
+
+Mizunoe
+
+10 demons killed
+
+None
+
+First advancement. Unlocks basic Corps mission pool.
+
+Kanoto
+
+30 demons killed
+
+None
+
+Kanoe
+
+60 demons killed
+
+None
+
+Tsuchinoto
+
+100 demons killed
+
+None
+
+Tsuchinoe
+
+150 demons killed
+
+None
+
+Mid-rank. Wider mission access.
+
+Kinoto
+
+200 demons killed
+
+None
+
+Kinoe
+
+300 demons killed
+
+None
+
+Prerequisite rank to become Hashira.
+
+Hashira
+
+500 demons killed as Kinoe
+
+Solo kill any Kizuki moon demon
+
+The alternative path (Kizuki solo kill) can be done at any rank, but rank is still set to Hashira.
+
+## **KillRecord Tracking**
+Kill counts are tracked per-rank. Kills made as Mizunote do not carry forward to count toward Kanoe requirements. Each rank's counter resets when the player advances. This prevents stockpiling kills before ranking up. The KillRecord stores:
+
+- killsAtCurrentRank â€” count of demon kills since last rank advance
+- kizukiSoloKills â€” lifetime count of solo Kizuki kills (used for Hashira alt path)
+- totalDemonKills â€” lifetime total (used for taunt content and story flavor)
+- killsByCategory â€” Map<DemonCategory, Integer> for mission/story tracking
+
+Rank advancement is automatic â€” no confirmation screen, no trial mission.
+
+When killsAtCurrentRank crosses the threshold, the rank is set immediately and a
+
+notification is sent to the player. The Corps acknowledges advancement passively
+
+through NPC dialogue shifts â€” there is no formal ceremony.
+
+For the Hashira alternate path: a Kizuki solo kill is detected when the player
+
+deals the killing blow to a moon-rank Nemesis demon and no other entity dealt
+
+damage to that demon during the current BattleSession. This uses the existing
+
+BattleSession.interferers check from the Nemesis system.
+
+# **5. The Four Reputation Dimensions**
+## **5.1  Corps Reputation**
+Measures how DSHQ perceives the player as an agent, a soldier, and a person. High Corps Rep opens mission pools, changes how Hashira and NPCs speak to the player, and reduces the baseline rate at which Suspicion accumulates. Negative Corps Rep means the player is disgraced â€” Hashira are dispatched to bring them in or cut them down.
+
+Corps Rep is also the only dimension the player can see a named tier for on demand â€” by speaking to Corps-aligned NPCs who will tell the player where they stand. The hidden Suspicion sub-meter (0â€“500) runs in parallel and is never shown directly.
+
+## **5.2  Tanjiro Affinity**
+Measures Tanjiro's personal trust in the player. It does not mirror Corps Rep. Tanjiro fights beside anyone in danger regardless of affinity tier â€” his character demands it. What affinity changes is how far he is willing to deviate from the anime's main plot on the player's behalf: sharing restricted information, hiding evidence, altering his own plans around the player's actions, and unlocking mission branches that do not exist in the base story.
+
+Negative affinity means Tanjiro actively avoids the player. At deep negative he treats the player as an obstacle or threat and will engage them in combat if they interfere with his mission. He never permanently turns hostile unless the player kills a crew member â€” but at low affinity his combat assistance vanishes and his branching cooperation closes entirely.
+
+## **5.3  Muzan's Favor**
+Measures how Muzan regards the player. Positive favor does not mean Muzan calls off demon hunts â€” the Nemesis system's hunters are acting on their own motivations (territory, rivalry, ambition). Muzan actively wants demons fighting each other and resists allowing any demon to grow too powerful by making alliances. What positive Muzan favor does is: reduce the probability he personally intervenes, unlock demon-path content, and occasionally cause a Kizuki to pause before acting against the player.
+
+Negative Muzan favor is where his power becomes direct. At sufficiently negative tiers, Muzan issues personal directives â€” he dispatches specific Kizuki to hunt the player, functioning identically to how he dispatched hunters against Tanjiro in the source material. The more negative the favor, the higher-ranked the Kizuki he sends. This is separate from and on top of the standard Nemesis hunter spawning.
+
+Demon-path players (those who have drunk Muzan's blood) cannot conceal anything from Muzan. Every action they take is transmitted through the blood bond. There is no witness mechanic available for this channel.
+
+## **5.4  Demon Notoriety**
+Measures how the demon world perceives the player as a combatant. Positive notoriety means the player is known, feared, and respected â€” cowardly demons flee, ambitious ones seek the challenge, and demon taunts reference the player's deeds by name. Negative notoriety means the player is known as weak â€” a soft target. Cowardly demons who would normally flee now attack, while powerful duelist-personality demons consider the player beneath their attention entirely.
+
+Demon Notoriety feeds directly into the Nemesis System's spawn chance and behavior override formulas. It is the most mechanically consequential dimension in combat.
+
+# **6. Reputation Tiers (Positive & Negative)**
+*Score range is â€“500 to 1000 for all dimensions. Tier names are inferred by the player through dialogue, taunts, and NPC behavior â€” they are never shown in a UI panel.*
+
+## **6.1  Corps Reputation Tiers**
+**Tier Name**
+
+**Score Range**
+
+**World Effect**
+
+**Traitor**
+
+â€“500 to â€“301
+
+Hunted on sight by Hashira. All Corps NPCs are hostile. Effectively exiled from any Corps-aligned location.
+
+**Disgraced**
+
+â€“300 to â€“101
+
+Corps NPCs refuse service. Hashira are cold and hostile. No missions available. Suspicion has no meaning at this range â€” the Corps already knows.
+
+**Suspicious**
+
+â€“100 to â€“1
+
+Corps NPCs are guarded. Rumors circulate. Mission pool is restricted to the lowest tier.
+
+**Unknown**
+
+0
+
+Starting state. Corps is neutral and professional. Standard mission pool.
+
+**Recognized**
+
+1â€“199
+
+Corps NPCs acknowledge the player positively. Wider mission pool.
+
+**Trusted**
+
+200â€“399
+
+Hashira speak warmly. Most mission tiers available.
+
+**Honored**
+
+400â€“599
+
+Senior Corps figures consult the player. All missions available.
+
+**Revered**
+
+600â€“799
+
+Full Hashira training access. NPCs defer to the player. Suspicion growth rate halved.
+
+**Pillar**
+
+800â€“1000
+
+The player is treated as a foundational member of the Corps. Maximum mission rewards. Ubuyashiki may acknowledge the player.
+
+## **6.2  Tanjiro Affinity Tiers**
+**Tier Name**
+
+**Score Range**
+
+**World Effect**
+
+**Enemy**
+
+â€“500 to â€“301
+
+Tanjiro actively works against the player. He will engage them in combat if their missions conflict.
+
+**Obstacle**
+
+â€“300 to â€“101
+
+Tanjiro avoids the player. Refuses dialogue beyond mission necessity. No branching cooperation available.
+
+**Stranger**
+
+â€“100 to 99
+
+Tanjiro is neutral and polite. He fights alongside the player in combat because that is his nature â€” but no story branches open.
+
+**Acquaintance**
+
+100â€“249
+
+Tanjiro greets the player and shares minor observations. Earliest branching paths crack open.
+
+**Comrade**
+
+250â€“449
+
+Tanjiro treats the player as a trusted ally in the field. Mid-tier branching available. He may share restricted intel.
+
+**Friend**
+
+450â€“649
+
+Tanjiro will bend rules for the player. He hides evidence, alters his plans around player choices. Deep branches available.
+
+**Trusted**
+
+650â€“799
+
+Tanjiro vouches for the player to Hashira. He can suppress up to 100 Corps Suspicion on the player's behalf.
+
+**Best Friend**
+
+800â€“1000
+
+Tanjiro will act against the Corps' direct orders to protect the player. Suppresses up to 200 Suspicion. All non-canon branches available.
+
+## **6.3  Muzan Favor Tiers**
+Muzan's tier name is never shown to the player. They infer it through demon behavior, scripted story moments, and the frequency of Kizuki dispatches.
+
+**Tier Name**
+
+**Score Range**
+
+**World Effect**
+
+**Marked for Death**
+
+â€“500 to â€“301
+
+Muzan dispatches Upper Moon Kizuki (UM4 or higher) personally to hunt the player. This is separate from Nemesis hunter spawning and cannot be stopped by any reputation action.
+
+**Hunted**
+
+â€“300 to â€“101
+
+Muzan dispatches Lower Moon or UM6/UM5 Kizuki periodically. Demon-world NPCs are hostile.
+
+**Irrelevant**
+
+â€“100 to 99
+
+Muzan is indifferent. No personal interventions. Standard Nemesis behavior.
+
+**Noticed**
+
+100â€“249
+
+Muzan is aware of the player. Occasional Kizuki hesitate before attacking. No direct benefits.
+
+**Observed**
+
+250â€“449
+
+Muzan watches with interest. For demon-path players: minor Blood Demon Arts upgrade access.
+
+**Regarded**
+
+450â€“649
+
+A Kizuki may pause and observe rather than immediately attack. Corps Suspicion rises +3/day passively.
+
+**Favored**
+
+650â€“799
+
+Demon-path players: full BDA upgrade access. Corps Suspicion +5/day. Human-path: near-certain Corps Investigation.
+
+**Chosen**
+
+800â€“1000
+
+Scripted Muzan acknowledgment event triggers. Demon-path players gain unique abilities. Human-path: Corps Investigation triggers immediately regardless of current Suspicion.
+
+## **6.4  Demon Notoriety Tiers**
+**Tier Name**
+
+**Score Range**
+
+**World Effect**
+
+**Prey**
+
+â€“500 to â€“301
+
+Demons regard the player as easy food. All demon personalities that would normally avoid combat now attack. Duelist/Berserker demons ignore the player entirely â€” beneath their notice.
+
+**Weakling**
+
+â€“300 to â€“101
+
+Cowardly and Scavenger demons attack instead of fleeing. Taunts are mocking and dismissive.
+
+**Unknown**
+
+â€“100 to 99
+
+Neutral. Standard Nemesis behavior. No taunt modifications.
+
+**Spotted**
+
+100â€“199
+
+Some demons carry a description of the player. Fodder spawn chance slightly increased.
+
+**Marked**
+
+200â€“349
+
+Lower Moons are aware of the player. Hunter spawn +15%. Taunts reference a specific past kill.
+
+**Feared**
+
+350â€“499
+
+Cowardly and Scavenger demons begin fleeing on sight. Hunter spawn +30%. Upper Moon awareness begins.
+
+**Hunted**
+
+500â€“699
+
+Upper Moons dispatch hunters. Spawn +50%. Taunts reference kill count by name.
+
+**Legendary**
+
+700â€“849
+
+All Kizuki eligible to dispatch. Spawn +75%. Some Lower Moons refuse engagement entirely.
+
+**Cursed Name**
+
+850â€“1000
+
+Maximum aggression from ambitious demons. Cowardly demons always flee. Taunts are runtime-composed referencing full kill history.
+
+# **7. Faction Hard Lines â€” Permanent Blacklists**
+Hard line violations are stored as HardlineFlag enum values in the player's record. They are never cleared under any circumstance â€” no redemption arc, no quest, no command exists to reverse them in normal gameplay. Because they are permanent, they must be extremely difficult to trigger accidentally. Each is gated behind a multi-step confirmation or requires a deliberate, sustained action.
+
+## **7.1  DSHQ Hard Lines**

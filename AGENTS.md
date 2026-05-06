@@ -24,19 +24,21 @@ DemonSlayer (bootstrap)
 ├── NemesisSystemEvents (demon hierarchy lifecycle)
 ├── ActiveFormManager (server-side form ticking)
 ├── DemonHierarchyManager (SavedData — world-persistent demon roster)
+├── ClientEvents (client input/HUD/render hooks + glow capability attachment)
 └── ModMessages (networking channel)
 ```
 
 ### Player State (Forge Capabilities)
-All player data uses the capability pattern. Providers in each package:
+Player and combat-target state use the capability pattern. Providers in each package:
 - `breathing/` — `PlayerBreath`, `PlayerStyle` (slayer breathing energy & current style)
 - `demon/` — `PlayerDemon` (demon transformation state, blood points)
 - `ranking/` — `PlayerProgression` (slayer rank progression)
 - `cooldown/` — `PlayerCooldowns` (ability cooldown tracking)
 - `crow/` — `PlayerCrow` (crow companion state)
 - `missions/` — `PlayerMissions` (active mission tracking)
+- `glow/` — `GlowCapability` (entity highlight state, attached to `LivingEntity` in `ClientEvents.ForgeEventHandlers`)
 
-**Critical**: Capabilities are attached in `ModEvents.onAttachCapabilities()`. Data persistence across death uses map-based workarounds due to PlayerAnimator conflicts — see the comment block at the top of `ModEvents.java`.
+**Critical**: Player capabilities are attached in `ModEvents.onAttachCapabilities()`. Data persistence across death uses map-based workarounds due to PlayerAnimator conflicts — see the comment block at the top of `ModEvents.java`.
 
 ### Combat Forms System
 Forms are **enum constants** implementing `IForm` interface:
@@ -53,7 +55,7 @@ Active forms tick server-side via `ActiveFormManager` (subscribed to `TickEvent.
 - **Blueprints**: JSON files in `run/config/demonslayer/blueprints/` defining canonical Kizuki demons
 - **Traits**: `nemesis/trait/DemonTrait.java` — personality, memories, emotions, relationships
 - **AI**: `nemesis/ai/NemesisDemonEntity.java` — spawned nemesis demon entity
-- **Battles**: `nemesis/battle/BloodBattle.java` — player vs demon combat sessions
+- **Battles**: `nemesis/BloodBattle.java` (active duel state), `nemesis/battle/` (session tracking/outcomes)
 - **Operator commands**: `command/DemonSlayerCommands.java` contains `/demonslayer nemesis social ...` QoL controls (packs, alliances, compatibility previews, mobilization, maintenance). Full command reference: `docs/NEMESIS_SYSTEM.md` -> `Player Interaction — Commands & Debug`.
 
 ### Networking
@@ -70,6 +72,9 @@ Active forms tick server-side via `ActiveFormManager` (subscribed to `TickEvent.
 ```bash
 # Build the mod
 ./gradlew build
+
+# Run unit tests
+./gradlew test
 
 # Run client (with IDE integration)
 ./gradlew genIntellijRuns  # First time only
@@ -128,7 +133,7 @@ All entities in `entity/ModEntityTypes.java` using `DeferredRegister<EntityType<
 
 ### Data-Driven Content
 - **Missions**: JSON in `src/main/resources/data/demonslayer/missions/`, loaded via `MissionReloadListener`
-- **Nemesis Blueprints**: JSON in `run/config/demonslayer/blueprints/`, loaded by `BlueprintLoader`
+- **Nemesis Blueprints**: JSON in `run/config/demonslayer/blueprints/`, loaded by `BlueprintLoader` (defaults are seeded from bundled `data/demonslayer/nemesis/blueprints` resources)
 - **Generated resources**: `src/generated/resources/` (run `./gradlew runData` to regenerate)
 
 ### Documentation
@@ -145,6 +150,8 @@ Design docs in `docs/`:
 
 3. **Nemesis system is world-saved**: `DemonHierarchyManager` extends `SavedData` — changes persist across server restarts. Use `get(ServerLevel)` to access the singleton.
 
-4. **Blueprint loading**: First-time defaults are seeded from bundled resources in `src/main/resources/`. Runtime configs in `run/config/demonslayer/blueprints/` override defaults.
+4. **Blueprint loading**: First-time defaults are seeded from bundled `data/demonslayer/nemesis/blueprints` resources (packaged via `build.gradle` `processResources` from `run/config/demonslayer/blueprints/`). Runtime configs in `run/config/demonslayer/blueprints/` override defaults.
 
 5. **Entity spawn registration**: Spawn placements registered in `commonSetup` via `event.enqueueWork()` — must be thread-safe.
+
+6. **Glow capability attachment location**: `GlowCapability` is attached to `LivingEntity` in `events/ClientEvents.java` (`ForgeEventHandlers.onAttachCapabilities`), not in `ModEvents.onAttachCapabilities()` with player capabilities.

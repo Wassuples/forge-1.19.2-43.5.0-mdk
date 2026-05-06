@@ -14,6 +14,9 @@ import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.DemonRank;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.gravity.GravityDirection;
+import com.wassuples.demonslayer.gravity.GravityUtil;
+import com.wassuples.demonslayer.gravity.PlayerGravity;
 import com.wassuples.demonslayer.missions.MissionRegistry;
 import com.wassuples.demonslayer.nemesis.DemonDisplayData;
 import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
@@ -38,11 +41,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -175,8 +174,7 @@ public class DemonSlayerCommands {
                                 .then(Commands.argument("style_name", StringArgumentType.word()).suggests(STYLE_SUGGESTIONS)
                                         .executes(ctx -> getFormsListForStyle(ctx.getSource(), StringArgumentType.getString(ctx, "style_name")))))
                 )
-
-                //  EDIT COMMAND
+                    //  EDIT COMMAND
                 .then(Commands.literal("edit")
                         .then(Commands.argument("targets", EntityArgument.players())
                                 .then(Commands.literal("breath")
@@ -218,6 +216,12 @@ public class DemonSlayerCommands {
                                         .executes(ctx -> executeSetRank(ctx))))
                                 .then(Commands.literal("style").then(Commands.argument("style_name", StringArgumentType.word()).suggests(STYLE_SUGGESTIONS)
                                         .executes(ctx -> executeSetStyle(ctx))))
+                                .then(Commands.literal("gravity")
+                                        .then(Commands.literal("set")
+                                                .then(Commands.argument("direction", StringArgumentType.word())
+                                                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(
+                                                                Arrays.stream(GravityDirection.values()).map(d -> d.name().toLowerCase()), builder))
+                                                        .executes(DemonSlayerCommands::executeSetGravityForTargets))))
                         )
                 )
 
@@ -323,6 +327,8 @@ public class DemonSlayerCommands {
                                         .executes(DemonSlayerCommands::executeClearAlliances))
                         )
                 )
+
+                .then(ReputationCommands.registerSubtree())
 
                 //  RESET COMMAND
                 .then(Commands.literal("reset")
@@ -806,6 +812,24 @@ public class DemonSlayerCommands {
         return targets.size();
     }
 
+    private static int executeSetGravityForTargets(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        Collection<ServerPlayer> targets = EntityArgument.getPlayers(ctx, "targets");
+        GravityDirection direction;
+        try {
+            direction = GravityDirection.valueOf(StringArgumentType.getString(ctx, "direction").toUpperCase());
+        } catch (IllegalArgumentException e) {
+            ctx.getSource().sendFailure(Component.literal("Invalid gravity direction."));
+            return 0;
+        }
+
+        for (ServerPlayer target : targets) {
+            setPlayerGravity(target, direction);
+        }
+
+        ctx.getSource().sendSuccess(Component.literal("Set gravity to " + direction.name() + " for " + targets.size() + " player(s)."), true);
+        return targets.size();
+    }
+
     //  LOGIC METHODS (FOR SINGLE PLAYER)
 
     private static void modifyPlayerBreath(ServerPlayer target, ModifyAction action, int amount, boolean isMax) {
@@ -936,6 +960,23 @@ public class DemonSlayerCommands {
                 ModUtils.syncStyle(target);
                 ModUtils.syncProgression(target);
             });
+        });
+    }
+
+    private static void setPlayerGravity(ServerPlayer target, GravityDirection direction) {
+        target.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+            GravityDirection previous = gravity.getGravity();
+            boolean changed = gravity.setGravity(direction);
+            if (changed) {
+                GravityUtil.reanchorEntityForGravityChange(target, previous, direction);
+                GravityUtil.refreshGravityHitbox(target, direction);
+                target.fallDistance = 0.0F;
+                target.hasImpulse = true;
+            }
+            if (direction == GravityDirection.DOWN && target.isNoGravity() && !target.isSpectator()) {
+                target.setNoGravity(false);
+            }
+            ModUtils.syncGravity(target);
         });
     }
 
@@ -1482,6 +1523,13 @@ public class DemonSlayerCommands {
         int cleared = manager.clearActiveAlliances();
         manager.setDirty();
         source.sendSuccess(Component.literal("Cleared " + cleared + " active alliance(s).").withStyle(ChatFormatting.YELLOW), true);
+        return 1;
+    }
+
+    private static int setGravity(CommandContext<CommandSourceStack> ctx, GravityDirection dir) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayerOrException();
+        setPlayerGravity(player, dir);
+        ctx.getSource().sendSuccess(Component.literal("Gravity set to " + dir.name()).withStyle(ChatFormatting.AQUA), true);
         return 1;
     }
 }

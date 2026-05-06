@@ -26,6 +26,7 @@ public class BattleSessionTracker {
     public record SessionKey(UUID demonId, UUID opponentId) {}
 
     private final Map<SessionKey, BattleSession> activeSessions = new HashMap<>();
+    private final Deque<BattleOutcome> finalizedOutcomes = new ArrayDeque<>();
 
     /**
      * Lookup function to resolve a demon UUID to its trait.
@@ -131,6 +132,7 @@ public class BattleSessionTracker {
         if (session == null) return;
 
         BattleOutcome outcome = BattleOutcome.derive(session, currentTime);
+        finalizedOutcomes.addLast(outcome);
         DemonTrait trait = traitLookup.apply(key.demonId());
         if (trait == null) return;
 
@@ -196,5 +198,23 @@ public class BattleSessionTracker {
     public int getActiveSessionCount() {
         return activeSessions.size();
     }
-}
 
+    /**
+     * Returns and clears outcomes finalized since the last drain call.
+     */
+    public List<BattleOutcome> drainFinalizedOutcomes() {
+        List<BattleOutcome> out = new ArrayList<>(finalizedOutcomes);
+        finalizedOutcomes.clear();
+        return out;
+    }
+
+    public Set<UUID> getOpponentsInBattle(UUID demonId) {
+        Set<UUID> opponents = new HashSet<>();
+        for (SessionKey key : activeSessions.keySet()) {
+            if (key.demonId().equals(demonId)) {
+                opponents.add(key.opponentId());
+            }
+        }
+        return opponents;
+    }
+}

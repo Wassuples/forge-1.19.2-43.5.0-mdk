@@ -2,6 +2,7 @@ package com.wassuples.demonslayer.networking.packet;
 
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.custom.TamayoEntity;
+import com.wassuples.demonslayer.reputation.ReputationService;
 import com.wassuples.demonslayer.util.ModUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.FriendlyByteBuf;
@@ -79,6 +80,7 @@ public class TamayoOfferResponseC2SPacket {
                 }
 
                 demon.setDemon(true);
+                ReputationService.onDemonPathAccepted(player);
                 // Starter demon state. Keep default rank + no BDA equipped.
                 ModUtils.syncDemon(player);
 

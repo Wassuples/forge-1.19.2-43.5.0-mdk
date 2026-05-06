@@ -18,6 +18,7 @@ import com.wassuples.demonslayer.nemesis.story.PlayerIntelManager;
 import com.wassuples.demonslayer.nemesis.story.StoryEvent;
 import com.wassuples.demonslayer.nemesis.taunt.TauntRenderer;
 import com.wassuples.demonslayer.nemesis.trait.*;
+import com.wassuples.demonslayer.reputation.ReputationService;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -2248,6 +2249,7 @@ public class DemonHierarchyManager extends SavedData {
         }
         var emotions = hunterTrait.getEmotionState();
         relationshipModifier += emotions.getIntensity(com.wassuples.demonslayer.nemesis.trait.EmotionType.HATE_PLAYER) * 0.5f;
+        relationshipModifier += ReputationService.getDemonNotorietyHunterRelationshipBonus(player);
 
         // 5. Difficulty
         float difficultyModifier = switch (player.level.getDifficulty()) {

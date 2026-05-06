@@ -2,6 +2,7 @@ package com.wassuples.demonslayer.networking.packet;
 
 import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import com.wassuples.demonslayer.networking.ModMessages;
+import com.wassuples.demonslayer.reputation.ReputationService;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
@@ -29,6 +30,7 @@ public class AbandonMissionC2SPacket {
             if (player != null) {
                 player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
                     missions.abandonMission(this.missionId);
+                    ReputationService.onMissionAbandoned(player, this.missionId);
 
                     CompoundTag missionData = new CompoundTag();
                     missions.saveNBTData(missionData);

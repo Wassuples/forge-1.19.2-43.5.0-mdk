@@ -5,9 +5,17 @@
   "compatibilityLevel": "JAVA_17",
   "refmap": "demonslayer.refmap.json",
   "mixins": [
-    "FireBlockAccessor"
+    "FireBlockAccessor",
+    "gravity.GravityEntityMixin",
+    "gravity.GravityLivingEntityMixin",
+    "gravity.GravityMoveRelativeMixin",
+    "gravity.GravityMoveMixin"
   ],
   "client": [
+    "gravity.GravityCameraMixin",
+    "gravity.GravityLocalPlayerMixin",
+    "gravity.GravityMouseHandlerMixin",
+    "gravity.GravityTravelMixin"
   ],
   "server": [],
   "injectors": {

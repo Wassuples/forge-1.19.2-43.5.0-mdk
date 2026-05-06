@@ -9,6 +9,7 @@ import com.wassuples.demonslayer.nemesis.trait.DemonTrait;
 import com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider;
 import com.wassuples.demonslayer.nemesis.trait.IDemonTrait;
 import com.wassuples.demonslayer.nemesis.trait.Quirk;
+import com.wassuples.demonslayer.reputation.ReputationService;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -239,7 +240,9 @@ public class NemesisSystemEvents {
                 ServerLevel overworld = event.getServer().overworld();
                 long currentTime = overworld.getGameTime();
                 DemonHierarchyManager manager = DemonHierarchyManager.get(overworld);
-                manager.getBattleSessionTracker().tick(currentTime);
+                BattleSessionTracker tracker = manager.getBattleSessionTracker();
+                tracker.tick(currentTime);
+                tracker.drainFinalizedOutcomes().forEach(outcome -> ReputationService.onBattleOutcome(overworld, outcome));
                 manager.tickSocialAlliances(currentTime);
             }
 
@@ -287,6 +290,7 @@ public class NemesisSystemEvents {
 
             Optional<DemonRank> defenderRankOpt = manager.getKizukiRank(battle.defender);
             boolean isTainted = !battle.interferers.isEmpty();
+            boolean defenderWasUpperMoon = defenderRankOpt.map(rank -> rank.name().startsWith("UPPER")).orElse(false);
 
             System.out.println("[NEMESIS DEBUG] ═══ BLOOD BATTLE CONCLUDED ═══");
             System.out.println("[NEMESIS DEBUG] Challenger: " + challenger.getGameProfile().getName() + " (BP: " + demonPlayer.getBloodPoints() + ")");
@@ -338,6 +342,8 @@ public class NemesisSystemEvents {
                     System.out.println("[NEMESIS DEBUG] Defender was fodder - no rank to steal");
                 }
             }
+
+            ReputationService.onBloodBattleConclusion(level, challenger.getUUID(), isTainted, defenderWasUpperMoon);
         });
 
         // Log story event (H1)

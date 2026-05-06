@@ -128,8 +128,10 @@ Rank advancement is gated exclusively on kill counts achieved while holding the 
 | Kanoe | 60 demons killed | None | - |
 | Tsuchinoto | 100 demons killed | None | - |
 | Tsuchinoe | 150 demons killed | None | Mid-rank. Wider mission access. |
-| Kinoto | 200 demons killed | None | - |
-| Kinoe | 300 demons killed | None | Prerequisite rank to become Hashira. |
+   Hinoto  250 demons killed  None  - 
+   Hinoe  300 demons killed  None  - 
+   Kinoto  400 demons killed  None  - 
+   Kinoe  500 demons killed  None  Prerequisite rank to become Hashira. 
 | Hashira | 500 demons killed as Kinoe | Solo kill any Kizuki moon demon | The alternative path (Kizuki solo kill) can be done at any rank, but rank is still set to Hashira. |
 
 ## **KillRecord Tracking**

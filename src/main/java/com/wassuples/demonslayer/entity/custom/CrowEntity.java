@@ -9,6 +9,7 @@ import com.wassuples.demonslayer.nemesis.DemonDisplayData;
 import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.OpenCrowDispatchS2CPacket;
+import com.wassuples.demonslayer.reputation.ReputationService;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
@@ -279,6 +280,7 @@ public class CrowEntity extends TamableAnimal implements IAnimatable {
     public void die(DamageSource source) {
         super.die(source);
         if (!this.level.isClientSide) {
+            ReputationService.onCrowDeath(this, source);
             CrowManager.handleCrowDeath(this);
         }
     }

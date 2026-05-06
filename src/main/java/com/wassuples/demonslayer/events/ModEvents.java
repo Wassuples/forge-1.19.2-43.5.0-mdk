@@ -16,6 +16,9 @@ import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.*;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
+import com.wassuples.demonslayer.gravity.GravityDirection;
+import com.wassuples.demonslayer.gravity.GravityUtil;
+import com.wassuples.demonslayer.gravity.PlayerGravity;
 import com.wassuples.demonslayer.item.custom.HashiraSwordHelper;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.missions.Mission;
@@ -27,6 +30,7 @@ import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
+import com.wassuples.demonslayer.reputation.ReputationService;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import com.wassuples.demonslayer.styles.DemonForms;
@@ -70,7 +74,6 @@ import net.minecraftforge.event.entity.player.AttackEntityEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.event.entity.player.PlayerSleepInBedEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.LogicalSide;
 import net.minecraftforge.fml.common.Mod;
 
 import java.util.*;
@@ -103,6 +106,7 @@ public class ModEvents {
     private static final Map<UUID, CompoundTag> demonDeathData = new HashMap<>();
     private static final Map<UUID, CompoundTag> crowDeathData = new HashMap<>();
     private static final Map<UUID, CompoundTag> cooldownDeathData = new HashMap<>();
+    private static final Map<UUID, CompoundTag> gravityDeathData = new HashMap<>();
 
     private static final UUID ENHANCED_VIGOR_MODIFIER_ID = UUID.fromString("a7a2f5a2-a3a4-492c-a8e2-89255ac3a7e4");
     private static final UUID DEMONIC_STRENGTH_MODIFIER_ID = UUID.fromString("f3b1f1a0-75da-4c4b-b72e-c4e9c7a6e12e");
@@ -186,6 +190,10 @@ public class ModEvents {
             if (!player.getCapability(PlayerCrowProvider.PLAYER_CROW).isPresent()) {
                 event.addCapability(PlayerCrowProvider.KEY, new PlayerCrowProvider());
             }
+
+            if (!player.getCapability((PlayerGravity.GRAVITY_CAPABILITY)).isPresent()) {
+                event.addCapability(PlayerGravity.GRAVITY_RESOURCE, new PlayerGravity());
+            }
         }
 
         // Attach DemonTrait capability to NemesisDemonEntity instances
@@ -248,6 +256,13 @@ public class ModEvents {
                 cooldowns.saveNBTData(serverPlayer.level, nbt);
                 cooldownDeathData.put(serverPlayer.getUUID(), nbt);
             });
+
+            // Save Gravity data
+            serverPlayer.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+                CompoundTag nbt = new CompoundTag();
+                gravity.saveNBTData(nbt);
+                gravityDeathData.put(serverPlayer.getUUID(), nbt);
+            });
         }
     }
 
@@ -297,6 +312,13 @@ public class ModEvents {
                 player.getCapability(PlayerCooldownsProvider.PLAYER_COOLDOWNS)
                         .ifPresent(cooldowns -> cooldowns.loadNBTData(player.level, nbt));
                 cooldownDeathData.remove(player.getUUID());
+            }
+
+            // Load Gravity data
+            if (gravityDeathData.containsKey(player.getUUID())) {
+                CompoundTag nbt = gravityDeathData.get(player.getUUID());
+                player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> gravity.loadNBTData(nbt));
+                gravityDeathData.remove(player.getUUID());
             }
 
             // After loading the data on the server, sync it all to the client.
@@ -355,6 +377,8 @@ public class ModEvents {
             crow.saveNBTData(nbt);
             // optionally send packet later
         });
+
+        ModUtils.syncGravity(player);
     }
 
     @SubscribeEvent
@@ -365,212 +389,248 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.side == LogicalSide.SERVER && event.player instanceof ServerPlayer serverPlayer) {
-            CrowManager.ensureCrowFor(serverPlayer);
+        if (!(event.player instanceof ServerPlayer player)) return;
 
-            // WISTERIA: demon players are poisoned near wisteria leaves.
-            if (event.phase == TickEvent.Phase.END && serverPlayer.tickCount % 10 == 0) {
-                applyWisteriaPoisonIfNear(serverPlayer);
+        // CUSTOM GRAVITY PHYSICS HANDLING
+        player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+            GravityDirection direction = gravity.getGravity();
+            boolean creativeFlight = player.getAbilities().flying && player.getAbilities().mayfly;
+            boolean useCustomGravity = direction != GravityDirection.DOWN
+                && !player.isPassenger() && !player.isSpectator() && !creativeFlight;
+
+            if (event.phase == TickEvent.Phase.START) {
+                // Set before ServerPlayer.tick() so noGravity is active during travel()
+                GravityUtil.refreshGravityHitbox(player, direction);
+                if (useCustomGravity) player.setNoGravity(true);
+                else if (player.isNoGravity()) player.setNoGravity(false);
+                return;
             }
 
-            // Demon threat expiry (runs server-side, cheap O(1))
-            if (event.phase == TickEvent.Phase.END) {
-                String tag = serverPlayer.getTags().stream().filter(t -> t.startsWith(DEMON_THREAT_TAG + ":")).findFirst().orElse(null);
-                if (tag != null) {
-                    try {
-                        long until = Long.parseLong(tag.substring((DEMON_THREAT_TAG + ":").length()));
-                        if (serverPlayer.level.getGameTime() >= until) {
-                            ModMessages.sendToPlayer(new DemonThreatS2CPacket(0.0f), serverPlayer);
-                            serverPlayer.getTags().remove(tag);
+            // Phase.END: run physics after movement has been processed
+            if (!useCustomGravity) return;
+            gravity.tickInterpolation();
+            gravity.tickTransientState();
+
+            boolean grounded = GravityUtil.updateGroundStateForCustomGravity(
+                player, direction, gravity.isSurfaceDetachActive());
+            Vec3 vel = GravityUtil.applyCustomGravityStep(
+                player.getDeltaMovement(), direction, grounded);
+            player.setDeltaMovement(vel);
+
+            if (grounded) {
+                Vec3 down = GravityUtil.getWorldDown(direction);
+                double ds = vel.dot(down);
+                Vec3 lateral = vel.subtract(down.scale(ds)).scale(0.91D);
+                player.setDeltaMovement(down.scale(ds).add(lateral));
+            }
+            player.fallDistance = 0.0F;
+        });
+
+        if (event.phase != TickEvent.Phase.END) return;
+        CrowManager.ensureCrowFor(player);
+
+
+        // WISTERIA: demon players are poisoned near wisteria leaves.
+        if (player.tickCount % 10 == 0) {
+            applyWisteriaPoisonIfNear(player);
+        }
+
+        // Demon threat expiry (runs server-side, cheap O(1))
+        String tag = player.getTags().stream().filter(t -> t.startsWith(DEMON_THREAT_TAG + ":")).findFirst().orElse(null);
+        if (tag != null) {
+            try {
+                long until = Long.parseLong(tag.substring((DEMON_THREAT_TAG + ":").length()));
+                if (player.level.getGameTime() >= until) {
+                    ModMessages.sendToPlayer(new DemonThreatS2CPacket(0.0f), player);
+                    player.getTags().remove(tag);
+                }
+            } catch (NumberFormatException ignored) {
+                player.getTags().remove(tag);
+            }
+        }
+
+        // SLAYER BREATH REGEN
+        event.player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
+            if (breath.getBreath() < breath.maxBreath && player.getRandom().nextFloat() < 0.025f) {
+                breath.addBreath(1);
+            }
+
+            if (player.tickCount % 20 == 0) {
+                ModMessages.sendToPlayer(new PlayerBreathSyncS2CPacket(breath.getBreath(), breath.getMaxBreath()), player);
+            }
+        });
+
+        // DEMON PASSIVE HANDLING
+        player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            // This handles attributes (Health/Damage), regeneration, and sun weakness/resistance
+            handleDemonPassives(player, demon);
+
+            // This handles passives that only run when toggled on and at the end of the tick
+            if (event.phase == TickEvent.Phase.END && demon.isDemon()) {
+                handleStalkersGait(player, demon);
+                handleOverwhelmingAura(player, demon);
+            }
+        });
+
+        if (player.tickCount % 20 == 0) { // Check once per second
+            final ResourceLocation finalSelectionId = new ResourceLocation(DemonSlayer.MOD_ID, "story_final_selection");
+
+            player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
+                if (missions.isActive(finalSelectionId)) {
+                    final ResourceLocation requiredBiome = new ResourceLocation(DemonSlayer.MOD_ID, "fujikasane_forest");
+                    final String biomeEnteredKey = "fujikasane_entered";
+                    final String bossSpawnedKey = "boss_spawned";
+
+                    Map<String, Integer> progress = missions.getProgress(finalSelectionId);
+                    ResourceLocation currentBiome = player.level.getBiome(player.blockPosition()).unwrapKey().get().location();
+
+                    Mission mission = MissionRegistry.getMission(finalSelectionId);
+                    if (mission == null) return;
+
+                    if (currentBiome.equals(requiredBiome)) {
+                        // --- Player is INSIDE the biome ---
+                        if (!progress.containsKey(biomeEnteredKey)) {
+                            missions.updateProgress(finalSelectionId, biomeEnteredKey, 1);
+                            player.sendSystemMessage(Component.literal("You have entered Mt. Fujikasane. The trial begins now. Do not leave.").withStyle(ChatFormatting.DARK_PURPLE));
                         }
-                    } catch (NumberFormatException ignored) {
-                        serverPlayer.getTags().remove(tag);
+
+                        if (!progress.containsKey(bossSpawnedKey)) {
+                            int startTime = progress.getOrDefault("survive_objective", (int)player.level.getGameTime());
+                            long timeElapsed = player.level.getGameTime() - startTime;
+
+                            // Check if 6 days have passed
+                            if (timeElapsed >= (24000 * 6)) {
+                                BlockPos spawnPos = player.blockPosition().north(5);
+                                ModEntityTypes.HAND_DEMON.get().spawn((ServerLevel)player.level, null, null, spawnPos, MobSpawnType.EVENT, true, false);
+                                player.sendSystemMessage(Component.literal("A massive, grotesque demon emerges from the trees... It reeks of countless devoured slayers.").withStyle(ChatFormatting.DARK_RED));
+                                missions.updateProgress(finalSelectionId, bossSpawnedKey, 1);
+                            }
+                        }
+                    } else {
+                        // --- Player is OUTSIDE the biome ---
+                        if (progress.containsKey(biomeEnteredKey)) {
+                            missions.abandonMission(finalSelectionId);
+                            player.sendSystemMessage(Component.literal("You have fled Mt. Fujikasane. Your trial has ended in failure.").withStyle(ChatFormatting.RED));
+                            player.level.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 0.5f, 1.0f);
+                            ModUtils.syncMissions(player);
+                        }
                     }
                 }
-            }
-
-            // SLAYER BREATH REGEN
-            event.player.getCapability(PlayerBreathProvider.PLAYER_BREATH).ifPresent(breath -> {
-                if (breath.getBreath() < breath.maxBreath && serverPlayer.getRandom().nextFloat() < 0.025f) {
-                    breath.addBreath(1);
-                }
-
-                if (serverPlayer.tickCount % 20 == 0) {
-                    ModMessages.sendToPlayer(new PlayerBreathSyncS2CPacket(breath.getBreath(), breath.getMaxBreath()), serverPlayer);
-                }
             });
+        }
 
-            // DEMON PASSIVE HANDLING
-            serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                // This handles attributes (Health/Damage), regeneration, and sun weakness/resistance
-                handleDemonPassives(serverPlayer, demon);
+        if (player.tickCount % 40 == 0) {
+            player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
+                Set<ResourceLocation> activeMissionIds = new HashSet<>(missions.getActiveMissionIds());
 
-                // This handles passives that only run when toggled on and at the end of the tick
-                if (event.phase == TickEvent.Phase.END && demon.isDemon()) {
-                    handleStalkersGait(serverPlayer, demon);
-                    handleOverwhelmingAura(serverPlayer, demon);
-                }
-            });
-
-            if (serverPlayer.tickCount % 20 == 0) { // Check once per second
-                final ResourceLocation finalSelectionId = new ResourceLocation(DemonSlayer.MOD_ID, "story_final_selection");
-
-                serverPlayer.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
-                    if (missions.isActive(finalSelectionId)) {
-                        final ResourceLocation requiredBiome = new ResourceLocation(DemonSlayer.MOD_ID, "fujikasane_forest");
-                        final String biomeEnteredKey = "fujikasane_entered";
-                        final String bossSpawnedKey = "boss_spawned";
-
-                        Map<String, Integer> progress = missions.getProgress(finalSelectionId);
-                        ResourceLocation currentBiome = serverPlayer.level.getBiome(serverPlayer.blockPosition()).unwrapKey().get().location();
-
-                        Mission mission = MissionRegistry.getMission(finalSelectionId);
-                        if (mission == null) return;
-
-                        if (currentBiome.equals(requiredBiome)) {
-                            // --- Player is INSIDE the biome ---
-                            if (!progress.containsKey(biomeEnteredKey)) {
-                                missions.updateProgress(finalSelectionId, biomeEnteredKey, 1);
-                                serverPlayer.sendSystemMessage(Component.literal("You have entered Mt. Fujikasane. The trial begins now. Do not leave.").withStyle(ChatFormatting.DARK_PURPLE));
+                activeMissionIds.forEach(missionId -> {
+                    Mission mission = MissionRegistry.getMission(missionId);
+                    if (mission != null) {
+                        boolean allObjectivesComplete = true;
+                        for (MissionObjective objective : mission.objectives()) {
+                            if (!objective.isComplete(player, missions.getProgress(missionId))) {
+                                allObjectivesComplete = false;
+                                break;
                             }
+                        }
 
-                            if (!progress.containsKey(bossSpawnedKey)) {
-                                int startTime = progress.getOrDefault("survive_objective", (int)serverPlayer.level.getGameTime());
-                                long timeElapsed = serverPlayer.level.getGameTime() - startTime;
+                        if (allObjectivesComplete) {
+                            // Grant rewards and complete the mission
+                            mission.rewards().forEach(reward -> reward.grant(player));
+                            missions.completeMission(mission);
+                            ReputationService.onMissionCompleted(player, mission);
+                            ModUtils.checkAndApplyRankUp(player);
+                            player.sendSystemMessage(Component.literal("Mission Complete: ").withStyle(ChatFormatting.GOLD).append(mission.title()));
 
-                                // Check if 6 days have passed
-                                if (timeElapsed >= (24000 * 6)) {
-                                    BlockPos spawnPos = serverPlayer.blockPosition().north(5);
-                                    ModEntityTypes.HAND_DEMON.get().spawn((ServerLevel)serverPlayer.level, null, null, spawnPos, MobSpawnType.EVENT, true, false);
-                                    serverPlayer.sendSystemMessage(Component.literal("A massive, grotesque demon emerges from the trees... It reeks of countless devoured slayers.").withStyle(ChatFormatting.DARK_RED));
-                                    missions.updateProgress(finalSelectionId, bossSpawnedKey, 1);
-                                }
-                            }
-                        } else {
-                            // --- Player is OUTSIDE the biome ---
-                            if (progress.containsKey(biomeEnteredKey)) {
-                                missions.abandonMission(finalSelectionId);
-                                serverPlayer.sendSystemMessage(Component.literal("You have fled Mt. Fujikasane. Your trial has ended in failure.").withStyle(ChatFormatting.RED));
-                                serverPlayer.level.playSound(null, serverPlayer.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 0.5f, 1.0f);
-                                ModUtils.syncMissions(serverPlayer);
-                            }
+                            // Sync the changes to the client
+                            CompoundTag missionData = new CompoundTag();
+                            missions.saveNBTData(missionData);
+                            ModMessages.sendToPlayer(new PlayerMissionSyncS2CPacket(missionData), player);
                         }
                     }
                 });
-            }
+            });
+        }
 
-            if (serverPlayer.tickCount % 40 == 0) {
-                serverPlayer.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
-                    Set<ResourceLocation> activeMissionIds = new HashSet<>(missions.getActiveMissionIds());
+        if (player.tickCount % 4 == 0) {
+            if (player.hasEffect(ModEffects.FORCED_SLEEP.get())) return;
+            if (player.getInventory().getArmor(3).is(Items.CARVED_PUMPKIN)) return;
 
-                    activeMissionIds.forEach(missionId -> {
-                        Mission mission = MissionRegistry.getMission(missionId);
-                        if (mission != null) {
-                            boolean allObjectivesComplete = true;
-                            for (MissionObjective objective : mission.objectives()) {
-                                if (!objective.isComplete(serverPlayer, missions.getProgress(missionId))) {
-                                    allObjectivesComplete = false;
-                                    break;
-                                }
-                            }
+            for (Entity entity : ((ServerLevel) player.level).getEntities().getAll()) {
+                if (entity instanceof MotherEyeEntity motherEye) {
+                    if (player.getUUID().equals(motherEye.getCasterUUID())) continue;
+                    if (player.distanceToSqr(motherEye) > 25 * 25) continue;
 
-                            if (allObjectivesComplete) {
-                                // Grant rewards and complete the mission
-                                mission.rewards().forEach(reward -> reward.grant(serverPlayer));
-                                missions.completeMission(mission);
-                                ModUtils.checkAndApplyRankUp(serverPlayer);
-                                serverPlayer.sendSystemMessage(Component.literal("Mission Complete: ").withStyle(ChatFormatting.GOLD).append(mission.title()));
+                    for (BlockPos eyePos : motherEye.getLesserEyePositions()) {
+                        Vec3 playerLook = player.getLookAngle();
+                        Vec3 playerToEye = Vec3.atCenterOf(eyePos).subtract(player.getEyePosition()).normalize();
+                        double dot = playerLook.dot(playerToEye);
 
-                                // Sync the changes to the client
-                                CompoundTag missionData = new CompoundTag();
-                                missions.saveNBTData(missionData);
-                                ModMessages.sendToPlayer(new PlayerMissionSyncS2CPacket(missionData), serverPlayer);
-                            }
-                        }
-                    });
-                });
-            }
+                        if (dot > 0.98) {
+                            ClipContext ctx = new ClipContext(player.getEyePosition(), Vec3.atCenterOf(eyePos), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, player);
+                            BlockHitResult ray = player.level.clip(ctx);
 
-            if (serverPlayer.tickCount % 4 == 0) {
-                if (serverPlayer.hasEffect(ModEffects.FORCED_SLEEP.get())) return;
-                if (serverPlayer.getInventory().getArmor(3).is(Items.CARVED_PUMPKIN)) return;
+                            if (ray.getType() == HitResult.Type.MISS) {
+                                player.addEffect(new MobEffectInstance(ModEffects.FORCED_SLEEP.get(), 1200, 0));
+                                ForcedSleepEffect.setCaster(player, (LivingEntity) motherEye.getCaster());
 
-                for (Entity entity : ((ServerLevel) serverPlayer.level).getEntities().getAll()) {
-                    if (entity instanceof MotherEyeEntity motherEye) {
-                        if (serverPlayer.getUUID().equals(motherEye.getCasterUUID())) continue;
-                        if (serverPlayer.distanceToSqr(motherEye) > 25 * 25) continue;
+                                List<Integer> keys = new ArrayList<>(List.of(0, 1, 2, 3)); // 0=up, 1=left, 2=down, 3=right
+                                Collections.shuffle(keys);
+                                ModMessages.sendToPlayer(new StartSleepQTES2CPacket(keys), player);
 
-                        for (BlockPos eyePos : motherEye.getLesserEyePositions()) {
-                            Vec3 playerLook = serverPlayer.getLookAngle();
-                            Vec3 playerToEye = Vec3.atCenterOf(eyePos).subtract(serverPlayer.getEyePosition()).normalize();
-                            double dot = playerLook.dot(playerToEye);
-
-                            if (dot > 0.98) {
-                                ClipContext ctx = new ClipContext(serverPlayer.getEyePosition(), Vec3.atCenterOf(eyePos), ClipContext.Block.COLLIDER, ClipContext.Fluid.NONE, serverPlayer);
-                                BlockHitResult ray = serverPlayer.level.clip(ctx);
-
-                                if (ray.getType() == HitResult.Type.MISS) {
-                                    serverPlayer.addEffect(new MobEffectInstance(ModEffects.FORCED_SLEEP.get(), 1200, 0));
-                                    ForcedSleepEffect.setCaster(serverPlayer, (LivingEntity) motherEye.getCaster());
-
-                                    List<Integer> keys = new ArrayList<>(List.of(0, 1, 2, 3)); // 0=up, 1=left, 2=down, 3=right
-                                    Collections.shuffle(keys);
-                                    ModMessages.sendToPlayer(new StartSleepQTES2CPacket(keys), serverPlayer);
-
-                                    return;
-                                }
+                                return;
                             }
                         }
                     }
                 }
             }
+        }
 
-            if (serverPlayer.isPassenger() && serverPlayer.getVehicle() instanceof WaterPrisonEntity) {
-                serverPlayer.setAirSupply(0);
-            }
+        if (player.isPassenger() && player.getVehicle() instanceof WaterPrisonEntity) {
+            player.setAirSupply(0);
+        }
 
-            if (event.phase == TickEvent.Phase.END && !event.player.level.isClientSide && event.player instanceof ServerPlayer player) {
+        if (!event.player.level.isClientSide) {
+            player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                if (!demon.isDemon()) return;
+
+                handleStalkersGait(player, demon);
+                handleOverwhelmingAura(player, demon);
+            });
+        }
+
+        // Tamayo offer cooldown expiry (cheap)
+        if (event.phase == TickEvent.Phase.END) {
+            tickTamayoCooldown(player);
+        }
+
+        // Tamayo offer trigger: extremely low health + nearby + not demon + not on cooldown
+        if (player.tickCount % TAMAYO_SCAN_INTERVAL_TICKS == 0) {
+            if (player.isAlive() && !player.isCreative() && player.getHealth() <= TAMAYO_CRITICAL_HEALTH) {
                 player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                    if (!demon.isDemon()) return;
+                    if (demon.isDemon()) return;
+                    if (isTamayoOnCooldown(player)) return;
 
-                    handleStalkersGait(player, demon);
-                    handleOverwhelmingAura(player, demon);
+                    var box = player.getBoundingBox().inflate(TAMAYO_SCAN_RADIUS);
+                    TamayoEntity tamayo = player.level.getEntitiesOfClass(TamayoEntity.class, box)
+                            .stream()
+                            .findFirst()
+                            .orElse(null);
+                    if (tamayo == null) return;
+
+                    // Start cooldown immediately to prevent UI spam.
+                    startTamayoCooldown(player);
+
+                    java.util.List<net.minecraft.network.chat.Component> pages = java.util.List.of(
+                            net.minecraft.network.chat.Component.literal("Wait... You're bleeding out. Please, hold still. I'm Tamayo.\n\nI can stabilize you — but what I offer isn't ordinary medicine."),
+                            net.minecraft.network.chat.Component.literal("I developed a transformation process independent of Muzan's direct blood creation.\n\nIt will turn you into a demon."),
+                            net.minecraft.network.chat.Component.literal("If you accept: your body will change. You'll gain strength and regeneration.\n\nBut you will also develop intense cravings, and sunlight will become lethal unless you later overcome it."),
+                            net.minecraft.network.chat.Component.literal("This is not a cure. It's a different kind of life — and it may cost you everything you value.\n\nI won't force this on you."),
+                            net.minecraft.network.chat.Component.literal("If you truly understand the risks and still want to live... say so.\n\nDo you consent to the transformation?")
+                    );
+
+                    ModMessages.sendToPlayer(new OpenTamayoOfferS2CPacket(tamayo.getId(), pages), player);
                 });
-            }
-
-            // Tamayo offer cooldown expiry (cheap)
-            if (event.phase == TickEvent.Phase.END) {
-                tickTamayoCooldown(serverPlayer);
-            }
-
-            // Tamayo offer trigger: extremely low health + nearby + not demon + not on cooldown
-            if (event.phase == TickEvent.Phase.END && serverPlayer.tickCount % TAMAYO_SCAN_INTERVAL_TICKS == 0) {
-                if (serverPlayer.isAlive() && !serverPlayer.isCreative() && serverPlayer.getHealth() <= TAMAYO_CRITICAL_HEALTH) {
-                    serverPlayer.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                        if (demon.isDemon()) return;
-                        if (isTamayoOnCooldown(serverPlayer)) return;
-
-                        var box = serverPlayer.getBoundingBox().inflate(TAMAYO_SCAN_RADIUS);
-                        TamayoEntity tamayo = serverPlayer.level.getEntitiesOfClass(TamayoEntity.class, box)
-                                .stream()
-                                .findFirst()
-                                .orElse(null);
-                        if (tamayo == null) return;
-
-                        // Start cooldown immediately to prevent UI spam.
-                        startTamayoCooldown(serverPlayer);
-
-                        java.util.List<net.minecraft.network.chat.Component> pages = java.util.List.of(
-                                net.minecraft.network.chat.Component.literal("Wait... You're bleeding out. Please, hold still. I'm Tamayo.\n\nI can stabilize you — but what I offer isn't ordinary medicine."),
-                                net.minecraft.network.chat.Component.literal("I developed a transformation process independent of Muzan's direct blood creation.\n\nIt will turn you into a demon."),
-                                net.minecraft.network.chat.Component.literal("If you accept: your body will change. You'll gain strength and regeneration.\n\nBut you will also develop intense cravings, and sunlight will become lethal unless you later overcome it."),
-                                net.minecraft.network.chat.Component.literal("This is not a cure. It's a different kind of life — and it may cost you everything you value.\n\nI won't force this on you."),
-                                net.minecraft.network.chat.Component.literal("If you truly understand the risks and still want to live... say so.\n\nDo you consent to the transformation?")
-                        );
-
-                        ModMessages.sendToPlayer(new OpenTamayoOfferS2CPacket(tamayo.getId(), pages), serverPlayer);
-                    });
-                }
             }
         }
     }

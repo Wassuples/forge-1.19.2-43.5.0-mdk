@@ -3,6 +3,7 @@ package com.wassuples.demonslayer.util;
 import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.gravity.PlayerGravity;
 import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.*;
@@ -96,6 +97,19 @@ public final class ModUtils {
         syncStyle(player);
         syncBreath(player);
         syncDemon(player);
+        syncGravity(player);
+    }
+
+    /** Sends the player's gravity orientation to clients so camera/model orientation stays in sync. */
+    public static void syncGravity(ServerPlayer player) {
+        player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+            ModMessages.sendToClients(new PlayerGravitySyncS2CPacket(
+                    player.getId(),
+                    gravity.getGravity(),
+                    gravity.getPreviousGravity(),
+                    gravity.getTransitionProgress()
+            ));
+        });
     }
 
     /**
