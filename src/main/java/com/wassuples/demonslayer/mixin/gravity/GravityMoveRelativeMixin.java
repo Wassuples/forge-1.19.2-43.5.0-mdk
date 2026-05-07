@@ -22,9 +22,11 @@ public abstract class GravityMoveRelativeMixin {
 
             Vec3 normalized = relative.lengthSqr() > 1.0 ? relative.normalize() : relative;
 
+            float yawToUse = gravity.getGravityYaw();
+
             Vec3 worldDelta = GravityUtil.getMovementVector(
                 self.getLookAngle(),
-                self.getYRot(),
+                yawToUse,
                 normalized.scale(speed),
                 dir
             );

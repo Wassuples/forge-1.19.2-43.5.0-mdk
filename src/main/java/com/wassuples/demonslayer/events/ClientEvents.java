@@ -23,6 +23,7 @@ import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -326,7 +327,30 @@ public class ClientEvents {
 
             player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
                 GravityDirection direction = gravity.getGravity();
-                event.setRoll(event.getRoll() + GravityUtil.getCameraRollDegrees(direction));
+                if (direction == GravityDirection.DOWN) return;
+
+                float partialTicks = (float) event.getPartialTick();
+                float yawToUse;
+                float pitchToUse;
+
+                if (gravity.getTransitionProgress() >= 1.0f) {
+                    yawToUse = gravity.getGravityYaw();
+                    pitchToUse = gravity.getGravityPitch();
+                } else {
+                    // Use rotLerp to avoid 360-degree spins during transitions
+                    yawToUse = Mth.rotLerp(partialTicks, gravity.getGravityYawOld(), gravity.getGravityYaw());
+                    pitchToUse = Mth.lerp(partialTicks, gravity.getGravityPitchOld(), gravity.getGravityPitch());
+                }
+
+                float[] vanilla = GravityUtil.gravityLookToVanilla(
+                    yawToUse,
+                    pitchToUse,
+                    direction
+                );
+
+                event.setYaw(vanilla[0]);
+                event.setPitch(vanilla[1]);
+                event.setRoll(vanilla[2]);
             });
         }
 

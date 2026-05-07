@@ -20,6 +20,10 @@ public class PlayerGravity implements ICapabilitySerializable<CompoundTag> {
     private GravityDirection previousGravity = GravityDirection.DOWN;
     private float transitionProgress = 1.0f;
     private int surfaceDetachTicks = 0;
+    private float gravityYaw = 0.0f;
+    private float gravityPitch = 0.0f;
+    private float gravityYawOld = 0.0f;
+    private float gravityPitchOld = 0.0f;
 
     public GravityDirection getGravity() {
         return gravity;
@@ -37,6 +41,9 @@ public class PlayerGravity implements ICapabilitySerializable<CompoundTag> {
     }
 
     public void tickInterpolation() {
+        gravityYawOld = gravityYaw;
+        gravityPitchOld = gravityPitch;
+
         if (transitionProgress < 1.0f) {
             transitionProgress += 0.05f; // Adjust speed as needed
             if (transitionProgress > 1.0f) {
@@ -63,6 +70,38 @@ public class PlayerGravity implements ICapabilitySerializable<CompoundTag> {
         return transitionProgress;
     }
 
+    public float getGravityYaw() {
+        return gravityYaw;
+    }
+
+    public void setGravityYaw(float gravityYaw) {
+        this.gravityYaw = gravityYaw;
+    }
+
+    public float getGravityPitch() {
+        return gravityPitch;
+    }
+
+    public void setGravityPitch(float gravityPitch) {
+        this.gravityPitch = gravityPitch;
+    }
+
+    public float getGravityYawOld() {
+        return gravityYawOld;
+    }
+
+    public void setGravityYawOld(float gravityYawOld) {
+        this.gravityYawOld = gravityYawOld;
+    }
+
+    public float getGravityPitchOld() {
+        return gravityPitchOld;
+    }
+
+    public void setGravityPitchOld(float gravityPitchOld) {
+        this.gravityPitchOld = gravityPitchOld;
+    }
+
     public GravityDirection getPreviousGravity() {
         return previousGravity;
     }
@@ -77,6 +116,8 @@ public class PlayerGravity implements ICapabilitySerializable<CompoundTag> {
         nbt.putString("gravity_direction", gravity.name());
         nbt.putString("previous_gravity", previousGravity.name());
         nbt.putFloat("transition_progress", transitionProgress);
+        nbt.putFloat("gravity_yaw", gravityYaw);
+        nbt.putFloat("gravity_pitch", gravityPitch);
     }
 
     public void loadNBTData(CompoundTag nbt) {
@@ -84,6 +125,8 @@ public class PlayerGravity implements ICapabilitySerializable<CompoundTag> {
             gravity = GravityDirection.valueOf(nbt.getString("gravity_direction"));
             previousGravity = nbt.contains("previous_gravity") ? GravityDirection.valueOf(nbt.getString("previous_gravity")) : gravity;
             transitionProgress = nbt.contains("transition_progress") ? nbt.getFloat("transition_progress") : 1.0f;
+            gravityYaw = nbt.getFloat("gravity_yaw");
+            gravityPitch = nbt.getFloat("gravity_pitch");
         } catch (IllegalArgumentException e) {
             gravity = GravityDirection.DOWN;
             previousGravity = GravityDirection.DOWN;
@@ -96,6 +139,10 @@ public class PlayerGravity implements ICapabilitySerializable<CompoundTag> {
         this.previousGravity = source.previousGravity;
         this.transitionProgress = source.transitionProgress;
         this.surfaceDetachTicks = source.surfaceDetachTicks;
+        this.gravityYaw = source.gravityYaw;
+        this.gravityPitch = source.gravityPitch;
+        this.gravityYawOld = source.gravityYawOld;
+        this.gravityPitchOld = source.gravityPitchOld;
     }
 
     private final LazyOptional<PlayerGravity> optional = LazyOptional.of(() -> this);

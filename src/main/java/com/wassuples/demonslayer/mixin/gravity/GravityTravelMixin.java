@@ -27,40 +27,42 @@ public abstract class GravityTravelMixin {
         )
     )
     private void demonslayer$gravityMoveRelative(LivingEntity instance, float speed, Vec3 relativeMovement) {
-        GravityDirection dir = instance.getCapability(PlayerGravity.GRAVITY_CAPABILITY)
-            .map(PlayerGravity::getGravity)
-            .orElse(GravityDirection.DOWN);
+        instance.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+            GravityDirection dir = gravity.getGravity();
 
-        if (dir == GravityDirection.DOWN) {
-            // Vanilla behaviour — untouched
-            instance.moveRelative(speed, relativeMovement);
-            return;
-        }
+            if (dir == GravityDirection.DOWN) {
+                // Vanilla behaviour — untouched
+                instance.moveRelative(speed, relativeMovement);
+                return;
+            }
 
-        // Replicate vanilla's input normalisation from LivingEntity.getInputVector()
-        float inputX = (float) relativeMovement.x; // strafe (A/D)
-        float inputZ = (float) relativeMovement.z; // forward (W/S)
+            // Replicate vanilla's input normalisation from LivingEntity.getInputVector()
+            float inputX = (float) relativeMovement.x; // strafe (A/D)
+            float inputZ = (float) relativeMovement.z; // forward (W/S)
 
-        float magnitudeSq = inputX * inputX + inputZ * inputZ;
-        if (magnitudeSq < 1.0E-7F) return;
+            float magnitudeSq = inputX * inputX + inputZ * inputZ;
+            if (magnitudeSq < 1.0E-7F) return;
 
-        float magnitude = Mth.sqrt(magnitudeSq);
-        if (magnitude < 1.0F) magnitude = 1.0F;
-        float scale = speed / magnitude;
-        inputX *= scale;
-        inputZ *= scale;
+            float magnitude = Mth.sqrt(magnitudeSq);
+            if (magnitude < 1.0F) magnitude = 1.0F;
+            float scale = speed / magnitude;
+            inputX *= scale;
+            inputZ *= scale;
 
-        // Instead of vanilla's yaw-in-XZ rotation, project onto the gravity floor plane.
-        // getLookAngle() returns the true 3D look direction, which getMovementVector projects
-        // correctly onto whatever plane the gravity direction defines as the floor.
-        Vec3 worldMovement = GravityUtil.getMovementVector(
-            instance.getLookAngle(),
-            instance.getYRot(),
-            new Vec3(inputX, 0.0, inputZ),
-            dir
-        );
+            float yawToUse = gravity.getGravityYaw();
 
-        instance.setDeltaMovement(instance.getDeltaMovement().add(worldMovement));
+            // Instead of vanilla's yaw-in-XZ rotation, project onto the gravity floor plane.
+            // getLookAngle() returns the true 3D look direction, which getMovementVector projects
+            // correctly onto whatever plane the gravity direction defines as the floor.
+            Vec3 worldMovement = GravityUtil.getMovementVector(
+                instance.getLookAngle(),
+                yawToUse,
+                new Vec3(inputX, 0.0, inputZ),
+                dir
+            );
+
+            instance.setDeltaMovement(instance.getDeltaMovement().add(worldMovement));
+        });
     }
 
     /**

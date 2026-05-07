@@ -80,8 +80,13 @@ dependencies {
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
 
     implementation fg.deobf('software.bernie.geckolib:geckolib-forge-1.19:3.1.19')
+    runtimeOnly fg.deobf('software.bernie.geckolib:geckolib-forge-1.19:3.1.19')
+
     implementation fg.deobf("curse.maven:playeranimator-658587:4418149")
+    runtimeOnly fg.deobf("curse.maven:playeranimator-658587:4418149")
+
     implementation fg.deobf("curse.maven:terrablender-563928:4618490")
+    runtimeOnly fg.deobf("curse.maven:terrablender-563928:4618490")
 
     annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
 

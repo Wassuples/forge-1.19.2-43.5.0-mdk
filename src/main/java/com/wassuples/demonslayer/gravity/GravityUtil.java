@@ -122,7 +122,7 @@ public class GravityUtil {
 
     public static Vec3 getRightOnGravityPlane(Vec3 forwardOnPlane, GravityDirection gravityDirection) {
         Vec3 up = getWorldUp(gravityDirection);
-        Vec3 right = up.cross(forwardOnPlane);
+        Vec3 right = forwardOnPlane.cross(up);
         if (right.lengthSqr() < EPSILON) {
             return new Vec3(1.0D, 0.0D, 0.0D);
         }
@@ -142,13 +142,30 @@ public class GravityUtil {
         return projected.normalize();
     }
 
-    public static Vec3 getMovementVector(Vec3 lookVector, float yRot, Vec3 localVector, GravityDirection gravityDirection) {
-        Vec3 forward = getMovementForward(lookVector, yRot, gravityDirection);
-        Vec3 right = getRightOnGravityPlane(forward, gravityDirection);
-        Vec3 up = getWorldUp(gravityDirection);
-        return right.scale(-localVector.x)
-                .add(up.scale(localVector.y))
-                .add(forward.scale(-localVector.z));
+    public static Vec3 getMovementVector(Vec3 lookVector, float gYaw, Vec3 localVector, GravityDirection gravityDirection) {
+        if (gravityDirection == GravityDirection.DOWN) {
+            float f = Mth.sin(gYaw * ((float)Math.PI / 180F));
+            float f1 = Mth.cos(gYaw * ((float)Math.PI / 180F));
+            return new Vec3(localVector.x * f1 - localVector.z * f, localVector.y, localVector.z * f1 + localVector.x * f);
+        }
+
+        Vec3 gUp = getWorldUp(gravityDirection);
+        // We use a stable basis where gUp is Head, and we pick a reference that is not gUp.
+        Vec3 ref = (Math.abs(gUp.y) < 0.9) ? new Vec3(0, 1, 0) : new Vec3(0, 0, 1);
+        Vec3 gForward = projectOntoPlane(ref, gUp).normalize();
+        Vec3 gRight = gForward.cross(gUp).normalize();
+
+        double radY = Math.toRadians(gYaw);
+        double sinY = Math.sin(radY);
+        double cosY = Math.cos(radY);
+
+        // Basis-relative forward/left
+        Vec3 relForward = gForward.scale(cosY).add(gRight.scale(sinY));
+        Vec3 relLeft = gUp.cross(relForward);
+
+        return relLeft.scale(localVector.x)
+                .add(gUp.scale(localVector.y))
+                .add(relForward.scale(localVector.z));
     }
 
     public static Vec3 rotateWorldMovementForGravity(Vec3 vector, GravityDirection direction) {
@@ -176,70 +193,85 @@ public class GravityUtil {
     }
 
     public static float getCameraRollDegrees(GravityDirection direction) {
-        return switch (direction) {
-            case UP -> 180.0F;
-            case WEST -> -90.0F;
-            case EAST -> 90.0F;
-            default -> 0.0F;
-        };
+        return 0.0F;
     }
 
     public static float getCameraPitchOffsetDegrees(GravityDirection direction) {
-        return switch (direction) {
-            case NORTH -> -90.0F;
-            case SOUTH -> 90.0F;
-            default -> 0.0F;
-        };
+        return 0.0F;
     }
 
     public static double[] remapTurnDeltas(double deltaX, double deltaY, GravityDirection direction) {
-        return switch (direction) {
-            // Vanilla: no change.
-            case DOWN  -> new double[]{deltaX,   deltaY};
-            // Upside-down: only pitch inverts (screen top/bottom flip, left/right stays).
-            case UP    -> new double[]{deltaX,  -deltaY};
-            // East wall: right = world+Y (up in world). Swap and negate both.
-            case EAST  -> new double[]{-deltaY, -deltaX};
-            // West wall: right = world−Y (down in world). Swap, no negation.
-            case WEST  -> new double[]{deltaY,   deltaX};
-            // North/South: broken by gimbal lock regardless of remap.
-            case NORTH -> new double[]{deltaY,  -deltaX};
-            case SOUTH -> new double[]{-deltaY,  deltaX};
-        };
+        // With unified camera roll logic (making gUp point UP on screen),
+        // mouse remapping is constant across all gravity directions.
+        // gPitch+ is UP, while deltaY+ is DOWN on screen, so we negate deltaY.
+        return new double[]{deltaX, -deltaY};
     }
 
     public static float[] gravityLookToVanilla(float gYaw, float gPitch, GravityDirection direction) {
-        Vec3 gForward = getForwardOnGravityPlane(new Vec3(1, 0, 0), direction); // use +X as stable reference
-        Vec3 gRight   = getRightOnGravityPlane(gForward, direction);
-        Vec3 gUp      = getWorldUp(direction);
+        Vec3 gUp = getWorldUp(direction);
+        Vec3 ref = (Math.abs(gUp.y) < 0.9) ? new Vec3(0, 1, 0) : new Vec3(0, 0, 1);
+        Vec3 gForward = projectOntoPlane(ref, gUp).normalize();
+        Vec3 gRight = gForward.cross(gUp).normalize();
 
-        double cosP = Math.cos(Math.toRadians(gPitch));
-        double sinP = Math.sin(Math.toRadians(gPitch));
-        double cosY = Math.cos(Math.toRadians(gYaw));
-        double sinY = Math.sin(Math.toRadians(gYaw));
+        double radP = Math.toRadians(gPitch);
+        double radY = Math.toRadians(gYaw);
 
-        // World-space look direction built from the gravity basis.
+        double cosP = Math.cos(radP);
+        double sinP = Math.sin(radP);
+        double cosY = Math.cos(radY);
+        double sinY = Math.sin(radY);
+
+        // look = Forward * cosP * cosY + Right * cosP * sinY + Up * sinP
         Vec3 look = gForward.scale(cosP * cosY)
             .add(gRight.scale(cosP * sinY))
-            .add(gUp.scale(-sinP));
+            .add(gUp.scale(sinP));
 
-        float vanillaYaw   = (float) Math.toDegrees(Math.atan2(-look.x, look.z));
-        float vanillaPitch = (float) Math.toDegrees(Math.asin(Mth.clamp(-look.y, -1.0, 1.0)));
-        return new float[]{vanillaYaw, vanillaPitch};
+        // Vanilla look vector rotation (yaw, pitch) is:
+        // x = -sin(yaw) * cos(pitch)
+        // y = -sin(pitch)
+        // z = cos(yaw) * cos(pitch)
+        float vYaw   = (float) Math.toDegrees(Math.atan2(-look.x, look.z));
+        float vPitch = (float) Math.toDegrees(Math.asin(Mth.clamp(-look.y, -1.0, 1.0)));
+
+        // Calculate Roll to make gUp point UP on screen.
+        // Camera Up (Roll=0):
+        // Up0 = RotateYaw(vYaw) * RotatePitch(vPitch) * (0, 1, 0)
+        double radVY = Math.toRadians(vYaw);
+        double radVP = Math.toRadians(vPitch);
+        double sinVY = Math.sin(radVY);
+        double cosVY = Math.cos(radVY);
+        double sinVP = Math.sin(radVP);
+        double cosVP = Math.cos(radVP);
+
+        Vec3 vUp0 = new Vec3(-sinVY * sinVP, cosVP, cosVY * sinVP);
+
+        // Desired Up is gUp projected onto the plane perpendicular to look.
+        Vec3 desiredUp = gUp.subtract(look.scale(gUp.dot(look))).normalize();
+
+        // Roll is angle between vUp0 and desiredUp around look.
+        Vec3 vRight0 = look.cross(vUp0);
+        double cosR = vUp0.dot(desiredUp);
+        double sinR = vRight0.dot(desiredUp);
+        float vRoll = (float) Math.toDegrees(Math.atan2(sinR, cosR));
+
+        return new float[]{vYaw, vPitch, vRoll};
     }
 
     public static float[] vanillaToGravityLook(float vanillaYaw, float vanillaPitch, GravityDirection direction) {
-        Vec3 look     = Vec3.directionFromRotation(vanillaPitch, vanillaYaw);
-        Vec3 gForward = getForwardOnGravityPlane(new Vec3(1, 0, 0), direction);
-        Vec3 gRight   = getRightOnGravityPlane(gForward, direction);
-        Vec3 gUp      = getWorldUp(direction);
+        Vec3 look = Vec3.directionFromRotation(vanillaPitch, vanillaYaw);
 
-        double lookF  = look.dot(gForward);
-        double lookR  = look.dot(gRight);
-        double lookU  = look.dot(gUp);
+        Vec3 gUp = getWorldUp(direction);
+        Vec3 ref = (Math.abs(gUp.y) < 0.9) ? new Vec3(0, 1, 0) : new Vec3(0, 0, 1);
+        Vec3 gForward = projectOntoPlane(ref, gUp).normalize();
+        Vec3 gRight = gForward.cross(gUp).normalize();
 
-        float gYaw   = (float) Math.toDegrees(Math.atan2(lookR, lookF));
-        float gPitch = (float) Math.toDegrees(Math.asin(Mth.clamp(-lookU, -1.0, 1.0)));
+        // Project look onto gForward, gRight, gUp
+        double lookF = look.dot(gForward);
+        double lookR = look.dot(gRight);
+        double lookU = look.dot(gUp);
+
+        float gYaw = (float) Math.toDegrees(Math.atan2(lookR, lookF));
+        float gPitch = (float) Math.toDegrees(Math.asin(Mth.clamp(lookU, -1.0, 1.0)));
         return new float[]{gYaw, gPitch};
     }
 

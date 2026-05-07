@@ -16,11 +16,6 @@ import org.spongepowered.asm.mixin.injection.Redirect;
 public abstract class GravityMouseHandlerMixin {
     @Shadow @Final private Minecraft minecraft;
 
-    // Quick storage for gravity-frame look angles: [gYaw, gPitch]
-    // Key: entity ID. Reset when gravity direction changes.
-    private static final java.util.Map<Integer, float[]> gravityAngles = new java.util.HashMap<>();
-    private static final java.util.Map<Integer, GravityDirection> lastKnownDir = new java.util.HashMap<>();
-
     @Redirect(
         method = "turnPlayer()V",
         at = @At(value = "INVOKE",
@@ -28,36 +23,39 @@ public abstract class GravityMouseHandlerMixin {
     )
     private void demonslayer$gravityTurn(net.minecraft.client.player.LocalPlayer player,
                                          double yawDelta, double pitchDelta) {
-        GravityDirection dir = player.getCapability(PlayerGravity.GRAVITY_CAPABILITY)
-            .map(PlayerGravity::getGravity)
-            .orElse(GravityDirection.DOWN);
+        player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
+            GravityDirection dir = gravity.getGravity();
 
-        if (dir == GravityDirection.DOWN) {
-            player.turn(yawDelta, pitchDelta);
-            return;
-        }
+            if (dir == GravityDirection.DOWN) {
+                player.turn(yawDelta, pitchDelta);
+                return;
+            }
 
-        int id = player.getId();
+            // Sync gravity angles from vanilla if they were just initialized or if dir changed
+            if (gravity.getTransitionProgress() < 0.01f) {
+                float[] init = GravityUtil.vanillaToGravityLook(player.getYRot(), player.getXRot(), dir);
+                gravity.setGravityYaw(init[0]);
+                gravity.setGravityPitch(init[1]);
+            }
 
-        // Re-initialise gravity-frame angles if gravity just changed.
-        GravityDirection prev = lastKnownDir.get(id);
-        if (prev != dir) {
-            float[] init = GravityUtil.vanillaToGravityLook(player.getYRot(), player.getXRot(), dir);
-            gravityAngles.put(id, new float[]{init[0], init[1]});
-            lastKnownDir.put(id, dir);
-        }
+            // Apply mouse delta directly in gravity space
+            double[] remapped = GravityUtil.remapTurnDeltas(yawDelta, pitchDelta, dir);
 
-        float[] ga = gravityAngles.computeIfAbsent(id, k -> new float[]{0f, 0f});
+            float gYaw = gravity.getGravityYaw() + (float) remapped[0];
+            float gPitch = Mth.clamp(gravity.getGravityPitch() + (float) remapped[1], -89.0F, 89.0F);
 
-        // Apply mouse delta directly in gravity space — no remapping needed.
-        ga[0] += (float) yawDelta;            // gravity yaw
-        ga[1]  = Mth.clamp(ga[1] + (float) pitchDelta, -90f, 90f); // gravity pitch
+            gravity.setGravityYaw(gYaw);
+            gravity.setGravityPitch(gPitch);
+            gravity.setGravityYawOld(gYaw);
+            gravity.setGravityPitchOld(gPitch);
 
-        // Convert back to vanilla angles that produce the correct world look.
-        float[] va = GravityUtil.gravityLookToVanilla(ga[0], ga[1], dir);
-        player.setYRot(va[0]);
-        player.setXRot(va[1]);
-        player.yRotO = va[0];
-        player.xRotO = va[1];
+            float[] vanilla = GravityUtil.gravityLookToVanilla(gYaw, gPitch, dir);
+            player.setYRot(vanilla[0]);
+            player.setXRot(vanilla[1]);
+            player.yRotO = vanilla[0];
+            player.xRotO = vanilla[1];
+        });
     }
+
+    // Removed the static maps as we now use the PlayerGravity capability
 }
