@@ -15,8 +15,17 @@ import net.minecraftforge.network.NetworkHooks;
 
 import java.util.UUID;
 
-public class ToonBananaPeelEntity extends ThrowableItemProjectile {
-    private static final int MAX_LIFE_TICKS = 20 * 20;
+import software.bernie.geckolib3.core.IAnimatable;
+import software.bernie.geckolib3.core.PlayState;
+import software.bernie.geckolib3.core.builder.AnimationBuilder;
+import software.bernie.geckolib3.core.controller.AnimationController;
+import software.bernie.geckolib3.core.event.predicate.AnimationEvent;
+import software.bernie.geckolib3.core.manager.AnimationData;
+import software.bernie.geckolib3.core.manager.AnimationFactory;
+
+public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAnimatable {
+    private final AnimationFactory factory = new AnimationFactory(this);
+    private static final int MAX_LIFE_TICKS = 20 * 60; // 1 minute
     private int lifeTicks = MAX_LIFE_TICKS;
     private UUID ownerUUID;
 
@@ -79,6 +88,21 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile {
     @Override
     public net.minecraft.network.protocol.Packet<?> getAddEntityPacket() {
         return NetworkHooks.getEntitySpawningPacket(this);
+    }
+
+    @Override
+    public void registerControllers(AnimationData data) {
+        data.addAnimationController(new AnimationController<>(this, "controller", 0, this::predicate));
+    }
+
+    private <E extends IAnimatable> PlayState predicate(AnimationEvent<E> event) {
+        event.getController().setAnimation(new AnimationBuilder().addAnimation("idle", true));
+        return PlayState.CONTINUE;
+    }
+
+    @Override
+    public AnimationFactory getFactory() {
+        return this.factory;
     }
 }
 

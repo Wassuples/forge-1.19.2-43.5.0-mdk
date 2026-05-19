@@ -8,7 +8,6 @@
     "FireBlockAccessor",
     "gravity.GravityEntityMixin",
     "gravity.GravityLivingEntityMixin",
-    "gravity.GravityMoveRelativeMixin",
     "gravity.GravityMoveMixin"
   ],
   "client": [

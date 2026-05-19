@@ -168,6 +168,12 @@ public class ModEntityTypes {
                             .noSave()
                             .build("toon_fake_tunnel"));
 
+    public static final RegistryObject<EntityType<ToonAnvilEntity>> TOON_ANVIL =
+            ENTITY_TYPES.register("toon_anvil",
+                    () -> EntityType.Builder.<ToonAnvilEntity>of(ToonAnvilEntity::new, MobCategory.MISC)
+                            .sized(1.2f, 1.0f)
+                            .build("toon_anvil"));
+
 
 
     //##########################################################
