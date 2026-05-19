@@ -96,6 +96,12 @@ public class ModMessages {
                 .consumerMainThread(PieSplatS2CPacket::handle)
                 .add();
 
+        net.messageBuilder(PlayPlayerAnimationS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PlayPlayerAnimationS2CPacket::new)
+                .encoder(PlayPlayerAnimationS2CPacket::toBytes)
+                .consumerMainThread(PlayPlayerAnimationS2CPacket::handle)
+                .add();
+
         net.messageBuilder(SwingInAirC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SwingInAirC2SPacket::new)
                 .encoder(SwingInAirC2SPacket::toBytes)

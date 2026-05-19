@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ModEntityTypes;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.Packet;
@@ -30,8 +31,10 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
-    private static final int MAX_LIFE_TICKS = 20 * 120; // 2 minutes
+    private static final int MAX_LIFE_TICKS = 20 * 8;
+    private static final int MAX_BOUNCES = 10;
     private int lifeTicks = MAX_LIFE_TICKS;
+    private int bounces;
 
     public ToonEyeProjectileEntity(EntityType<? extends ThrowableItemProjectile> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -53,12 +56,23 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
         super.tick();
 
         if (this.level.isClientSide) {
-            this.level.addParticle(ParticleTypes.END_ROD, this.getX(), this.getY(), this.getZ(), 0, 0, 0);
+            Vec3 velocity = this.getDeltaMovement();
+            this.level.addParticle(ParticleTypes.END_ROD, this.getX(), this.getY(), this.getZ(),
+                    -velocity.x * 0.03, -velocity.y * 0.03, -velocity.z * 0.03);
+            if (this.tickCount % 2 == 0) {
+                this.level.addParticle(ParticleTypes.CRIT, this.getX(), this.getY(), this.getZ(),
+                        -velocity.x * 0.05, -velocity.y * 0.05, -velocity.z * 0.05);
+            }
         }
 
         if (!this.level.isClientSide && --this.lifeTicks <= 0) {
             this.discard();
         }
+    }
+
+    @Override
+    protected boolean canHitEntity(Entity entity) {
+        return (entity != this.getOwner() || this.tickCount >= 8) && super.canHitEntity(entity);
     }
 
     @Override
@@ -72,7 +86,9 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
         if (hit instanceof LivingEntity target && this.getOwner() instanceof LivingEntity owner && hit != owner) {
             target.hurt(DamageSource.mobAttack(owner), 4.0f);
             ToonForceHelper.tryApplyDizzy(target, owner, 0.3f);
-            this.level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.7f, 1.8f);
+            ToonForceHelper.spawnBonkText((net.minecraft.server.level.ServerLevel) this.level, target.position());
+            FormAnimations.play(target, FormAnimations.TOON_BONKED);
+            this.level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9f, 2.0f);
         }
 
         this.discard();
@@ -85,18 +101,30 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
         }
 
         if (hitResult instanceof BlockHitResult blockHit) {
+            this.bounces++;
             Vec3 normal = Vec3.atLowerCornerOf(blockHit.getDirection().getNormal());
             Vec3 velocity = this.getDeltaMovement();
             double dot = velocity.dot(normal);
-            Vec3 reflected = velocity.subtract(normal.scale(2.0 * dot)).scale(0.9);
+            Vec3 reflected = velocity.subtract(normal.scale(2.0 * dot));
 
             if (reflected.lengthSqr() < 0.04) {
-                reflected = reflected.normalize().scale(0.6);
+                reflected = normal.scale(3.0);
+            } else {
+                reflected = reflected.normalize().scale(Math.max(2.8, Math.min(4.6, reflected.length())));
             }
 
-            this.setDeltaMovement(reflected);
-            this.setDeltaMovement(this.getDeltaMovement().add(0, Mth.clamp(0.02, 0, 0.1), 0));
+            this.setDeltaMovement(reflected.add(0, Mth.clamp(0.04, 0, 0.12), 0));
+            if (this.level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                serverLevel.sendParticles(ParticleTypes.END_ROD, this.getX(), this.getY(), this.getZ(), 8, 0.14, 0.14, 0.14, 0.02);
+                if (this.bounces <= 4) {
+                    ToonForceHelper.spawnToonText(serverLevel, this.position().add(0, 0.35, 0),
+                            net.minecraft.network.chat.Component.literal("BOING!").withStyle(net.minecraft.ChatFormatting.AQUA), 12);
+                }
+            }
             this.level.playSound(null, blockPosition(), SoundEvents.SLIME_JUMP, SoundSource.PLAYERS, 0.5f, 1.6f);
+            if (this.bounces >= MAX_BOUNCES) {
+                this.discard();
+            }
             return;
         }
 

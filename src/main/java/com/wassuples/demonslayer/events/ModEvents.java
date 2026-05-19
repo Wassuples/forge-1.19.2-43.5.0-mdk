@@ -822,12 +822,17 @@ public class ModEvents {
 
         if (player.getPersistentData().contains("ds_toon_airwalk_ground_y")) {
             double groundY = player.getPersistentData().getDouble("ds_toon_airwalk_ground_y");
-            if (player.getY() >= groundY - 0.1 && player.getY() <= groundY + 0.1) {
+            if (player.getY() >= groundY - 0.65 && player.getY() <= groundY + 0.2) {
                 Vec3 vel = player.getDeltaMovement();
                 player.setDeltaMovement(vel.x, 0.0, vel.z);
                 player.setPos(player.getX(), groundY, player.getZ());
+                player.setOnGround(true);
                 player.fallDistance = 0.0f;
                 player.getPersistentData().putBoolean(ToonForceHelper.AIRWALK_TAG, true);
+                if (player.tickCount % 8 == 0) {
+                    ((ServerLevel) player.level).sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
+                            player.getX(), groundY - 0.05, player.getZ(), 2, 0.2, 0.02, 0.2, 0.0);
+                }
             } else if (player.getY() < groundY - 0.1) {
                 player.getPersistentData().remove("ds_toon_airwalk_ground_y");
             }

@@ -1,7 +1,10 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ModEntityTypes;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
+import net.minecraft.ChatFormatting;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -26,6 +29,7 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
     private static final int MAX_LIFE_TICKS = 20 * 60; // 1 minute
+    private static final int OWNER_GRACE_TICKS = 20;
     private int lifeTicks = MAX_LIFE_TICKS;
     private UUID ownerUUID;
 
@@ -49,6 +53,10 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAn
 
         if (this.level.isClientSide) {
             this.setYRot(this.getYRot() + 25.0f);
+            if (this.tickCount % 3 == 0) {
+                this.level.addParticle(net.minecraft.core.particles.ParticleTypes.ITEM_SLIME,
+                        this.getX(), this.getY() + 0.04, this.getZ(), 0, 0, 0);
+            }
         }
 
         if (!this.level.isClientSide) {
@@ -58,15 +66,18 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAn
             }
 
             for (LivingEntity target : this.level.getEntitiesOfClass(LivingEntity.class, this.getBoundingBox().inflate(0.3))) {
-                if (target.getUUID().equals(this.ownerUUID) || target.isPassenger()) {
-                    // Owner can still slip, but give them a tiny grace radius to avoid instant self-slip.
-                    if (this.tickCount < 4) {
-                        continue;
-                    }
+                if (target.isPassenger()) {
+                    continue;
+                }
+
+                if (target.getUUID().equals(this.ownerUUID) && this.tickCount < OWNER_GRACE_TICKS) {
+                    continue;
                 }
 
                 if (target.isAlive()) {
                     ToonForceHelper.applyBananaSlip(target, this.getOwner() instanceof LivingEntity owner ? owner : null, 0.65f);
+                    ToonForceHelper.spawnToonText((net.minecraft.server.level.ServerLevel) this.level, target.position().add(0, target.getBbHeight(), 0),
+                            Component.literal("WHIFF!").withStyle(ChatFormatting.YELLOW), 20);
                     this.level.playSound(null, blockPosition(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 0.9f, 1.2f);
                     this.discard();
                     break;

@@ -4,7 +4,6 @@ import com.wassuples.demonslayer.entity.ModEntityTypes;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.MoverType;
@@ -16,12 +15,17 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 
 import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class ToonShadowAnchorEntity extends Entity {
     private static final int MAX_LIFE_TICKS = 20 * 30;
     private int lifeTicks = MAX_LIFE_TICKS;
     private boolean stuck = false;
+    private Vec3 stuckNormal = Vec3.ZERO;
+    @Nullable
+    private BlockPos stuckBlockPos;
     @Nullable
     private UUID ownerUUID;
 
@@ -53,9 +57,9 @@ public class ToonShadowAnchorEntity extends Entity {
 
                 if (hit.getType() == HitResult.Type.BLOCK) {
                     BlockPos pos = hit.getBlockPos();
-                    Vec3 hitPos = Vec3.atCenterOf(pos).add(hit.getDirection().getNormal().getX() * 0.2,
-                            hit.getDirection().getNormal().getY() * 0.2,
-                            hit.getDirection().getNormal().getZ() * 0.2);
+                    this.stuckBlockPos = pos;
+                    this.stuckNormal = Vec3.atLowerCornerOf(hit.getDirection().getNormal());
+                    Vec3 hitPos = hit.getLocation().add(this.stuckNormal.scale(0.08));
                     this.setPos(hitPos);
                     this.setDeltaMovement(Vec3.ZERO);
                     this.stuck = true;
@@ -76,6 +80,53 @@ public class ToonShadowAnchorEntity extends Entity {
     }
 
     @Nullable
+    public Vec3 findSafeTeleportPosition(Entity teleported) {
+        if (!this.stuck) {
+            return null;
+        }
+
+        List<Vec3> candidates = new ArrayList<>();
+        Vec3 normal = this.stuckNormal.lengthSqr() > 0.001 ? this.stuckNormal.normalize() : Vec3.ZERO;
+
+        if (this.stuckBlockPos != null && normal.y > 0.5) {
+            candidates.add(Vec3.atBottomCenterOf(this.stuckBlockPos.above()));
+        }
+
+        if (normal.lengthSqr() > 0.001) {
+            double offset = teleported.getBbWidth() * 0.5 + 0.42;
+            Vec3 outsideFace = this.position().add(normal.scale(offset));
+            addVerticalCandidates(candidates, outsideFace);
+        }
+
+        if (this.stuckBlockPos != null) {
+            candidates.add(Vec3.atBottomCenterOf(this.stuckBlockPos.above()));
+            addVerticalCandidates(candidates, Vec3.atBottomCenterOf(this.stuckBlockPos).add(normal.scale(0.9)));
+        }
+
+        for (Vec3 candidate : candidates) {
+            if (isSafeTeleportPosition(teleported, candidate)) {
+                return candidate;
+            }
+        }
+
+        return null;
+    }
+
+    private static void addVerticalCandidates(List<Vec3> candidates, Vec3 base) {
+        int baseY = net.minecraft.util.Mth.floor(base.y);
+        for (int y = baseY + 1; y >= baseY - 4; y--) {
+            candidates.add(new Vec3(base.x, y, base.z));
+        }
+        for (int y = baseY + 2; y <= baseY + 4; y++) {
+            candidates.add(new Vec3(base.x, y, base.z));
+        }
+    }
+
+    private boolean isSafeTeleportPosition(Entity teleported, Vec3 candidate) {
+        return this.level.noCollision(teleported, teleported.getBoundingBox().move(candidate.subtract(teleported.position())));
+    }
+
+    @Nullable
     public UUID getOwnerUUID() {
         return this.ownerUUID;
     }
@@ -91,6 +142,10 @@ public class ToonShadowAnchorEntity extends Entity {
         }
         this.stuck = tag.getBoolean("Stuck");
         this.lifeTicks = tag.getInt("LifeTicks");
+        this.stuckNormal = new Vec3(tag.getDouble("NormalX"), tag.getDouble("NormalY"), tag.getDouble("NormalZ"));
+        if (tag.contains("StuckBlockX")) {
+            this.stuckBlockPos = new BlockPos(tag.getInt("StuckBlockX"), tag.getInt("StuckBlockY"), tag.getInt("StuckBlockZ"));
+        }
     }
 
     @Override
@@ -100,6 +155,14 @@ public class ToonShadowAnchorEntity extends Entity {
         }
         tag.putBoolean("Stuck", this.stuck);
         tag.putInt("LifeTicks", this.lifeTicks);
+        tag.putDouble("NormalX", this.stuckNormal.x);
+        tag.putDouble("NormalY", this.stuckNormal.y);
+        tag.putDouble("NormalZ", this.stuckNormal.z);
+        if (this.stuckBlockPos != null) {
+            tag.putInt("StuckBlockX", this.stuckBlockPos.getX());
+            tag.putInt("StuckBlockY", this.stuckBlockPos.getY());
+            tag.putInt("StuckBlockZ", this.stuckBlockPos.getZ());
+        }
     }
 
     @Override

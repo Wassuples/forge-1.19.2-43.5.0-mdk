@@ -6,7 +6,9 @@ import com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider;
 import com.wassuples.demonslayer.nemesis.trait.EmotionState;
 import com.wassuples.demonslayer.nemesis.trait.EmotionType;
 import com.wassuples.demonslayer.nemesis.trait.MemoryType;
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
@@ -105,6 +107,7 @@ public final class ToonForceHelper {
         target.hurtMarked = true;
 
         target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 60, 0, true, false, true));
+        FormAnimations.play(target, FormAnimations.TOON_SLIP);
 
         long spinUntil = level.getGameTime() + 30;
         target.getPersistentData().putLong(BANANA_SPIN_UNTIL_TAG, spinUntil);
@@ -246,12 +249,18 @@ public final class ToonForceHelper {
     }
 
     public static void spawnBonkText(ServerLevel level, Vec3 pos) {
-        ArmorStand stand = new ArmorStand(level, pos.x, pos.y + 0.6, pos.z);
+        spawnToonText(level, pos.add(0, 0.6, 0), Component.literal("BONK!").withStyle(ChatFormatting.GOLD), 24);
+        level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 1.0, pos.z, 12, 0.35, 0.25, 0.35, 0.0);
+    }
+
+    public static void spawnToonText(ServerLevel level, Vec3 pos, Component text, int durationTicks) {
+        ArmorStand stand = new ArmorStand(level, pos.x, pos.y, pos.z);
         stand.setInvisible(true);
         stand.setNoGravity(true);
+        stand.setInvulnerable(true);
         stand.setCustomNameVisible(true);
-        stand.setCustomName(net.minecraft.network.chat.Component.literal("BONK"));
-        stand.getPersistentData().putLong(TOON_TEXT_UNTIL_TAG, level.getGameTime() + 20);
+        stand.setCustomName(text);
+        stand.getPersistentData().putLong(TOON_TEXT_UNTIL_TAG, level.getGameTime() + durationTicks);
         level.addFreshEntity(stand);
     }
 

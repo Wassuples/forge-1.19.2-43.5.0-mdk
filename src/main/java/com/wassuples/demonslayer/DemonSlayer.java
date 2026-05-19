@@ -3,6 +3,7 @@ package com.wassuples.demonslayer;
 import com.mojang.logging.LogUtils;
 import com.wassuples.demonslayer.block.ModBlocks;
 import com.wassuples.demonslayer.block.ModFlammableBlocks;
+import com.wassuples.demonslayer.client.animation.ClientFormAnimations;
 import com.wassuples.demonslayer.client.gui.SleepQTEOverlay;
 import com.wassuples.demonslayer.client.gui.SunForgeScreen;
 import com.wassuples.demonslayer.client.gui.SwordsmithTableScreen;
@@ -175,10 +176,11 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.CRYSTALLINE_DIVINE_CHILD.get(), CrystallineDivineChildRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.BODHISATTVA.get(), BodhisattvaRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.THROWN_NICHIRIN.get(), ThrownNichirinRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.TOON_EYE.get(), ThrownItemRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.TOON_BANANA_PEEL.get(), ThrownItemRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.TOON_SHADOW_ANCHOR.get(), NoopRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.TOON_FAKE_TUNNEL.get(), NoopRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_EYE.get(), ToonEyeRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_BANANA_PEEL.get(), ToonBananaPeelRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_SHADOW_ANCHOR.get(), ToonShadowAnchorRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_FAKE_TUNNEL.get(), ToonFakeTunnelRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_ANVIL.get(), ToonAnvilRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CUTTING_THREAD_CAGE.get(), CuttingThreadCageRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.THREAD_WHEEL.get(), ThreadWheelRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CROW.get(), CrowRenderer::new);
@@ -218,6 +220,7 @@ public class DemonSlayer {
         public static void onClientModSetup(FMLClientSetupEvent event) {
             MenuScreens.register(ModMenuTypes.SUN_FORGE_MENU.get(), SunForgeScreen::new);
             MenuScreens.register(ModMenuTypes.SWORDSMITH_TABLE_MENU.get(), SwordsmithTableScreen::new);
+            ClientFormAnimations.registerLayer();
         }
     }
 

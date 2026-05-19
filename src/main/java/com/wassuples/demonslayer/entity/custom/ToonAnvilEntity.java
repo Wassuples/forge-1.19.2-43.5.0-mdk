@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ModEntityTypes;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
@@ -83,18 +84,21 @@ public class ToonAnvilEntity extends Entity implements IAnimatable {
         this.level.playSound(null, this.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.0f, 0.8f);
         if (this.level instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY(), this.getZ(), 1, 0, 0, 0, 0);
-            serverLevel.sendParticles(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY(), this.getZ(), 10, 0.5, 0.2, 0.5, 0.02);
+            serverLevel.sendParticles(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY(), this.getZ(), 18, 0.7, 0.25, 0.7, 0.02);
+            ToonForceHelper.spawnToonText(serverLevel, this.position().add(0, 1.0, 0),
+                    net.minecraft.network.chat.Component.literal("KLANG!").withStyle(net.minecraft.ChatFormatting.GRAY), 24);
 
             AABB box = this.getBoundingBox().inflate(1.5, 1.0, 1.5);
             for (LivingEntity target : this.level.getEntitiesOfClass(LivingEntity.class, box)) {
                 if (ownerUUID != null && target.getUUID().equals(ownerUUID)) continue;
 
-                Entity owner = serverLevel.getEntity(ownerUUID);
+                Entity owner = ownerUUID != null ? serverLevel.getEntity(ownerUUID) : null;
                 DamageSource ds = owner instanceof LivingEntity livingOwner ? DamageSource.ANVIL : DamageSource.ANVIL;
                 target.hurt(ds, 15.0f);
                 ToonForceHelper.applyFlattened(target, 60);
                 ToonForceHelper.tryApplyDizzy(target, owner instanceof LivingEntity l ? l : null, 0.5f);
                 ToonForceHelper.spawnBonkText(serverLevel, target.position());
+                FormAnimations.play(target, FormAnimations.TOON_BONKED);
             }
         }
         this.discard();

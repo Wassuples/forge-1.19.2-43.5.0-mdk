@@ -146,12 +146,18 @@ public class ModEntityTypes {
             ENTITY_TYPES.register("toon_eye",
                     () -> EntityType.Builder.<ToonEyeProjectileEntity>of(ToonEyeProjectileEntity::new, MobCategory.MISC)
                             .sized(0.5f, 0.5f)
+                            .setShouldReceiveVelocityUpdates(true)
+                            .clientTrackingRange(64)
+                            .updateInterval(1)
                             .build("toon_eye"));
 
     public static final RegistryObject<EntityType<ToonBananaPeelEntity>> TOON_BANANA_PEEL =
             ENTITY_TYPES.register("toon_banana_peel",
                     () -> EntityType.Builder.<ToonBananaPeelEntity>of(ToonBananaPeelEntity::new, MobCategory.MISC)
                             .sized(0.25f, 0.1f)
+                            .setShouldReceiveVelocityUpdates(true)
+                            .clientTrackingRange(48)
+                            .updateInterval(1)
                             .build("toon_banana_peel"));
 
     public static final RegistryObject<EntityType<ToonShadowAnchorEntity>> TOON_SHADOW_ANCHOR =
