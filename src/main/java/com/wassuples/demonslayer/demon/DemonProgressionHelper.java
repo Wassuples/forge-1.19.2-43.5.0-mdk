@@ -53,6 +53,7 @@ public class DemonProgressionHelper {
             .put(BloodDemonArts.HAEMO, 5000)
             .put(BloodDemonArts.SASH, 5000)
             .put(BloodDemonArts.SLEEP, 5000)
+            .put(BloodDemonArts.TOON_FORCE, 5000)
             .build();
 
     public static final Map<BloodDemonArts, Integer> BDA_PURCHASE_COSTS  = new ImmutableMap.Builder<BloodDemonArts, Integer>()
@@ -65,6 +66,7 @@ public class DemonProgressionHelper {
             .put(BloodDemonArts.HAEMO, 5000)
             .put(BloodDemonArts.SASH, 5000)
             .put(BloodDemonArts.SLEEP, 5000)
+            .put(BloodDemonArts.TOON_FORCE, 5000)
             .build();
 
     public static final Map<BloodDemonArts, List<Integer>> BDA_UPGRADE_COSTS = new ImmutableMap.Builder<BloodDemonArts, List<Integer>>()
@@ -77,6 +79,7 @@ public class DemonProgressionHelper {
             .put(BloodDemonArts.HAEMO, ImmutableList.of(1200, 2800, 5500, 11000))
             .put(BloodDemonArts.SASH, ImmutableList.of(1200, 2800, 5500, 11000))
             .put(BloodDemonArts.SLEEP, ImmutableList.of(1200, 2800, 5500, 11000))
+            .put(BloodDemonArts.TOON_FORCE, ImmutableList.of(1200, 2800, 5500, 11000))
             .build();
 
     public static final Map<DemonRank, Integer> RANK_UP_COSTS = new ImmutableMap.Builder<DemonRank, Integer>()

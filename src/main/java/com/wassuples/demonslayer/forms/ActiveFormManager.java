@@ -19,28 +19,16 @@ import com.wassuples.demonslayer.forms.demon.hantengu.CompressedSoundWavesForm;
 import com.wassuples.demonslayer.forms.demon.hantengu.CountlessStrikingTreesForm;
 import com.wassuples.demonslayer.forms.demon.hantengu.CrazedCryOfThunderdeathForm;
 import com.wassuples.demonslayer.forms.demon.hantengu.WeepingSpearsForm;
-import com.wassuples.demonslayer.forms.demon.rui.CuttingThreadCageForm;
-import com.wassuples.demonslayer.forms.demon.rui.CuttingThreadRotationForm;
-import com.wassuples.demonslayer.forms.demon.rui.MurderousEyeBasketForm;
+import com.wassuples.demonslayer.forms.demon.rui.*;
+import com.wassuples.demonslayer.forms.demon.toon.*;
 import com.wassuples.demonslayer.forms.slayer.beast.*;
 import com.wassuples.demonslayer.forms.slayer.flame.*;
-import com.wassuples.demonslayer.forms.slayer.flower.HonorableShadowPlumParry;
-import com.wassuples.demonslayer.forms.slayer.flower.PeoniesOfFutilityForm;
-import com.wassuples.demonslayer.forms.slayer.flower.VermilionEyeForm;
-import com.wassuples.demonslayer.forms.slayer.flower.WhirlingPeachForm;
-import com.wassuples.demonslayer.forms.slayer.insect.BeeStingFlutterForm;
-import com.wassuples.demonslayer.forms.slayer.insect.ButterflyDanceCapriceForm;
-import com.wassuples.demonslayer.forms.slayer.insect.CentipedeDanceForm;
-import com.wassuples.demonslayer.forms.slayer.insect.DragonflyDanceForm;
-import com.wassuples.demonslayer.forms.slayer.love.*;
+import com.wassuples.demonslayer.forms.slayer.flower.*;
+import com.wassuples.demonslayer.forms.slayer.insect.*;
 import com.wassuples.demonslayer.forms.slayer.mist.*;
 import com.wassuples.demonslayer.forms.slayer.moon.*;
-import com.wassuples.demonslayer.forms.slayer.serpent.CoilChokeForm;
-import com.wassuples.demonslayer.forms.slayer.serpent.SlitheringSerpentForm;
-import com.wassuples.demonslayer.forms.slayer.serpent.VenomFangsForm;
-import com.wassuples.demonslayer.forms.slayer.sound.ResoundingSlashesForm;
-import com.wassuples.demonslayer.forms.slayer.sound.RoarForm;
-import com.wassuples.demonslayer.forms.slayer.sound.StringPerformanceForm;
+import com.wassuples.demonslayer.forms.slayer.love.*;
+import com.wassuples.demonslayer.forms.slayer.sound.*;
 import com.wassuples.demonslayer.forms.slayer.stone.*;
 import com.wassuples.demonslayer.forms.slayer.sun.*;
 import com.wassuples.demonslayer.forms.slayer.thunder.*;
@@ -344,6 +332,14 @@ public  class ActiveFormManager {
                 .put(MOON_10, DrillingSlashesForm::new)
                 .put(MOON_14, CatastropheForm::new)
                 .put(MOON_16, MoonbowForm::new)
+                // TOON FORCE
+                .put(TOON_FORCE_1, EyePopForm::new)
+                .put(TOON_FORCE_2, AcmeAnvilForm::new)
+                .put(TOON_FORCE_3, PieSplatForm::new)
+                .put(TOON_FORCE_4, BananaPeelForm::new)
+                .put(TOON_FORCE_5, ShadowTossForm::new)
+                .put(TOON_FORCE_6, FakeTunnelForm::new)
+                .put(TOON_FORCE_7, PocketForm::new)
                 // BEAST BREATHING
                 .put(BEAST_4, SliceNDiceForm::new)
                 .put(BEAST_5, CrazyCuttingForm::new)
@@ -413,4 +409,3 @@ public  class ActiveFormManager {
                 .build();
     }
 }
-

@@ -26,6 +26,7 @@ import com.wassuples.demonslayer.worldgen.terrablender.ModOverworldRegion;
 import com.wassuples.demonslayer.reputation.ReputationEvents;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.NoopRenderer;
+import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -174,6 +175,10 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.CRYSTALLINE_DIVINE_CHILD.get(), CrystallineDivineChildRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.BODHISATTVA.get(), BodhisattvaRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.THROWN_NICHIRIN.get(), ThrownNichirinRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_EYE.get(), ThrownItemRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_BANANA_PEEL.get(), ThrownItemRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_SHADOW_ANCHOR.get(), NoopRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_FAKE_TUNNEL.get(), NoopRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CUTTING_THREAD_CAGE.get(), CuttingThreadCageRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.THREAD_WHEEL.get(), ThreadWheelRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CROW.get(), CrowRenderer::new);

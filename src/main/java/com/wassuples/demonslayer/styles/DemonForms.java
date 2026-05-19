@@ -1351,6 +1351,142 @@ public enum DemonForms implements IForm {
             return Math.max(0, priority);
         }
     },
+    // =================================================================================
+    // BDA, Toon Force
+    // =================================================================================
+    TOON_FORCE_1(BloodDemonArts.TOON_FORCE,
+            "Eye Pop",
+            IForm.InputType.PRESS,
+            0,
+            0,
+            50,
+            100,
+            "Eye pops off, bounces off wall endlessly, and hits someone eventually.",
+            20) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public int getUsagePriority(CombatContext context) {
+            return 10;
+        }
+    },
+    TOON_FORCE_2(BloodDemonArts.TOON_FORCE,
+            "Acme Anvil",
+            IForm.InputType.PRESS,
+            0,
+            0,
+            50,
+            100,
+            "Giant 2D-ish cartoon anvil, flattens target.",
+            20) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public int getUsagePriority(CombatContext context) {
+            return 10;
+        }
+    },
+    TOON_FORCE_3(BloodDemonArts.TOON_FORCE,
+            "Pie Splat",
+            IForm.InputType.PRESS,
+            0,
+            0,
+            50,
+            100,
+            "Pie splats attacker's screen on successful counter.",
+            20) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public int getUsagePriority(CombatContext context) {
+            return 10;
+        }
+    },
+    TOON_FORCE_4(BloodDemonArts.TOON_FORCE,
+            "Banana Peel",
+            IForm.InputType.PRESS,
+            0,
+            0,
+            50,
+            100,
+            "A deceptive trap that makes victims slip uncontrollably.",
+            20) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public int getUsagePriority(CombatContext context) {
+            return 10;
+        }
+    },
+    TOON_FORCE_5(BloodDemonArts.TOON_FORCE,
+            "Shadow Toss",
+            IForm.InputType.PRESS,
+            0,
+            0,
+            50,
+            100,
+            "Rips shadow off ground, sticks to wall/floor, recast to teleport to it.",
+            20) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public int getUsagePriority(CombatContext context) {
+            return 10;
+        }
+    },
+    TOON_FORCE_6(BloodDemonArts.TOON_FORCE,
+            "Fake Tunnel",
+            IForm.InputType.PRESS,
+            0,
+            0,
+            50,
+            100,
+            "Fake wall tunnel user can pass through but enemies slam into.",
+            20) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public int getUsagePriority(CombatContext context) {
+            return 10;
+        }
+    },
+    TOON_FORCE_7(BloodDemonArts.TOON_FORCE,
+            "Pocket",
+            IForm.InputType.PRESS,
+            0,
+            0,
+            50,
+            100,
+            "User reaches behind back and pulls out a random item.",
+            20) {
+        @Override
+        public void performAction(LivingEntity user, ServerLevel level) {
+            ActiveFormManager.start(user, this);
+        }
+
+        @Override
+        public int getUsagePriority(CombatContext context) {
+            return 10;
+        }
+    },
     ;
 
     private final BloodDemonArts style;
