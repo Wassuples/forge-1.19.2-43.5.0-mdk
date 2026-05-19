@@ -24,7 +24,8 @@ public enum BloodDemonArts {
     SASH("Obi Sash Manipulation", "Originally  Daki's Blood Demon Art, the Upper Moon Six."),
     HAEMO("Haemokinesis", "Originally Gyutaro's Blood Demon Art, the Upper Moon Six."),
     SLEEP("Sleep Manipulation", "Originally Enmu's Blood Demon Art, the Lower Moon One."),
-    THREADS("Thread Manipulation", "Originally Rui's Blood Demon Art, the Lower Moon Five.");
+    THREADS("Thread Manipulation", "Originally Rui's Blood Demon Art, the Lower Moon Five."),
+    TOON_FORCE("Toon Force", "Cartoon physics haha go BRRRRRRRRRRR.");
 
     private final String displayName;
     private final String description;

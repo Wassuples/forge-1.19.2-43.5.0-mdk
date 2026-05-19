@@ -142,6 +142,32 @@ public class ModEntityTypes {
                             )
                             .build("thrown_nichirin"));
 
+    public static final RegistryObject<EntityType<ToonEyeProjectileEntity>> TOON_EYE =
+            ENTITY_TYPES.register("toon_eye",
+                    () -> EntityType.Builder.<ToonEyeProjectileEntity>of(ToonEyeProjectileEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .build("toon_eye"));
+
+    public static final RegistryObject<EntityType<ToonBananaPeelEntity>> TOON_BANANA_PEEL =
+            ENTITY_TYPES.register("toon_banana_peel",
+                    () -> EntityType.Builder.<ToonBananaPeelEntity>of(ToonBananaPeelEntity::new, MobCategory.MISC)
+                            .sized(0.25f, 0.1f)
+                            .build("toon_banana_peel"));
+
+    public static final RegistryObject<EntityType<ToonShadowAnchorEntity>> TOON_SHADOW_ANCHOR =
+            ENTITY_TYPES.register("toon_shadow_anchor",
+                    () -> EntityType.Builder.<ToonShadowAnchorEntity>of(ToonShadowAnchorEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .noSave()
+                            .build("toon_shadow_anchor"));
+
+    public static final RegistryObject<EntityType<ToonFakeTunnelEntity>> TOON_FAKE_TUNNEL =
+            ENTITY_TYPES.register("toon_fake_tunnel",
+                    () -> EntityType.Builder.<ToonFakeTunnelEntity>of(ToonFakeTunnelEntity::new, MobCategory.MISC)
+                            .sized(2.0f, 3.0f)
+                            .noSave()
+                            .build("toon_fake_tunnel"));
+
 
 
     //##########################################################

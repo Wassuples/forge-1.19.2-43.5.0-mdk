@@ -149,6 +149,7 @@ public class ClientEvents {
 
             DemonThreatEffects.clientTick();
 
+            PieSplatOverlay.tick();
             LesserEyeRendererManager.tick();
 
             if (mc.player.getVehicle() instanceof BodhisattvaEntity) {
@@ -429,6 +430,7 @@ public class ClientEvents {
             event.registerAbove(VanillaGuiOverlay.PLAYER_HEALTH.id(), "breath", BreathHudOverlay.HUD_BREATH);
             event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "vignette", VignetteHudOverlay.HUD_VIGNETTE);
             event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "red_static", RedStaticHudOverlay.HUD_RED_STATIC);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "pie_splat", PieSplatOverlay.HUD_PIE_SPLAT);
         }
     }
 

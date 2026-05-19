@@ -36,6 +36,7 @@ import com.wassuples.demonslayer.styles.BreathingStyles;
 import com.wassuples.demonslayer.styles.DemonForms;
 import com.wassuples.demonslayer.util.DemonThreatHelper;
 import com.wassuples.demonslayer.util.ModUtils;
+import com.wassuples.demonslayer.util.ToonForceHelper;
 import com.wassuples.demonslayer.util.WisteriaHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -429,6 +430,9 @@ public class ModEvents {
         if (event.phase != TickEvent.Phase.END) return;
         CrowManager.ensureCrowFor(player);
 
+        ToonForceHelper.tickHotPotatoBomb(player);
+        ToonForceHelper.tickFlattened(player);
+        ToonForceHelper.tickBananaSpin(player);
 
         // WISTERIA: demon players are poisoned near wisteria leaves.
         if (player.tickCount % 10 == 0) {
@@ -470,6 +474,8 @@ public class ModEvents {
                 handleStalkersGait(player, demon);
                 handleOverwhelmingAura(player, demon);
             }
+
+            handleToonForceAirwalk(player, demon);
         });
 
         if (player.tickCount % 20 == 0) { // Check once per second
@@ -643,6 +649,10 @@ public class ModEvents {
         LivingEntity livingEntity = event.getEntity();
         if (livingEntity instanceof Player) return;
 
+        ToonForceHelper.tickHotPotatoBomb(livingEntity);
+        ToonForceHelper.tickFlattened(livingEntity);
+        ToonForceHelper.tickToonText(livingEntity);
+
         // Poison demon NPCs close to wisteria leaves.
         if (livingEntity.tickCount % 10 != 0) return;
         applyWisteriaPoisonIfNear(livingEntity);
@@ -789,6 +799,41 @@ public class ModEvents {
         }
     }
 
+    private static void handleToonForceAirwalk(ServerPlayer player, PlayerDemon demon) {
+        if (!demon.isDemon() || demon.getEquippedBda() != BloodDemonArts.TOON_FORCE) {
+            player.getPersistentData().remove(ToonForceHelper.AIRWALK_TAG);
+            player.getPersistentData().remove("ds_toon_airwalk_ground_y");
+            return;
+        }
+
+        if (player.isOnGround()) {
+            player.getPersistentData().putDouble("ds_toon_airwalk_ground_y", player.getY());
+            player.getPersistentData().remove(ToonForceHelper.AIRWALK_TAG);
+            return;
+        }
+
+        float pitch = player.getXRot();
+        boolean lookingDown = pitch > 50.0f; // Slightly more generous
+        if (lookingDown) {
+            player.getPersistentData().remove(ToonForceHelper.AIRWALK_TAG);
+            player.getPersistentData().remove("ds_toon_airwalk_ground_y");
+            return;
+        }
+
+        if (player.getPersistentData().contains("ds_toon_airwalk_ground_y")) {
+            double groundY = player.getPersistentData().getDouble("ds_toon_airwalk_ground_y");
+            if (player.getY() >= groundY - 0.1 && player.getY() <= groundY + 0.1) {
+                Vec3 vel = player.getDeltaMovement();
+                player.setDeltaMovement(vel.x, 0.0, vel.z);
+                player.setPos(player.getX(), groundY, player.getZ());
+                player.fallDistance = 0.0f;
+                player.getPersistentData().putBoolean(ToonForceHelper.AIRWALK_TAG, true);
+            } else if (player.getY() < groundY - 0.1) {
+                player.getPersistentData().remove("ds_toon_airwalk_ground_y");
+            }
+        }
+    }
+
     @SubscribeEvent
     public static void onCommandsRegister(RegisterCommandsEvent event) {
         DemonSlayerCommands.register(event.getDispatcher());
@@ -843,6 +888,13 @@ public class ModEvents {
                         attacker.hurt(DamageSource.thorns(target), 4.0f);
                     }
                 }
+            }
+        }
+
+        Entity attackerEntity = event.getSource().getEntity();
+        if (attackerEntity instanceof LivingEntity attacker && target.isAlive()) {
+            if (ToonForceHelper.hasHotPotatoBomb(attacker)) {
+                ToonForceHelper.transferHotPotatoBomb(attacker, target);
             }
         }
 

@@ -90,6 +90,12 @@ public class ModMessages {
                 .consumerMainThread(VignetteS2CPacket::handle)
                 .add();
 
+        net.messageBuilder(PieSplatS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(PieSplatS2CPacket::new)
+                .encoder(PieSplatS2CPacket::toBytes)
+                .consumerMainThread(PieSplatS2CPacket::handle)
+                .add();
+
         net.messageBuilder(SwingInAirC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
                 .decoder(SwingInAirC2SPacket::new)
                 .encoder(SwingInAirC2SPacket::toBytes)
