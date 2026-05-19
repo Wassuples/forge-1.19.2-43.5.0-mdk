@@ -10,6 +10,19 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
+/**
+ * Client-side renderer for Toon Anvil entity.
+ *
+ * <h2>Adding Custom Models/Animations</h2>
+ * <p>To replace this manual renderer with a GeckoLib 3D model:</p>
+ * <ol>
+ *   <li>Create {@code assets/demonslayer/models/entity/toon_anvil.geo.json} with your model</li>
+ *   <li>Create {@code assets/demonslayer/textures/entity/toon_anvil.png} texture</li>
+ *   <li>Create {@code assets/demonslayer/animations/entity/toon_anvil.animation.json} with animations</li>
+ *   <li>Make ToonAnvilEntity extend LivingEntity instead of Entity and implement IAnimatable</li>
+ *   <li>Change this class to extend {@code GeoEntityRenderer<ToonAnvilEntity>}</li>
+ * </ol>
+ */
 public class ToonAnvilRenderer extends EntityRenderer<ToonAnvilEntity> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/white.png");
 
@@ -24,21 +37,31 @@ public class ToonAnvilRenderer extends EntityRenderer<ToonAnvilEntity> {
         stack.pushPose();
         stack.mulPose(this.entityRenderDispatcher.cameraOrientation());
 
+        // === CUSTOM MODEL HOOK ===
+        // Replace the below manual drawing with your GeckoLib model.
+        // The squash effect simulates the anvil stretching as it falls.
+
         float squash = entity.getDeltaMovement().y < -0.25
                 ? 1.0f + Mth.sin((entity.tickCount + partialTicks) * 0.9f) * 0.08f
                 : 1.0f;
         stack.scale(1.45f * squash, 1.45f / squash, 1.45f);
 
+        // Anvil body (dark iron)
         ToonRenderHelper.box(stack, buffer, 0xFF121212, -0.74f, -0.58f, -0.18f, 0.74f, -0.42f, 0.18f);
         ToonRenderHelper.box(stack, buffer, 0xFF6B6F76, -0.68f, -0.52f, -0.16f, 0.68f, -0.34f, 0.16f);
+        // Anvil base
         ToonRenderHelper.box(stack, buffer, 0xFF0F0F0F, -0.45f, -0.36f, -0.15f, 0.45f, 0.18f, 0.15f);
         ToonRenderHelper.box(stack, buffer, 0xFF81858D, -0.38f, -0.32f, -0.13f, 0.38f, 0.16f, 0.13f);
+        // Anvil top
         ToonRenderHelper.box(stack, buffer, 0xFF0F0F0F, -0.84f, 0.10f, -0.16f, 0.84f, 0.36f, 0.16f);
         ToonRenderHelper.box(stack, buffer, 0xFF8D929A, -0.78f, 0.16f, -0.14f, 0.78f, 0.34f, 0.14f);
+        // Horn
         ToonRenderHelper.box(stack, buffer, 0xFF555A62, -0.92f, 0.20f, -0.13f, -0.58f, 0.30f, 0.13f);
         ToonRenderHelper.box(stack, buffer, 0xFF555A62, 0.58f, 0.20f, -0.13f, 0.92f, 0.30f, 0.13f);
+        // Highlight
         ToonRenderHelper.box(stack, buffer, 0xCCFFFFFF, -0.60f, 0.25f, -0.17f, 0.22f, 0.31f, -0.15f);
 
+        // "ACME" text label
         stack.pushPose();
         stack.translate(0.0f, -0.16f, -0.18f);
         stack.scale(0.018f, -0.018f, 0.018f);

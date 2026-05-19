@@ -10,6 +10,19 @@ import net.minecraft.client.renderer.entity.EntityRendererProvider;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
 
+/**
+ * Client-side renderer for Toon Banana Peel entity.
+ *
+ * <h2>Adding Custom Models/Animations</h2>
+ * <p>To add a custom 3D model to the banana peel:</p>
+ * <ol>
+ *   <li>Create {@code assets/demonslayer/models/entity/toon_banana_peel.geo.json}</li>
+ *   <li>Create {@code assets/demonslayer/textures/entity/toon_banana_peel.png}</li>
+ *   <li>Create {@code assets/demonslayer/animations/entity/toon_banana_peel.animation.json}</li>
+ *   <li>Make ToonBananaPeelEntity extend LivingEntity instead of ThrowableItemProjectile</li>
+ *   <li>Change this class to extend {@code GeoEntityRenderer<ToonBananaPeelEntity>}</li>
+ * </ol>
+ */
 public class ToonBananaPeelRenderer extends EntityRenderer<ToonBananaPeelEntity> {
     private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/white.png");
 
@@ -26,13 +39,18 @@ public class ToonBananaPeelRenderer extends EntityRenderer<ToonBananaPeelEntity>
         stack.mulPose(Vector3f.ZP.rotationDegrees(Mth.lerp(partialTicks, entity.yRotO, entity.getYRot())));
         stack.scale(0.85f, 0.85f, 0.85f);
 
-        ToonRenderHelper.ellipse(stack, buffer, 0x77111111, 0.62f, 0.16f, -0.09f);
-        ToonRenderHelper.quad(stack, buffer, 0xFF2B1C08, -0.08f, -0.12f, 0.08f, 0.12f, -0.04f);
+        // === CUSTOM MODEL HOOK ===
+        // Replace the below manual drawing with your GeckoLib model.
 
+        // Shadow
+        ToonRenderHelper.ellipse(stack, buffer, 0x77111111, 0.62f, 0.16f, -0.09f);
+        // Peel stem
+        ToonRenderHelper.quad(stack, buffer, 0xFF2B1C08, -0.08f, -0.12f, 0.08f, 0.12f, -0.04f);
+        // Peel segments
         drawPeel(stack, buffer, -0.42f, -0.12f, -0.02f, 0.20f, 0xFFFFD83D);
         drawPeel(stack, buffer, -0.12f, -0.20f, 0.20f, 0.30f, 0xFFFFEC55);
         drawPeel(stack, buffer, 0.22f, -0.10f, 0.45f, 0.18f, 0xFFFFD83D);
-
+        // Inner flesh
         ToonRenderHelper.quad(stack, buffer, 0xFFE7A316, -0.12f, 0.02f, 0.12f, 0.36f, -0.01f);
         ToonRenderHelper.quad(stack, buffer, 0xFFFFFFFF, -0.08f, 0.22f, 0.02f, 0.31f, 0.0f);
 

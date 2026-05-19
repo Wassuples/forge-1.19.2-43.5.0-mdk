@@ -1,0 +1,26 @@
+{
+  "length": 20,
+  "animations": {
+    "idle": {
+      "loop": true,
+      "keyframes": [
+        {
+          "time": 0,
+          "position": [0, 0, 0],
+          "easing": "linear"
+        },
+        {
+          "time": 10,
+          "position": [0, 0.05, 0],
+          "easing": "linear"
+        },
+        {
+          "time": 20,
+          "position": [0, 0, 0],
+          "easing": "linear"
+        }
+      ]
+    }
+  },
+  "default": "idle"
+}
