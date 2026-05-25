@@ -122,18 +122,22 @@ public class PocketForm extends TimedForm {
         if (target == null) {
             Vec3 show = user.getEyePosition().add(user.getLookAngle().scale(1.5));
             ToonForceHelper.spawnToonText(level, show, Component.literal("TICK?").withStyle(ChatFormatting.RED), 18);
+            FormAnimations.play(user, FormAnimations.TOON_BOMB_GET);
             level.sendParticles(ParticleTypes.SMOKE, show.x, show.y, show.z, 8, 0.2, 0.2, 0.2, 0.0);
             return;
         }
 
         ToonForceHelper.applyHotPotatoBomb(target, user, HOT_POTATO_FUSE);
         ToonForceHelper.tryApplyDizzy(target, user, 0.25f);
+        FormAnimations.play(user, FormAnimations.TOON_BOMB_PASS);
+        FormAnimations.play(target, FormAnimations.TOON_BOMB_GET);
         ToonForceHelper.spawnToonText(level, target.position().add(0, target.getBbHeight() + 0.25, 0),
                 Component.literal("TICK TICK!").withStyle(ChatFormatting.RED), 26);
         level.playSound(null, target.blockPosition(), SoundEvents.SNOWBALL_THROW, SoundSource.PLAYERS, 0.8f, 1.3f);
     }
 
     private void fortuneCookie() {
+        FormAnimations.play(user, FormAnimations.TOON_COOKIE);
         List<String> fortunes = List.of(
                 "DEATH!",
                 "UH OH!",
@@ -195,6 +199,7 @@ public class PocketForm extends TimedForm {
         LivingEntity target = CombatHelper.getLookedAtEntity(user, 4.0);
         if (target == null) {
             Vec3 show = user.getEyePosition().add(user.getLookAngle().scale(1.7));
+            FormAnimations.play(user, FormAnimations.TOON_FISH);
             ToonForceHelper.spawnToonText(level, show, Component.literal("FISH?").withStyle(ChatFormatting.AQUA), 18);
             level.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, new ItemStack(Items.COD)),
                     show.x, show.y, show.z, 12, 0.2, 0.2, 0.2, 0.04);
@@ -205,6 +210,8 @@ public class PocketForm extends TimedForm {
         target.setDeltaMovement(new Vec3(0, 0.2, 0));
         ToonForceHelper.tryApplyDizzy(target, user, 0.15f);
         ToonForceHelper.recordFishHumiliation(user, target);
+        FormAnimations.play(user, FormAnimations.TOON_FISH);
+        FormAnimations.play(target, FormAnimations.TOON_BONKED);
         ToonForceHelper.spawnToonText(level, target.position().add(0, target.getBbHeight() + 0.25, 0),
                 Component.literal("FISH!").withStyle(ChatFormatting.AQUA), 20);
         level.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, new ItemStack(Items.COD)),
@@ -212,4 +219,3 @@ public class PocketForm extends TimedForm {
         level.playSound(null, target.blockPosition(), SoundEvents.SALMON_FLOP, SoundSource.PLAYERS, 0.9f, 1.4f);
     }
 }
-

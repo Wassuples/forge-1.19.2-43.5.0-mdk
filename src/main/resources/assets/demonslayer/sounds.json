@@ -1,0 +1,34 @@
+{
+  "toon_boing": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_boing"]
+  },
+  "toon_slip": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_slip"]
+  },
+  "toon_whistle_fall": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_whistle_fall"]
+  },
+  "toon_crash": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_crash"]
+  },
+  "toon_bonk": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_bonk"]
+  },
+  "toon_splat": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_splat"]
+  },
+  "toon_eye_pop": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_eye_pop"]
+  },
+  "toon_run": {
+    "category": "player",
+    "sounds": ["demonslayer:toon/toon_run"]
+  }
+}

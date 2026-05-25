@@ -11,6 +11,7 @@ import net.minecraft.world.entity.LivingEntity;
  * asks each client to play the named animation for the synced entity id.
  */
 public final class FormAnimations {
+    // Toon BDA Animations
     public static final String TOON_EYE_POP = "toon_eye_pop";
     public static final String TOON_ANVIL = "toon_anvil";
     public static final String TOON_BANANA = "toon_banana";
@@ -20,6 +21,12 @@ public final class FormAnimations {
     public static final String TOON_BONKED = "toon_bonked";
     public static final String TOON_SLIP = "toon_slip";
     public static final String TOON_PIE_SPLAT = "toon_pie_splat";
+    public static final String TOON_TUNNEL_SLAM = "toon_tunnel_slam";
+    public static final String TOON_RUN = "toon_run";
+    public static final String TOON_FISH = "toon_fish";
+    public static final String TOON_COOKIE = "toon_cookie";
+    public static final String TOON_BOMB_PASS = "toon_bomb_pass";
+    public static final String TOON_BOMB_GET = "toon_bomb_get";
 
     private FormAnimations() {
     }

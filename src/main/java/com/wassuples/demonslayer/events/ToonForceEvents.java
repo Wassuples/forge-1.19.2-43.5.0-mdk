@@ -54,6 +54,7 @@ public class ToonForceEvents {
                         player.setDeltaMovement(player.getDeltaMovement().x, 0, player.getDeltaMovement().z);
                         player.fallDistance = 0;
                         if (player.level instanceof ServerLevel level && player.tickCount % 8 == 0) {
+                            FormAnimations.play(player, FormAnimations.TOON_RUN);
                             level.sendParticles(ParticleTypes.CLOUD, player.getX(), player.getY() - 0.05, player.getZ(),
                                     2, 0.18, 0.02, 0.18, 0.0);
                         }

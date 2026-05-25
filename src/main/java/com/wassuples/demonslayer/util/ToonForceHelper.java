@@ -1,11 +1,7 @@
 package com.wassuples.demonslayer.util;
 
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
-import com.wassuples.demonslayer.nemesis.trait.DemonMemory;
-import com.wassuples.demonslayer.nemesis.trait.DemonTraitProvider;
-import com.wassuples.demonslayer.nemesis.trait.EmotionState;
-import com.wassuples.demonslayer.nemesis.trait.EmotionType;
-import com.wassuples.demonslayer.nemesis.trait.MemoryType;
+import com.wassuples.demonslayer.nemesis.trait.*;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
@@ -14,13 +10,11 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
-import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.Pose;
 import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
@@ -105,6 +99,10 @@ public final class ToonForceHelper {
         Vec3 launch = direction.scale(baseLaunch * sprintBonus).add(0, 0.35, 0);
         target.setDeltaMovement(launch);
         target.hurtMarked = true;
+
+        FormAnimations.play(target, FormAnimations.TOON_SLIP);
+
+        tryApplyDizzy(target, owner, 0.25f);
 
         target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 60, 0, true, false, true));
         FormAnimations.play(target, FormAnimations.TOON_SLIP);
@@ -211,6 +209,8 @@ public final class ToonForceHelper {
         }
 
         level.sendParticles(ParticleTypes.SMOKE, to.getX(), to.getEyeY(), to.getZ(), 6, 0.2, 0.2, 0.2, 0.0);
+        FormAnimations.play(from, FormAnimations.TOON_BOMB_PASS);
+        FormAnimations.play(to, FormAnimations.TOON_BOMB_GET);
     }
 
     public static void tickHotPotatoBomb(LivingEntity target) {

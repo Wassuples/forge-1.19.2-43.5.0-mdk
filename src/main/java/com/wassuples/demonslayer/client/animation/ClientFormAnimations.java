@@ -57,6 +57,7 @@ public final class ClientFormAnimations {
 
     private static KeyframeAnimation create(String animationId) {
         return switch (animationId) {
+            // Toon BDA Animations
             case FormAnimations.TOON_EYE_POP -> eyePop();
             case FormAnimations.TOON_ANVIL -> anvil();
             case FormAnimations.TOON_BANANA -> bananaThrow();
@@ -66,8 +67,18 @@ public final class ClientFormAnimations {
             case FormAnimations.TOON_BONKED -> bonked();
             case FormAnimations.TOON_SLIP -> slip();
             case FormAnimations.TOON_PIE_SPLAT -> pieSplat();
+            case FormAnimations.TOON_TUNNEL_SLAM -> empty("toon_tunnel_slam");
+            case FormAnimations.TOON_RUN -> empty("toon_run");
+            case FormAnimations.TOON_FISH -> empty("toon_fish");
+            case FormAnimations.TOON_COOKIE -> empty("toon_cookie");
+            case FormAnimations.TOON_BOMB_PASS -> empty("toon_bomb_pass");
+            case FormAnimations.TOON_BOMB_GET -> empty("toon_bomb_get");
             default -> null;
         };
+    }
+
+    private static KeyframeAnimation empty(String name) {
+        return builder(name, 10).build();
     }
 
     private static KeyframeAnimation eyePop() {

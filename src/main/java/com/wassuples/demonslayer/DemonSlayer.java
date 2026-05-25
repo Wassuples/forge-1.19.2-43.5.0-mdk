@@ -21,13 +21,13 @@ import com.wassuples.demonslayer.missions.MissionReloadListener;
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.recipe.ModRecipes;
+import com.wassuples.demonslayer.reputation.ReputationEvents;
+import com.wassuples.demonslayer.sound.ModSounds;
 import com.wassuples.demonslayer.worldgen.biome.ModBiomes;
 import com.wassuples.demonslayer.worldgen.inventory.ModMenuTypes;
 import com.wassuples.demonslayer.worldgen.terrablender.ModOverworldRegion;
-import com.wassuples.demonslayer.reputation.ReputationEvents;
 import net.minecraft.client.gui.screens.MenuScreens;
 import net.minecraft.client.renderer.entity.NoopRenderer;
-import net.minecraft.client.renderer.entity.ThrownItemRenderer;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -97,6 +97,8 @@ public class DemonSlayer {
         ModEntityTypes.register(modEventBus);
         ModEffects.register(modEventBus);
         ModBiomes.register(modEventBus);
+        ModSounds.register(modEventBus);
+
 
         modEventBus.addListener(this::commonSetup);
         modEventBus.addListener(this::onAttributeCreate);
@@ -223,7 +225,6 @@ public class DemonSlayer {
             ClientFormAnimations.registerLayer();
         }
     }
-
     /**
      * Registers attribute maps for all living entity types.
      *
