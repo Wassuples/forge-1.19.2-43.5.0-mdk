@@ -33,11 +33,11 @@ public final class GrowthCalculator {
     private static final long TICKS_PER_DAY = 24_000L;
 
     /** Stat points granted per age milestone (every N days). */
-    private static final int AGE_GROWTH_INTERVAL_DAYS = 7;
-    private static final int AGE_GROWTH_POINTS = 1;
+    private static final int AGE_GROWTH_INTERVAL_DAYS = 1;  // every day instead of every 3
+    private static final int AGE_GROWTH_POINTS = 3;          // 3 instead of 2
 
     /** Maximum stat points that can be granted in a single simulation day. */
-    private static final int MAX_GROWTH_PER_DAY = 5;
+    private static final int MAX_GROWTH_PER_DAY = 20;
 
     /** Soft cap threshold for diminishing returns. At this stat value,
      *  growth rate is halved. */
