@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableMap;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.PlayerDemonSyncS2CPacket;
 import com.wassuples.demonslayer.styles.BloodDemonArts;
+import com.wassuples.demonslayer.util.ModUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
@@ -101,6 +102,53 @@ public class DemonProgressionHelper {
             .put(DemonRank.UPPER_MOON_2, 800000)
             .build();
 
+    public static final Map<DemonRank, Integer> KIZUKI_MINIMUM_BP_REQUIREMENTS = new ImmutableMap.Builder<DemonRank, Integer>()
+            .put(DemonRank.LOWER_MOON_6, 200)
+            .put(DemonRank.LOWER_MOON_5, 320)
+            .put(DemonRank.LOWER_MOON_4, 460)
+            .put(DemonRank.LOWER_MOON_3, 620)
+            .put(DemonRank.LOWER_MOON_2, 800)
+            .put(DemonRank.LOWER_MOON_1, 1000)
+            .put(DemonRank.UPPER_MOON_6, 1400)
+            .put(DemonRank.UPPER_MOON_5, 1900)
+            .put(DemonRank.UPPER_MOON_4, 2600)
+            .put(DemonRank.UPPER_MOON_3, 3500)
+            .put(DemonRank.UPPER_MOON_2, 4800)
+            .put(DemonRank.UPPER_MOON_1, 6500)
+            .build();
+
+    public static int getMinimumBloodPointsForRank(DemonRank rank) {
+        return KIZUKI_MINIMUM_BP_REQUIREMENTS.getOrDefault(rank, 0);
+    }
+
+    public static int getLowerMoonSixMinimumBloodPoints() {
+        return getMinimumBloodPointsForRank(DemonRank.LOWER_MOON_6);
+    }
+
+    public static DemonRank getFodderRankForBloodPoints(int bloodPoints) {
+        int lowerMoonSixMinimum = Math.max(1, getLowerMoonSixMinimumBloodPoints());
+        int bandSize = Math.max(1, lowerMoonSixMinimum / DemonRank.LOWER_MOON_6.ordinal());
+        int clamped = Math.max(0, Math.min(bloodPoints, lowerMoonSixMinimum - 1));
+        int rankIndex = Math.min(DemonRank.ELITE_DEMON.ordinal(), clamped / bandSize);
+        return DemonRank.values()[rankIndex];
+    }
+
+    public static int rollInitialDemonBloodPoints(ServerPlayer player) {
+        return player.getRandom().nextInt(getLowerMoonSixMinimumBloodPoints() + 1);
+    }
+
+    public static int rollMuzanBloodInfusion(ServerPlayer player) {
+        int maximumInfusion = Math.max(1, getLowerMoonSixMinimumBloodPoints() / 5);
+        return 1 + player.getRandom().nextInt(maximumInfusion);
+    }
+
+    public static void initializeNewDemon(ServerPlayer player, PlayerDemon demon) {
+        demon.setDemon(true);
+        demon.setBloodPoints(rollInitialDemonBloodPoints(player));
+        demon.setRank(getFodderRankForBloodPoints(demon.getBloodPoints()));
+        ModUtils.syncDemon(player);
+    }
+
     public static final Map<DemonPassive, List<Integer>> PASSIVE_SKILL_COSTS = new ImmutableMap.Builder<DemonPassive, List<Integer>>()
             .put(DemonPassive.HYPER_REGENERATION, ImmutableList.of(500, 1500, 3000, 6000, 12000))
             .put(DemonPassive.TOUGHENED_HIDE, ImmutableList.of(400, 1200, 2500, 5000, 10000))
@@ -177,6 +225,10 @@ public class DemonProgressionHelper {
     }
 
     public static void tryUnlockPassive(ServerPlayer player, PlayerDemon demon, DemonPassive passive) {
+        if (!demon.isDemon()) {
+            return;
+        }
+
         int currentTier = demon.getPassiveTier(passive);
         int maxTier = passive.getMaxTier();
 
@@ -190,6 +242,7 @@ public class DemonProgressionHelper {
         List<Integer> costs = PASSIVE_SKILL_COSTS.get(passive);
         if (costs == null || currentTier >= costs.size()) {
             // This is a data error, cost is not defined for the next tier
+            player.sendSystemMessage(Component.literal("This passive cannot be upgraded right now.").withStyle(ChatFormatting.RED));
             return;
         }
         int cost = costs.get(currentTier);
@@ -199,13 +252,13 @@ public class DemonProgressionHelper {
             // Deduct cost and apply the next tier
             demon.setBloodPoints(demon.getBloodPoints() - cost);
             demon.setPassiveTier(passive, currentTier + 1);
+            demon.setPassiveActive(passive, true);
 
             // Give feedback to the player
             player.sendSystemMessage(Component.literal("Upgraded " + passive.getDisplayName() + " to Tier " + (currentTier + 1)).withStyle(ChatFormatting.GREEN));
             player.level.playSound(null, player.blockPosition(), SoundEvents.ENCHANTMENT_TABLE_USE, SoundSource.PLAYERS, 0.75f, 1.2f);
 
-            // NOTE: You must sync the player's capability data to the client after changing it.
-            // Example: ModMessages.sendToPlayer(new SyncDemonDataS2CPacket(demon), player);
+            ModMessages.sendToPlayer(new PlayerDemonSyncS2CPacket(demon), player);
         } else {
             // Not enough points
             player.sendSystemMessage(Component.literal("Not enough Blood Points to upgrade this passive.").withStyle(ChatFormatting.RED));

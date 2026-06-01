@@ -71,9 +71,9 @@ public class AnnihilationTypeForm extends ChargeableForm {
     }
 
     @Override
-    protected void onChargeRelease(boolean fullyCharged) {
+    protected void onChargeRelease(float chargeRatio) {
         removeImmobility(user);
-        if (fullyCharged) {
+        if (chargeRatio >= 1.0f) {
             level.playSound(null, user.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 1.0f, 1.5f);
             level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.0f, 1.0f);
             this.direction = user.getLookAngle();

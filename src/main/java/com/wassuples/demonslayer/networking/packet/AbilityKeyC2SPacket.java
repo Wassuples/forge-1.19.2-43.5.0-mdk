@@ -71,11 +71,13 @@ public class AbilityKeyC2SPacket {
                 ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
 
                 if (activeForm instanceof ChargeableForm chargeable) {
-                    boolean wasFullyCharged = chargeable.chargeTicks >= chargeable.chargeGoal;
                     IForm form = chargeable.getForm();
 
-                    // Deduct breath cost on successful charge release
-                    if (wasFullyCharged && form instanceof BreathingForms breathingForm) {
+                    // Chargeable forms always fire on release regardless of how long the key
+                    // was held. The charge ratio (0.0 = instant, 1.0 = max charge) is passed
+                    // to the form so it can scale its output accordingly.
+                    // Breath cost and cooldown are always applied on release.
+                    if (form instanceof BreathingForms breathingForm) {
                         int breathCost = breathingForm.getBreathCost();
                         boolean hasEnoughBreath = player.getCapability(PlayerBreathProvider.PLAYER_BREATH)
                                 .map(breath -> breath.getBreath() >= breathCost)
@@ -90,20 +92,17 @@ public class AbilityKeyC2SPacket {
                         ModUtils.syncBreath(player);
                     }
 
-                    chargeable.release(wasFullyCharged);
+                    // Always release — the form scales internally based on chargeTicks.
+                    chargeable.release();
 
-                    if (wasFullyCharged) {
-                        int cooldownTicks = form.getCooldownTicks(player);
-                        cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
-
-                        if (cooldownTicks > 0) {
-                            cooldowns.setOnCooldown(player.level, form, cooldownTicks);
-                        }
-
-                        // Grant mastery on successful charge
-                        PlayerProgressionProvider.grantMasteryOnUse(player, form);
-                        ModUtils.syncProgression(player);
+                    int cooldownTicks = form.getCooldownTicks(player);
+                    cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
+                    if (cooldownTicks > 0) {
+                        cooldowns.setOnCooldown(player.level, form, cooldownTicks);
                     }
+
+                    PlayerProgressionProvider.grantMasteryOnUse(player, form);
+                    ModUtils.syncProgression(player);
                 }
                 return;
             }
@@ -125,9 +124,13 @@ public class AbilityKeyC2SPacket {
                 ActiveForm activeForm = ActiveFormManager.getActiveForm(player);
 
                 // --- DEACTIVATION / REUSE LOGIC ---
-                // Keep tap-to-toggle behavior only for buff forms.
+                // Buff forms always call performAction on re-press (toggle handled inside performAction).
+                // Non-buff interruptible forms also call performAction on re-press — this is required
+                // for manual toggle-off forms like Disorder and Countless Striking Trees, whose
+                // performAction checks "am I already running?" and calls stop() if so.
+                // Non-interruptible forms cannot be stopped this way; they block naturally below.
                 if (activeForm != null && activeForm.getForm() == formToUse) {
-                    if (activeForm.getForm().isBuff()) {
+                    if (formToUse.isBuff() || activeForm.isInterruptible()) {
                         formToUse.performAction(player, (ServerLevel) player.level);
                     }
                     return;
@@ -215,24 +218,34 @@ public class AbilityKeyC2SPacket {
 
                 formToUse.performAction(player, (ServerLevel) player.level);
 
+                // Only apply cooldown for PRESS forms when the form was actually STARTED.
+                // If performAction toggled the form OFF (e.g. Disorder, Countless Striking Trees),
+                // getActiveForm() will now return null or a different form — in that case we must
+                // NOT set a cooldown, because doing so would prevent immediate re-activation.
                 if (formToUse.getInputType() == IForm.InputType.PRESS) {
-                    int cooldownTicks = formToUse.getCooldownTicks(player);
+                    ActiveForm formAfterAction = ActiveFormManager.getActiveForm(player);
+                    boolean formWasStarted = formAfterAction != null
+                            && formAfterAction.getForm() == formToUse;
 
-                    // Hashira sword synergy for breathing forms
-                    if (formToUse instanceof BreathingForms) {
-                        boolean hashiraSynergy = player.getCapability(PlayerStyleProvider.PLAYER_STYLE)
-                                .map(style -> HashiraSwordHelper.doesSwordMatchStyle(player.getMainHandItem(), style.getCurrentStyles())
-                                        || HashiraSwordHelper.doesSwordMatchStyle(player.getOffhandItem(), style.getCurrentStyles()))
-                                .orElse(false);
-                        if (hashiraSynergy) {
-                            cooldownTicks = Math.max(1, Math.round(cooldownTicks * 0.80f));
+                    if (formWasStarted) {
+                        int cooldownTicks = formToUse.getCooldownTicks(player);
+
+                        // Hashira sword synergy for breathing forms
+                        if (formToUse instanceof BreathingForms) {
+                            boolean hashiraSynergy = player.getCapability(PlayerStyleProvider.PLAYER_STYLE)
+                                    .map(style -> HashiraSwordHelper.doesSwordMatchStyle(player.getMainHandItem(), style.getCurrentStyles())
+                                            || HashiraSwordHelper.doesSwordMatchStyle(player.getOffhandItem(), style.getCurrentStyles()))
+                                    .orElse(false);
+                            if (hashiraSynergy) {
+                                cooldownTicks = Math.max(1, Math.round(cooldownTicks * 0.80f));
+                            }
                         }
-                    }
 
-                    cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
+                        cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
 
-                    if (cooldownTicks > 0) {
-                        cooldowns.setOnCooldownAtLeastOneTick(player.level, formToUse, cooldownTicks);
+                        if (cooldownTicks > 0) {
+                            cooldowns.setOnCooldownAtLeastOneTick(player.level, formToUse, cooldownTicks);
+                        }
                     }
                 }
 

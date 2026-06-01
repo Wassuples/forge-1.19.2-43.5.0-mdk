@@ -56,7 +56,7 @@ public class CrystallineDivineChildForm extends ChargeableForm {
     }
 
     @Override
-    protected void onChargeRelease(boolean fullyCharged) {
+    protected void onChargeRelease(float chargeRatio) {
         int clonesToSpawn = Math.min(chargeTicks / CLONE_CHARGE_TIME, MAX_CLONES);
         if (clonesToSpawn > 0) {
             level.playSound(null, user.blockPosition(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.5f, 1.5f);

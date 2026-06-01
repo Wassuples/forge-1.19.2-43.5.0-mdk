@@ -108,12 +108,23 @@ public class BreathingMenuScreen extends Screen {
     private Button rankUpButton;
     private Button rankSubTabButton, bdaSubTabButton, physiologySubTabButton;
     private BloodDemonArts selectedBdaForUpgrade;
+    private int selectedBdaIndex = 0;
     private double bdaUpgradeScroll;
     private Button upgradeBdaButton;
     private List<BloodDemonArts> demonArtsList = new ArrayList<>();
     private Button purchaseBdaButton;
+    private static final int BDA_LIST_WIDTH = 118;
 
     private Button parkourButton;
+
+    // Challenge system
+    private double challengeListScroll = 0.0;
+    private int selectedChallengeIndex = -1;
+    private ChallengeListS2CPacket.Entry selectedChallengeEntry = null;
+    private Button challengeButton;
+    private Button refreshChallengeButton;
+    private static final int CHALLENGE_LIST_WIDTH = 210;
+    private static final int CHALLENGE_STATS_X_OFFSET = 220;
 
     private static final Map<DemonPassive, Vec2> PASSIVE_POSITIONS = new ImmutableMap.Builder<DemonPassive, Vec2>()
             .put(DemonPassive.ENHANCED_VIGOR, new Vec2(20, 20))
@@ -194,7 +205,24 @@ public class BreathingMenuScreen extends Screen {
         this.bdaSubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 60, subTabButtonY, 50, 20, Component.literal("BDA"), (b) -> this.currentDemonTab = DemonSubTab.BDA));
         this.physiologySubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 115, subTabButtonY, 70, 20, Component.literal("Physiology"), (b) -> this.currentDemonTab = DemonSubTab.PHYSIOLOGY));
 
-        this.rankUpButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("CHALLENGE"), (b) -> ModMessages.sendToServer(new RankUpC2SPacket())));
+        this.rankUpButton = null; // removed: replaced by challenge system
+        this.challengeButton = this.addRenderableWidget(new Button(0, 0, 110, 20,
+                Component.literal("Challenge!"),
+                (b) -> {
+                    if (this.selectedChallengeEntry != null) {
+                        ModMessages.sendToServer(new InitiateChallengeC2SPacket(this.selectedChallengeEntry.id()));
+                        this.onClose();
+                    }
+                }
+        ));
+        this.refreshChallengeButton = this.addRenderableWidget(new Button(0, 0, 50, 12,
+                Component.literal("Refresh"),
+                (b) -> {
+                    ChallengeListS2CPacket.CACHED_LIST.clear();
+                    this.clearChallengeSelection();
+                    ModMessages.sendToServer(new RequestChallengeListC2SPacket());
+                }
+        ));
         this.purchaseBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("Purchase"), (b) -> {
             if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new PurchaseBdaC2SPacket(this.selectedBdaForUpgrade));
         }));
@@ -215,6 +243,10 @@ public class BreathingMenuScreen extends Screen {
         if (this.minecraft != null && this.minecraft.player != null) {
             this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
                 this.demonProgressionButton.visible = demon.isDemon();
+                // Pre-fetch challenge list so the RANK sub-tab is populated immediately.
+                if (demon.isDemon()) {
+                    ModMessages.sendToServer(new RequestChallengeListC2SPacket());
+                }
             });
         }
     }
@@ -235,7 +267,8 @@ public class BreathingMenuScreen extends Screen {
         this.switchStyleButton.visible = false;
         this.equipBdaButton.visible = false;
         this.purchaseBdaButton.visible = false;
-        this.rankUpButton.visible = false;
+        this.challengeButton.visible = false;
+        this.refreshChallengeButton.visible = false;
         this.upgradeBdaButton.visible = false;
         this.rankSubTabButton.visible = false;
         this.bdaSubTabButton.visible = false;
@@ -499,60 +532,102 @@ public class BreathingMenuScreen extends Screen {
     private void renderRankUpView(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
         if (this.minecraft == null || this.minecraft.player == null) return;
 
-        int contentX = leftPos + subWindowXOffset + 10;
-        int contentY = topPos + subWindowYOffset + 40;
-        int rightColumnX = contentX + 160;
+        int contentX    = leftPos + subWindowXOffset + 10;
+        int contentY    = topPos  + subWindowYOffset + 40;
+        int rightColX   = contentX + CHALLENGE_STATS_X_OFFSET;
+        int listTopY    = contentY + 26;
+        int listBottomY = topPos + windowHeight - 50;
+        int listHeight  = listBottomY - listTopY;
+        int listWidth   = CHALLENGE_LIST_WIDTH;
 
         this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-            // Left: Rank Info
-            font.draw(poseStack, "Current Rank: ", contentX, contentY, textColor);
-            font.draw(poseStack, demon.getRank().getDisplayName(), contentX + font.width("Current Rank: "), contentY, 0xFFFFFF);
-
             DemonRank currentRank = demon.getRank();
-            DemonProgressionHelper.getNextRank(currentRank).ifPresentOrElse(nextRank -> {
-                if (currentRank.isMoonRank()) {
-                    // Kizuki ranks: Show CHALLENGE button for Blood Battle
-                    font.draw(poseStack, "Next Rank: ", contentX, contentY + 12, textColor);
-                    font.draw(poseStack, nextRank.getDisplayName(), contentX + font.width("Next Rank: "), contentY + 12, 0xFFFFFF);
-                    font.draw(poseStack, Component.literal("Challenge the next rank in combat!").withStyle(ChatFormatting.YELLOW), contentX, contentY + 24, 0xFFFFFF);
 
-                    this.rankUpButton.visible = true;
-                    this.rankUpButton.active = true;
-                    this.rankUpButton.x = leftPos + (windowWidth / 2) - (rankUpButton.getWidth() / 2);
-                    this.rankUpButton.y = topPos + windowHeight - 40;
-                } else {
-                    // Fodder ranks: Tied to reputation system, not BDP
-                    font.draw(poseStack, "Next Rank: ", contentX, contentY + 12, textColor);
-                    font.draw(poseStack, nextRank.getDisplayName(), contentX + font.width("Next Rank: "), contentY + 12, 0xFFFFFF);
-                    font.draw(poseStack, Component.literal("Progress via Reputation").withStyle(ChatFormatting.LIGHT_PURPLE), contentX, contentY + 24, 0xFFFFFF);
-                    font.draw(poseStack, Component.literal("(Demon Notoriety)").withStyle(ChatFormatting.GRAY), contentX, contentY + 36, 0xFFFFFF);
+            // ── Current rank label ──────────────────────────────────────────
+            font.draw(poseStack, "Rank: ", contentX, contentY, textColor);
+            font.draw(poseStack, currentRank.getDisplayName(), contentX + font.width("Rank: "), contentY, 0xCC88FF);
 
-                    // Hide the rank up button for Fodder ranks - progression is reputation-based
-                    this.rankUpButton.visible = false;
+            // ── "Challenges:" header + Refresh button ───────────────────────
+            font.draw(poseStack, "Challenges:", contentX, listTopY - 11, textColor);
+            this.refreshChallengeButton.visible = true;
+            this.refreshChallengeButton.x = contentX + font.width("Challenges:") + 4;
+            this.refreshChallengeButton.y = listTopY - 12;
+
+            // ── Scrollable challenge list ────────────────────────────────────
+            List<ChallengeListS2CPacket.Entry> list = ChallengeListS2CPacket.CACHED_LIST;
+            this.syncChallengeSelection(list);
+            this.clampChallengeListScroll(list.size(), listHeight);
+
+            double guiScale = this.minecraft.getWindow().getGuiScale();
+            RenderSystem.enableScissor(
+                (int)(contentX * guiScale),
+                (int)((this.height - listBottomY) * guiScale),
+                (int)(listWidth * guiScale),
+                (int)(listHeight * guiScale)
+            );
+
+            if (list.isEmpty()) {
+                font.draw(poseStack, "No targets — press Refresh.", contentX + 2, listTopY + 4, 0xAAAAAA);
+            } else {
+                for (int i = 0; i < list.size(); i++) {
+                    ChallengeListS2CPacket.Entry entry = list.get(i);
+                    int entryY = listTopY + (i * moveListEntryHeight) - (int) challengeListScroll;
+                    if (entryY + moveListEntryHeight < listTopY || entryY > listBottomY) continue;
+
+                    // Row background
+                    if (i == selectedChallengeIndex) {
+                        fill(poseStack, contentX - 1, entryY,
+                             contentX + listWidth - 1, entryY + moveListEntryHeight - 1,
+                             0x60A060FF);
+                    } else if (i % 2 == 0) {
+                        fill(poseStack, contentX - 1, entryY,
+                             contentX + listWidth - 1, entryY + moveListEntryHeight - 1,
+                             0x18FFFFFF);
+                    }
+
+                    // Icon + name + BP
+                    String prefix    = entry.isRankChallenge() ? "★ " : "  ";
+                    int    nameColor = entry.isRankChallenge() ? 0xDD88FF : 0xDDDDDD;
+                    String bpLabel   = " ["+entry.bloodPoints()+" BP]";
+                    int nameMaxWidth = listWidth - font.width(prefix) - font.width(bpLabel) - 8;
+                    String displayName = font.plainSubstrByWidth(entry.name(), Math.max(20, nameMaxWidth));
+                    font.draw(poseStack, prefix + displayName, contentX + 2, entryY + 2, nameColor);
+                    font.draw(poseStack, bpLabel,
+                              contentX + listWidth - font.width(bpLabel) - 2, entryY + 2, 0xFFCC44);
                 }
-            }, () -> {
-                font.draw(poseStack, "You have reached the final rank.", contentX, contentY + 24, goldColor);
-                this.rankUpButton.visible = false;
-            });
+            }
+            RenderSystem.disableScissor();
+            this.renderChallengeScrollbar(poseStack, contentX + listWidth + 3, listTopY, listHeight, list.size());
 
-            // Right: Current Attributes
-            font.draw(poseStack, Component.literal("Current Attributes").withStyle(ChatFormatting.GOLD), rightColumnX, contentY, 0xFFFFFF);
-            int statY = contentY + 12;
+            // ── Selected-target footer ───────────────────────────────────────
+            if (this.selectedChallengeEntry != null) {
+                String typeLabel = this.selectedChallengeEntry.isRankChallenge()
+                        ? "§5[Rank Claim] " + this.selectedChallengeEntry.rankLabel()
+                        : "§6[BP Reward] " + this.selectedChallengeEntry.rankLabel();
+                font.draw(poseStack, typeLabel, contentX, listBottomY + 1, 0xFFFFFF);
 
-            float bonusHealth = DemonProgressionHelper.getBonusHealth(demon);
-            font.draw(poseStack, String.format("Bonus Health: +%.1f", bonusHealth), rightColumnX, statY, textColor);
-            statY += 10;
+                this.challengeButton.visible = true;
+                this.challengeButton.active  = true;
+                this.challengeButton.x = contentX;
+                this.challengeButton.y = topPos + windowHeight - 28;
+            } else {
+                font.draw(poseStack, "Select a target to challenge.", contentX, listBottomY + 1, 0x888888);
+                this.challengeButton.visible = false;
+            }
 
-            float bonusDamage = DemonProgressionHelper.getBonusDamage(demon);
-            font.draw(poseStack, String.format("Bonus Damage: +%.0f%%", bonusDamage * 100), rightColumnX, statY, textColor);
-            statY += 10;
+            // ── Right column: stats ──────────────────────────────────────────
+            font.draw(poseStack, "Stats", rightColX, contentY, 0xFFCC44);
+            int sy = contentY + 12;
 
-            float bonusRegen = DemonProgressionHelper.getBonusRegen(demon);
-            font.draw(poseStack, String.format("Regeneration: +%.1f/s", bonusRegen), rightColumnX, statY, textColor);
-            statY += 10;
+            float hp   = DemonProgressionHelper.getBonusHealth(demon);
+            float dmg  = DemonProgressionHelper.getBonusDamage(demon);
+            float regen = DemonProgressionHelper.getBonusRegen(demon);
+            float res  = DemonProgressionHelper.getDamageResistance(demon);
 
-            float damageResist = DemonProgressionHelper.getDamageResistance(demon);
-            font.draw(poseStack, String.format("Resistance: %.0f%%", damageResist * 100), rightColumnX, statY, textColor);
+            font.draw(poseStack, String.format("Health  +%.1f", hp),           rightColX, sy,      textColor); sy += 10;
+            font.draw(poseStack, String.format("Damage  +%.0f%%", dmg * 100f),  rightColX, sy,      textColor); sy += 10;
+            font.draw(poseStack, String.format("Regen   +%.2f/s", regen),       rightColX, sy,      textColor); sy += 10;
+            font.draw(poseStack, String.format("Resist  %.0f%%", res * 100f),   rightColX, sy,      textColor);
         });
     }
 
@@ -560,9 +635,12 @@ public class BreathingMenuScreen extends Screen {
         if (this.minecraft == null || this.minecraft.player == null) return;
 
         int contentTopY = topPos + subWindowYOffset + 32;
-        int listWidth = 100;
+        int listWidth = BDA_LIST_WIDTH;
         int listLeft = leftPos + subWindowXOffset + 5;
         int listHeight = subWindowHeight - 38;
+
+        this.syncBdaSelection();
+        this.clampBdaListScroll(listHeight);
 
         RenderSystem.enableScissor((int)(listLeft * minecraft.getWindow().getGuiScale()), (int)((this.height - (contentTopY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
         for (int i = 0; i < demonArtsList.size(); i++) {
@@ -571,11 +649,15 @@ public class BreathingMenuScreen extends Screen {
             if (entryY + moveListEntryHeight >= contentTopY && entryY <= contentTopY + listHeight) {
                 if (bda == this.selectedBdaForUpgrade) {
                     fill(poseStack, listLeft - 2, entryY, listLeft + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
+                } else if (i % 2 == 0) {
+                    fill(poseStack, listLeft - 2, entryY, listLeft + listWidth, entryY + moveListEntryHeight, 0x18FFFFFF);
                 }
-                this.font.draw(poseStack, bda.getDisplayName(), listLeft + 2, entryY + 2, textColor);
+                String displayName = font.plainSubstrByWidth(bda.getDisplayName(), listWidth - 6);
+                this.font.draw(poseStack, displayName, listLeft + 2, entryY + 2, textColor);
             }
         }
         RenderSystem.disableScissor();
+        this.renderBdaScrollbar(poseStack, listLeft + listWidth + 3, contentTopY, listHeight);
 
         if (this.selectedBdaForUpgrade != null) {
             int detailX = listLeft + listWidth + 10;
@@ -759,15 +841,39 @@ public class BreathingMenuScreen extends Screen {
             }
         }
         if (this.currentTab == Tab.DEMON_PROGRESSION) {
+            if (this.currentDemonTab == DemonSubTab.RANK) {
+                // Challenge list row selection
+                int leftPos  = (this.width  - this.windowWidth)  / 2;
+                int topPos   = (this.height - this.windowHeight) / 2;
+                int contentX = leftPos + subWindowXOffset + 10;
+                int contentY = topPos  + subWindowYOffset + 40;
+                int listTopY    = contentY + 26;
+                int listBottomY = topPos + windowHeight - 50;
+                int listHeight  = listBottomY - listTopY;
+                int listWidth   = CHALLENGE_LIST_WIDTH;
+                if (pMouseX >= contentX && pMouseX < contentX + listWidth
+                        && pMouseY >= listTopY && pMouseY < listTopY + listHeight) {
+                    int clicked = (int) ((pMouseY - listTopY + this.challengeListScroll) / moveListEntryHeight);
+                    List<ChallengeListS2CPacket.Entry> list = ChallengeListS2CPacket.CACHED_LIST;
+                    if (clicked >= 0 && clicked < list.size()) {
+                        this.selectedChallengeIndex = clicked;
+                        this.selectedChallengeEntry = list.get(clicked);
+                        this.ensureChallengeSelectionIsVisible(listHeight);
+                        return true;
+                    }
+                }
+            }
             if (this.currentDemonTab == DemonSubTab.BDA) {
                 int contentTopY = (this.height - this.windowHeight) / 2 + subWindowYOffset + 32;
                 int listLeft = (this.width - this.windowWidth) / 2 + subWindowXOffset + 5;
-                int listWidth = 100;
+                int listWidth = BDA_LIST_WIDTH;
                 int listHeight = subWindowHeight - 38;
                 if (pMouseX >= listLeft && pMouseX < listLeft + listWidth && pMouseY >= contentTopY && pMouseY < contentTopY + listHeight) {
                     int clickedIndex = (int) ((pMouseY - contentTopY + bdaUpgradeScroll) / moveListEntryHeight);
                     if (clickedIndex >= 0 && clickedIndex < this.demonArtsList.size()) {
+                        this.selectedBdaIndex = clickedIndex;
                         this.selectedBdaForUpgrade = this.demonArtsList.get(clickedIndex);
+                        this.ensureBdaSelectionIsVisible(listHeight);
                         return true;
                     }
                 }
@@ -782,7 +888,7 @@ public class BreathingMenuScreen extends Screen {
                     if (pos == null) continue;
                     int iconX = contentX + (int) pos.x;
                     int iconY = contentY + (int) pos.y;
-                    if (pMouseX >= iconX && pMouseX <= iconX + 16 && pMouseY >= iconY && pMouseY <= iconY + 16) {
+                    if (pMouseX >= iconX && pMouseX <= iconX + 68 && pMouseY >= iconY && pMouseY <= iconY + 16) {
                         if (pButton == 0) {
                             ModMessages.sendToServer(new PurchasePassiveC2SPacket(passive));
                             return true;
@@ -821,6 +927,7 @@ public class BreathingMenuScreen extends Screen {
                 .collect(Collectors.toList());
 
         if (!this.demonArtsList.isEmpty() && this.selectedBdaForUpgrade == null) {
+            this.selectedBdaIndex = 0;
             this.selectedBdaForUpgrade = this.demonArtsList.get(0);
         }
         this.bdaUpgradeScroll = 0;
@@ -945,6 +1052,48 @@ public class BreathingMenuScreen extends Screen {
                 return true;
             }
         }
+        if (this.currentTab == Tab.DEMON_PROGRESSION && this.currentDemonTab == DemonSubTab.RANK) {
+            List<ChallengeListS2CPacket.Entry> list = ChallengeListS2CPacket.CACHED_LIST;
+            this.syncChallengeSelection(list);
+            if (!list.isEmpty()) {
+                if (pKeyCode == GLFW.GLFW_KEY_DOWN) {
+                    int nextIndex = this.selectedChallengeIndex < 0 ? 0
+                            : Math.min(this.selectedChallengeIndex + 1, list.size() - 1);
+                    this.selectedChallengeIndex = nextIndex;
+                    this.selectedChallengeEntry = list.get(nextIndex);
+                    this.ensureChallengeSelectionIsVisible(getChallengeListHeight());
+                    return true;
+                } else if (pKeyCode == GLFW.GLFW_KEY_UP) {
+                    int nextIndex = this.selectedChallengeIndex < 0 ? list.size() - 1
+                            : Math.max(this.selectedChallengeIndex - 1, 0);
+                    this.selectedChallengeIndex = nextIndex;
+                    this.selectedChallengeEntry = list.get(nextIndex);
+                    this.ensureChallengeSelectionIsVisible(getChallengeListHeight());
+                    return true;
+                } else if (pKeyCode == GLFW.GLFW_KEY_ENTER || pKeyCode == GLFW.GLFW_KEY_KP_ENTER) {
+                    ChallengeListS2CPacket.Entry entry = this.selectedChallengeEntry;
+                    if (entry != null) {
+                        ModMessages.sendToServer(new InitiateChallengeC2SPacket(entry.id()));
+                        this.onClose();
+                        return true;
+                    }
+                }
+            }
+        }
+        if (this.currentTab == Tab.DEMON_PROGRESSION && this.currentDemonTab == DemonSubTab.BDA && !this.demonArtsList.isEmpty()) {
+            this.syncBdaSelection();
+            if (pKeyCode == GLFW.GLFW_KEY_DOWN) {
+                this.selectedBdaIndex = Math.min(this.selectedBdaIndex + 1, this.demonArtsList.size() - 1);
+                this.selectedBdaForUpgrade = this.demonArtsList.get(this.selectedBdaIndex);
+                this.ensureBdaSelectionIsVisible(getBdaListHeight());
+                return true;
+            } else if (pKeyCode == GLFW.GLFW_KEY_UP) {
+                this.selectedBdaIndex = Math.max(this.selectedBdaIndex - 1, 0);
+                this.selectedBdaForUpgrade = this.demonArtsList.get(this.selectedBdaIndex);
+                this.ensureBdaSelectionIsVisible(getBdaListHeight());
+                return true;
+            }
+        }
         return super.keyPressed(pKeyCode, pScanCode, pModifiers);
     }
 
@@ -959,6 +1108,124 @@ public class BreathingMenuScreen extends Screen {
         } else if (itemBottomY > this.moveListScroll + listHeight) {
             this.moveListScroll = itemBottomY - listHeight;
         }
+    }
+
+    private int getChallengeListHeight() {
+        int topPos = (this.height - this.windowHeight) / 2;
+        int contentY = topPos + subWindowYOffset + 40;
+        int listTopY = contentY + 26;
+        int listBottomY = topPos + windowHeight - 50;
+        return listBottomY - listTopY;
+    }
+
+    private void clearChallengeSelection() {
+        this.selectedChallengeIndex = -1;
+        this.selectedChallengeEntry = null;
+        this.challengeListScroll = 0.0;
+    }
+
+    private void syncChallengeSelection(List<ChallengeListS2CPacket.Entry> list) {
+        if (list.isEmpty()) {
+            this.clearChallengeSelection();
+            return;
+        }
+
+        if (this.selectedChallengeEntry != null) {
+            for (int i = 0; i < list.size(); i++) {
+                if (list.get(i).id().equals(this.selectedChallengeEntry.id())) {
+                    this.selectedChallengeIndex = i;
+                    this.selectedChallengeEntry = list.get(i);
+                    return;
+                }
+            }
+        }
+
+        this.selectedChallengeIndex = Mth.clamp(this.selectedChallengeIndex, 0, list.size() - 1);
+        this.selectedChallengeEntry = list.get(this.selectedChallengeIndex);
+    }
+
+    private void clampChallengeListScroll(int itemCount, int listHeight) {
+        int maxScroll = Math.max(0, (itemCount * moveListEntryHeight) - listHeight);
+        this.challengeListScroll = Mth.clamp(this.challengeListScroll, 0, maxScroll);
+    }
+
+    private void ensureChallengeSelectionIsVisible(int listHeight) {
+        if (this.selectedChallengeIndex < 0) return;
+        int itemTopY = this.selectedChallengeIndex * this.moveListEntryHeight;
+        int itemBottomY = itemTopY + this.moveListEntryHeight;
+
+        if (itemTopY < this.challengeListScroll) {
+            this.challengeListScroll = itemTopY;
+        } else if (itemBottomY > this.challengeListScroll + listHeight) {
+            this.challengeListScroll = itemBottomY - listHeight;
+        }
+        this.clampChallengeListScroll(ChallengeListS2CPacket.CACHED_LIST.size(), listHeight);
+    }
+
+    private void renderChallengeScrollbar(PoseStack poseStack, int x, int y, int height, int itemCount) {
+        int contentHeight = itemCount * moveListEntryHeight;
+        if (contentHeight <= height) return;
+
+        fill(poseStack, x, y, x + 2, y + height, 0x50000000);
+        int thumbHeight = Math.max(12, height * height / contentHeight);
+        int maxScroll = contentHeight - height;
+        int thumbTravel = height - thumbHeight;
+        int thumbY = y + (int) ((this.challengeListScroll / maxScroll) * thumbTravel);
+        fill(poseStack, x, thumbY, x + 2, thumbY + thumbHeight, 0xAAFFCC44);
+    }
+
+    private int getBdaListHeight() {
+        return subWindowHeight - 38;
+    }
+
+    private void syncBdaSelection() {
+        if (this.demonArtsList.isEmpty()) {
+            this.selectedBdaIndex = -1;
+            this.selectedBdaForUpgrade = null;
+            this.bdaUpgradeScroll = 0.0;
+            return;
+        }
+
+        if (this.selectedBdaForUpgrade != null) {
+            int index = this.demonArtsList.indexOf(this.selectedBdaForUpgrade);
+            if (index >= 0) {
+                this.selectedBdaIndex = index;
+                return;
+            }
+        }
+
+        this.selectedBdaIndex = Mth.clamp(this.selectedBdaIndex, 0, this.demonArtsList.size() - 1);
+        this.selectedBdaForUpgrade = this.demonArtsList.get(this.selectedBdaIndex);
+    }
+
+    private void clampBdaListScroll(int listHeight) {
+        int maxScroll = Math.max(0, (this.demonArtsList.size() * moveListEntryHeight) - listHeight);
+        this.bdaUpgradeScroll = Mth.clamp(this.bdaUpgradeScroll, 0, maxScroll);
+    }
+
+    private void ensureBdaSelectionIsVisible(int listHeight) {
+        if (this.selectedBdaIndex < 0) return;
+        int itemTopY = this.selectedBdaIndex * this.moveListEntryHeight;
+        int itemBottomY = itemTopY + this.moveListEntryHeight;
+
+        if (itemTopY < this.bdaUpgradeScroll) {
+            this.bdaUpgradeScroll = itemTopY;
+        } else if (itemBottomY > this.bdaUpgradeScroll + listHeight) {
+            this.bdaUpgradeScroll = itemBottomY - listHeight;
+        }
+        this.clampBdaListScroll(listHeight);
+    }
+
+    private void renderBdaScrollbar(PoseStack poseStack, int x, int y, int height) {
+        int contentHeight = this.demonArtsList.size() * moveListEntryHeight;
+        if (contentHeight <= height) return;
+
+        fill(poseStack, x, y, x + 2, y + height, 0x50000000);
+        int thumbHeight = Math.max(12, height * height / contentHeight);
+        int maxScroll = contentHeight - height;
+        int thumbTravel = height - thumbHeight;
+        int thumbY = y + (int) ((this.bdaUpgradeScroll / maxScroll) * thumbTravel);
+        fill(poseStack, x, thumbY, x + 2, thumbY + thumbHeight, 0xAAFFCC44);
     }
 
     @Override
@@ -993,6 +1260,13 @@ public class BreathingMenuScreen extends Screen {
         if (this.currentTab == Tab.MOVE_LIST && this.formsForSelectedStyle != null) {
             int maxScroll = Math.max(0, (formsForSelectedStyle.size() * moveListEntryHeight) - (128 - 32));
             this.moveListScroll = Mth.clamp(this.moveListScroll - (pDelta * 10), 0, maxScroll);
+            return true;
+        }
+        if (this.currentTab == Tab.DEMON_PROGRESSION && this.currentDemonTab == DemonSubTab.RANK) {
+            List<ChallengeListS2CPacket.Entry> list = ChallengeListS2CPacket.CACHED_LIST;
+            int listHeight = getChallengeListHeight();
+            int maxScroll = Math.max(0, (list.size() * moveListEntryHeight) - listHeight);
+            this.challengeListScroll = Mth.clamp(this.challengeListScroll - (pDelta * 10), 0, maxScroll);
             return true;
         }
         if (this.currentTab == Tab.DEMON_PROGRESSION && this.currentDemonTab == DemonSubTab.BDA) {

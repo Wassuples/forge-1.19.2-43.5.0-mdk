@@ -4,6 +4,7 @@ import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.demon.DemonRank;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.item.custom.HierarchySpawnEggItem;
+import com.wassuples.demonslayer.item.custom.MuzansBloodItem;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -77,7 +78,7 @@ public class ModItems {
                     new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_NICHIRIN_TAB)));
 
     public static final RegistryObject<Item> MUZANS_BLOOD = ITEMS.register("muzans_blood",
-            () -> new Item(new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)
+            () -> new MuzansBloodItem(new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)
                     .food(new FoodProperties.Builder().alwaysEat().effect(() -> new MobEffectInstance(MobEffects.CONFUSION, 200, 1), 1.0F).build())));
 
     public static final RegistryObject<Item> RAW_SCARLET = ITEMS.register("raw_scarlet",

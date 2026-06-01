@@ -1,0 +1,113 @@
+---- Minecraft Crash Report ----
+// Daisy, daisy...
+
+Time: 2026-05-27 05:22:04
+Description: Exception in server tick loop
+
+java.lang.NullPointerException: Exception in server tick loop
+	at java.util.Objects.requireNonNull(Objects.java:209) ~[?:?] {re:mixin}
+	at java.util.ImmutableCollections$List12.<init>(ImmutableCollections.java:556) ~[?:?] {}
+	at java.util.List.of(List.java:812) ~[?:?] {re:mixin}
+	at com.wassuples.demonslayer.nemesis.DemonHierarchyManager.getSimulatedTime(DemonHierarchyManager.java:1047) ~[%23194!/:?] {re:classloading}
+	at com.wassuples.demonslayer.nemesis.DemonHierarchyManager.simulateBattle(DemonHierarchyManager.java:888) ~[%23194!/:?] {re:classloading}
+	at com.wassuples.demonslayer.nemesis.DemonHierarchyManager.simulateFodderVsFodder(DemonHierarchyManager.java:1380) ~[%23194!/:?] {re:classloading}
+	at com.wassuples.demonslayer.nemesis.DemonHierarchyManager.runDailySimulation(DemonHierarchyManager.java:811) ~[%23194!/:?] {re:classloading}
+	at com.wassuples.demonslayer.nemesis.NemesisSystemEvents.onServerTick(NemesisSystemEvents.java:261) ~[%23194!/:?] {re:classloading}
+	at com.wassuples.demonslayer.nemesis.__NemesisSystemEvents_onServerTick_ServerTickEvent.invoke(.dynamic) ~[%23194!/:?] {re:classloading,pl:eventbus:B}
+	at net.minecraftforge.eventbus.ASMEventHandler.invoke(ASMEventHandler.java:73) ~[eventbus-6.0.3.jar%23117!/:?] {}
+	at net.minecraftforge.eventbus.EventBus.post(EventBus.java:315) ~[eventbus-6.0.3.jar%23117!/:?] {}
+	at net.minecraftforge.eventbus.EventBus.post(EventBus.java:296) ~[eventbus-6.0.3.jar%23117!/:?] {}
+	at net.minecraftforge.event.ForgeEventFactory.onPostServerTick(ForgeEventFactory.java:849) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23188%23195!/:?] {re:classloading}
+	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:843) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.client.server.IntegratedServer.tickServer(IntegratedServer.java:84) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/:?] {re:classloading,pl:runtimedistcleaner:A}
+	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:654) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at net.minecraft.server.MinecraftServer.lambda$spin$2(MinecraftServer.java:244) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/:?] {re:classloading,pl:accesstransformer:B}
+	at java.lang.Thread.run(Thread.java:840) ~[?:?] {}
+
+
+A detailed walkthrough of the error, its code path and all known details is as follows:
+---------------------------------------------------------------------------------------
+
+-- System Details --
+Details:
+	Minecraft Version: 1.19.2
+	Minecraft Version ID: 1.19.2
+	Operating System: Windows 10 (amd64) version 10.0
+	Java Version: 17.0.19, Eclipse Adoptium
+	Java VM Version: OpenJDK 64-Bit Server VM (mixed mode, sharing), Eclipse Adoptium
+	Memory: 181010616 bytes (172 MiB) / 1440743424 bytes (1374 MiB) up to 4089446400 bytes (3900 MiB)
+	CPUs: 12
+	Processor Vendor: AuthenticAMD
+	Processor Name: AMD Ryzen 7 7445HS w/ Radeon 740M Graphics     
+	Identifier: AuthenticAMD Family 25 Model 124 Stepping 0
+	Microarchitecture: Zen 3
+	Frequency (GHz): 3.19
+	Number of physical packages: 1
+	Number of physical CPUs: 6
+	Number of logical CPUs: 12
+	Graphics card #0 name: Parsec Virtual Display Adapter
+	Graphics card #0 vendor: Parsec Cloud, Inc.
+	Graphics card #0 VRAM (MB): 0.00
+	Graphics card #0 deviceId: unknown
+	Graphics card #0 versionInfo: DriverVersion=0.45.0.0
+	Graphics card #1 name: Meta Virtual Monitor
+	Graphics card #1 vendor: Meta Inc.
+	Graphics card #1 VRAM (MB): 0.00
+	Graphics card #1 deviceId: unknown
+	Graphics card #1 versionInfo: DriverVersion=5.3.57.114
+	Graphics card #2 name: NVIDIA GeForce RTX 4050 Laptop GPU
+	Graphics card #2 vendor: NVIDIA (0x10de)
+	Graphics card #2 VRAM (MB): 4095.00
+	Graphics card #2 deviceId: 0x28a1
+	Graphics card #2 versionInfo: DriverVersion=32.0.15.9649
+	Graphics card #3 name: AMD Radeon 740M Graphics
+	Graphics card #3 vendor: Advanced Micro Devices, Inc. (0x1002)
+	Graphics card #3 VRAM (MB): 512.00
+	Graphics card #3 deviceId: 0x1901
+	Graphics card #3 versionInfo: DriverVersion=32.0.22042.8003
+	Memory slot #0 capacity (MB): 8192.00
+	Memory slot #0 clockSpeed (GHz): 5.60
+	Memory slot #0 type: Unknown
+	Memory slot #1 capacity (MB): 8192.00
+	Memory slot #1 clockSpeed (GHz): 5.60
+	Memory slot #1 type: Unknown
+	Virtual memory max (MB): 26863.40
+	Virtual memory used (MB): 22942.98
+	Swap memory total (MB): 11264.00
+	Swap memory used (MB): 1294.29
+	JVM Flags: 1 total; -XX:HeapDumpPath=MojangTricksIntelDriversForPerformance_javaw.exe_minecraft.exe.heapdump
+	Server Running: true
+	Player Count: 1 / 8; [ServerPlayer['Dev'/193, l='ServerLevel[Nemesis Testing]', x=-89.30, y=75.00, z=-15.30]]
+	Data Packs: vanilla, mod:terrablender, mod:forge, mod:demonslayer, mod:geckolib3 (incompatible), mod:playeranimator (incompatible)
+	World Generation: Stable
+	Type: Integrated Server (map_client.txt)
+	Is Modded: Definitely; Client brand changed to 'forge'; Server brand changed to 'forge'
+	Launched Version: MOD_DEV
+	ModLauncher: 10.0.9+10.0.9+main.dcd20f30
+	ModLauncher launch target: forgeclientuserdev
+	ModLauncher naming: mcp
+	ModLauncher services: 
+		mixin-0.8.5.jar mixin PLUGINSERVICE 
+		eventbus-6.0.3.jar eventbus PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar slf4jfixer PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar object_holder_definalize PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar runtime_enum_extender PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar capability_token_subclass PLUGINSERVICE 
+		accesstransformers-8.0.4.jar accesstransformer PLUGINSERVICE 
+		fmlloader-1.19.2-43.5.0.jar runtimedistcleaner PLUGINSERVICE 
+		modlauncher-10.0.9.jar mixin TRANSFORMATIONSERVICE 
+		modlauncher-10.0.9.jar fml TRANSFORMATIONSERVICE 
+	FML Language Providers: 
+		minecraft@1.0
+		lowcodefml@null
+		javafml@null
+	Mod List: 
+		forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.|Minecraft                     |minecraft                     |1.19.2              |DONE      |Manifest: a1:d4:5e:04:4f:d3:d6:e0:7b:37:97:cf:77:b0:de:ad:4a:47:ce:8c:96:49:5f:0a:cf:8c:ae:b2:6d:4b:8a:3f
+		terrablender-563928-4618490_mapped_official_1.19.2|TerraBlender                  |terrablender                  |2.0.1.166           |DONE      |Manifest: NOSIGNATURE
+		                                                  |Forge                         |forge                         |43.5.0              |DONE      |Manifest: NOSIGNATURE
+		main                                              |Demon Slayer                  |demonslayer                   |0.0.9               |DONE      |Manifest: NOSIGNATURE
+		geckolib-forge-1.19-3.1.19_mapped_official_1.19.2.|GeckoLib                      |geckolib3                     |3.1.19              |DONE      |Manifest: NOSIGNATURE
+		playeranimator-658587-4418149_mapped_official_1.19|Player Animator               |playeranimator                |1.0.2               |DONE      |Manifest: NOSIGNATURE
+	Crash Report UUID: 087f0cc9-f484-4476-879a-fbd2ddb58366
+	FML: 43.5
+	Forge: net.minecraftforge:43.5.0

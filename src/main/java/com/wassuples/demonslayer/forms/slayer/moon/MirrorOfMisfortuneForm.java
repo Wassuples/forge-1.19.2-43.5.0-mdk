@@ -3,6 +3,7 @@ package com.wassuples.demonslayer.forms.slayer.moon;
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
+import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
@@ -11,6 +12,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -62,6 +64,8 @@ public class MirrorOfMisfortuneForm extends TimedForm {
         List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, damageBox, e -> e != user && e.isAlive());
 
         float currentDamage = BASE_DAMAGE_PER_TICK + (this.ticksActive * DAMAGE_RAMP_PER_TICK);
+        BlockPos groundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(waveCenter));
+        Vec3 groundCenter = Vec3.atBottomCenterOf(groundPos).add(0, 0.08, 0);
 
         for (LivingEntity target : potentialTargets) {
             if (user instanceof Player player) {
@@ -76,6 +80,20 @@ public class MirrorOfMisfortuneForm extends TimedForm {
         }
 
         spawnParticleArcInWorld(level, waveCenter.add(0, 1.5, 0), currentWidth, 120, (int) (currentWidth * 5), user.getYRot(), 0, PURPLE_SLASH);
+        spawnParticleArcInWorld(level, groundCenter, currentWidth * 0.9, 360, (int) (currentWidth * 14), user.getYRot(), 90, ParticleTypes.SOUL_FIRE_FLAME);
+        spawnParticleArcInWorld(level, groundCenter.add(0, 0.25, 0), currentWidth * 0.65, 360, (int) (currentWidth * 12), user.getYRot() + 45.0f, 90, PURPLE_SLASH);
+        // Second outer ring for a layered ground effect
+        spawnParticleArcInWorld(level, groundCenter, currentWidth * 1.05, 360, (int) (currentWidth * 10), user.getYRot() + 22.0f, 90, PURPLE_SLASH);
+
+        int groundSpikes = Math.max(20, (int) (currentWidth * 3.5));
+        for (int i = 0; i < groundSpikes; i++) {
+            double angle = (Math.PI * 2.0 * i / groundSpikes) + progress * Math.PI;
+            double radius = currentWidth * (0.35 + level.random.nextDouble() * 0.65);
+            Vec3 spikePos = groundCenter.add(Math.cos(angle) * radius, 0.05, Math.sin(angle) * radius);
+            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, spikePos.x, spikePos.y, spikePos.z, 3, 0.05, 0.55, 0.05, 0.020);
+            level.sendParticles(ParticleTypes.REVERSE_PORTAL, spikePos.x, spikePos.y + 0.15, spikePos.z, 2, 0.08, 0.35, 0.08, 0.025);
+        }
+
         for (int i = 0; i < 3; i++) {
             Vec3 randomPos = waveCenter.add(
                     (level.random.nextDouble() - 0.5) * currentWidth * 2,

@@ -35,6 +35,9 @@ public class TogglePassiveC2SPacket {
             ServerPlayer player = context.getSender();
             if (player != null) {
                 player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+                    if (demon.getPassiveTier(this.passive) <= 0) {
+                        return;
+                    }
                     demon.setPassiveActive(this.passive, !demon.isPassiveActive(this.passive));
                     ModMessages.sendToPlayer(new PlayerDemonSyncS2CPacket(demon), player);
                 });

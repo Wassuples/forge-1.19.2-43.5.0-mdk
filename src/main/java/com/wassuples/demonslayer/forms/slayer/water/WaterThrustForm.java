@@ -26,8 +26,8 @@ public class WaterThrustForm extends ChargeableForm {
     @Override protected int getReleaseDuration() {
         return 0;
     }
-    @Override protected void onChargeRelease(boolean fullyCharged) {
-        if (fullyCharged) {
+    @Override protected void onChargeRelease(float chargeRatio) {
+        if (chargeRatio >= 1.0f) {
             performGenericAttack(user, SoundEvents.GENERIC_SPLASH, 1.0f, 1.0f);
             dealThrustDamage(user, 8.0, 20.0f);
             spawnLineParticles(level, ParticleTypes.SPLASH, user.getEyePosition(), user.getEyePosition().add(user.getLookAngle().scale(8.0)), 30);

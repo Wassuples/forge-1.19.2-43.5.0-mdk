@@ -1,11 +1,13 @@
 package com.wassuples.demonslayer.forms.slayer.moon;
 
 import com.mojang.math.Vector3f;
-import com.wassuples.demonslayer.forms.baseForms.TimedForm;
+import com.wassuples.demonslayer.forms.baseForms.ChargeableForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
@@ -22,64 +24,141 @@ import static com.wassuples.demonslayer.util.VFXHelper.spawnParticleArcInWorld;
 
 /**
  * Moon Breathing form: Catastrophe.
- *
- * @see com.wassuples.demonslayer.styles.BreathingForms
- * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
  */
-public class CatastropheForm extends TimedForm {
-    private static final int DURATION = 30;
-    private static final double MAX_RADIUS = 20.0;
-    private static final float DAMAGE = 40.0f;
-    private static final float KNOCKBACK = 2.0f;
+public class CatastropheForm extends ChargeableForm {
+    // Moon14: Longer charge = more bursts. Extra charge window expanded significantly.
+    private static final int MAX_EXTRA_CHARGE_TICKS = 160;
+    private static final int BURST_INTERVAL = 9;
+    private static final int BURST_START_TICK = 5;
+    private static final int MIN_BURSTS = 3;
+    private static final int MAX_BURSTS = 14;  // was 8; more bursts reward longer charging
+    private static final double START_RADIUS = 7.0;
+    private static final double RADIUS_PER_BURST = 3.0;
+    private static final float DAMAGE = 28.0f;
+    private static final float KNOCKBACK = 1.8f;
 
-    private static final DustParticleOptions PURPLE_SLASH = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.5f);
-    private final Set<UUID> hitEntities = new HashSet<>();
+    private static final DustParticleOptions PURPLE_SLASH =
+            new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.7f);
+
+    private int releaseTick = 0;
+    private int burstCount = 0;
+    private int burstsReleased = 0;
+    private final Set<UUID> hitThisBurst = new HashSet<>();
 
     public CatastropheForm(LivingEntity user, IForm form) {
-        super(user, form, DURATION);
+        super(user, form);
     }
 
     @Override
-    public void onStart() {
-        level.playSound(null, user.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 1.5f, 1.0f);
-        level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.8f);
-        applyImmobility(user, 10);
+    protected int getMaxChargeTicks() {
+        return chargeGoal + MAX_EXTRA_CHARGE_TICKS;
     }
 
     @Override
-    public void onTick() {
-        super.onTick();
+    protected int getReleaseDuration() {
+        return burstCount <= 0 ? 1 : BURST_START_TICK + burstCount * BURST_INTERVAL + 12;
+    }
 
-        double progress = (double) this.ticksActive / DURATION;
-        double currentRadius = MAX_RADIUS * progress;
-        double previousRadius = MAX_RADIUS * ((double) (this.ticksActive - 1) / DURATION);
+    @Override
+    protected void onChargeStart() {
+        level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 0.9f, 1.25f);
+    }
 
-        AABB searchBox = user.getBoundingBox().inflate(currentRadius);
-        List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, searchBox,
-                e -> e != user && e.isAlive() && !this.hitEntities.contains(e.getUUID()));
+    @Override
+    protected void onChargingTick() {
+        float chargeRatio = Mth.clamp((float) chargeTicks / getMaxChargeTicks(), 0.0f, 1.0f);
+        double radius = 2.0 + chargeRatio * 6.0;
 
-        for (LivingEntity target : potentialTargets) {
-            double distanceToUser = target.distanceTo(user);
-            if (distanceToUser <= currentRadius && distanceToUser > previousRadius) {
-                if (user instanceof Player player) {
-                    target.hurt(DamageSource.playerAttack(player).setExplosion(), DAMAGE);
-                } else {
-                    target.hurt(DamageSource.mobAttack(user).setExplosion(), DAMAGE);
-                }
-
-                Vec3 knockbackDir = target.position().subtract(user.position()).normalize();
-                target.knockback(KNOCKBACK, knockbackDir.x, knockbackDir.z);
-                this.hitEntities.add(target.getUUID());
-            }
+        if (chargeTicks % 6 == 0) {
+            spawnParticleArcInWorld(level, user.position().add(0, 0.15, 0), radius, 360, 28, user.getYRot(), 90, PURPLE_SLASH);
+            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, user.getX(), user.getY() + 0.2, user.getZ(), 8, radius * 0.18, 0.08, radius * 0.18, 0.01);
         }
 
-        for (int i = 0; i < 20; i++) {
-            Vec3 randomDir = new Vec3(level.random.nextGaussian(), level.random.nextGaussian(), level.random.nextGaussian()).normalize();
-            Vec3 particlePos = user.position().add(randomDir.scale(currentRadius));
+        if (chargeTicks == chargeGoal) {
+            level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0f, 0.7f);
+        }
+    }
 
-            float randomYaw = level.random.nextFloat() * 360;
-            float randomPitch = -90 + level.random.nextFloat() * 180;
-            spawnParticleArcInWorld(level, particlePos, 1.5 + progress * 2.0, 120, 10, randomYaw, randomPitch, PURPLE_SLASH);
+    @Override
+    protected void onChargeRelease(float chargeRatio) {
+        this.releaseTick = 0;
+        this.burstsReleased = 0;
+        this.hitThisBurst.clear();
+
+        // Burst count scales continuously from MIN_BURSTS at 0 charge to MAX_BURSTS at full charge.
+        // This means an instant-cast produces a small but real burst, and a full hold produces the
+        // maximum barrage. No binary threshold: every release fires something.
+        this.burstCount = Mth.clamp(
+                MIN_BURSTS + Math.round(chargeRatio * (MAX_BURSTS - MIN_BURSTS)),
+                MIN_BURSTS, MAX_BURSTS);
+
+        if (chargeRatio >= 1.0f) {
+            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 1.4f, 1.0f);
+            level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 0.75f);
+        } else {
+            // Partial charge still sounds dramatic, just quieter.
+            level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.8f + chargeRatio * 0.4f, 0.8f + chargeRatio * 0.25f);
+        }
+        applyImmobility(user, 12 + this.burstCount * BURST_INTERVAL);
+    }
+
+    @Override
+    protected void onReleaseTick() {
+        if (burstCount <= 0) {
+            return;
+        }
+
+        this.releaseTick++;
+        if (this.releaseTick < BURST_START_TICK) {
+            return;
+        }
+
+        int burstSlot = (this.releaseTick - BURST_START_TICK) / BURST_INTERVAL;
+        if (burstSlot >= this.burstCount || burstSlot < this.burstsReleased) {
+            return;
+        }
+
+        this.burstsReleased++;
+        doBurst(burstSlot);
+    }
+
+    @Override
+    protected void onChargeEnd() {
+        this.hitThisBurst.clear();
+    }
+
+    private void doBurst(int burstIndex) {
+        this.hitThisBurst.clear();
+
+        double radius = START_RADIUS + burstIndex * RADIUS_PER_BURST;
+        AABB searchBox = user.getBoundingBox().inflate(radius, 4.0, radius);
+        List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, searchBox,
+                e -> e != user && e.isAlive() && !this.hitThisBurst.contains(e.getUUID()));
+
+        for (LivingEntity target : potentialTargets) {
+            if (target.distanceTo(user) > radius) {
+                continue;
+            }
+
+            if (user instanceof Player player) {
+                target.hurt(DamageSource.playerAttack(player).setExplosion(), DAMAGE);
+            } else {
+                target.hurt(DamageSource.mobAttack(user).setExplosion(), DAMAGE);
+            }
+
+            Vec3 knockbackDir = target.position().subtract(user.position()).normalize();
+            target.knockback(KNOCKBACK, knockbackDir.x, knockbackDir.z);
+            this.hitThisBurst.add(target.getUUID());
+        }
+
+        level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 0.8f, 0.85f + burstIndex * 0.03f);
+        spawnParticleArcInWorld(level, user.position().add(0, 0.2, 0), radius, 360, (int) (radius * 9), user.getYRot(), 90, PURPLE_SLASH);
+        spawnParticleArcInWorld(level, user.position().add(0, 1.2, 0), radius * 0.8, 360, (int) (radius * 7), user.getYRot() + 30.0f, 0, PURPLE_SLASH);
+
+        for (int i = 0; i < 18; i++) {
+            Vec3 randomDir = new Vec3(level.random.nextGaussian(), level.random.nextGaussian() * 0.35, level.random.nextGaussian()).normalize();
+            Vec3 particlePos = user.position().add(randomDir.scale(radius * (0.35 + level.random.nextDouble() * 0.65))).add(0, 0.4, 0);
+            level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, particlePos.x, particlePos.y, particlePos.z, 2, 0.08, 0.08, 0.08, 0.02);
         }
     }
 }

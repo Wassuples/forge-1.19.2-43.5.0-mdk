@@ -58,8 +58,8 @@ public class SunflowerThrustForm extends ChargeableForm {
     }
 
     @Override
-    protected void onChargeRelease(boolean fullyCharged) {
-        if (fullyCharged) {
+    protected void onChargeRelease(float chargeRatio) {
+        if (chargeRatio >= 1.0f) {
             this.direction = user.getLookAngle();
             level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.5f, 1.2f);
         } else {

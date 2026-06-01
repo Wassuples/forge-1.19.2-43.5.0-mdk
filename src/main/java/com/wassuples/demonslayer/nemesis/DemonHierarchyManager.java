@@ -84,6 +84,26 @@ public class DemonHierarchyManager extends SavedData {
             BloodDemonArts.SLEEP, List.of("MIND_AFFECTING")
     );
 
+    // ── Player challenge system ───────────────────────────────────────────────
+
+    /**
+     * A demon the player is allowed to challenge, as delivered to the client.
+     * {@code isRankChallenge} = true means a win claims that Kizuki rank;
+     * false means a BP-only reward.
+     */
+    public record ChallengeEntry(UUID id, String name, int bloodPoints, String rankLabel, boolean isRankChallenge) {}
+
+    /**
+     * Server-side record tracking a pending player-initiated challenge.
+     * Package-private so {@link NemesisSystemEvents} can read it in the kill handler.
+     */
+    record PendingChallenge(UUID targetId, boolean isRankChallenge, @Nullable DemonRank targetRank) {}
+
+    /** Maps player UUID → their pending challenge (at most one at a time). */
+    private final Map<UUID, PendingChallenge> pendingPlayerChallenges = new HashMap<>();
+
+    // ── end challenge system ─────────────────────────────────────────────────
+
     private int worldDayCounter = 0;
     private final Random random = new Random();
 
@@ -780,6 +800,109 @@ public class DemonHierarchyManager extends SavedData {
 
         return new DemonDisplayDataLists(kizukiData, fodderData);
     }
+
+    // ── Challenge target resolution ─────────────────────────────────────────
+
+    /**
+     * Builds the list of NPC demons this player-demon may challenge.
+     *
+     * <ul>
+     *   <li>Kizuki player: rank-taking challenge vs the NPC in the slot above, plus BP-only
+     *       challenges vs lower Kizuki and all fodder.</li>
+     *   <li>{@link DemonRank#ELITE_DEMON}: rank-taking challenge vs LM6, plus BP-only vs fodder.</li>
+     *   <li>All other fodder ranks: BP-only challenges vs fodder NPCs only.</li>
+     * </ul>
+     *
+     * <p>The list is sorted so rank-taking entries appear first, then by BP descending.
+     */
+    public List<com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry> getChallengeableTargets(
+            UUID playerUUID, DemonRank playerRank) {
+
+        List<com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry> entries = new ArrayList<>();
+        DemonRank[] allRanks = DemonRank.values();
+
+        if (playerRank.isMoonRank()) {
+            // --- Kizuki player ---
+
+            // Rank-taking: the NPC in the slot directly above
+            int nextOrd = playerRank.ordinal() + 1;
+            if (nextOrd < allRanks.length && allRanks[nextOrd].isMoonRank()) {
+                DemonRank nextRank = allRanks[nextOrd];
+                UUID aboveId = kizukiSlots.get(nextRank);
+                if (aboveId != null && !aboveId.equals(playerUUID)) {
+                    DemonTrait t = getDemonTrait(aboveId);
+                    if (t != null) {
+                        entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                                aboveId, t.getName(), t.getBloodPoints(),
+                                nextRank.getDisplayName().getString(), true));
+                    }
+                }
+            }
+
+            // BP-only: all Kizuki ranks below the player's own
+            for (int ord = DemonRank.LOWER_MOON_6.ordinal(); ord < playerRank.ordinal(); ord++) {
+                DemonRank rank = allRanks[ord];
+                if (!rank.isMoonRank()) continue;
+                UUID id = kizukiSlots.get(rank);
+                if (id == null || id.equals(playerUUID)) continue;
+                DemonTrait t = getDemonTrait(id);
+                if (t != null) {
+                    entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                            id, t.getName(), t.getBloodPoints(),
+                            rank.getDisplayName().getString(), false));
+                }
+            }
+
+        } else if (playerRank == DemonRank.ELITE_DEMON) {
+            // --- Top fodder player (ELITE_DEMON) ---
+
+            // Rank-taking: LM6 NPC
+            UUID lm6Id = kizukiSlots.get(DemonRank.LOWER_MOON_6);
+            if (lm6Id != null) {
+                DemonTrait t = getDemonTrait(lm6Id);
+                if (t != null) {
+                    entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                            lm6Id, t.getName(), t.getBloodPoints(), "Lower Moon 6", true));
+                }
+            }
+        }
+        // Fodder-only pool for non-Kizuki; Kizuki may also challenge fodder for BP.
+        for (UUID fodderID : rankedFodder) {
+            DemonTrait t = getDemonTrait(fodderID);
+            if (t != null) {
+                entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                        fodderID, t.getName(), t.getBloodPoints(), "Fodder", false));
+            }
+        }
+
+        // Sort: rank challenges first, then by BP descending
+        entries.sort(Comparator
+                .comparing(com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry::isRankChallenge).reversed()
+                .thenComparing(Comparator
+                        .comparingInt(com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry::bloodPoints).reversed()));
+
+        return entries;
+    }
+
+    /** Registers a pending challenge so the kill handler can resolve the reward. */
+    public void registerPlayerChallenge(UUID playerUUID, UUID targetId,
+                                         boolean isRankChallenge, @Nullable DemonRank targetRank) {
+        pendingPlayerChallenges.put(playerUUID, new PendingChallenge(targetId, isRankChallenge, targetRank));
+        setDirty();
+    }
+
+    /** Removes any pending challenge for the player (called on resolution or logout). */
+    public void clearPlayerChallenge(UUID playerUUID) {
+        pendingPlayerChallenges.remove(playerUUID);
+        setDirty();
+    }
+
+    /** Returns the pending challenge for the player, if one exists. */
+    public Optional<PendingChallenge> getPendingChallenge(UUID playerUUID) {
+        return Optional.ofNullable(pendingPlayerChallenges.get(playerUUID));
+    }
+
+    // ── end challenge target resolution ─────────────────────────────────────
 
     public void runDailySimulation(ServerLevel level) {
         worldDayCounter++;
@@ -2233,6 +2356,12 @@ public class DemonHierarchyManager extends SavedData {
 
     public void trySpawnHunterForPlayer(ServerPlayer player) {
         if (player.level.getDifficulty() == Difficulty.PEACEFUL) return;
+
+        // Grace period: Nemesis demons do not hunt players until 4 in-game days (96 000 ticks)
+        // have passed since world creation. This gives new players time to get established.
+        final long HUNT_GRACE_PERIOD_TICKS = 4L * 24000L; // 4 Minecraft days
+        if (player.level.getGameTime() < HUNT_GRACE_PERIOD_TICKS) return;
+
         ResourceLocation currentBiome = player.level.getBiome(player.blockPosition()).unwrapKey().get().location();
 
         // Build candidates from ALL demons — territory match, relationship, or emotion (J2)
@@ -2806,6 +2935,17 @@ public class DemonHierarchyManager extends SavedData {
         // Player intel (H2)
         nbt.put("playerIntel", playerIntelManager.serializeNBT());
 
+        // Save pending player challenges
+        CompoundTag pendingChallengesTag = new CompoundTag();
+        pendingPlayerChallenges.forEach((playerUUID, challenge) -> {
+            CompoundTag ct = new CompoundTag();
+            ct.putUUID("targetId", challenge.targetId());
+            ct.putBoolean("isRankChallenge", challenge.isRankChallenge());
+            if (challenge.targetRank() != null) ct.putString("targetRank", challenge.targetRank().name());
+            pendingChallengesTag.put(playerUUID.toString(), ct);
+        });
+        nbt.put("pendingPlayerChallenges", pendingChallengesTag);
+
         return nbt;
     }
 
@@ -2869,6 +3009,26 @@ public class DemonHierarchyManager extends SavedData {
         // Load player intel (H2)
         if (nbt.contains("playerIntel")) {
             manager.playerIntelManager.deserializeNBT(nbt.getCompound("playerIntel"));
+        }
+
+        // Load pending player challenges
+        if (nbt.contains("pendingPlayerChallenges", 10)) {
+            CompoundTag pct = nbt.getCompound("pendingPlayerChallenges");
+            for (String key : pct.getAllKeys()) {
+                try {
+                    UUID playerUUID = UUID.fromString(key);
+                    CompoundTag ct  = pct.getCompound(key);
+                    UUID targetId          = ct.getUUID("targetId");
+                    boolean isRankChallenge = ct.getBoolean("isRankChallenge");
+                    DemonRank targetRank   = null;
+                    if (ct.contains("targetRank", 8)) {
+                        try { targetRank = DemonRank.valueOf(ct.getString("targetRank")); }
+                        catch (IllegalArgumentException ignored) {}
+                    }
+                    manager.pendingPlayerChallenges.put(playerUUID,
+                            new PendingChallenge(targetId, isRankChallenge, targetRank));
+                } catch (Exception ignored) {}
+            }
         }
 
         // No side effects here; population happens lazily in get().

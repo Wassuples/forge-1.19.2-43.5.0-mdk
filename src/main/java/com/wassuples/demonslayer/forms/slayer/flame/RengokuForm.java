@@ -62,8 +62,8 @@ public class RengokuForm extends ChargeableForm {
     }
 
     @Override
-    protected void onChargeRelease(boolean fullyCharged) {
-        if (fullyCharged) {
+    protected void onChargeRelease(float chargeRatio) {
+        if (chargeRatio >= 1.0f) {
             level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.0f, 0.8f);
             level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_GROWL, SoundSource.PLAYERS, 2.0f, 1.2f);
             this.direction = user.getLookAngle();

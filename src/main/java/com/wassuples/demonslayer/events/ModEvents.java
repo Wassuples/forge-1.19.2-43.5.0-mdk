@@ -1115,11 +1115,21 @@ public class ModEvents {
         player.getCapability(PLAYER_PROGRESSION).ifPresent(progression -> {
             progression.incrementDemonKills();
 
-            if (dead instanceof NemesisDemonEntity && dead.level instanceof ServerLevel serverLevel) {
+            boolean killedKizuki = false;
+            if (dead instanceof DemonEntity demonEntity) {
+                killedKizuki = demonEntity.getDemonRank().isMoonRank();
+            } else if (dead instanceof NemesisDemonEntity && dead.level instanceof ServerLevel serverLevel) {
                 DemonHierarchyManager manager = DemonHierarchyManager.get(serverLevel);
-                if (manager.isKizuki(dead.getUUID())) {
-                    progression.recordKizukiKill();
-                }
+                killedKizuki = manager.isKizuki(dead.getUUID());
+            } else if (dead instanceof Player) {
+                killedKizuki = dead.getCapability(PlayerDemonProvider.PLAYER_DEMON)
+                    .map(PlayerDemon::getRank)
+                    .map(rank -> rank != null && rank.isMoonRank())
+                    .orElse(false);
+            }
+
+            if (killedKizuki) {
+                progression.recordKizukiKill();
             }
         });
 

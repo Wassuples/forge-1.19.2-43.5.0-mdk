@@ -5,6 +5,7 @@ import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.util.Mth;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -45,9 +46,16 @@ public abstract class ChargeableForm extends ActiveForm {
 
     protected abstract int getReleaseDuration();
 
+    protected int getMaxChargeTicks() {
+        return chargeGoal;
+    }
+
     @Override
     public void onStart() {
-        user.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, chargeGoal + 40, 255, false, false));
+        // Use a moderate slowdown (level 1 = -30% speed) so the player can still adjust position
+        // while charging, but can clearly feel the form is active. Level 255 was effectively a
+        // full freeze which made it feel broken.
+        user.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, getMaxChargeTicks() + 40, 1, false, false));
         onChargeStart();
     }
 
@@ -62,7 +70,7 @@ public abstract class ChargeableForm extends ActiveForm {
         }
 
         if (!released) {
-            if (chargeTicks < chargeGoal) {
+            if (chargeTicks < getMaxChargeTicks()) {
                 chargeTicks++;
                 onChargingTick();
             }
@@ -86,13 +94,18 @@ public abstract class ChargeableForm extends ActiveForm {
         }
     }
 
-    public void release(boolean wasFullyCharged) {
-        DemonSlayer.LOGGER.debug("[ChargeForm] release(wasFullyCharged={})", wasFullyCharged);
+    public void release() {
+        DemonSlayer.LOGGER.debug("[ChargeForm] release(chargeTicks={}, maxChargeTicks={})", chargeTicks, getMaxChargeTicks());
         if (this.released) return;
         this.released = true;
         this.ticksActive = 0;
         user.removeEffect(MobEffects.MOVEMENT_SLOWDOWN);
-        onChargeRelease(wasFullyCharged);
+        // Charge ratio: 0.0 = released instantly, 1.0 = held to full max charge.
+        // Subclasses use this to scale their output linearly without any binary threshold.
+        float chargeRatio = getMaxChargeTicks() > 0
+                ? Mth.clamp((float) chargeTicks / getMaxChargeTicks(), 0.0f, 1.0f)
+                : 1.0f;
+        onChargeRelease(chargeRatio);
 
         if (getReleaseDuration() <= 0) {
             if (ActiveFormManager.getActiveForm(user) == this) {
@@ -105,7 +118,7 @@ public abstract class ChargeableForm extends ActiveForm {
 
     protected abstract void onChargeStart();
     protected abstract void onChargingTick();
-    protected abstract void onChargeRelease(boolean fullyCharged);
+    protected abstract void onChargeRelease(float chargeRatio);
     protected abstract void onReleaseTick();
     protected abstract void onChargeEnd();
 }

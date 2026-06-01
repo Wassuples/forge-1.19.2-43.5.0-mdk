@@ -110,12 +110,21 @@ public class PlayerDemon {
     public void setDemon(boolean demon) {
         isDemon = demon;
     }
-    public void setBloodPoints(int amount) { this.bloodPoints = amount; }
+    public void setBloodPoints(int amount) {
+        this.bloodPoints = Math.max(0, amount);
+        if (this.isDemon && !this.rank.isMoonRank()) {
+            this.rank = DemonProgressionHelper.getFodderRankForBloodPoints(this.bloodPoints);
+        }
+    }
     public DemonRank getRank() {
         return rank;
     }
     public void setRank(DemonRank rank) {
-        this.rank = rank;
+        if (this.isDemon && !rank.isMoonRank()) {
+            this.rank = DemonProgressionHelper.getFodderRankForBloodPoints(this.bloodPoints);
+        } else {
+            this.rank = rank;
+        }
     }
     public int getBloodPoints() {
         return bloodPoints;
@@ -184,6 +193,7 @@ public class PlayerDemon {
             this.unlockedPassives.put(passive, tier);
         } else {
             this.unlockedPassives.remove(passive);
+            this.activePassives.remove(passive);
         }
     }
 
@@ -191,7 +201,7 @@ public class PlayerDemon {
         return this.activePassives.contains(passive);
     }
     public void setPassiveActive(DemonPassive passive, boolean isActive) {
-        if (isActive) {
+        if (isActive && this.getPassiveTier(passive) > 0) {
             this.activePassives.add(passive);
         } else {
             this.activePassives.remove(passive);
@@ -211,7 +221,7 @@ public class PlayerDemon {
 
     public void addBloodPoints(int amount) {
         if(!isDemon) return;
-        this.bloodPoints += amount;
+        this.setBloodPoints(this.bloodPoints + amount);
     }
 
     public void setGazeTarget(@Nullable UUID targetId) {
@@ -298,7 +308,7 @@ public class PlayerDemon {
                 this.rank = DemonRank.FODDER;
             }
         }
-        this.bloodPoints = nbt.getInt("bloodPoints");
+        this.setBloodPoints(nbt.getInt("bloodPoints"));
         if (nbt.contains("equippedBda")) {
             try {
                 this.equippedBda = BloodDemonArts.valueOf(nbt.getString("equippedBda"));

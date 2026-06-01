@@ -31,11 +31,12 @@ public class ThousandNeedleFishKillForm extends ActiveForm {
             double angle = (2 * Math.PI / FISH_COUNT) * i;
             double x = user.getX() + Math.cos(angle) * SPAWN_RADIUS;
             double z = user.getZ() + Math.sin(angle) * SPAWN_RADIUS;
-            double y = user.getY() + 1.0;
+            // Spawn at foot level so the fish land immediately; gravity does the rest.
+            double y = user.getY();
 
             KillerGoldfishEntity fish = ModEntityTypes.KILLER_GOLDFISH.get().create(level);
             if (fish != null) {
-                fish.setPos(x, y, z);
+                fish.moveTo(x, y, z, user.getYRot(), 0);
                 fish.setOwner(user);
                 level.addFreshEntity(fish);
             }
