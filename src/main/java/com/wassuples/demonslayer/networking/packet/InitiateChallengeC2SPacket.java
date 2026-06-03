@@ -20,7 +20,7 @@ import java.util.function.Supplier;
  *
  * <p>The server validates that the target is in the player's legal challenge pool,
  * spawns the demon entity near the player, and registers a
- * {@link DemonHierarchyManager.PendingChallenge} so that the kill event can grant
+ * DemonHierarchyManager.PendingChallenge so that the kill event can grant
  * the correct reward.
  */
 public class InitiateChallengeC2SPacket {

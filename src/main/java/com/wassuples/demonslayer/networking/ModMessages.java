@@ -291,6 +291,18 @@ public class ModMessages {
                 .encoder(InitiateChallengeC2SPacket::toBytes)
                 .consumerMainThread(InitiateChallengeC2SPacket::handle)
                 .add();
+
+        net.messageBuilder(StartStyleMinigameS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+            .decoder(StartStyleMinigameS2CPacket::new)
+            .encoder(StartStyleMinigameS2CPacket::toBytes)
+            .consumerMainThread(StartStyleMinigameS2CPacket::handle)
+            .add();
+
+        net.messageBuilder(StyleMinigameResultC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+            .decoder(StyleMinigameResultC2SPacket::new)
+            .encoder(StyleMinigameResultC2SPacket::toBytes)
+            .consumerMainThread(StyleMinigameResultC2SPacket::handle)
+            .add();
     }
 
     public static <MSG> void sendToServer(MSG message) {
