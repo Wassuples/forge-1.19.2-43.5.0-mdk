@@ -1051,9 +1051,9 @@ public class DemonHierarchyManager extends SavedData {
 
     private record EffectiveStats(float health, float damage, float agility) {}
     private EffectiveStats getEffectiveStats(DemonTrait demon, DemonTrait opponent, BattleContext context, boolean isHomeField) {
-        float health = (demon.getVigor() * 10) + (demon.getBloodPoints() / 2f);
-        float damage = demon.getStrength() * 5f;
-        float agility = demon.getAgility();
+        float health = (demon.getVigor() * 10) + (demon.getBloodPoints() / 1.5f);
+        float damage = (demon.getStrength() * 5f) + (demon.getBloodPoints() / 15f);
+        float agility = demon.getAgility() + (demon.getBloodPoints() / 40f);
 
         if (isHomeField) {
             float bonus = 1.0f;
@@ -1461,10 +1461,16 @@ public class DemonHierarchyManager extends SavedData {
     }
 
     private void simulateKizukiVsKizuki(ServerLevel level) {
-        // All moon ranks EXCEPT the highest (UM1) can challenge the rank above them
+        // All moon ranks EXCEPT the highest (UM1) can challenge the rank above
         List<DemonRank> challengerCandidates = Arrays.stream(DemonRank.values())
-                .filter(r -> r.isMoonRank() && r.ordinal() < DemonRank.UPPER_MOON_1.ordinal())
-                .toList();
+            .filter(r -> {
+                if (!r.isMoonRank()) return false;
+                if (r == DemonRank.UPPER_MOON_1) return false;
+
+                return kizukiSlots.containsKey(r)
+                    && kizukiSlots.containsKey(DemonRank.values()[r.ordinal() + 1]);
+            })
+            .toList();
 
         if (challengerCandidates.isEmpty()) {
             System.out.println("[NEMESIS DEBUG] Skipping Kizuki vs Kizuki - no challenger candidates available");
@@ -1594,88 +1600,68 @@ public class DemonHierarchyManager extends SavedData {
                 // If this slot is already filled, skip
                 if (kizukiSlots.containsKey(targetRank)) continue;
 
-                // For LM6 (the lowest moon rank), try to promote top fodder directly
-                if (targetRank == DemonRank.LOWER_MOON_6) {
-                    int bpThreshold = getOrganicPromotionBpThreshold(targetRank);
-                    Optional<UUID> topFodderUUID = rankedFodder.stream()
-                            .filter(uuid -> {
-                                DemonTrait t = getDemonTrait(uuid);
-                                return t != null && t.getBloodPoints() >= bpThreshold;
-                            })
-                            .max(Comparator.comparingInt(uuid -> {
-                                DemonTrait t = getDemonTrait(uuid);
-                                return t != null ? t.getBloodPoints() : 0;
-                            }));
-
-                    if (topFodderUUID.isPresent()) {
-                        UUID promoterId = topFodderUUID.get();
-                        DemonTrait fodderTrait = getDemonTrait(promoterId);
-                        String fodderName = fodderTrait != null ? fodderTrait.getName() : "Unknown";
-                        int fodderBP = fodderTrait != null ? fodderTrait.getBloodPoints() : 0;
-
-                        System.out.println("[NEMESIS DEBUG] VACANCY FILL: Promoting fodder " + fodderName +
-                            " (BP: " + fodderBP + ", threshold: " + bpThreshold +
-                            ") to vacant " + targetRank.getDisplayName().getString());
-
-                        rankedFodder.remove(promoterId);
-                        kizukiSlots.put(targetRank, promoterId);
-
-                        if (fodderTrait != null) {
-                            fodderTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, promoterId));
-                            logStoryEvent(StoryEvent.promotion(time, promoterId,
-                                    fodderTrait.getName(), targetRank.getDisplayName().getString()));
-                        }
-
-                        broadcastToPlayers(level, Component.literal(
-                                "§5" + fodderName + " has risen to the rank of " + targetRank.getDisplayName().getString() + "!")
-                                .withStyle(ChatFormatting.DARK_PURPLE));
-
-                        promotedAny = true;
-                        setDirty();
-                    }
-                    continue;
-                }
-
-                // For all other moon ranks, look at the rank directly below
-                DemonRank belowRank = allRanks[ord - 1];
-                if (!belowRank.isMoonRank()) continue;
-
-                UUID belowDemonId = kizukiSlots.get(belowRank);
-                if (belowDemonId == null) continue; // rank below is also empty
-
-                DemonTrait belowTrait = getDemonTrait(belowDemonId);
-                if (belowTrait == null) continue;
-
                 int bpThreshold = getOrganicPromotionBpThreshold(targetRank);
 
-                if (belowTrait.getBloodPoints() >= bpThreshold) {
-                    System.out.println("[NEMESIS DEBUG] VACANCY FILL: " + belowTrait.getName() +
-                        " (BP: " + belowTrait.getBloodPoints() + ", threshold: " + bpThreshold +
-                        ") promoted from " + belowRank.getDisplayName().getString() +
-                        " to vacant " + targetRank.getDisplayName().getString());
+                UUID bestCandidateId = null;
+                DemonRank bestCandidateRank = null;
+                int bestCandidateBP = -1;
 
-                    kizukiSlots.put(targetRank, belowDemonId);
-                    kizukiSlots.remove(belowRank);
+                // Check Fodder first
+                for (UUID fodderId : rankedFodder) {
+                    DemonTrait t = getDemonTrait(fodderId);
+                    if (t != null && t.getBloodPoints() > bestCandidateBP) {
+                        bestCandidateBP = t.getBloodPoints();
+                        bestCandidateId = fodderId;
+                    }
+                }
 
-                    belowTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, belowDemonId));
-                    logStoryEvent(StoryEvent.promotion(time, belowDemonId,
-                            belowTrait.getName(), targetRank.getDisplayName().getString()));
+                // Check all Kizuki ranks BELOW current
+                for (int lowerOrd = ord - 1; lowerOrd >= DemonRank.LOWER_MOON_6.ordinal(); lowerOrd--) {
+                    DemonRank r = allRanks[lowerOrd];
+                    if (kizukiSlots.containsKey(r)) {
+                        UUID id = kizukiSlots.get(r);
+                        DemonTrait t = getDemonTrait(id);
+                        if (t != null && t.getBloodPoints() > bestCandidateBP) {
+                            bestCandidateBP = t.getBloodPoints();
+                            bestCandidateId = id;
+                            bestCandidateRank = r;
+                        }
+                    }
+                }
+
+                if (bestCandidateId != null && bestCandidateBP >= bpThreshold) {
+                    DemonTrait trait = getDemonTrait(bestCandidateId);
+                    String candidateName = trait != null ? trait.getName() : "Unknown";
+
+                    System.out.println("[NEMESIS DEBUG] VACANCY FILL: " + candidateName +
+                        " (BP: " + bestCandidateBP + ", threshold: " + bpThreshold +
+                        ") promoted to vacant " + targetRank.getDisplayName().getString());
+
+                    kizukiSlots.put(targetRank, bestCandidateId);
+
+                    if (bestCandidateRank != null) {
+                        kizukiSlots.remove(bestCandidateRank);
+                    } else {
+                        rankedFodder.remove(bestCandidateId);
+                    }
+
+                    if (trait != null) {
+                        trait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, bestCandidateId));
+                        logStoryEvent(StoryEvent.promotion(time, bestCandidateId,
+                                trait.getName(), targetRank.getDisplayName().getString()));
+                    }
 
                     broadcastToPlayers(level, Component.literal(
-                            "§5" + belowTrait.getName() + " " + belowTrait.getTitle() +
-                            " has risen to the rank of " + targetRank.getDisplayName().getString() + "!")
+                            "§5" + candidateName + " has risen to the rank of " + targetRank.getDisplayName().getString() + "!")
                             .withStyle(ChatFormatting.DARK_PURPLE));
 
-                    // The rank below is now vacant — handle it via cascade (pulls fodder up)
-                    handlePowerVacuum(belowRank);
+                    if (bestCandidateRank != null) {
+                        // The rank below is now vacant — handle it via cascade (pulls fodder in)
+                        handlePowerVacuum(bestCandidateRank);
+                    }
 
                     promotedAny = true;
                     setDirty();
-                } else {
-                    System.out.println("[NEMESIS DEBUG] " + belowTrait.getName() + " in " +
-                        belowRank.getDisplayName().getString() + " not strong enough for vacant " +
-                        targetRank.getDisplayName().getString() + " (BP: " + belowTrait.getBloodPoints() +
-                        " < threshold: " + bpThreshold + ")");
                 }
             }
         } while (promotedAny);
