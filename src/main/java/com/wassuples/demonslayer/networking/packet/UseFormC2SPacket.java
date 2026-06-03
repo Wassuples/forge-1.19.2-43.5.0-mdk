@@ -6,6 +6,8 @@ import com.wassuples.demonslayer.cooldown.PlayerCooldowns;
 import com.wassuples.demonslayer.cooldown.PlayerCooldownsProvider;
 import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.item.custom.HashiraSwordHelper;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
 import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
@@ -89,12 +91,21 @@ public class UseFormC2SPacket {
 
         currentForm.performAction(player, player.getLevel());
 
+        // Only apply cooldown if the form was actually STARTED.
+        // If performAction stopped a toggle form (e.g. Disorder), getActiveForm() now returns
+        // null — applying a cooldown in that case would lock out immediate re-activation.
         if (currentForm.getInputType() == IForm.InputType.PRESS) {
-            int cooldownTicks = currentForm.getCooldownTicks(player);
-            cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
+            ActiveForm formAfterAction = ActiveFormManager.getActiveForm(player);
+            boolean formWasStarted = formAfterAction != null
+                    && formAfterAction.getForm() == currentForm;
 
-            if (cooldownTicks > 0) {
-                cooldowns.setOnCooldownAtLeastOneTick(player.level, currentForm, cooldownTicks);
+            if (formWasStarted) {
+                int cooldownTicks = currentForm.getCooldownTicks(player);
+                cooldownTicks = PlayerCooldowns.applyFormsCooldownMultiplier(player.level, cooldownTicks);
+
+                if (cooldownTicks > 0) {
+                    cooldowns.setOnCooldownAtLeastOneTick(player.level, currentForm, cooldownTicks);
+                }
             }
         }
     }

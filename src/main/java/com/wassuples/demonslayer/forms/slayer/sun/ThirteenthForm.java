@@ -155,9 +155,9 @@ public class ThirteenthForm extends ActiveForm {
             return;
         }
 
-        // Special-case: SUN_8 is a ChargeableForm and needs its release phase started.
+        // Special-case: SUN_8 is a ChargeableForm and needs its release phase started at full charge.
         if (created instanceof SunflowerThrustForm thrust) {
-            thrust.release(true);
+            thrust.release();
         }
 
         this.currentSubForm = created;

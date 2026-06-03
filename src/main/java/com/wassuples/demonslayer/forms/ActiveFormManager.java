@@ -46,6 +46,7 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import org.jetbrains.annotations.Nullable;
@@ -178,21 +179,6 @@ public  class ActiveFormManager {
         if (form.getInputType() != BreathingForms.InputType.HOLD) return;
         start(user, form);
     }
-    public static void releaseCharge(LivingEntity user) {
-        ActiveForm activeForm = ACTIVE_FORMS.get(user.getUUID());
-        if (activeForm != null) {
-            System.out.println("[DEBUG] ==> Attempting to RELEASE charge for active form: " + activeForm.getForm().getDisplayName());
-            if (activeForm instanceof ChargeableForm chargeable) {
-                boolean wasFullyCharged = chargeable.chargeTicks >= chargeable.chargeGoal;
-                System.out.println("[DEBUG] Charge was " + (wasFullyCharged ? "SUCCESSFUL" : "INCOMPLETE"));
-                chargeable.release(wasFullyCharged);
-            } else {
-                System.out.println("[DEBUG] ERROR: Active form is not a ChargeableForm!");
-            }
-        } else {
-            System.out.println("[DEBUG] ERROR: releaseCharge() called, but no active form was found.");
-        }
-    }
 
     @Nullable
     public static ActiveForm getActiveForm(LivingEntity user) {
@@ -249,6 +235,31 @@ public  class ActiveFormManager {
                 for (ActiveForm buff : buffForms.values()) {
                     buff.onHurt(event);
                 }
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogout(PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player) {
+            // Clean up any form still running for this player. Without this, the static
+            // ACTIVE_FORMS / BUFF_FORMS maps retain stale entries across disconnects.
+            // On reconnect the stale entry would block the very first form activation
+            // attempt (the interruptibility guard sees a phantom non-null active form).
+            ActiveForm staleForm = ACTIVE_FORMS.remove(player.getUUID());
+            if (staleForm != null) {
+                // Call onStop() for any cleanup the form registered (e.g. removing effects).
+                // Pass notifyClient=false — the player is gone, no packet to send.
+                staleForm.onStop();
+                DemonSlayer.LOGGER.info("[ActiveForm] Cleared stale active form '{}' for disconnecting player {}",
+                        staleForm.getForm().getDisplayName(), player.getGameProfile().getName());
+            }
+
+            Map<IForm, ActiveForm> staleBuffs = BUFF_FORMS.remove(player.getUUID());
+            if (staleBuffs != null && !staleBuffs.isEmpty()) {
+                staleBuffs.values().forEach(ActiveForm::onStop);
+                DemonSlayer.LOGGER.info("[ActiveForm] Cleared {} stale buff form(s) for disconnecting player {}",
+                        staleBuffs.size(), player.getGameProfile().getName());
             }
         }
     }
@@ -325,6 +336,7 @@ public  class ActiveFormManager {
                 .put(SERPENT_5, SlitheringSerpentForm::new)
                 // MOON
                 .put(MOON_2, PearlFlowerMoongazingForm::new)
+                .put(MOON_3, LoathsomeMoonChainsForm::new)
                 .put(MOON_5, CalamitousEddyForm::new)
                 .put(MOON_6, PerpetualNightForm::new)
                 .put(MOON_7, MirrorOfMisfortuneForm::new)

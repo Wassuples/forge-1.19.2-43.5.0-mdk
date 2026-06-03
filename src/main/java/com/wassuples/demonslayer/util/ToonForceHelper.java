@@ -156,6 +156,12 @@ public final class ToonForceHelper {
         player.setSprinting(false);
     }
 
+    public static void tickBananaSpin(LivingEntity target) {
+        if (target instanceof Player player) {
+            tickBananaSpin(player);
+        }
+    }
+
     public static void recordFishHumiliation(LivingEntity user, LivingEntity target) {
         if (!(target instanceof NemesisDemonEntity nemesis) || !(target.level instanceof ServerLevel level)) {
             return;

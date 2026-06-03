@@ -9,35 +9,14 @@ import net.minecraftforge.network.NetworkRegistry;
 import net.minecraftforge.network.PacketDistributor;
 import net.minecraftforge.network.simple.SimpleChannel;
 
-/**
- * Central networking channel registration for this mod.
- *
- * <p>Responsibilities:
- *
- * <ul>
- *   <li>Creates the {@link SimpleChannel} used for all mod packets.</li>
- *   <li>Registers packet types and their encoders/decoders/handlers.</li>
- *   <li>Provides small convenience helpers for sending messages.</li>
- * </ul>
- *
- * <p>Note: protocol versioning is currently permissive ({@code clientAcceptedVersions/serverAcceptedVersions}
- * accept all). If you ever publish builds that may connect to different mod versions, consider tightening this.
- */
 public class ModMessages {
     private static SimpleChannel INSTANCE;
-
     private static int packetId = 0;
 
-    /** @return the next unique packet ID for registration. */
     private static int id() {
         return packetId++;
     }
 
-    /**
-     * Registers all packets.
-     *
-     * <p>Expected to be called during mod init (common setup).
-     */
     public static void register() {
         SimpleChannel net = NetworkRegistry.ChannelBuilder
                 .named(new ResourceLocation(DemonSlayer.MOD_ID, "messages"))
@@ -293,19 +272,47 @@ public class ModMessages {
                 .decoder(HeatLightningCracksS2CPacket::new)
                 .consumerMainThread(HeatLightningCracksS2CPacket::handle)
                 .add();
+
+        // ── Challenge system ──────────────────────────────────────────────
+        net.messageBuilder(RequestChallengeListC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(RequestChallengeListC2SPacket::new)
+                .encoder(RequestChallengeListC2SPacket::toBytes)
+                .consumerMainThread(RequestChallengeListC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(ChallengeListS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(ChallengeListS2CPacket::new)
+                .encoder(ChallengeListS2CPacket::toBytes)
+                .consumerMainThread(ChallengeListS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(InitiateChallengeC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(InitiateChallengeC2SPacket::new)
+                .encoder(InitiateChallengeC2SPacket::toBytes)
+                .consumerMainThread(InitiateChallengeC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(StartStyleMinigameS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+            .decoder(StartStyleMinigameS2CPacket::new)
+            .encoder(StartStyleMinigameS2CPacket::toBytes)
+            .consumerMainThread(StartStyleMinigameS2CPacket::handle)
+            .add();
+
+        net.messageBuilder(StyleMinigameResultC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+            .decoder(StyleMinigameResultC2SPacket::new)
+            .encoder(StyleMinigameResultC2SPacket::toBytes)
+            .consumerMainThread(StyleMinigameResultC2SPacket::handle)
+            .add();
     }
 
-    /** Sends a message from client to server. */
     public static <MSG> void sendToServer(MSG message) {
         INSTANCE.sendToServer(message);
     }
 
-    /** Sends a message from server to a specific player. */
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
         INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), message);
     }
 
-    /** Sends a message from server to all connected players. */
     public static <MSG> void sendToClients(MSG message) {
         INSTANCE.send(PacketDistributor.ALL.noArg(), message);
     }

@@ -84,6 +84,26 @@ public class DemonHierarchyManager extends SavedData {
             BloodDemonArts.SLEEP, List.of("MIND_AFFECTING")
     );
 
+    // ── Player challenge system ───────────────────────────────────────────────
+
+    /**
+     * A demon the player is allowed to challenge, as delivered to the client.
+     * {@code isRankChallenge} = true means a win claims that Kizuki rank;
+     * false means a BP-only reward.
+     */
+    public record ChallengeEntry(UUID id, String name, int bloodPoints, String rankLabel, boolean isRankChallenge) {}
+
+    /**
+     * Server-side record tracking a pending player-initiated challenge.
+     * Package-private so {@link NemesisSystemEvents} can read it in the kill handler.
+     */
+    record PendingChallenge(UUID targetId, boolean isRankChallenge, @Nullable DemonRank targetRank) {}
+
+    /** Maps player UUID → their pending challenge (at most one at a time). */
+    private final Map<UUID, PendingChallenge> pendingPlayerChallenges = new HashMap<>();
+
+    // ── end challenge system ─────────────────────────────────────────────────
+
     private int worldDayCounter = 0;
     private final Random random = new Random();
 
@@ -781,6 +801,109 @@ public class DemonHierarchyManager extends SavedData {
         return new DemonDisplayDataLists(kizukiData, fodderData);
     }
 
+    // ── Challenge target resolution ─────────────────────────────────────────
+
+    /**
+     * Builds the list of NPC demons this player-demon may challenge.
+     *
+     * <ul>
+     *   <li>Kizuki player: rank-taking challenge vs the NPC in the slot above, plus BP-only
+     *       challenges vs lower Kizuki and all fodder.</li>
+     *   <li>{@link DemonRank#ELITE_DEMON}: rank-taking challenge vs LM6, plus BP-only vs fodder.</li>
+     *   <li>All other fodder ranks: BP-only challenges vs fodder NPCs only.</li>
+     * </ul>
+     *
+     * <p>The list is sorted so rank-taking entries appear first, then by BP descending.
+     */
+    public List<com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry> getChallengeableTargets(
+            UUID playerUUID, DemonRank playerRank) {
+
+        List<com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry> entries = new ArrayList<>();
+        DemonRank[] allRanks = DemonRank.values();
+
+        if (playerRank.isMoonRank()) {
+            // --- Kizuki player ---
+
+            // Rank-taking: the NPC in the slot directly above
+            int nextOrd = playerRank.ordinal() + 1;
+            if (nextOrd < allRanks.length && allRanks[nextOrd].isMoonRank()) {
+                DemonRank nextRank = allRanks[nextOrd];
+                UUID aboveId = kizukiSlots.get(nextRank);
+                if (aboveId != null && !aboveId.equals(playerUUID)) {
+                    DemonTrait t = getDemonTrait(aboveId);
+                    if (t != null) {
+                        entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                                aboveId, t.getName(), t.getBloodPoints(),
+                                nextRank.getDisplayName().getString(), true));
+                    }
+                }
+            }
+
+            // BP-only: all Kizuki ranks below the player's own
+            for (int ord = DemonRank.LOWER_MOON_6.ordinal(); ord < playerRank.ordinal(); ord++) {
+                DemonRank rank = allRanks[ord];
+                if (!rank.isMoonRank()) continue;
+                UUID id = kizukiSlots.get(rank);
+                if (id == null || id.equals(playerUUID)) continue;
+                DemonTrait t = getDemonTrait(id);
+                if (t != null) {
+                    entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                            id, t.getName(), t.getBloodPoints(),
+                            rank.getDisplayName().getString(), false));
+                }
+            }
+
+        } else if (playerRank == DemonRank.ELITE_DEMON) {
+            // --- Top fodder player (ELITE_DEMON) ---
+
+            // Rank-taking: LM6 NPC
+            UUID lm6Id = kizukiSlots.get(DemonRank.LOWER_MOON_6);
+            if (lm6Id != null) {
+                DemonTrait t = getDemonTrait(lm6Id);
+                if (t != null) {
+                    entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                            lm6Id, t.getName(), t.getBloodPoints(), "Lower Moon 6", true));
+                }
+            }
+        }
+        // Fodder-only pool for non-Kizuki; Kizuki may also challenge fodder for BP.
+        for (UUID fodderID : rankedFodder) {
+            DemonTrait t = getDemonTrait(fodderID);
+            if (t != null) {
+                entries.add(new com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry(
+                        fodderID, t.getName(), t.getBloodPoints(), "Fodder", false));
+            }
+        }
+
+        // Sort: rank challenges first, then by BP descending
+        entries.sort(Comparator
+                .comparing(com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry::isRankChallenge).reversed()
+                .thenComparing(Comparator
+                        .comparingInt(com.wassuples.demonslayer.networking.packet.ChallengeListS2CPacket.Entry::bloodPoints).reversed()));
+
+        return entries;
+    }
+
+    /** Registers a pending challenge so the kill handler can resolve the reward. */
+    public void registerPlayerChallenge(UUID playerUUID, UUID targetId,
+                                         boolean isRankChallenge, @Nullable DemonRank targetRank) {
+        pendingPlayerChallenges.put(playerUUID, new PendingChallenge(targetId, isRankChallenge, targetRank));
+        setDirty();
+    }
+
+    /** Removes any pending challenge for the player (called on resolution or logout). */
+    public void clearPlayerChallenge(UUID playerUUID) {
+        pendingPlayerChallenges.remove(playerUUID);
+        setDirty();
+    }
+
+    /** Returns the pending challenge for the player, if one exists. */
+    public Optional<PendingChallenge> getPendingChallenge(UUID playerUUID) {
+        return Optional.ofNullable(pendingPlayerChallenges.get(playerUUID));
+    }
+
+    // ── end challenge target resolution ─────────────────────────────────────
+
     public void runDailySimulation(ServerLevel level) {
         worldDayCounter++;
         System.out.println("[NEMESIS DEBUG] ═══ Starting Daily Simulation for Day " + worldDayCounter + " ═══");
@@ -818,15 +941,20 @@ public class DemonHierarchyManager extends SavedData {
             System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Skipping Challenger vs Kizuki battles (not divisible by 3)");
         }
 
-        // Kizuki vs Kizuki. Every 9-10 days, and less likely
-        if (worldDayCounter > 0 && worldDayCounter % 9 == 0 && random.nextFloat() < 0.5f) { // every 9 days, 50% chance
-            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " is divisible by 9 and 50% roll passed - Simulating Kizuki vs Kizuki battles");
+        // Kizuki vs Kizuki. Every 3 days with a 50% roll = fires roughly every 6 days on average.
+        // Previously this ran every 9 days, which meant a sparse hierarchy could go weeks without
+        // any Kizuki-tier battles, preventing BP redistribution at the top of the chain.
+        if (worldDayCounter > 0 && worldDayCounter % 3 == 0 && random.nextFloat() < 0.5f) {
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Simulating Kizuki vs Kizuki battles (3-day window, 50% roll passed)");
             simulateKizukiVsKizuki(level);
-        } else if (worldDayCounter > 0 && worldDayCounter % 9 == 0) {
-            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " is divisible by 9 but 50% roll failed - Skipping Kizuki vs Kizuki battles");
+        } else if (worldDayCounter > 0 && worldDayCounter % 3 == 0) {
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Skipping Kizuki vs Kizuki battles (3-day window, 50% roll failed)");
         } else {
-            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Skipping Kizuki vs Kizuki battles (not divisible by 9)");
+            System.out.println("[NEMESIS DEBUG] Day " + worldDayCounter + " - Skipping Kizuki vs Kizuki battles (not a 3-day window)");
         }
+
+        System.out.println("[NEMESIS DEBUG] Enforcing rank integrity");
+        enforceRankIntegrity(level);
 
         System.out.println("[NEMESIS DEBUG] Refilling demon roster (target: 20 fodder, current: " + rankedFodder.size() + ")");
         refillDemonRoster(level);
@@ -841,6 +969,9 @@ public class DemonHierarchyManager extends SavedData {
             GrowthCalculator.applyGrowth(entry.getValue(), growthTime,
                     rank.orElse(null));
         }
+
+        System.out.println("[NEMESIS DEBUG] Applying passive BP growth to all " + demonDataCache.size() + " demons");
+        applyDailyPassiveBpGrowth();
 
         List<ServerPlayer> onlinePlayers = level.getServer().getPlayerList().getPlayers();
         System.out.println("[NEMESIS DEBUG] Spreading rumors about " + worldStoryLog.size() + " story events to " + onlinePlayers.size() + " online players");
@@ -880,10 +1011,12 @@ public class DemonHierarchyManager extends SavedData {
         long simulatedTime = getSimulatedTime(aggressor, defender, intel);
 
         // Home-Advantage & Biome
-        ResourceLocation arena = defender.getTerritory(); // may change this, but for now, always defender's territory
+        // Arena is decided randomly 50/50 between the two demons' territories so neither side has
+        // a permanent home-field advantage in every single confrontation.
+        ResourceLocation arena = random.nextBoolean() ? defender.getTerritory() : aggressor.getTerritory();
         BattleContext context = new BattleContext(arena, simulatedTime);
         boolean isAggressorHomeField = aggressor.getTerritory().equals(arena);
-        boolean isDefenderHomeField = true; // Always true for now
+        boolean isDefenderHomeField = defender.getTerritory().equals(arena);
 
         // Calculate Effective Stats for each fighter
         EffectiveStats stats1 = getEffectiveStats(aggressor, defender, context, isAggressorHomeField);
@@ -1384,7 +1517,7 @@ public class DemonHierarchyManager extends SavedData {
 
         if (outcome == SimOutcome.RETREAT) {
             // Loser survives — already lost BP in writeSimulatedBattleOutcome
-            int pointsGained = Math.max(5, loser.getBloodPoints() / 20);
+            int pointsGained = Math.max(15, loser.getBloodPoints() / 3);
             winner.addBloodPoints(pointsGained);
             System.out.println("[NEMESIS DEBUG] " + loser.getName() + " retreated, " + winner.getName() + " gains " + pointsGained + " BP");
 
@@ -1392,7 +1525,7 @@ public class DemonHierarchyManager extends SavedData {
             broadcastToPlayers(level, Component.literal(String.format(announcement, winner.getName(), loser.getName()) + " §7(opponent retreated)").withStyle(ChatFormatting.GRAY));
         } else {
             // Decisive win or humiliation — loser dies
-            int pointsGained = Math.max(10, loser.getBloodPoints() / 10);
+            int pointsGained = Math.max(30, loser.getBloodPoints() / 2);
             winner.addBloodPoints(pointsGained);
             System.out.println("[NEMESIS DEBUG] " + loser.getName() + " killed, " + winner.getName() + " gains " + pointsGained + " BP");
             killDemon(result.loserId());
@@ -1403,100 +1536,46 @@ public class DemonHierarchyManager extends SavedData {
     }
 
     private void simulateChallengerVsKizuki(ServerLevel level) {
-        if (rankedFodder.isEmpty() || !kizukiSlots.containsKey(DemonRank.LOWER_MOON_6)) {
+        if (rankedFodder.isEmpty() || kizukiSlots.isEmpty()) {
             System.out.println("[NEMESIS DEBUG] Skipping Challenger vs Kizuki - " +
-                (rankedFodder.isEmpty() ? "no fodder" : "no LM6"));
+                (rankedFodder.isEmpty() ? "no fodder" : "no Kizuki slots filled"));
             return;
         }
 
+        // Top fodder demon by BP is the challenger.
         rankedFodder.sort(Comparator.comparingInt(uuid -> -getDemonTrait(uuid).getBloodPoints()));
         UUID challengerId = rankedFodder.get(0);
-        UUID defenderId = kizukiSlots.get(DemonRank.LOWER_MOON_6);
-
         DemonTrait challengerTrait = getDemonTrait(challengerId);
-        DemonTrait lm6Trait = getDemonTrait(defenderId);
-        if (challengerTrait == null || lm6Trait == null) return;
+        if (challengerTrait == null) return;
+
+        // Find the weakest occupied moon rank. The challenger targets whoever is most beatable,
+        // not just LM6 — allowing strong fodder to skip past already-weak Kizuki incumbents.
+        UUID defenderId = null;
+        DemonRank targetRank = null;
+        int weakestKizukiBP = Integer.MAX_VALUE;
+        for (Map.Entry<DemonRank, UUID> entry : kizukiSlots.entrySet()) {
+            DemonTrait candidate = getDemonTrait(entry.getValue());
+            if (candidate == null) continue;
+            if (candidate.getBloodPoints() < weakestKizukiBP) {
+                weakestKizukiBP = candidate.getBloodPoints();
+                defenderId = entry.getValue();
+                targetRank = entry.getKey();
+            }
+        }
+
+        // Only proceed if the challenger genuinely outclasses the weakest Kizuki in BP.
+        if (defenderId == null || targetRank == null || challengerTrait.getBloodPoints() <= weakestKizukiBP) {
+            System.out.println("[NEMESIS DEBUG] Skipping Challenger vs Kizuki - top fodder (" +
+                challengerTrait.getBloodPoints() + " BP) does not exceed weakest Kizuki (" + weakestKizukiBP + " BP)");
+            return;
+        }
+
+        DemonTrait defenderTrait = getDemonTrait(defenderId);
+        if (defenderTrait == null) return;
 
         System.out.println("[NEMESIS DEBUG] Challenger vs Kizuki: " + challengerTrait.getName() +
-            " (BP: " + challengerTrait.getBloodPoints() + ") challenges " + lm6Trait.getName() +
-            " (LM6, BP: " + lm6Trait.getBloodPoints() + ")");
-
-        BattleResult result = simulateBattle(challengerId, defenderId, level);
-
-        // Write battle outcome memories + growth stats for both
-        long time = level.getGameTime();
-        DemonTrait winner = result.winnerId().equals(challengerId) ? challengerTrait : lm6Trait;
-        DemonTrait loser = result.winnerId().equals(challengerId) ? lm6Trait : challengerTrait;
-
-        System.out.println("[NEMESIS DEBUG] Battle result: " + winner.getName() + " defeated " + loser.getName() +
-            " (Winner TTK: " + String.format("%.1f", result.winnerTTK()) + "s, Loser TTK: " + String.format("%.1f", result.loserTTK()) + "s)");
-
-        writeSimulatedBattleOutcome(winner, loser, result, time);
-
-        if (result.winnerId().equals(challengerId)) {
-            // Huzzah! A victory — also record hierarchy changes
-            System.out.println("[NEMESIS DEBUG] Challenger victory! " + challengerTrait.getName() +
-                " promoted to Lower Moon Six, " + lm6Trait.getName() + " demoted to fodder");
-            challengerTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, defenderId, challengerId));
-            challengerTrait.addMemory(DemonMemory.of(MemoryType.DEFEATED_KIZUKI, time, defenderId, challengerId));
-            challengerTrait.addMemory(DemonMemory.of(MemoryType.KILLED_KIZUKI, time, defenderId, challengerId));
-
-            killDemon(defenderId);
-            rankedFodder.remove(challengerId);
-            kizukiSlots.put(DemonRank.LOWER_MOON_6, challengerId);
-
-            // Log story events (H1)
-            logStoryEvent(StoryEvent.promotion(time, challengerId,
-                    challengerTrait.getName(), DemonRank.LOWER_MOON_6.getDisplayName().getString()));
-            logStoryEvent(StoryEvent.demonKilled(time, defenderId, lm6Trait.getName(),
-                    challengerId, challengerTrait.getName()));
-
-            String announcement = SimulationAnnouncer.forChallengerUpset(challengerTrait, lm6Trait);
-            broadcastToPlayers(level, Component.literal(String.format(announcement,
-                    challengerTrait.getName() + " " + challengerTrait.getTitle(),
-                    lm6Trait.getName())).withStyle(ChatFormatting.RED));
-        } else {
-            System.out.println("[NEMESIS DEBUG] Challenger defeat: " + lm6Trait.getName() + " successfully defended Lower Moon Six");
-        }
-    }
-
-    private void simulateKizukiVsKizuki(ServerLevel level) {
-        // All moon ranks EXCEPT the highest (UM1) can challenge the rank above
-        List<DemonRank> challengerCandidates = Arrays.stream(DemonRank.values())
-            .filter(r -> {
-                if (!r.isMoonRank()) return false;
-                if (r == DemonRank.UPPER_MOON_1) return false;
-
-                return kizukiSlots.containsKey(r)
-                    && kizukiSlots.containsKey(DemonRank.values()[r.ordinal() + 1]);
-            })
-            .toList();
-
-        if (challengerCandidates.isEmpty()) {
-            System.out.println("[NEMESIS DEBUG] Skipping Kizuki vs Kizuki - no challenger candidates available");
-            return;
-        }
-
-        DemonRank challengerRank = challengerCandidates.get(random.nextInt(challengerCandidates.size()));
-        // Defender is one rank HIGHER in power (ordinal + 1)
-        DemonRank defenderRank = DemonRank.values()[challengerRank.ordinal() + 1];
-
-        UUID challengerId = kizukiSlots.get(challengerRank);
-        UUID defenderId = kizukiSlots.get(defenderRank);
-
-        if (challengerId == null || defenderId == null) {
-            System.out.println("[NEMESIS DEBUG] Skipping Kizuki vs Kizuki - missing demons for " +
-                challengerRank.getDisplayName().getString() + " or " + defenderRank.getDisplayName().getString());
-            return;
-        }
-
-        DemonTrait challengerTrait = getDemonTrait(challengerId);
-        DemonTrait defenderTrait = getDemonTrait(defenderId);
-        if (challengerTrait == null || defenderTrait == null) return;
-
-        System.out.println("[NEMESIS DEBUG] Kizuki vs Kizuki: " + challengerTrait.getName() +
-            " (" + challengerRank.getDisplayName().getString() + ", BP: " + challengerTrait.getBloodPoints() + ") challenges " +
-            defenderTrait.getName() + " (" + defenderRank.getDisplayName().getString() + ", BP: " + defenderTrait.getBloodPoints() + ")");
+            " (BP: " + challengerTrait.getBloodPoints() + ") challenges " + defenderTrait.getName() +
+            " (" + targetRank.getDisplayName().getString() + ", BP: " + defenderTrait.getBloodPoints() + ")");
 
         BattleResult result = simulateBattle(challengerId, defenderId, level);
 
@@ -1511,9 +1590,90 @@ public class DemonHierarchyManager extends SavedData {
         writeSimulatedBattleOutcome(winner, loser, result, time);
 
         if (result.winnerId().equals(challengerId)) {
-            // SHOCKING UPSET — record hierarchy changes
+            // Challenger victory — grant BP reward for defeating a Kizuki in direct combat
+            int bpGain = Math.max(50, defenderTrait.getBloodPoints() / 2);
+            challengerTrait.addBloodPoints(bpGain);
+            System.out.println("[NEMESIS DEBUG] Challenger victory! " + challengerTrait.getName() +
+                " promoted to " + targetRank.getDisplayName().getString() + " (+" + bpGain + " BP), " +
+                defenderTrait.getName() + " killed");
+
+            challengerTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, defenderId, challengerId));
+            challengerTrait.addMemory(DemonMemory.of(MemoryType.DEFEATED_KIZUKI, time, defenderId, challengerId));
+            challengerTrait.addMemory(DemonMemory.of(MemoryType.KILLED_KIZUKI, time, defenderId, challengerId));
+
+            killDemon(defenderId);
+            rankedFodder.remove(challengerId);
+            kizukiSlots.put(targetRank, challengerId);
+
+            // Log story events (H1)
+            logStoryEvent(StoryEvent.promotion(time, challengerId,
+                    challengerTrait.getName(), targetRank.getDisplayName().getString()));
+            logStoryEvent(StoryEvent.demonKilled(time, defenderId, defenderTrait.getName(),
+                    challengerId, challengerTrait.getName()));
+
+            String announcement = SimulationAnnouncer.forChallengerUpset(challengerTrait, defenderTrait);
+            broadcastToPlayers(level, Component.literal(String.format(announcement,
+                    challengerTrait.getName() + " " + challengerTrait.getTitle(),
+                    defenderTrait.getName())).withStyle(ChatFormatting.RED));
+        } else {
+            System.out.println("[NEMESIS DEBUG] Challenger defeat: " + defenderTrait.getName() +
+                " successfully defended " + targetRank.getDisplayName().getString());
+        }
+    }
+
+    private void simulateKizukiVsKizuki(ServerLevel level) {
+        // Collect every adjacent pair where BOTH ranks are currently occupied.
+        // The original code picked a random rank first and gave up if either slot
+        // was empty, so sparse hierarchies would almost always skip the battle.
+        // This version scans for valid pairs first, then picks randomly among them.
+        List<int[]> validPairs = new ArrayList<>();
+        DemonRank[] allRanks = DemonRank.values();
+        for (int i = DemonRank.LOWER_MOON_6.ordinal(); i < DemonRank.UPPER_MOON_1.ordinal(); i++) {
+            DemonRank lower = allRanks[i];
+            DemonRank upper = allRanks[i + 1];
+            if (!lower.isMoonRank() || !upper.isMoonRank()) continue;
+            if (kizukiSlots.containsKey(lower) && kizukiSlots.containsKey(upper)) {
+                validPairs.add(new int[]{i, i + 1});
+            }
+        }
+
+        if (validPairs.isEmpty()) {
+            System.out.println("[NEMESIS DEBUG] Skipping Kizuki vs Kizuki - no adjacent pairs with both ranks filled");
+            return;
+        }
+
+        int[] chosen = validPairs.get(random.nextInt(validPairs.size()));
+        DemonRank challengerRank = allRanks[chosen[0]];
+        DemonRank defenderRank   = allRanks[chosen[1]];
+        UUID challengerId = kizukiSlots.get(challengerRank);
+        UUID defenderId   = kizukiSlots.get(defenderRank);
+
+        DemonTrait challengerTrait = getDemonTrait(challengerId);
+        DemonTrait defenderTrait   = getDemonTrait(defenderId);
+        if (challengerTrait == null || defenderTrait == null) return;
+
+        System.out.println("[NEMESIS DEBUG] Kizuki vs Kizuki: " + challengerTrait.getName() +
+            " (" + challengerRank.getDisplayName().getString() + ", BP: " + challengerTrait.getBloodPoints() + ") challenges " +
+            defenderTrait.getName() + " (" + defenderRank.getDisplayName().getString() + ", BP: " + defenderTrait.getBloodPoints() + ")");
+
+        BattleResult result = simulateBattle(challengerId, defenderId, level);
+
+        // Write battle outcome memories + growth stats for both
+        long time = level.getGameTime();
+        DemonTrait winner = result.winnerId().equals(challengerId) ? challengerTrait : defenderTrait;
+        DemonTrait loser  = result.winnerId().equals(challengerId) ? defenderTrait : challengerTrait;
+
+        System.out.println("[NEMESIS DEBUG] Battle result: " + winner.getName() + " defeated " + loser.getName() +
+            " (Winner TTK: " + String.format("%.1f", result.winnerTTK()) + "s, Loser TTK: " + String.format("%.1f", result.loserTTK()) + "s)");
+
+        writeSimulatedBattleOutcome(winner, loser, result, time);
+
+        if (result.winnerId().equals(challengerId)) {
+            // SHOCKING UPSET — grant BP reward for defeating a higher-ranked Kizuki in combat
+            int bpGain = Math.max(60, defenderTrait.getBloodPoints() / 2);
+            challengerTrait.addBloodPoints(bpGain);
             System.out.println("[NEMESIS DEBUG] SHOCKING UPSET! " + challengerTrait.getName() +
-                " promoted to " + defenderRank.getDisplayName().getString() + ", " +
+                " promoted to " + defenderRank.getDisplayName().getString() + " (+" + bpGain + " BP), " +
                 defenderTrait.getName() + " killed, power vacuum triggered for " + challengerRank.getDisplayName().getString());
 
             challengerTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, defenderId, challengerId));
@@ -1600,6 +1760,68 @@ public class DemonHierarchyManager extends SavedData {
                 // If this slot is already filled, skip
                 if (kizukiSlots.containsKey(targetRank)) continue;
 
+                // For LM6 (the lowest moon rank), try to promote top fodder directly
+                if (targetRank == DemonRank.LOWER_MOON_6) {
+                    int bpThreshold = getOrganicPromotionBpThreshold(targetRank);
+                    Optional<UUID> topFodderUUID = rankedFodder.stream()
+                            .filter(uuid -> {
+                                DemonTrait t = getDemonTrait(uuid);
+                                return t != null && t.getBloodPoints() >= bpThreshold;
+                            })
+                            .max(Comparator.comparingInt(uuid -> {
+                                DemonTrait t = getDemonTrait(uuid);
+                                return t != null ? t.getBloodPoints() : 0;
+                            }));
+
+                    if (topFodderUUID.isPresent()) {
+                        UUID promoterId = topFodderUUID.get();
+                        DemonTrait fodderTrait = getDemonTrait(promoterId);
+                        String fodderName = fodderTrait != null ? fodderTrait.getName() : "Unknown";
+                        int fodderBP = fodderTrait != null ? fodderTrait.getBloodPoints() : 0;
+
+                        System.out.println("[NEMESIS DEBUG] VACANCY FILL: Promoting fodder " + fodderName +
+                            " (BP: " + fodderBP + ", threshold: " + bpThreshold +
+                            ") to vacant " + targetRank.getDisplayName().getString());
+
+                        rankedFodder.remove(promoterId);
+                        kizukiSlots.put(targetRank, promoterId);
+
+                        if (fodderTrait != null) {
+                            fodderTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, null, promoterId));
+                            logStoryEvent(StoryEvent.promotion(time, promoterId,
+                                    fodderTrait.getName(), targetRank.getDisplayName().getString()));
+                        }
+
+                        broadcastToPlayers(level, Component.literal(
+                                "§5" + fodderName + " has risen to the rank of " + targetRank.getDisplayName().getString() + "!")
+                                .withStyle(ChatFormatting.DARK_PURPLE));
+
+                        promotedAny = true;
+                        setDirty();
+                    }
+                    continue;
+                }
+
+                // For all other moon ranks, find the nearest occupied rank below.
+                // Scanning downward (not just ordinal-1) means a demon can fill a slot
+                // even when several intermediate ranks are also vacant, rather than the
+                // entire upper tier being permanently blocked by a single empty gap.
+                DemonRank belowRank = null;
+                for (int searchOrd = ord - 1; searchOrd >= DemonRank.LOWER_MOON_6.ordinal(); searchOrd--) {
+                    DemonRank candidate = allRanks[searchOrd];
+                    if (candidate.isMoonRank() && kizukiSlots.containsKey(candidate)) {
+                        belowRank = candidate;
+                        break;
+                    }
+                }
+                if (belowRank == null) continue; // no occupied rank found below at all
+
+                UUID belowDemonId = kizukiSlots.get(belowRank);
+                if (belowDemonId == null) continue;
+
+                DemonTrait belowTrait = getDemonTrait(belowDemonId);
+                if (belowTrait == null) continue;
+
                 int bpThreshold = getOrganicPromotionBpThreshold(targetRank);
 
                 UUID bestCandidateId = null;
@@ -1676,15 +1898,21 @@ public class DemonHierarchyManager extends SavedData {
      */
     private int getOrganicPromotionBpThreshold(DemonRank rank) {
         return switch (rank) {
-            case LOWER_MOON_6, LOWER_MOON_5,
-                 LOWER_MOON_4, LOWER_MOON_3,
-                 LOWER_MOON_2, LOWER_MOON_1 -> 200;
-            case UPPER_MOON_6 -> 450;
-            case UPPER_MOON_5 -> 650;
-            case UPPER_MOON_4 -> 900;
-            case UPPER_MOON_3 -> 1200;
-            case UPPER_MOON_2 -> 1600;
-            case UPPER_MOON_1 -> 2000;
+            // Graduated Lower Moon thresholds — prevents a single ~200 BP demon
+            // from cascade-filling all 6 Lower Moon slots in one simulation day.
+            case LOWER_MOON_6 -> 200;
+            case LOWER_MOON_5 -> 320;
+            case LOWER_MOON_4 -> 460;
+            case LOWER_MOON_3 -> 620;
+            case LOWER_MOON_2 -> 800;
+            case LOWER_MOON_1 -> 1000;
+            // Upper Moon thresholds represent the canonical massive power gap.
+            case UPPER_MOON_6 -> 1400;
+            case UPPER_MOON_5 -> 1900;
+            case UPPER_MOON_4 -> 2600;
+            case UPPER_MOON_3 -> 3500;
+            case UPPER_MOON_2 -> 4800;
+            case UPPER_MOON_1 -> 6500;
             default -> Integer.MAX_VALUE; // non-moon ranks cannot be promoted into
         };
     }
@@ -2160,6 +2388,12 @@ public class DemonHierarchyManager extends SavedData {
 
     public void trySpawnHunterForPlayer(ServerPlayer player) {
         if (player.level.getDifficulty() == Difficulty.PEACEFUL) return;
+
+        // Grace period: Nemesis demons do not hunt players until 4 in-game days (96 000 ticks)
+        // have passed since world creation. This gives new players time to get established.
+        final long HUNT_GRACE_PERIOD_TICKS = 4L * 24000L; // 4 Minecraft days
+        if (player.level.getGameTime() < HUNT_GRACE_PERIOD_TICKS) return;
+
         ResourceLocation currentBiome = player.level.getBiome(player.blockPosition()).unwrapKey().get().location();
 
         // Build candidates from ALL demons — territory match, relationship, or emotion (J2)
@@ -2287,6 +2521,130 @@ public class DemonHierarchyManager extends SavedData {
         level.addFreshEntity(demon);
         System.out.println("Spawning hunter: " + trait.getName() + " [Reason: " + reason + "]");
         return true;
+    }
+
+    /* Grants passive BP growth to every demon in the roster each simulation day.
+         Reflects the continuous accumulation of power demons gain simply from feeding and surviving
+         — even without active combat. Without this, demons that rarely participate in simulated
+         battles (particularly Kizuki who fight only every few days) stagnate in BP indefinitely,
+         making the higher rank thresholds unreachable.
+
+        Growth rates per day (scaled to match graduated rank thresholds):
+            Upper Moon 1:   80 BP/day  (needs 6500 to hold rank; ~80 days from UM6 threshold)
+            Upper Moon 2-3: 65 BP/day
+            Upper Moon 4-6: 50 BP/day
+            Lower Moon 1:   35 BP/day  (needs 1000; ~25 days from LM6 threshold)
+            Lower Moon 2-3: 28 BP/day
+            Lower Moon 4-6: 20 BP/day
+            Fodder:         8-18 BP/day (~13 average; reaches LM6 threshold in ~15 days)
+        */
+    private void applyDailyPassiveBpGrowth() {
+        for (Map.Entry<UUID, DemonTrait> entry : demonDataCache.entrySet()) {
+            UUID id = entry.getKey();
+            DemonTrait trait = entry.getValue();
+            Optional<DemonRank> rank = getKizukiRank(id);
+
+            int gain;
+            if (rank.isPresent()) {
+                gain = switch (rank.get()) {
+                    case UPPER_MOON_1 -> 80;
+                    case UPPER_MOON_2, UPPER_MOON_3 -> 65;
+                    case UPPER_MOON_4, UPPER_MOON_5, UPPER_MOON_6 -> 50;
+                    case LOWER_MOON_1 -> 35;
+                    case LOWER_MOON_2, LOWER_MOON_3 -> 28;
+                    case LOWER_MOON_4, LOWER_MOON_5, LOWER_MOON_6 -> 20;
+                    default -> 8 + random.nextInt(11); // non-moon fallback
+                };
+            } else {
+                gain = 8 + random.nextInt(11); // Fodder: 8-18 BP/day (~13 average)
+            }
+
+            if (gain > 0) {
+                trait.addBloodPoints(gain);
+            }
+        }
+    }
+
+    /**
+     * Enforces rank ordering by triggering a battle whenever a lower-ranked Kizuki
+     * has more BP than the Kizuki immediately above them.
+     *
+     * <p>Without this check, a demon can climb through lucky battle wins while gaining
+     * no BP, leaving them occupying a rank they are weaker than the demon below. This
+     * method corrects inversions one pair at a time per day (breaks after the first
+     * swap to avoid cascading multiple changes in a single tick).
+     *
+     * <p>If the stronger lower-ranked demon wins the battle, they take the higher rank
+     * and the incumbent is killed. If the weaker incumbent somehow wins, the inversion
+     * is left to re-trigger on a subsequent day.
+     */
+    private void enforceRankIntegrity(ServerLevel level) {
+        DemonRank[] allRanks = DemonRank.values();
+        long time = level.getGameTime();
+
+        for (int i = DemonRank.LOWER_MOON_6.ordinal(); i < DemonRank.UPPER_MOON_1.ordinal(); i++) {
+            DemonRank lowerRank = allRanks[i];
+            DemonRank higherRank = allRanks[i + 1];
+            if (!lowerRank.isMoonRank() || !higherRank.isMoonRank()) continue;
+
+            UUID lowerId  = kizukiSlots.get(lowerRank);
+            UUID higherId = kizukiSlots.get(higherRank);
+            if (lowerId == null || higherId == null) continue;
+
+            DemonTrait lowerTrait  = getDemonTrait(lowerId);
+            DemonTrait higherTrait = getDemonTrait(higherId);
+            if (lowerTrait == null || higherTrait == null) continue;
+
+            // Only intervene when the difference is substantial (≥50%).
+            // The old 15% threshold triggered constant day-over-day integrity battles
+            // over trivial BP gaps, cycling weak demons out before they could grow.
+            // At 50%, only genuine power inversions — where the lower demon has grown
+            // significantly stronger than the incumbent above them — trigger a fight.
+            float integrityRatio = (float) lowerTrait.getBloodPoints() / Math.max(1, higherTrait.getBloodPoints());
+            if (integrityRatio < 1.50f) continue;
+
+            System.out.println("[NEMESIS DEBUG] RANK INTEGRITY: " + lowerTrait.getName() +
+                " (" + lowerRank.getDisplayName().getString() + ", BP: " + lowerTrait.getBloodPoints() + ")" +
+                " outclasses " + higherTrait.getName() +
+                " (" + higherRank.getDisplayName().getString() + ", BP: " + higherTrait.getBloodPoints() + ")" +
+                " — triggering integrity battle");
+
+            BattleResult result = simulateBattle(lowerId, higherId, level);
+            DemonTrait winner = result.winnerId().equals(lowerId) ? lowerTrait : higherTrait;
+            DemonTrait loser  = result.winnerId().equals(lowerId) ? higherTrait : lowerTrait;
+            writeSimulatedBattleOutcome(winner, loser, result, time);
+
+            if (result.winnerId().equals(lowerId)) {
+                // Stronger demon unseats the weaker incumbent
+                int bpGain = Math.max(20, higherTrait.getBloodPoints() / 4);
+                lowerTrait.addBloodPoints(bpGain);
+
+                kizukiSlots.put(higherRank, lowerId);
+                kizukiSlots.remove(lowerRank);
+                killDemon(higherId);
+                handlePowerVacuum(lowerRank);
+
+                lowerTrait.addMemory(DemonMemory.of(MemoryType.PROMOTED, time, higherId, lowerId));
+                logStoryEvent(StoryEvent.promotion(time, lowerId,
+                    lowerTrait.getName(), higherRank.getDisplayName().getString()));
+                logStoryEvent(StoryEvent.demonKilled(time, higherId, higherTrait.getName(),
+                    lowerId, lowerTrait.getName()));
+
+                broadcastToPlayers(level, Component.literal(String.format(
+                    "§5%s has surpassed and slain %s, claiming the rank of %s!",
+                    lowerTrait.getName(), higherTrait.getName(),
+                    higherRank.getDisplayName().getString())).withStyle(ChatFormatting.DARK_PURPLE));
+
+                System.out.println("[NEMESIS DEBUG] Rank integrity restored: " + lowerTrait.getName() +
+                    " now holds " + higherRank.getDisplayName().getString());
+
+                    // Process one integrity swap per day to avoid cascade storms
+                break;
+            } else {
+                System.out.println("[NEMESIS DEBUG] Integrity battle: " + higherTrait.getName() +
+                    " held their rank despite lower BP");
+            }
+        }
     }
 
     // ── World blood battles (J1) ────────────────────────────────────────
@@ -2503,6 +2861,7 @@ public class DemonHierarchyManager extends SavedData {
                             trait.setBlueprintAnnouncements(bp.announcements());
                         }
 
+                        ensureKizukiMinimumBp(trait, rank); // Guarantee minimum BP for the rank, even for blueprint demons
                         this.addDemon(demonUUID, trait);
                         this.setKizukiRank(rank, demonUUID);
                         System.out.println("[NEMESIS DEBUG] Populated " + rank.getDisplayName().getString() + " with " + trait.getName() + " " + trait.getTitle() +
@@ -2608,6 +2967,17 @@ public class DemonHierarchyManager extends SavedData {
         // Player intel (H2)
         nbt.put("playerIntel", playerIntelManager.serializeNBT());
 
+        // Save pending player challenges
+        CompoundTag pendingChallengesTag = new CompoundTag();
+        pendingPlayerChallenges.forEach((playerUUID, challenge) -> {
+            CompoundTag ct = new CompoundTag();
+            ct.putUUID("targetId", challenge.targetId());
+            ct.putBoolean("isRankChallenge", challenge.isRankChallenge());
+            if (challenge.targetRank() != null) ct.putString("targetRank", challenge.targetRank().name());
+            pendingChallengesTag.put(playerUUID.toString(), ct);
+        });
+        nbt.put("pendingPlayerChallenges", pendingChallengesTag);
+
         return nbt;
     }
 
@@ -2671,6 +3041,26 @@ public class DemonHierarchyManager extends SavedData {
         // Load player intel (H2)
         if (nbt.contains("playerIntel")) {
             manager.playerIntelManager.deserializeNBT(nbt.getCompound("playerIntel"));
+        }
+
+        // Load pending player challenges
+        if (nbt.contains("pendingPlayerChallenges", 10)) {
+            CompoundTag pct = nbt.getCompound("pendingPlayerChallenges");
+            for (String key : pct.getAllKeys()) {
+                try {
+                    UUID playerUUID = UUID.fromString(key);
+                    CompoundTag ct  = pct.getCompound(key);
+                    UUID targetId          = ct.getUUID("targetId");
+                    boolean isRankChallenge = ct.getBoolean("isRankChallenge");
+                    DemonRank targetRank   = null;
+                    if (ct.contains("targetRank", 8)) {
+                        try { targetRank = DemonRank.valueOf(ct.getString("targetRank")); }
+                        catch (IllegalArgumentException ignored) {}
+                    }
+                    manager.pendingPlayerChallenges.put(playerUUID,
+                            new PendingChallenge(targetId, isRankChallenge, targetRank));
+                } catch (Exception ignored) {}
+            }
         }
 
         // No side effects here; population happens lazily in get().

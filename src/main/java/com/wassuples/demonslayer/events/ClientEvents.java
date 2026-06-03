@@ -212,14 +212,19 @@ public class ClientEvents {
                 }
             }
 
-            if (KeyBinding.USE_KEY.consumeClick()) {
-                abilityKeyIsDown = true;
-                ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.PRESS));
-            }
-
-            if (!KeyBinding.USE_KEY.isDown() && abilityKeyIsDown) {
-                abilityKeyIsDown = false;
-                ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.RELEASE));
+            if (KeyBinding.USE_KEY.isDown()) {
+                // Edge-detect the press: only send PRESS on the first tick the key is held,
+                // not every tick (consumeClick() fires true every tick while held, which
+                // caused start/stop/start/stop every server tick for HOLD forms).
+                if (!abilityKeyIsDown) {
+                    abilityKeyIsDown = true;
+                    ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.PRESS));
+                }
+            } else {
+                if (abilityKeyIsDown) {
+                    abilityKeyIsDown = false;
+                    ModMessages.sendToServer(new AbilityKeyC2SPacket(AbilityKeyC2SPacket.KeyState.RELEASE));
+                }
             }
         }
 

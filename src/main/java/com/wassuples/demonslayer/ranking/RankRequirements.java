@@ -86,11 +86,10 @@ public final class RankRequirements {
             and(anyStyleMastery(1000))
         ));
 
-        // KINOE → HASHIRA: 50 kills in this rank, OR killed a Kizuki, OR > 2000 mastery in ANY style.
+        // KINOE → HASHIRA: Kill 50 demons total (any type) OR singlehandedly kill any Kizuki.
         TABLE.put(Rank.KINOE, or(
-            and(demonKillsThisRank(50)),
-            and(killedKizuki()),
-            and(anyStyleMastery(2000))
+            and(totalDemonKills(50)),
+            and(killedKizuki())
         ));
     }
 
@@ -111,6 +110,10 @@ public final class RankRequirements {
     @SafeVarargs
     private static List<Predicate<Context>> and(Predicate<Context>... predicates) {
         return List.of(predicates);
+    }
+
+    private static Predicate<Context> totalDemonKills(int count) {
+        return ctx -> ctx.progression().getDemonKills() >= count;
     }
 
     private static Predicate<Context> demonKillsThisRank(int count) {

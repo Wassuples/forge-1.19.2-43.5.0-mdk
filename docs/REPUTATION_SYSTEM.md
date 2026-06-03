@@ -128,10 +128,10 @@ Rank advancement is gated exclusively on kill counts achieved while holding the 
 | Kanoe | 60 demons killed | None | - |
 | Tsuchinoto | 100 demons killed | None | - |
 | Tsuchinoe | 150 demons killed | None | Mid-rank. Wider mission access. |
-   Hinoto  250 demons killed  None  - 
-   Hinoe  300 demons killed  None  - 
-   Kinoto  400 demons killed  None  - 
-   Kinoe  500 demons killed  None  Prerequisite rank to become Hashira. 
+   Hinoto  250 demons killed  None  -
+   Hinoe  300 demons killed  None  -
+   Kinoto  400 demons killed  None  -
+   Kinoe  500 demons killed  None  Prerequisite rank to become Hashira.
 | Hashira | 500 demons killed as Kinoe | Solo kill any Kizuki moon demon | The alternative path (Kizuki solo kill) can be done at any rank, but rank is still set to Hashira. |
 
 ## **KillRecord Tracking**
@@ -694,14 +694,8 @@ Each breathing style has at least one master who can teach it. Some are Hashira;
 Every style has a single associated minigame. The minigame is identical regardless of which master teaches it — it represents the style's philosophy, not the teacher's personality. A single lesson from any master unlocks the style. After that, the player can learn all forms independently through continued minigame play. Masters do not gate individual forms; they can accelerate proficiency in specific ones, shortening the time to learn them.
 
 Player-to-Player Teaching:
-
-A player who has mastered all forms of a style becomes a style master themselves.
-
-They can initiate the style's minigame for another player directly — no NPC required.
-
-Talk to a friend, trigger the minigame, unlock the style. The minigame is identical
-
-to the NPC version. The teaching player must have completed every form of that style.
+A player who has mastered all forms of a style becomes a style master themselves. They can initiate the style's minigame for another player directly — no NPC required.
+Talk to a friend, trigger the minigame, unlock the style. The minigame is identical  to the NPC version. The teaching player must have completed every form of that style.
 
 | Style | Minigame Type | Mechanical Description | Failure Consequence |
 | --- | --- | --- | --- |
@@ -734,8 +728,6 @@ Any single master is sufficient to unlock a style. Where multiple masters exist 
 | Serpent | Obanai Iguro | Yes | Serpent Hashira compound - fixed | Rank >= Kinoto. Corps Rep >= Honored (400). Suspicion <= 200 - Obanai will not teach Corps loyalty risks. |
 | Sound | Tengen Uzui | Yes | Sound Hashira Estate - fixed | Rank >= Kanoe. Corps Rep >= Trusted (200). Teaches Sound Breathing only - no connection to Thunder Breathing. |
 | Sound | Tengen Uzui (retired) | No | Entertainment District safe house - post-Mission 11 | Corps Rep >= Recognized (1+). No rank requirement. Lower access bar than the active Hashira path. |
-
-*Tengen Uzui has no knowledge of Thunder Breathing and will never reference or offer it. Jigoro Kuwajima is the sole Thunder master.*
 
 # **16. Integration — Persuasion System**
 Persuasion is a dialogue-based concealment action available against VILLAGER and DEMON_SLAYER witnesses within the 300-tick window. It uses the player's Demon Slayer Rank as the source of authority — higher rank unlocks more commanding options with better base success. Entirely separate from bribery (item-based) and intimidation (fear-based).

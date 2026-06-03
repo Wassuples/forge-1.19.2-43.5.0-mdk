@@ -42,8 +42,8 @@ public class ExtendingBendySlashForm extends ChargeableForm {
     }
 
     @Override
-    protected void onChargeRelease(boolean fullyCharged) {
-        if (fullyCharged) {
+    protected void onChargeRelease(float chargeRatio) {
+        if (chargeRatio >= 1.0f) {
             performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.5f, 1.8f);
             dealDirectionalDamage(user, ATTACK_RANGE, DAMAGE, 0.85);
             spawnParticleArc(user, ParticleTypes.CRIT, ATTACK_RANGE, 90, 40);

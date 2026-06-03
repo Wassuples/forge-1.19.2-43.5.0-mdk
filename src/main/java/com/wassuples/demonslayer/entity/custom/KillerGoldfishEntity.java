@@ -36,6 +36,11 @@ public class KillerGoldfishEntity extends Monster implements IAnimatable {
 
     public KillerGoldfishEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
+        // Turret: never moves on its own, but IS subject to gravity so it lands properly.
+        this.setNoGravity(false);
+        this.navigation = new net.minecraft.world.entity.ai.navigation.GroundPathNavigation(this, pLevel) {
+            @Override public boolean isStableDestination(net.minecraft.core.BlockPos pos) { return false; }
+        };
     }
 
     public static AttributeSupplier.Builder createAttributes() {
@@ -59,6 +64,11 @@ public class KillerGoldfishEntity extends Monster implements IAnimatable {
     @Override
     public void tick() {
         super.tick();
+        // Turret: stay perfectly still once on the ground. Clear any lateral drift each tick
+        // so that knockback / physics don't nudge it off its spawn position.
+        if (this.onGround) {
+            this.setDeltaMovement(0, this.getDeltaMovement().y, 0);
+        }
         if (this.tickCount > 300) {
             this.discard();
         }

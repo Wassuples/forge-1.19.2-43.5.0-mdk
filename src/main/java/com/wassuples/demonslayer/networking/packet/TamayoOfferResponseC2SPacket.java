@@ -1,9 +1,9 @@
 package com.wassuples.demonslayer.networking.packet;
 
+import com.wassuples.demonslayer.demon.DemonProgressionHelper;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.custom.TamayoEntity;
 import com.wassuples.demonslayer.reputation.ReputationService;
-import com.wassuples.demonslayer.util.ModUtils;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.chat.Component;
@@ -79,14 +79,11 @@ public class TamayoOfferResponseC2SPacket {
                     return;
                 }
 
-                demon.setDemon(true);
+                DemonProgressionHelper.initializeNewDemon(player, demon);
                 ReputationService.onDemonPathAccepted(player);
-                // Starter demon state. Keep default rank + no BDA equipped.
-                ModUtils.syncDemon(player);
 
                 player.sendSystemMessage(Component.literal("Tamayo's medicine burns like fire through your veins...").withStyle(ChatFormatting.DARK_PURPLE));
-                player.sendSystemMessage(Component.literal("You have become a demon.").withStyle(ChatFormatting.LIGHT_PURPLE));
-            });
+           });
         });
         return true;
     }

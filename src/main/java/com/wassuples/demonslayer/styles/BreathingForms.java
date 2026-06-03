@@ -1399,8 +1399,8 @@ public enum BreathingForms implements IForm {
     MOON_3(BreathingStyles.MOON,
             "Third Form: Loathsome Moon, Chains",
             InputType.PRESS,
-            1,
             0,
+            1,
             50,
             100,
             "Third Form: Loathsome Moon, Chains desc.",
@@ -1408,20 +1408,7 @@ public enum BreathingForms implements IForm {
             new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/icons/moon/moon_3.png")) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
-            level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SKELETON_HURT, SoundSource.PLAYERS, 1.0f, 0.8f);
-            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.2f, 0.9f);
-
-            float damage = 25.0f;
-            double range = 8.0;
-            dealDirectionalDamage(user, range, damage, 0.4);
-
-            final DustParticleOptions purple = new DustParticleOptions(new Vector3f(0.5f, 0.2f, 0.8f), 1.2f);
-
-            Vec3 upperArcOrigin = user.getEyePosition().add(0, 0.5, 0);
-            spawnParticleArcInWorld(level, upperArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
-
-            Vec3 lowerArcOrigin = user.position().add(0, user.getBbHeight() * 0.5, 0);
-            spawnParticleArcInWorld(level, lowerArcOrigin, 5.0, 160, 60, user.getYRot(), 0, purple);
+            ActiveFormManager.start(user, this);
         }
     },
     MOON_5(BreathingStyles.MOON,
@@ -1516,8 +1503,8 @@ public enum BreathingForms implements IForm {
     },
     MOON_14(BreathingStyles.MOON,
             "Fourteenth Form: Catastrophe, Tenman Crescent Moon",
-            InputType.PRESS,
-            0,
+            InputType.HOLD,
+            80,
             1,
             50,
             100,
@@ -1531,8 +1518,8 @@ public enum BreathingForms implements IForm {
     },
     MOON_16(BreathingStyles.MOON,
             "Sixteenth Form: Moonbow, Half Moon",
-            InputType.PRESS,
-            0,
+            InputType.HOLD,
+            40,
             1,
             50,
             100,

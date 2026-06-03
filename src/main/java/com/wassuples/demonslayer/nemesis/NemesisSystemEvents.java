@@ -211,6 +211,21 @@ public class NemesisSystemEvents {
             }
 
             Optional<DemonRank> kizukiRank = manager.getKizukiRank(nemesisDemon.getUUID());
+
+            // ── Player challenge resolution ─────────────────────────────────
+            // Check BEFORE the blood-battle path so the challenge is resolved
+            // even if the demon happened to also be flagged as a defender.
+            if (killer instanceof ServerPlayer player) {
+                DemonHierarchyManager.PendingChallenge pending =
+                        manager.getPendingChallenge(player.getUUID()).orElse(null);
+
+                if (pending != null && pending.targetId().equals(nemesisDemon.getUUID())) {
+                    resolvePlayerChallenge(player, nemesisDemon, pending, kizukiRank, manager, level);
+                    return;
+                }
+            }
+            // ── end player challenge resolution ──────────────────────────────
+
             BloodBattle battle = manager.getActiveBattle();
             if (battle != null && battle.defender.equals(nemesisDemon.getUUID())) {
                 System.out.println("[NEMESIS DEBUG] Blood Battle concluded: Defender " +
@@ -270,6 +285,101 @@ public class NemesisSystemEvents {
             }
         }
     }
+
+    // ── Player challenge resolution helper ───────────────────────────────
+
+    private static void resolvePlayerChallenge(
+            ServerPlayer player,
+            NemesisDemonEntity nemesisDemon,
+            DemonHierarchyManager.PendingChallenge pending,
+            Optional<DemonRank> kizukiRank,
+            DemonHierarchyManager manager,
+            ServerLevel level) {
+
+        manager.clearPlayerChallenge(player.getUUID());
+
+        player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demonCap -> {
+            DemonTrait slainTrait = manager.getDemonTrait(nemesisDemon.getUUID());
+            String slainName     = slainTrait != null ? slainTrait.getName() : "the demon";
+
+            if (pending.isRankChallenge() && pending.targetRank() != null) {
+                // —— Rank-taking win ——
+                // Capture old Kizuki slot BEFORE setKizukiRank removes the player from it.
+                DemonRank playerOldKizukiRank = manager.getKizukiRank(player.getUUID()).orElse(null);
+
+                demonCap.setRank(pending.targetRank());
+                manager.setKizukiRank(pending.targetRank(), player.getUUID());
+
+                int bpReward = calculatePlayerChallengeBloodPointReward(level, slainTrait);
+                demonCap.addBloodPoints(bpReward);
+
+                // Server-wide announcement
+                level.getServer().getPlayerList().broadcastSystemMessage(
+                        Component.literal("§5" + player.getGameProfile().getName()
+                                + " has slain " + slainName
+                                + " and seized the rank of "
+                                + pending.targetRank().getDisplayName().getString() + "!"),
+                        false);
+
+                player.sendSystemMessage(Component.literal("§dRank claimed: ")
+                        .append(pending.targetRank().getDisplayName())
+                        .append(Component.literal(" (+" + bpReward + " BP)").withStyle(ChatFormatting.GOLD)));
+
+                // Kill NPC; trigger vacuum for the Kizuki slot the player just vacated.
+                manager.killDemon(nemesisDemon.getUUID());
+                if (playerOldKizukiRank != null) {
+                    manager.handlePowerVacuum(playerOldKizukiRank);
+                }
+
+            } else {
+                // —— BP-only win ——
+                int bpReward = calculatePlayerChallengeBloodPointReward(level, slainTrait);
+                demonCap.addBloodPoints(bpReward);
+
+                player.sendSystemMessage(Component.literal("§6Challenge won! +" + bpReward
+                        + " Blood Points."));
+
+                manager.killDemon(nemesisDemon.getUUID());
+                // Trigger vacuum only for Kizuki NPCs killed in a BP-only challenge
+                // (rank-taking challenges handle vacuum via the player's vacated old slot).
+                kizukiRank.ifPresent(manager::handlePowerVacuum);
+            }
+
+            com.wassuples.demonslayer.networking.ModMessages.sendToPlayer(
+                    new com.wassuples.demonslayer.networking.packet.PlayerDemonSyncS2CPacket(demonCap),
+                    player);
+        });
+    }
+
+    private static int calculatePlayerChallengeBloodPointReward(ServerLevel level, DemonTrait slainTrait) {
+        if (slainTrait == null) {
+            return 0;
+        }
+
+        int targetBloodPoints = Math.max(0, slainTrait.getBloodPoints());
+        if (targetBloodPoints <= 0) {
+            return 0;
+        }
+
+        if (level.random.nextFloat() < 0.30f) {
+            float rewardMultiplier = 0.50f + (level.random.nextFloat() * 0.40f);
+            return Math.max(1, Math.round(targetBloodPoints * rewardMultiplier));
+        }
+
+        return targetBloodPoints;
+    }
+
+    @SubscribeEvent
+    public static void onPlayerLogout(
+            net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player
+                && player.level instanceof ServerLevel level) {
+            // Clear stale pending challenges so they don't persist across reconnects.
+            DemonHierarchyManager.get(level).clearPlayerChallenge(player.getUUID());
+        }
+    }
+
+    // ── end player challenge resolution helper ───────────────────────
 
     public static void handleBloodBattleConclusion(BloodBattle battle, DemonHierarchyManager manager, ServerLevel level) {
         ServerPlayer challenger = level.getServer().getPlayerList().getPlayer(battle.challenger);
