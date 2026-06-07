@@ -13,14 +13,14 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 /**
- * Server → Client: instructs the client to open the style minigame screen for the given style.
+ * Server -> Client: instructs the client to open the style minigame screen for the given style.
  *
  * <p>Payload:
  * <ul>
- *   <li>{@code sessionId} – matches the server-side session for result correlation</li>
- *   <li>{@code style}     – which style's minigame to launch</li>
- *   <li>{@code tier}      – difficulty tier (1 = unlock, 2+ = form mastery training)</li>
- *   <li>{@code lives}     – remaining lives (for FLAME and SERPENT)</li>
+ *   <li>{@code sessionId} - matches the server-side session for result correlation</li>
+ *   <li>{@code style}     - which style's minigame to launch</li>
+ *   <li>{@code tier}      - difficulty tier (1 = unlock, 2+ = form mastery training)</li>
+ *   <li>{@code lives}     - remaining lives (for FLAME and SERPENT)</li>
  * </ul>
  */
 public class StartStyleMinigameS2CPacket {
@@ -67,7 +67,13 @@ public class StartStyleMinigameS2CPacket {
                 case LOVE    -> new LoveMinigameScreen(sessionId, tier);
                 case SERPENT -> new SerpentMinigameScreen(sessionId, tier, lives);
             };
-            Minecraft.getInstance().setScreen(screen);
+            Minecraft mc = Minecraft.getInstance();
+            // Dismiss any open screen (including the pause menu) before opening
+            // the minigame, so a playermaster-forced session always works.
+            if (mc.screen != null) {
+                mc.setScreen(null);
+            }
+            mc.setScreen(screen);
         }));
         return true;
     }

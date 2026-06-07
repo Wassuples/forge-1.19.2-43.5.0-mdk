@@ -37,7 +37,7 @@ public class StoneMinigameScreen extends StyleMinigameScreen {
     public StoneMinigameScreen(UUID sessionId, int tier) {
         super(sessionId, tier, Component.literal("Stone Breathing – Endurance & Resolve"));
         this.durationTicks = 60 + (tier - 1) * 40;   // 60, 100, 140, … ticks
-        this.requiredCps   = 2.5f + (tier - 1) * 0.5f; // 2.5, 3.0, 3.5, …
+        this.requiredCps   = 4.5f + (tier - 1) * 0.5f; // 2.5, 3.0, 3.5, …
         this.clickHistory  = new int[measureWindowTicks];
     }
 

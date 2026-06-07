@@ -42,6 +42,18 @@ public abstract class StyleMinigameScreen extends Screen {
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
+    /**
+     * Called whenever the screen is dismissed — by ESC, by the game closing,
+     * or by {@link #finishMinigame}. Sends a fail result if the game was not
+     * completed normally, ensuring the server session is always cleared.
+     */
+    @Override
+    public void onClose() {
+        // finishMinigame guards against double-sending via resultSent
+        finishMinigame(false);
+        // Do NOT call super.onClose() — finishMinigame calls setScreen(null) itself.
+    }
+
     @Override
     public final void tick() {
         tickGame();

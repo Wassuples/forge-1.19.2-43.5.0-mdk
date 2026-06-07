@@ -8,14 +8,16 @@ import net.minecraft.sounds.SoundEvents;
 import java.util.UUID;
 
 /**
- * Wind Breathing – Sustained Pressure minigame.
+ * Wind Breathing \u2013 Sustained Pressure minigame.
  *
  * <p><b>Mechanic</b>: A target follows an erratic wind-pattern path across the screen.
  * The player must click it repeatedly to score hits. Too many consecutive misses fails
- * the attempt immediately (no penalty; retry immediately).
+ * the attempt immediately.
  *
- * <p><b>Pass condition</b>: Land {@code requiredHits} total clicks on the target.
- * <br><b>Fail</b>: Exceed {@code maxConsecutiveMisses} consecutive missed clicks.
+ * <p><b>Pass condition</b>: Land {@code requiredHits} total clicks on the target within
+ * the time limit.
+ * <br><b>Fail</b>: Exceed {@code maxConsecutiveMisses} consecutive missed clicks, OR
+ * the time limit expires before all required hits are landed.
  */
 public class WindMinigameScreen extends StyleMinigameScreen {
 
@@ -23,6 +25,10 @@ public class WindMinigameScreen extends StyleMinigameScreen {
     private final int maxConsecutiveMisses;
     private final int targetRadius = 14;
     private final double baseSpeed;
+
+    /** Total tick budget to land all required hits. */
+    private final int timeLimitTicks;
+    private int ticksElapsed = 0;
 
     // Target position & velocity
     private double tx, ty;
@@ -38,12 +44,13 @@ public class WindMinigameScreen extends StyleMinigameScreen {
     private boolean failed = false;
 
     public WindMinigameScreen(UUID sessionId, int tier) {
-        super(sessionId, tier, Component.literal("Wind Breathing – Sustained Pressure"));
-        this.requiredHits        = 6 + (tier - 1) * 3;   // 6, 9, 12, …
-        this.maxConsecutiveMisses = Math.max(3, 8 - tier); // 7, 6, 5, 4, 3 …
+        super(sessionId, tier, Component.literal("Wind Breathing \u2013 Sustained Pressure"));
+        this.requiredHits         = 6 + (tier - 1) * 3;        // 6, 9, 12, \u2026
+        this.maxConsecutiveMisses = Math.max(3, 8 - tier);      // 7, 6, 5, 4, 3 \u2026
         this.baseSpeed            = 1.5 + (tier - 1) * 0.5;
         this.dirChangeInterval    = Math.max(15, 35 - tier * 4);
-        // start position set in init
+        // Time limit: 15 s base, shrinks by 1 s per tier (20 ticks = 1 s)
+        this.timeLimitTicks       = Math.max(200, (15 - (tier - 1)) * 20); // 300\u2192200 ticks
         this.tx = 0; this.ty = 0;
         this.vx = baseSpeed; this.vy = baseSpeed * 0.6;
     }
@@ -51,7 +58,7 @@ public class WindMinigameScreen extends StyleMinigameScreen {
     @Override
     protected void init() {
         super.init();
-        tx = this.width / 2.0;
+        tx = this.width  / 2.0;
         ty = this.height / 2.0;
         vx = baseSpeed;
         vy = baseSpeed * 0.6;
@@ -61,13 +68,29 @@ public class WindMinigameScreen extends StyleMinigameScreen {
     protected void tickGame() {
         if (failed) return;
 
+        // Time limit check
+        ticksElapsed++;
+        if (ticksElapsed >= timeLimitTicks) {
+            failed = true;
+            if (minecraft != null) minecraft.getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 0.8f));
+            finishMinigame(false);
+            return;
+        }
+
         // Move target
         tx += vx;
         ty += vy;
 
         // Bounce off edges
-        if (tx < targetRadius || tx > this.width - targetRadius)  { vx = -vx; tx = Math.max(targetRadius, Math.min(this.width - targetRadius, tx)); }
-        if (ty < 50 || ty > this.height - targetRadius)           { vy = -vy; ty = Math.max(50, Math.min(this.height - targetRadius, ty)); }
+        if (tx < targetRadius || tx > this.width - targetRadius) {
+            vx = -vx;
+            tx = Math.max(targetRadius, Math.min(this.width - targetRadius, tx));
+        }
+        if (ty < 50 || ty > this.height - targetRadius) {
+            vy = -vy;
+            ty = Math.max(50, Math.min(this.height - targetRadius, ty));
+        }
 
         // Erratic direction change
         dirChangeTick++;
@@ -110,14 +133,25 @@ public class WindMinigameScreen extends StyleMinigameScreen {
     @Override
     protected void renderGame(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         drawTitle(pose, "Sustained Pressure", 0x88FF88);
-        drawInstructions(pose, "Keep clicking the target — don't miss too many in a row!", 0xCCCCCC);
+        drawInstructions(pose, "Keep clicking the target \u2014 don\u2019t miss too many or run out of time!", 0xCCCCCC);
 
         drawCenteredString(pose, this.font,
-                "Hits: " + hitsLanded + " / " + requiredHits + "   Misses: " + consecutiveMisses + "/" + maxConsecutiveMisses,
+                "Hits: " + hitsLanded + " / " + requiredHits
+                        + "   Misses: " + consecutiveMisses + "/" + maxConsecutiveMisses,
                 this.width / 2, 35, 0x88FF88);
 
-        // Trail / wind particles (simple line from last position — approximated)
-        int ix = (int)tx, iy = (int)ty;
+        // Time limit bar
+        float timePct = 1f - (float) ticksElapsed / timeLimitTicks;
+        int bw = 160, bx = (this.width - bw) / 2;
+        fill(pose, bx, this.height - 30, bx + bw, this.height - 22, 0x44000000);
+        // Colour shifts red as time runs low
+        int barColour = timePct > 0.4f ? 0xFF88FF88 : timePct > 0.2f ? 0xFFFFAA00 : 0xFFFF3333;
+        fill(pose, bx, this.height - 30, bx + (int)(timePct * bw), this.height - 22, barColour);
+        drawCenteredString(pose, this.font,
+                "Time: " + Math.max(0, (timeLimitTicks - ticksElapsed) / 20) + "s",
+                this.width / 2, this.height - 42, 0xAAAAAA);
+
+        int ix = (int) tx, iy = (int) ty;
 
         // Wind gust lines radiating from target
         for (int i = 0; i < 6; i++) {
@@ -130,12 +164,12 @@ public class WindMinigameScreen extends StyleMinigameScreen {
         // Target
         fillCircle(pose, ix, iy, targetRadius, 0xFF1A5F1A);
         drawCircleOutline(pose, ix, iy, targetRadius, 2, 0xFF88FF88);
-        drawCenteredString(pose, this.font, "✦", ix, iy - 4, 0xFFFFFF);
+        drawCenteredString(pose, this.font, "\u2746", ix, iy - 4, 0xFFFFFF);
 
         // Consecutive miss warning
         if (consecutiveMisses >= maxConsecutiveMisses - 1) {
-            drawCenteredString(pose, this.font, "WARNING: one more miss fails!", this.width / 2,
-                    this.height - 40, 0xFF4444);
+            drawCenteredString(pose, this.font, "WARNING: one more miss fails!",
+                    this.width / 2, this.height - 55, 0xFF4444);
         }
     }
 }

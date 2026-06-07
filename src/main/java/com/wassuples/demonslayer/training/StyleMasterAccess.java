@@ -5,10 +5,7 @@ import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
 import com.wassuples.demonslayer.ranking.Rank;
 import com.wassuples.demonslayer.reputation.HardlineFlag;
 import com.wassuples.demonslayer.reputation.PlayerRepRecord;
-import com.wassuples.demonslayer.reputation.ReputationDimension;
 import com.wassuples.demonslayer.reputation.ReputationManager;
-import com.wassuples.demonslayer.styles.BreathingForms;
-import com.wassuples.demonslayer.styles.BreathingStyles;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -39,7 +36,7 @@ import java.util.Set;
  */
 public class StyleMasterAccess {
 
-    // ── immutable fields ──────────────────────────────────────────────────────
+    // -- immutable fields -----------------------------------------------------
 
     private final Rank minRank;
     private final int minCorpsRep;
@@ -61,7 +58,7 @@ public class StyleMasterAccess {
         this.requireKizukiKill = b.requireKizukiKill;
     }
 
-    // ── evaluation ────────────────────────────────────────────────────────────
+    // -- evaluation -----------------------------------------------------------
 
     public Result evaluate(ServerPlayer player, ServerLevel level) {
         PlayerProgression progression = player
@@ -86,7 +83,7 @@ public class StyleMasterAccess {
         }
 
         // Tanjiro affinity check
-        if (repRecord.getTanjiroRep() < minTanjiroRep) {
+        if (repRecord.getTanjiroRep() < minTanjiroRep && minTanjiroRep > 0) {
             return Result.deny(Component.literal(
                     "Your affinity with Tanjiro is too low.")
                     .withStyle(ChatFormatting.RED));
@@ -121,25 +118,26 @@ public class StyleMasterAccess {
             }
         }
 
-        // Kizuki kill
+        // Kizuki kill -- uses progression.hasKilledKizuki() which IS set in ModEvents on demon kill
         if (requireKizukiKill && !progression.hasKilledKizuki()) {
             return Result.deny(Component.literal(
-                    "You have not yet proven yourself against the Twelve Kizuki.")
+                    "Face a Kizuki first. Then we'll talk.")
                     .withStyle(ChatFormatting.RED));
         }
 
         return Result.allow();
     }
 
-    // ── flag denial messages ──────────────────────────────────────────────────
+    // -- flag denial messages -------------------------------------------------
 
     private static Component getDenialForMissingFlag(HardlineFlag flag) {
         return switch (flag) {
             case MET_RENGOKU ->
                 Component.literal("You must meet the Flame Hashira before speaking to his father.")
                          .withStyle(ChatFormatting.RED);
+            // FIX: was "Face a Moon demon first." -- Kizuki is the correct in-universe term
             case KILLED_LOWER_MOON ->
-                Component.literal("Face a Moon demon first. Then we'll talk.")
+                Component.literal("Face a Kizuki first. Then we'll talk.")
                          .withStyle(ChatFormatting.RED);
             default -> Component.literal("You have not yet met the prerequisite.")
                                .withStyle(ChatFormatting.RED);
@@ -156,14 +154,14 @@ public class StyleMasterAccess {
         };
     }
 
-    // ── result record ─────────────────────────────────────────────────────────
+    // -- result record --------------------------------------------------------
 
     public record Result(boolean allowed, @Nullable Component denialMessage) {
         public static Result allow()                    { return new Result(true, null); }
         public static Result deny(Component message)    { return new Result(false, message); }
     }
 
-    // ── builder ───────────────────────────────────────────────────────────────
+    // -- builder --------------------------------------------------------------
 
     public static Builder builder() { return new Builder(); }
 

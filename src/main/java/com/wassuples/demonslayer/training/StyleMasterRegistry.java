@@ -32,14 +32,14 @@ public final class StyleMasterRegistry {
     static {
         List<StyleMasterRecord> list = new ArrayList<>();
 
-        // ── WATER ────────────────────────────────────────────────────────────
+        // -- WATER ------------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "giyu_tomioka",
                 BreathingStyles.WATER,
                 "Giyu Tomioka",
                 true,
-                "River District – 2–3 fixed rotating locations",
+                "River District - 2-3 fixed rotating locations",
                 StyleMasterAccess.builder()
                         .minRank(Rank.TSUCHINOTO)
                         .minCorpsRep(1)
@@ -55,13 +55,10 @@ public final class StyleMasterRegistry {
                 BreathingStyles.WATER,
                 "Sakonji Urokodaki",
                 false,
-                "Mt. Sagiri – fixed location",
+                "Mt. Sagiri - fixed location",
                 StyleMasterAccess.builder()
-                        .minCorpsRep(0) // no rank required
+                        .minCorpsRep(0)
                         .minTanjiroRep(0)
-                        // Mission 0 completion is checked separately in StyleTeachingEvents;
-                        // Tanjiro affinity >= Acquaintance (100) grants the letter that skips
-                        // the 3-step warm-up dialogue (handled in interaction flow, not access).
                         .build(),
                 Arrays.asList(
                         BreathingForms.WATER_1,
@@ -76,14 +73,14 @@ public final class StyleMasterRegistry {
                         BreathingForms.WATER_10)
         ));
 
-        // ── FLAME ────────────────────────────────────────────────────────────
+        // -- FLAME ------------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "rengoku_kyojuro",
                 BreathingStyles.FLAME,
                 "Rengoku Kyojuro",
                 true,
-                "Flame Hashira Estate – fixed location",
+                "Flame Hashira Estate - fixed location",
                 StyleMasterAccess.builder()
                         .minRank(Rank.KINOE)
                         .minCorpsRep(600)
@@ -102,7 +99,7 @@ public final class StyleMasterRegistry {
                 BreathingStyles.FLAME,
                 "Shinjuro Rengoku",
                 false,
-                "Flame Hashira Estate – inner room",
+                "Flame Hashira Estate - inner room",
                 StyleMasterAccess.builder()
                         .minCorpsRep(1)
                         .requireFlag(HardlineFlag.MET_RENGOKU)
@@ -114,14 +111,14 @@ public final class StyleMasterRegistry {
                         BreathingForms.FLAME_3)
         ));
 
-        // ── THUNDER ──────────────────────────────────────────────────────────
+        // -- THUNDER ----------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "jigoro_kuwajima",
                 BreathingStyles.THUNDER,
                 "Jigoro Kuwajima",
                 false,
-                "Remote mountain village – fixed location, long travel",
+                "Remote mountain village - fixed location, long travel",
                 StyleMasterAccess.builder()
                         .minRank(Rank.KANOTO)
                         // no Corps rep requirement; travel distance is the primary gate
@@ -135,7 +132,7 @@ public final class StyleMasterRegistry {
                         BreathingForms.THUNDER_6)
         ));
 
-        // ── MIST ─────────────────────────────────────────────────────────────
+        // -- MIST -------------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "muichiro_tokito",
@@ -153,18 +150,21 @@ public final class StyleMasterRegistry {
                         BreathingForms.MIST_7)
         ));
 
-        // ── WIND ─────────────────────────────────────────────────────────────
+        // -- WIND -------------------------------------------------------------
+        // FIX: requireKizukiKill() replaces requireFlag(KILLED_LOWER_MOON).
+        // The rep flag was never being set on kill; the progression-based check
+        // (hasKilledKizuki()) is the one that IS properly set in ModEvents.
 
         list.add(new StyleMasterRecord(
                 "sanemi_shinazugawa",
                 BreathingStyles.WIND,
                 "Sanemi Shinazugawa",
                 true,
-                "Wind Hashira dojo – fixed location",
+                "Wind Hashira dojo - fixed location",
                 StyleMasterAccess.builder()
                         .minRank(Rank.TSUCHINOE)
                         .minCorpsRep(400)
-                        .requireFlag(HardlineFlag.KILLED_LOWER_MOON)
+                        .requireKizukiKill()
                         .blockFlag(HardlineFlag.PROTECTED_NEZUKO)
                         .build(),
                 Arrays.asList(
@@ -173,32 +173,32 @@ public final class StyleMasterRegistry {
                         BreathingForms.WIND_9)
         ));
 
-        // ── STONE ────────────────────────────────────────────────────────────
+        // -- STONE ------------------------------------------------------------
+        // FIX: removed minTanjiroRep(250). Gyomei does not check Tanjiro affinity.
 
         list.add(new StyleMasterRecord(
                 "gyomei_himejima",
                 BreathingStyles.STONE,
                 "Gyomei Himejima",
                 true,
-                "Stone Hashira temple – fixed location",
+                "Stone Hashira temple - fixed location",
                 StyleMasterAccess.builder()
                         .minRank(Rank.KINOE)
                         .minCorpsRep(600)
-                        .minTanjiroRep(250) // Comrade
                         .build(),
                 Arrays.asList(
                         BreathingForms.STONE_4,
                         BreathingForms.STONE_5)
         ));
 
-        // ── INSECT ───────────────────────────────────────────────────────────
+        // -- INSECT -----------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "shinobu_kocho",
                 BreathingStyles.INSECT,
                 "Shinobu Kocho",
                 true,
-                "Butterfly Estate – fixed location",
+                "Butterfly Estate - fixed location",
                 StyleMasterAccess.builder()
                         .minRank(Rank.KANOE)
                         .minCorpsRep(200)
@@ -210,14 +210,14 @@ public final class StyleMasterRegistry {
                         BreathingForms.INSECT_4)
         ));
 
-        // ── LOVE ─────────────────────────────────────────────────────────────
+        // -- LOVE -------------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "mitsuri_kanroji",
                 BreathingStyles.LOVE,
                 "Mitsuri Kanroji",
                 true,
-                "Love Hashira garden estate – fixed location",
+                "Love Hashira garden estate - fixed location",
                 StyleMasterAccess.builder()
                         .minRank(Rank.KANOTO)
                         .minCorpsRep(1)
@@ -228,14 +228,14 @@ public final class StyleMasterRegistry {
                         BreathingForms.LOVE_6)
         ));
 
-        // ── SERPENT ──────────────────────────────────────────────────────────
+        // -- SERPENT ----------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "obanai_iguro",
                 BreathingStyles.SERPENT,
                 "Obanai Iguro",
                 true,
-                "Serpent Hashira compound – fixed location",
+                "Serpent Hashira compound - fixed location",
                 StyleMasterAccess.builder()
                         .minRank(Rank.KINOTO)
                         .minCorpsRep(400)
@@ -247,14 +247,14 @@ public final class StyleMasterRegistry {
                         BreathingForms.SERPENT_5)
         ));
 
-        // ── SOUND ────────────────────────────────────────────────────────────
+        // -- SOUND ------------------------------------------------------------
 
         list.add(new StyleMasterRecord(
                 "tengen_uzui_active",
                 BreathingStyles.SOUND,
                 "Tengen Uzui",
                 true,
-                "Sound Hashira Estate – fixed location",
+                "Sound Hashira Estate - fixed location",
                 StyleMasterAccess.builder()
                         .minRank(Rank.KANOE)
                         .minCorpsRep(200)
@@ -269,9 +269,9 @@ public final class StyleMasterRegistry {
                 BreathingStyles.SOUND,
                 "Tengen Uzui (Retired)",
                 false,
-                "Entertainment District safe house – post-Mission 11",
+                "Entertainment District safe house - post-Mission 11",
                 StyleMasterAccess.builder()
-                        .minCorpsRep(1) // no rank requirement
+                        .minCorpsRep(1)
                         .build(),
                 Collections.singletonList(BreathingForms.SOUND_1)
         ));

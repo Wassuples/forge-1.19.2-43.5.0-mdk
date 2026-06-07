@@ -8,87 +8,99 @@ import org.lwjgl.glfw.GLFW;
 
 import java.util.UUID;
 
-/**
- * Flame Breathing – Burst Timing minigame.
- *
- * <p><b>Mechanic</b>: A charge bar fills rapidly. The player must press SPACE (or click)
- * exactly at the <i>peak</i> — when the bar is in the gold zone (85–100%). Multiple bursts
- * in sequence, increasing in speed each tier.
- *
- * <p><b>Pass condition</b>: Hit the peak window on {@code requiredBursts} consecutive bursts.
- * <br><b>Fail</b>: Miss the window and lose a life (handled server-side after result packet).
- * All lives lost → 1 in-game day cooldown.
- */
 public class FlameMinigameScreen extends StyleMinigameScreen {
 
-    // ── config ────────────────────────────────────────────────────────────────
-    private final int  requiredBursts;
-    private final int  chargeCycleTicks; // ticks to fill from 0 → 100 %
-    private final float peakLow  = 0.82f;
-    private final float peakHigh = 1.0f;
+    private static final float PEAK_LOW  = 0.80f;
+    private static final float PEAK_HIGH = 1.00f;
+    /** Base ticks for the first burst to fill 0→100%. Decreases each burst. */
+    private static final int BASE_CHARGE_TICKS = 40;
+    private static final int CHARGE_REDUCTION   = 10; // ticks removed per burst
+    private static final int MIN_CHARGE_TICKS   = 20;
 
-    // ── state ─────────────────────────────────────────────────────────────────
-    private float chargeProgress  = 0f;   // 0.0 → 1.0
+    private final int requiredBursts;
+    private int livesLeft;
+
+    private enum Phase { IDLE, CHARGING, RESULT_PASS, RESULT_MISS }
+    private Phase phase = Phase.IDLE;
+
+    private float chargeProgress  = 0f;
     private int   burstsDone      = 0;
-    private int   livesLeft;
-    private boolean waitingForInput = true; // true = bar is running, waiting for press
-    private int   resultDisplayTick = 0;   // flash "PERFECT!" / "MISS!" briefly
-    private boolean lastHitPeak    = false;
-    private boolean gameOver        = false;
+    private int   resultTick      = 0;
+    private boolean holdingSpace  = false;
+    private boolean gameOver      = false;
+
+    /** Ticks it takes to fill the bar for the current burst. Decreases each burst. */
+    private int currentChargeTicks;
 
     public FlameMinigameScreen(UUID sessionId, int tier, int lives) {
         super(sessionId, tier, Component.literal("Flame Breathing – Burst Timing"));
-        this.requiredBursts   = 3 + (tier - 1);          // 3, 4, 5, …
-        this.chargeCycleTicks = Math.max(20, 60 - (tier - 1) * 8); // 60 → 20 ticks
-        this.livesLeft        = lives;
+        this.requiredBursts    = 3 + (tier - 1);
+        this.livesLeft         = lives;
+        this.currentChargeTicks = Math.max(MIN_CHARGE_TICKS,
+            BASE_CHARGE_TICKS - (tier - 1) * CHARGE_REDUCTION);
     }
-
-    // ── game logic ────────────────────────────────────────────────────────────
 
     @Override
     protected void tickGame() {
         if (gameOver) return;
 
-        if (resultDisplayTick > 0) {
-            resultDisplayTick--;
-            if (resultDisplayTick == 0) {
-                if (livesLeft <= 0) {
-                    gameOver = true;
-                    finishMinigame(false);
-                    return;
-                }
-                resetCharge();
+        switch (phase) {
+            case IDLE -> {
+                // Waiting for the player to press SPACE — do nothing
             }
-            return;
-        }
-
-        if (waitingForInput) {
-            chargeProgress += 1.0f / chargeCycleTicks;
-            if (chargeProgress >= 1.0f) {
-                chargeProgress = 1.0f;
-                // Overshot – miss
-                registerMiss();
+            case CHARGING -> {
+                if (holdingSpace) {
+                    chargeProgress += 1.0f / currentChargeTicks;
+                    if (chargeProgress >= 1.0f) {
+                        chargeProgress = 1.0f;
+                        // Held too long past peak — auto-miss
+                        registerMiss();
+                    }
+                }
+            }
+            case RESULT_PASS, RESULT_MISS -> {
+                resultTick++;
+                if (resultTick >= 22) {
+                    resultTick = 0;
+                    if (phase == Phase.RESULT_MISS && livesLeft <= 0) {
+                        gameOver = true;
+                        finishMinigame(false);
+                    } else {
+                        chargeProgress = 0f;
+                        holdingSpace   = false;
+                        phase          = Phase.IDLE;
+                    }
+                }
             }
         }
     }
 
-    private void attemptStrike() {
-        if (gameOver || !waitingForInput) return;
+    private void onSpacePressed() {
+        if (gameOver || phase != Phase.IDLE) return;
+        holdingSpace   = true;
+        chargeProgress = 0f;
+        phase          = Phase.CHARGING;
+    }
 
-        if (chargeProgress >= peakLow && chargeProgress <= peakHigh) {
+    private void onSpaceReleased() {
+        if (gameOver || phase != Phase.CHARGING) return;
+        holdingSpace = false;
+
+        if (chargeProgress >= PEAK_LOW && chargeProgress <= PEAK_HIGH) {
+            // Good release
             burstsDone++;
-            lastHitPeak = true;
-            if (minecraft != null) {
-                minecraft.getSoundManager().play(
-                        SimpleSoundInstance.forUI(SoundEvents.FIRECHARGE_USE, 1.3f));
-            }
+            if (minecraft != null) minecraft.getSoundManager().play(
+                SimpleSoundInstance.forUI(SoundEvents.FIRECHARGE_USE, 1.3f));
             if (burstsDone >= requiredBursts) {
                 gameOver = true;
                 finishMinigame(true);
                 return;
             }
-            resultDisplayTick = 18;
-            waitingForInput = false;
+            // Speed up the bar for the next burst
+            currentChargeTicks = Math.max(MIN_CHARGE_TICKS,
+                currentChargeTicks - CHARGE_REDUCTION);
+            phase = Phase.RESULT_PASS;
+            resultTick = 0;
         } else {
             registerMiss();
         }
@@ -96,80 +108,76 @@ public class FlameMinigameScreen extends StyleMinigameScreen {
 
     private void registerMiss() {
         livesLeft--;
-        lastHitPeak = false;
-        resultDisplayTick = 25;
-        waitingForInput = false;
-        if (minecraft != null) {
-            minecraft.getSoundManager().play(
-                    SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 0.8f));
-        }
+        holdingSpace = false;
+        phase        = Phase.RESULT_MISS;
+        resultTick   = 0;
+        if (minecraft != null) minecraft.getSoundManager().play(
+            SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BASS, 0.8f));
     }
-
-    private void resetCharge() {
-        chargeProgress = 0f;
-        waitingForInput = true;
-    }
-
-    // ── input ─────────────────────────────────────────────────────────────────
 
     @Override
     public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_SPACE || keyCode == GLFW.GLFW_KEY_ENTER) {
-            attemptStrike();
-            return true;
-        }
+        if (keyCode == GLFW.GLFW_KEY_SPACE) { onSpacePressed(); return true; }
         return super.keyPressed(keyCode, scanCode, modifiers);
     }
 
     @Override
-    public boolean mouseClicked(double mx, double my, int button) {
-        attemptStrike();
-        return true;
+    public boolean keyReleased(int keyCode, int scanCode, int modifiers) {
+        if (keyCode == GLFW.GLFW_KEY_SPACE) { onSpaceReleased(); return true; }
+        return super.keyReleased(keyCode, scanCode, modifiers);
     }
-
-    // ── rendering ─────────────────────────────────────────────────────────────
 
     @Override
     protected void renderGame(PoseStack pose, int mouseX, int mouseY, float partialTick) {
         drawTitle(pose, "Burst Timing", 0xFF6600);
-        drawInstructions(pose, "Press SPACE at the PEAK of the charge!", 0xCCCCCC);
+        drawInstructions(pose,
+            phase == Phase.IDLE ? "Hold SPACE to charge — release AT the peak!"
+                : phase == Phase.CHARGING ? "Release at the peak!"
+                  : "",
+            0xCCCCCC);
 
-        // Lives
-        drawCenteredString(pose, this.font, "Lives: " + livesLeft, this.width / 2, 30, 0xFF4444);
-
-        // Progress: bursts
-        drawCenteredString(pose, this.font, "Bursts: " + burstsDone + " / " + requiredBursts,
-                this.width / 2, 45, 0xFFAA44);
+        drawCenteredString(pose, this.font,
+            "Lives: " + livesLeft + "   Bursts: " + burstsDone + " / " + requiredBursts,
+            this.width / 2, 35, 0xFFAA44);
 
         // Charge bar
-        int barW = 240;
-        int barH = 28;
+        int barW = 240, barH = 28;
         int barX = (this.width - barW) / 2;
         int barY = this.height / 2 - barH / 2;
 
-        // Background
         fill(pose, barX - 2, barY - 2, barX + barW + 2, barY + barH + 2, 0xFF222222);
-        fill(pose, barX, barY, barX + barW, barY + barH, 0xFF444444);
+        fill(pose, barX, barY, barX + barW, barY + barH, 0xFF3A3A3A);
 
         // Peak zone highlight
-        int peakStart = barX + (int)(peakLow * barW);
-        int peakEnd   = barX + barW;
-        fill(pose, peakStart, barY, peakEnd, barY + barH, 0x44FFD700);
+        int peakStart = barX + (int)(PEAK_LOW * barW);
+        fill(pose, peakStart, barY, barX + barW, barY + barH, 0x44FFD700);
 
         // Charge fill
-        int fillWidth = (int)(chargeProgress * barW);
-        boolean inPeak = chargeProgress >= peakLow;
-        int fillColour = inPeak ? 0xFFFFD700 : 0xFFFF6600;
-        fill(pose, barX, barY, barX + fillWidth, barY + barH, fillColour);
+        if (phase == Phase.CHARGING || phase == Phase.RESULT_PASS || phase == Phase.RESULT_MISS) {
+            int fw = (int)(chargeProgress * barW);
+            int fc = (chargeProgress >= PEAK_LOW) ? 0xFFFFD700 : 0xFFFF6600;
+            fill(pose, barX, barY, barX + fw, barY + barH, fc);
+        }
 
-        // Labels
-        drawString(pose, this.font, "RELEASE HERE", peakStart + 2, barY + barH / 2 - 4, 0xFFFFD700);
+        // Speed indicator (decreasing ticks)
+        String speedStr = "Speed: " + currentChargeTicks + " ticks";
+        drawCenteredString(pose, this.font, speedStr, this.width / 2, barY + barH + 10, 0x888888);
 
-        // Result flash
-        if (resultDisplayTick > 0) {
-            String msg = lastHitPeak ? "PERFECT!" : "MISS!";
-            int col = lastHitPeak ? 0xFFD700 : 0xFF4444;
-            drawCenteredString(pose, this.font, msg, this.width / 2, this.height / 2 + 30, col);
+        drawString(pose, this.font, "RELEASE HERE →", peakStart + 4, barY + barH / 2 - 4, 0xFFD700);
+
+        // Phase-specific feedback
+        switch (phase) {
+            case IDLE ->
+                drawCenteredString(pose, this.font, "Hold SPACE to begin", this.width / 2,
+                    this.height / 2 + 28, 0x888888);
+            case RESULT_PASS ->
+                drawCenteredString(pose, this.font, "PERFECT!", this.width / 2,
+                    this.height / 2 + 28, 0xFFD700);
+            case RESULT_MISS ->
+                drawCenteredString(pose, this.font,
+                    "MISS! " + livesLeft + " life/lives remaining",
+                    this.width / 2, this.height / 2 + 28, 0xFF4444);
+            default -> {}
         }
     }
 }

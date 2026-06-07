@@ -8,19 +8,19 @@ import net.minecraft.sounds.SoundEvents;
 import java.util.*;
 
 /**
- * Insect Breathing – Precision Timing minigame.
+ * Insect Breathing \u2013 Precision Timing minigame.
  *
  * <p><b>Mechanic</b>: Multiple small, fast targets appear simultaneously. A brief flash
  * sequence reveals the required strike order. The player must click all targets in that
  * order before they disappear. Retry immediately on failure.
  *
  * <p><b>Pass condition</b>: Successfully strike all targets in order across {@code requiredRounds} rounds.
- * <br><b>Fail</b>: Wrong target clicked or all targets disappear before completion → retry.
+ * <br><b>Fail</b>: Wrong target clicked or all targets disappear before completion \u2192 retry.
  */
 public class InsectMinigameScreen extends StyleMinigameScreen {
 
-    private static final int REVEAL_TICKS   = 40;  // how long order numbers are shown
-    private static final int ACTIVE_TICKS   = 60;  // window to click all targets after reveal
+    private static final int REVEAL_TICKS = 40;  // how long order numbers are shown
+    private static final int ACTIVE_TICKS = 60;  // window to click all targets after reveal
 
     private final int targetCount;
     private final int requiredRounds;
@@ -31,15 +31,21 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
     private final List<InsectTarget> targets = new ArrayList<>();
     private int revealTick   = 0;
     private int activeTick   = 0;
-    private int nextExpected = 0;  // index into strikeOrder the player must click next
+    private int nextExpected = 0;
     private int roundsDone   = 0;
     private int resultTick   = 0;
     private final Random rng = new Random();
 
     public InsectMinigameScreen(UUID sessionId, int tier) {
-        super(sessionId, tier, Component.literal("Insect Breathing – Precision Timing"));
-        this.targetCount   = 3 + (tier - 1);       // 3, 4, 5, …
+        super(sessionId, tier, Component.literal("Insect Breathing \u2013 Precision Timing"));
+        this.targetCount    = 3 + (tier - 1);   // 3, 4, 5, \u2026
         this.requiredRounds = 2 + (tier - 1);
+        // spawnRound() deferred to init() so this.width/height are valid
+    }
+
+    @Override
+    protected void init() {
+        super.init();
         spawnRound();
     }
 
@@ -50,28 +56,25 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
         activeTick   = 0;
         phase        = Phase.REVEAL;
 
-        // Assign random positions
         Set<String> usedCells = new HashSet<>();
         for (int i = 0; i < targetCount; i++) {
             int x, y;
             String key;
             int attempts = 0;
             do {
-                x = 50 + rng.nextInt(this.width - 100);
+                x = 50 + rng.nextInt(this.width  - 100);
                 y = 50 + rng.nextInt(this.height - 100);
                 key = (x / 30) + "," + (y / 30);
                 attempts++;
             } while (usedCells.contains(key) && attempts < 30);
             usedCells.add(key);
-            targets.add(new InsectTarget(x, y, i));  // strikeOrder = i
+            targets.add(new InsectTarget(x, y, i));
         }
-        // Shuffle strike order (targets are placed; their displayed hit number differs)
+        // Shuffle displayed strike order
         List<Integer> order = new ArrayList<>();
         for (int i = 0; i < targetCount; i++) order.add(i);
         Collections.shuffle(order, rng);
-        for (int i = 0; i < targets.size(); i++) {
-            targets.get(i).strikeOrder = order.get(i);
-        }
+        for (int i = 0; i < targets.size(); i++) targets.get(i).strikeOrder = order.get(i);
     }
 
     @Override
@@ -79,14 +82,11 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
         switch (phase) {
             case REVEAL -> {
                 revealTick++;
-                if (revealTick >= REVEAL_TICKS) {
-                    phase = Phase.ACTIVE;
-                }
+                if (revealTick >= REVEAL_TICKS) phase = Phase.ACTIVE;
             }
             case ACTIVE -> {
                 activeTick++;
                 if (activeTick >= ACTIVE_TICKS) {
-                    // Time ran out
                     phase = Phase.FAILED;
                     resultTick = 0;
                 }
@@ -95,18 +95,13 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
                 resultTick++;
                 if (resultTick >= 18) {
                     roundsDone++;
-                    if (roundsDone >= requiredRounds) {
-                        finishMinigame(true);
-                    } else {
-                        spawnRound();
-                    }
+                    if (roundsDone >= requiredRounds) finishMinigame(true);
+                    else spawnRound();
                 }
             }
             case FAILED -> {
                 resultTick++;
-                if (resultTick >= 20) {
-                    finishMinigame(false);
-                }
+                if (resultTick >= 20) finishMinigame(false);
             }
         }
     }
@@ -115,31 +110,22 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
     public boolean mouseClicked(double mx, double my, int button) {
         if (phase != Phase.ACTIVE) return false;
 
-        InsectTarget clickedTarget = null;
+        InsectTarget clicked = null;
         for (InsectTarget t : targets) {
             if (!t.struck) {
-                double dx = mx - t.x;
-                double dy = my - t.y;
-                if (dx * dx + dy * dy <= 14 * 14) {
-                    clickedTarget = t;
-                    break;
-                }
+                double dx = mx - t.x, dy = my - t.y;
+                if (dx * dx + dy * dy <= 14 * 14) { clicked = t; break; }
             }
         }
+        if (clicked == null) return false;
 
-        if (clickedTarget == null) return false;
-
-        if (clickedTarget.strikeOrder == nextExpected) {
-            clickedTarget.struck = true;
+        if (clicked.strikeOrder == nextExpected) {
+            clicked.struck = true;
             nextExpected++;
             if (minecraft != null) minecraft.getSoundManager().play(
                     SimpleSoundInstance.forUI(SoundEvents.BEE_STING, 1.0f, 1.8f));
-            if (nextExpected >= targetCount) {
-                phase = Phase.ROUND_PASS;
-                resultTick = 0;
-            }
+            if (nextExpected >= targetCount) { phase = Phase.ROUND_PASS; resultTick = 0; }
         } else {
-            // Wrong order
             phase = Phase.FAILED;
             resultTick = 0;
             if (minecraft != null) minecraft.getSoundManager().play(
@@ -159,7 +145,6 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
         drawCenteredString(pose, this.font, "Round " + (roundsDone + 1) + " / " + requiredRounds,
                 this.width / 2, 35, 0xCC66FF);
 
-        // Active-phase countdown bar
         if (phase == Phase.ACTIVE) {
             float pct = 1f - (float) activeTick / ACTIVE_TICKS;
             int bw = 160, bx = (this.width - bw) / 2;
@@ -170,13 +155,12 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
         for (InsectTarget t : targets) {
             if (t.struck) continue;
             int col = 0xFF882288;
-            if (phase == Phase.REVEAL || revealing) col = 0xFFCC66FF;
+            if (phase == Phase.REVEAL) col = 0xFFCC66FF;
             else if (t.strikeOrder == nextExpected) col = 0xFFFFFFFF;
             fillCircle(pose, t.x, t.y, 14, col);
             drawCircleOutline(pose, t.x, t.y, 14, 2, 0xFFCC66FF);
-            if (phase == Phase.REVEAL) {
+            if (phase == Phase.REVEAL)
                 drawCenteredString(pose, this.font, String.valueOf(t.strikeOrder + 1), t.x, t.y - 4, 0xFF000000);
-            }
         }
 
         if (phase == Phase.ROUND_PASS)
@@ -186,8 +170,7 @@ public class InsectMinigameScreen extends StyleMinigameScreen {
     }
 
     private static class InsectTarget {
-        int x, y;
-        int strikeOrder;
+        int x, y, strikeOrder;
         boolean struck = false;
         InsectTarget(int x, int y, int order) { this.x = x; this.y = y; this.strikeOrder = order; }
     }

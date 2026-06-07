@@ -2,118 +2,122 @@ package com.wassuples.demonslayer.client.gui.minigame;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.sounds.SoundEvents;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
-/**
- * Sound Breathing – Rhythm minigame.
- *
- * <p><b>Mechanic</b>: A scrolling rhythm track shows beats as markers. The player presses
- * SPACE (or clicks) when a beat marker crosses the hit line. Full-miss streaks reduce the
- * attempt score below the pass threshold. Retry immediately.
- *
- * <p><b>Pass condition</b>: Hit at least {@code passPercent}% of beats before the track ends.
- * <br><b>Fail</b>: Score falls below threshold → retry immediately.
- */
 public class SoundMinigameScreen extends StyleMinigameScreen {
 
-    private static final int HIT_LINE_X_OFFSET = 80;  // px from left edge
-    private static final int TRACK_Y_MID_RATIO  = 2;  // height / this
-    private static final float PASS_PERCENT      = 0.65f;
-    private static final int HIT_WINDOW_TICKS    = 5;  // ±5 ticks around the beat
+    private static final int[] PIGSTEP   = {0,12,18,25,37,43,50,62,75,81,88,100,106,113,125,137,143,150,162,168,175,187,200};
+    private static final int[] OTHERSIDE = {0,11,22,33,38,44,55,66,77,88,93,99,110,121,132,137,143,154,165,176,187,198};
+    private static final int[] DISC_5    = {0,17,34,42,51,68,85,94,102,119,136,144,153,170,187,196,204};
 
-    private final int beatInterval;   // ticks between beats
-    private final int trackLength;    // total beats
-    private final float scrollSpeed;  // px per tick
+    private static final String[] DISC_NAMES = {"Pigstep","Otherside","Disc Five"};
+    private static final int[][] PATTERNS    = {PIGSTEP, OTHERSIDE, DISC_5};
 
-    private int   tick        = 0;
-    private int   totalBeats  = 0;
-    private int   beatsHit    = 0;
-    private int   missStreak  = 0;
-    private final int maxMissStreak;
-    private boolean finished  = false;
+    private static final int   HIT_LINE_X    = 90;
+    private static final int   HIT_WINDOW_PX = 14;
+    private static final float SCROLL_SPEED  = 2.2f;
+    private static final float PASS_RATIO    = 0.65f;
 
-    /** x-coordinate of each upcoming beat (in "scroll space", i.e. pixel offset from start). */
+    private final int    maxMissStreak;
+    private final String discName;
+    private final int    patIdx;
+
     private final List<BeatMarker> beats = new ArrayList<>();
+    private int     beatsHit   = 0;
+    private int     totalBeats = 0;
+    private int     missStreak = 0;
+    private boolean done       = false;
 
-    private final Random rng = new Random();
+    /** Stored so we can stop playback when the screen is removed. */
+    private SoundInstance musicSound = null;
 
     public SoundMinigameScreen(UUID sessionId, int tier) {
-        super(sessionId, tier, Component.literal("Sound Breathing – Rhythm"));
-        this.beatInterval  = Math.max(12, 24 - (tier - 1) * 3);  // 24, 21, 18, … ticks
-        this.trackLength   = 12 + (tier - 1) * 4;                 // 12, 16, 20, …
-        this.scrollSpeed   = 2.5f + (tier - 1) * 0.5f;
+        super(sessionId, tier, Component.literal("Sound Breathing - Rhythm"));
         this.maxMissStreak = Math.max(2, 5 - tier);
+        this.patIdx        = Math.min(tier - 1, PATTERNS.length - 1);
+        this.discName      = DISC_NAMES[patIdx];
+        this.totalBeats    = PATTERNS[patIdx].length;
+        // Beat positions built in init() once this.width is valid
     }
 
     @Override
     protected void init() {
         super.init();
-        // Pre-place beats: each beat is spread by beatInterval * scrollSpeed pixels apart
-        int hitLineX = HIT_LINE_X_OFFSET;
-        for (int i = 0; i < trackLength; i++) {
-            int startX = hitLineX + (int)((i + 3) * beatInterval * scrollSpeed); // +3 so first beat enters from right
+        beats.clear();
+        beatsHit = 0; missStreak = 0; done = false;
+
+        int[] pattern = PATTERNS[patIdx];
+        for (int offset : pattern) {
+            // Start off the right edge so they scroll in naturally
+            int startX = HIT_LINE_X + (int)((offset + 40) / SCROLL_SPEED) + this.width;
             beats.add(new BeatMarker(startX));
         }
-        totalBeats = trackLength;
+
+        // Play the matching music disc
+        if (minecraft != null) {
+            net.minecraft.sounds.SoundEvent discEvent = switch (patIdx) {
+                case 1  -> SoundEvents.MUSIC_DISC_OTHERSIDE;
+                case 2  -> SoundEvents.MUSIC_DISC_5;
+                default -> SoundEvents.MUSIC_DISC_PIGSTEP;
+            };
+            musicSound = SimpleSoundInstance.forUI(discEvent, 1.0f);
+            minecraft.getSoundManager().play(musicSound);
+        }
+    }
+
+    /** Stop the music disc whenever this screen is removed (finish or ESC). */
+    @Override
+    public void removed() {
+        if (minecraft != null && musicSound != null) {
+            minecraft.getSoundManager().stop(musicSound);
+            musicSound = null;
+        }
+        super.removed();
     }
 
     @Override
     protected void tickGame() {
-        if (finished) return;
-        tick++;
+        if (done) return;
+        for (BeatMarker b : beats) b.x -= (int) SCROLL_SPEED;
 
-        // Scroll all beats left
         for (BeatMarker b : beats) {
-            b.x -= scrollSpeed;
-        }
-
-        // Auto-miss any beat that scrolled past the hit line without being hit
-        int hitLineX = HIT_LINE_X_OFFSET;
-        for (BeatMarker b : beats) {
-            if (!b.hit && !b.missed && b.x < hitLineX - HIT_WINDOW_TICKS * (int)scrollSpeed) {
+            if (!b.hit && !b.missed && b.x < HIT_LINE_X - HIT_WINDOW_PX - 8) {
                 b.missed = true;
                 missStreak++;
                 if (missStreak >= maxMissStreak) {
-                    finished = true;
+                    done = true;
                     finishMinigame(false);
                     return;
                 }
             }
         }
 
-        // Check if all beats are done
-        boolean allDone = beats.stream().allMatch(b -> b.hit || b.missed);
-        if (allDone) {
-            finished = true;
-            float score = (float) beatsHit / totalBeats;
-            finishMinigame(score >= PASS_PERCENT);
+        if (beats.stream().allMatch(b -> b.hit || b.missed)) {
+            done = true;
+            finishMinigame((float) beatsHit / totalBeats >= PASS_RATIO);
         }
     }
 
     private void attemptHit() {
-        if (finished) return;
-        int hitLineX = HIT_LINE_X_OFFSET;
+        if (done) return;
         for (BeatMarker b : beats) {
-            if (!b.hit && !b.missed) {
-                int dist = Math.abs(b.x - hitLineX);
-                if (dist <= HIT_WINDOW_TICKS * (int)scrollSpeed) {
-                    b.hit = true;
-                    beatsHit++;
-                    missStreak = 0;
-                    if (minecraft != null) minecraft.getSoundManager().play(
-                            SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BELL, 1.2f, 1.0f));
-                    return;
-                }
+            if (!b.hit && !b.missed && Math.abs(b.x - HIT_LINE_X) <= HIT_WINDOW_PX) {
+                b.hit = true;
+                beatsHit++;
+                missStreak = 0;
+                if (minecraft != null) minecraft.getSoundManager().play(
+                    SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_BELL, 1.0f));
+                return;
             }
         }
-        // No beat in window — phantom press, not counted as miss
+        // Phantom press - soft feedback, no penalty
+        if (minecraft != null) minecraft.getSoundManager().play(
+            SimpleSoundInstance.forUI(SoundEvents.NOTE_BLOCK_HAT, 1.0f, 0.6f));
     }
 
     @Override
@@ -130,48 +134,37 @@ public class SoundMinigameScreen extends StyleMinigameScreen {
 
     @Override
     protected void renderGame(PoseStack pose, int mouseX, int mouseY, float partialTick) {
-        int cx = this.width / 2;
-        int trackY = this.height / TRACK_Y_MID_RATIO;
-        int hitLineX = HIT_LINE_X_OFFSET;
-
-        drawTitle(pose, "Rhythm", 0xFFAA44);
-        drawInstructions(pose, "Press SPACE when the beat hits the line!", 0xCCCCCC);
-
-        // Score line
+        int cy = this.height / 2;
+        drawTitle(pose, "Rhythm - " + discName, 0xFFAA44);
+        drawInstructions(pose, "Press SPACE (or click) when a beat reaches the orange line", 0xCCCCCC);
         drawCenteredString(pose, this.font,
-                "Hits: " + beatsHit + " / " + totalBeats + "   Miss streak: " + missStreak + "/" + maxMissStreak,
-                cx, 35, 0xFFAA44);
+            "Hits: " + beatsHit + " / " + totalBeats +
+            "   Miss streak: " + missStreak + "/" + maxMissStreak,
+            this.width / 2, 35, 0xFFAA44);
 
-        // Track lane
-        fill(pose, 0, trackY - 12, this.width, trackY + 12, 0x44333333);
+        // Track lane background
+        fill(pose, 0, cy - 14, this.width, cy + 14, 0x33444444);
 
         // Hit line
-        fill(pose, hitLineX - 2, trackY - 18, hitLineX + 2, trackY + 18, 0xFFFF8800);
-        drawString(pose, this.font, "HIT", hitLineX - 8, trackY + 20, 0xFFAA44);
+        fill(pose, HIT_LINE_X - 2, cy - 20, HIT_LINE_X + 2, cy + 20, 0xFFFF8800);
+        // Hit window brackets
+        fill(pose, HIT_LINE_X - HIT_WINDOW_PX, cy - 18, HIT_LINE_X + HIT_WINDOW_PX, cy - 16, 0x88FF8800);
+        fill(pose, HIT_LINE_X - HIT_WINDOW_PX, cy + 16, HIT_LINE_X + HIT_WINDOW_PX, cy + 18, 0x88FF8800);
 
-        // Beat markers
         for (BeatMarker b : beats) {
-            if (b.x < 0 || b.x > this.width + 20) continue;
-            int col;
-            if (b.hit)   col = 0xFF55FF55;
-            else if (b.missed) col = 0xFF444444;
-            else          col = 0xFFFFAA44;
-            fill(pose, b.x - 8, trackY - 10, b.x + 8, trackY + 10, col);
-            fill(pose, b.x - 6, trackY - 8,  b.x + 6, trackY + 8,
-                    b.hit ? 0xAA55FF55 : b.missed ? 0x22FFFFFF : 0xAAFFCC44);
+            if (b.x < -20 || b.x > this.width + 20) continue;
+            int col = b.hit ? 0xFF55FF55 : b.missed ? 0xFF333333 : 0xFFFFAA44;
+            fill(pose, b.x - 9, cy - 12, b.x + 9, cy + 12, col);
         }
 
-        // Pass indicator
-        int need = (int)(totalBeats * PASS_PERCENT);
         drawString(pose, this.font,
-                "Need " + need + "+ hits to pass",
-                this.width - 130, this.height - 25, 0x888888);
+            "Need " + (int)(totalBeats * PASS_RATIO) + "+ hits",
+            this.width - 100, this.height - 22, 0x888888);
     }
 
     private static class BeatMarker {
         int x;
-        boolean hit    = false;
-        boolean missed = false;
+        boolean hit, missed;
         BeatMarker(int x) { this.x = x; }
     }
 }

@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.example.examplemod.forge-1.19.2-43.5.0-mdk.main.iml" filepath="$PROJECT_DIR$/.idea/modules/com.example.examplemod.forge-1.19.2-43.5.0-mdk.main.iml" />
-      <module fileurl="file://$PROJECT_DIR$/.idea/modules/com.example.examplemod.forge-1.19.2-43.5.0-mdk.test.iml" filepath="$PROJECT_DIR$/.idea/modules/com.example.examplemod.forge-1.19.2-43.5.0-mdk.test.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/forge-1.19.2-43.5.0-mdk.main.iml" filepath="$PROJECT_DIR$/.idea/modules/forge-1.19.2-43.5.0-mdk.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/forge-1.19.2-43.5.0-mdk.test.iml" filepath="$PROJECT_DIR$/.idea/modules/forge-1.19.2-43.5.0-mdk.test.iml" />
     </modules>

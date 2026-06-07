@@ -23,7 +23,7 @@ public class ThunderMinigameScreen extends StyleMinigameScreen {
     // ── config ────────────────────────────────────────────────────────────────
     private final int windowTicks;    // how long the target is visible
     private final int requiredHits;
-    private final int cooldownTicks = 30; // delay between flashes (darkness period)
+    private final int cooldownTicks = 15; // delay between flashes (darkness period)
 
     // ── state ─────────────────────────────────────────────────────────────────
     private enum Phase { WAITING, VISIBLE, RESULT_FLASH }
