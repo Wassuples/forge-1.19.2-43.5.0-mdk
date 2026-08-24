@@ -1,10 +1,12 @@
 package com.wassuples.demonslayer.mixin.gravity;
 
+import com.wassuples.demonslayer.gravity.GravityDebug;
 import com.wassuples.demonslayer.gravity.GravityDirection;
 import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -30,6 +32,7 @@ public abstract class GravityMoveMixin {
     @Unique private Vec3             demonslayer$preMovePos       = null;
     @Unique private Vec3             demonslayer$originalMovement = null;
     @Unique private GravityDirection demonslayer$moveGravity      = GravityDirection.DOWN;
+    @Unique private boolean          demonslayer$stepEligible     = false;
 
     // ── HEAD: suppress vanilla's wrong-axis step ──────────────────────────────────
     @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"))
@@ -38,18 +41,52 @@ public abstract class GravityMoveMixin {
         demonslayer$moveGravity = self.getCapability(PlayerGravity.GRAVITY_CAPABILITY)
             .map(PlayerGravity::getGravity).orElse(GravityDirection.DOWN);
 
-        if (demonslayer$moveGravity != GravityDirection.DOWN) {
-            demonslayer$savedMaxUpStep   = this.maxUpStep;
-            demonslayer$originalMovement = movement;
-            demonslayer$preMovePos       = self.position();
-            this.maxUpStep = 0f;   // vanilla reads this field inside move(); zero = no step
+        if (demonslayer$moveGravity == GravityDirection.DOWN) {
+            demonslayer$stepEligible = false;
+            return;
         }
+
+        // Gate the step maneuver to grounded, non-flying entities only.
+        //
+        // The old code ran unconditionally for every move() call, including during creative
+        // flight and while jumping. Vanilla's collision result legitimately falls a few
+        // percent short of the intended distance in those cases (sliding along the wall,
+        // crossing a block boundary, floating slightly off-surface), and the old 95 %
+        // threshold treated any such shortfall as "blocked — must step". That shoved the
+        // entity 0.6 blocks away from the wall and then back; whenever the push-back
+        // didn't land flush, the entity ended up airborne for one tick, gravity snapped it
+        // back in, and you got the toward/away oscillation (Issue 1 bounce) as well as
+        // hijacked flight-vertical movement (Issue 2).
+        boolean flying = self instanceof Player p
+            && p.getAbilities().flying
+            && p.getAbilities().mayfly;
+        demonslayer$stepEligible = !flying && GravityUtil.isStandingOnCustomSurface(self, demonslayer$moveGravity);
+
+        // ── DEBUG (Issue 1) ────────────────────────────────────────────────────────────────
+        if (movement.lengthSqr() > 1.0E-7) {
+            GravityDebug.log("STEP-PRE", "{} dir={} flying={} stepEligible={} movement={}",
+                self.level.isClientSide() ? "CLIENT" : "SERVER", demonslayer$moveGravity, flying,
+                demonslayer$stepEligible, movement);
+        }
+        // ── END DEBUG ─────────────────────────────────────────────────────────────
+
+        if (!demonslayer$stepEligible) {
+            // No step needed; leave vanilla maxUpStep untouched so it can resolve
+            // its own step logic normally (irrelevant for wall gravity but harmless).
+            return;
+        }
+
+        demonslayer$savedMaxUpStep   = this.maxUpStep;
+        demonslayer$originalMovement = movement;
+        demonslayer$preMovePos       = self.position();
+        this.maxUpStep = 0f;   // vanilla reads this field inside move(); zero = no step
     }
 
     // ── RETURN: redo step in the correct gravity-relative "up" direction ──────────
     @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At("RETURN"))
     private void demonslayer$postMoveStep(MoverType type, Vec3 movement, CallbackInfo ci) {
-        if (demonslayer$moveGravity == GravityDirection.DOWN
+        if (!demonslayer$stepEligible
+            || demonslayer$moveGravity == GravityDirection.DOWN
             || demonslayer$savedMaxUpStep <= 0f
             || demonslayer$originalMovement == null) {
             demonslayer$clear();
@@ -80,6 +117,13 @@ public abstract class GravityMoveMixin {
         double actualLen     = actualLateral.length();
 
         // Only attempt the step when we were meaningfully blocked (< 95 % of intent reached).
+        // ── DEBUG (Issue 1) ──────────────────────────────────────────────────────────
+        GravityDebug.log("STEP-POST",
+            "{} dir={} intendedLateral={} intendedLen={} actualLateral={} actualLen={} ratio={}",
+            self.level.isClientSide() ? "CLIENT" : "SERVER", demonslayer$moveGravity,
+            intendedLateral, intendedLen, actualLateral, actualLen,
+            intendedLen > 0 ? (actualLen / intendedLen) : -1.0);
+        // ── END DEBUG ──────────────────────────────────────────────────────────
         if (actualLen >= intendedLen * 0.95) { demonslayer$clear(); return; }
 
         float stepHeight = demonslayer$savedMaxUpStep;
@@ -108,8 +152,12 @@ public abstract class GravityMoveMixin {
         Vec3 steppedLateral = GravityUtil.projectOntoPlane(pos3.subtract(start), down);
         if (steppedLateral.length() > actualLen + 1.0E-5) {
             self.setPos(pos3.x, pos3.y, pos3.z);
+            GravityDebug.log("STEP-POST", "{} stepped result ACCEPTED steppedLen={} (vs actualLen={})",
+                self.level.isClientSide() ? "CLIENT" : "SERVER", steppedLateral.length(), actualLen);
         } else {
             self.setPos(postPos.x, postPos.y, postPos.z);  // vanilla result was at least as good
+            GravityDebug.log("STEP-POST", "{} vanilla result KEPT steppedLen={} (vs actualLen={})",
+                self.level.isClientSide() ? "CLIENT" : "SERVER", steppedLateral.length(), actualLen);
         }
 
         demonslayer$clear();
@@ -165,6 +213,7 @@ public abstract class GravityMoveMixin {
         demonslayer$preMovePos       = null;
         demonslayer$originalMovement = null;
         demonslayer$moveGravity      = GravityDirection.DOWN;
+        demonslayer$stepEligible     = false;
     }
 
     @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",

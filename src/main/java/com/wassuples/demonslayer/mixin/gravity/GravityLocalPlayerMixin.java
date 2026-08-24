@@ -1,13 +1,10 @@
 package com.wassuples.demonslayer.mixin.gravity;
 
 import com.wassuples.demonslayer.gravity.GravityDirection;
-import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -17,8 +14,6 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class GravityLocalPlayerMixin {
     @Shadow
     private int autoJumpTime;
-    @Unique
-    private Vec3 demonslayer$preAiVel = null;
 
     @Inject(method = "aiStep()V", at = @At("HEAD"))
     private void demonslayer$clearQueuedAutoJump(CallbackInfo ci) {
@@ -50,39 +45,10 @@ public abstract class GravityLocalPlayerMixin {
         });
     }
 
-    // Capture velocity before aiStep so we can see what vanilla adds to Y during the flying block.
-    @Inject(method = "aiStep()V", at = @At("HEAD"))
-    private void demonslayer$capturePreFlyVelocity(CallbackInfo ci) {
-        LocalPlayer self = (LocalPlayer)(Object)this;
-        if (!self.getAbilities().flying || !self.getAbilities().mayfly) return;
-        self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            if (gravity.getGravity() != GravityDirection.DOWN) {
-                demonslayer$preAiVel = self.getDeltaMovement();
-            }
-        });
-    }
-
-    // After aiStep, remap vanilla's Y flying delta to the gravity-relative up axis.
-    @Inject(method = "aiStep()V", at = @At("TAIL"))
-    private void demonslayer$remapFlyingVertical(CallbackInfo ci) {
-        if (demonslayer$preAiVel == null) return;
-        Vec3 pre = demonslayer$preAiVel;
-        demonslayer$preAiVel = null;
-
-        LocalPlayer self = (LocalPlayer) (Object) this;
-        self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            GravityDirection dir = gravity.getGravity();
-            if (dir == GravityDirection.DOWN) return;
-
-            Vec3 current = self.getDeltaMovement();
-            double yDelta = current.y - pre.y; // Exactly what vanilla added to Y
-            if (Math.abs(yDelta) < 1.0E-7) return;
-
-            // Undo vanilla's Y change, re-apply along gravity-relative "up"
-            Vec3 up = GravityUtil.getWorldUp(dir);
-            self.setDeltaMovement(
-                current.subtract(0, yDelta, 0).add(up.scale(yDelta))
-            );
-        });
-    }
+    // NOTE: The old demonslayer$capturePreFlyVelocity and demonslayer$remapFlyingVertical
+    // methods have been removed.  Creative-flight vertical remapping is now handled
+    // correctly by GravityTravelMixin (which maps relativeMovement.y → gravity-up in the
+    // moveRelative redirect) and GravityPlayerTravelMixin (which decays the gravity-up
+    // velocity component to 60 % per tick, matching vanilla's Y decay).  The old approach
+    // captured the wrong Y delta (vanilla's decay, not the input) and caused double-remapping.
 }

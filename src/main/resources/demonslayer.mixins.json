@@ -8,13 +8,14 @@
     "FireBlockAccessor",
     "gravity.GravityEntityMixin",
     "gravity.GravityLivingEntityMixin",
-    "gravity.GravityMoveMixin"
+    "gravity.GravityMoveMixin",
+    "gravity.GravityPlayerTravelMixin",
+    "gravity.GravityTravelMixin"
   ],
   "client": [
     "gravity.GravityCameraMixin",
     "gravity.GravityLocalPlayerMixin",
-    "gravity.GravityMouseHandlerMixin",
-    "gravity.GravityTravelMixin"
+    "gravity.GravityMouseHandlerMixin"
   ],
   "server": [],
   "injectors": {

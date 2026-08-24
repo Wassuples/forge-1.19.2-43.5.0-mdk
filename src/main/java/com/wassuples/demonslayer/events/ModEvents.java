@@ -395,19 +395,27 @@ public class ModEvents {
         // CUSTOM GRAVITY PHYSICS HANDLING
         player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             GravityDirection direction = gravity.getGravity();
-            boolean creativeFlight = player.getAbilities().flying && player.getAbilities().mayfly;
-            boolean useCustomGravity = direction != GravityDirection.DOWN
-                && !player.isPassenger() && !player.isSpectator() && !creativeFlight;
+            boolean creativeFlight  = player.getAbilities().flying && player.getAbilities().mayfly;
+            // isCustomGravity: any non-DOWN custom gravity regardless of creative flight
+            boolean isCustomGravity  = direction != GravityDirection.DOWN
+                && !player.isPassenger() && !player.isSpectator();
+            // useCustomGravity: apply gravity-pull step only when NOT flying
+            boolean useCustomGravity = isCustomGravity && !creativeFlight;
 
             if (event.phase == TickEvent.Phase.START) {
-                // Set before ServerPlayer.tick() so noGravity is active during travel()
+                // Set before ServerPlayer.tick() so noGravity is active during travel().
                 GravityUtil.refreshGravityHitbox(player, direction);
-                if (useCustomGravity) player.setNoGravity(true);
+                // FIX (Issue 2): Always set noGravity for custom gravity, including during
+                // creative flight. Previously this was only set when !creativeFlight, so
+                // vanilla Y-gravity could fight against the gravity-relative flight axes.
+                if (isCustomGravity) player.setNoGravity(true);
                 else if (player.isNoGravity()) player.setNoGravity(false);
                 return;
             }
 
-            // Phase.END: run physics after movement has been processed
+            // Phase.END: run physics after movement has been processed.
+            // Creative flight skips the gravity-pull step — we don't want to drag the
+            // player toward the wall while they are freely flying.
             if (!useCustomGravity) return;
             gravity.tickInterpolation();
             gravity.tickTransientState();
@@ -421,7 +429,13 @@ public class ModEvents {
             if (grounded) {
                 Vec3 down = GravityUtil.getWorldDown(direction);
                 double ds = vel.dot(down);
-                Vec3 lateral = vel.subtract(down.scale(ds)).scale(0.91D);
+                // FIX (Issue 1): Removed the redundant .scale(0.91D) that was applied here.
+                // GravityTravelMixin now runs on both sides and applies the correct
+                // block-friction-scaled Y damping inside travel() via
+                // demonslayer$applyMissingYFriction. The old double-friction
+                // (0.91 here AND blockFriction*0.91 in travel()) made custom-gravity
+                // movement noticeably slower than vanilla DOWN gravity.
+                Vec3 lateral = vel.subtract(down.scale(ds));
                 player.setDeltaMovement(down.scale(ds).add(lateral));
             }
             player.fallDistance = 0.0F;
