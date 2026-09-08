@@ -2,10 +2,12 @@ package com.wassuples.demonslayer.util;
 
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.nemesis.trait.*;
+import com.wassuples.demonslayer.sound.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -24,6 +26,7 @@ public final class ToonForceHelper {
     public static final String FLATTEN_UNTIL_TAG = "ds_toon_flatten_until";
     public static final String BANANA_SPIN_UNTIL_TAG = "ds_toon_banana_spin_until";
     private static final String BANANA_SPIN_STRENGTH_TAG = "ds_toon_banana_spin_strength";
+    private static final String BANANA_SPIN_STACKS_TAG = "ds_toon_banana_spin_stacks";
     public static final String AIRWALK_TAG = "ds_toon_airwalk";
     public static final String HOT_POTATO_UNTIL_TAG = "ds_toon_hot_potato_until";
     public static final String HOT_POTATO_OWNER_TAG = "ds_toon_hot_potato_owner";
@@ -93,10 +96,16 @@ public final class ToonForceHelper {
             return;
         }
 
+        long now = level.getGameTime();
+        long currentSpinUntil = target.getPersistentData().getLong(BANANA_SPIN_UNTIL_TAG);
+        int currentStacks = target.getPersistentData().getInt(BANANA_SPIN_STACKS_TAG);
+        int stacks = currentSpinUntil > now ? Mth.clamp(currentStacks + 1, 1, 6) : 1;
+
         Vec3 currentVel = target.getDeltaMovement();
         Vec3 direction = currentVel.lengthSqr() > 0.01 ? currentVel.normalize() : target.getLookAngle().normalize();
         float sprintBonus = target.isSprinting() ? 1.8f : 1.0f;
-        Vec3 launch = direction.scale(baseLaunch * sprintBonus).add(0, 0.35, 0);
+        float stackLaunch = 1.0f + (stacks - 1) * 0.25f;
+        Vec3 launch = direction.scale(baseLaunch * sprintBonus * stackLaunch).add(0, 0.35, 0);
         target.setDeltaMovement(launch);
         target.hurtMarked = true;
 
@@ -107,9 +116,10 @@ public final class ToonForceHelper {
         target.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 60, 0, true, false, true));
         FormAnimations.play(target, FormAnimations.TOON_SLIP);
 
-        long spinUntil = level.getGameTime() + 30;
+        long spinUntil = Math.min(now + 140, Math.max(currentSpinUntil, now) + 26 + (stacks * 6L));
         target.getPersistentData().putLong(BANANA_SPIN_UNTIL_TAG, spinUntil);
-        target.getPersistentData().putFloat(BANANA_SPIN_STRENGTH_TAG, 18.0f + level.random.nextFloat() * 12.0f);
+        target.getPersistentData().putFloat(BANANA_SPIN_STRENGTH_TAG, 18.0f + level.random.nextFloat() * 12.0f + (stacks - 1) * 8.0f);
+        target.getPersistentData().putInt(BANANA_SPIN_STACKS_TAG, stacks);
 
         if (target instanceof Player player) {
             ItemStack held = player.getMainHandItem();
@@ -120,7 +130,7 @@ public final class ToonForceHelper {
             }
         }
 
-        for (int i = 0; i < 10; i++) {
+        for (int i = 0; i < 10 + stacks * 3; i++) {
             level.sendParticles(ParticleTypes.ITEM_SLIME,
                     target.getX() + (level.random.nextDouble() - 0.5) * 0.6,
                     target.getY() + 0.2 + level.random.nextDouble() * 0.4,
@@ -143,6 +153,7 @@ public final class ToonForceHelper {
             if (until > 0) {
                 player.getPersistentData().remove(BANANA_SPIN_UNTIL_TAG);
                 player.getPersistentData().remove(BANANA_SPIN_STRENGTH_TAG);
+                player.getPersistentData().remove(BANANA_SPIN_STACKS_TAG);
             }
             return;
         }
@@ -257,6 +268,7 @@ public final class ToonForceHelper {
     public static void spawnBonkText(ServerLevel level, Vec3 pos) {
         spawnToonText(level, pos.add(0, 0.6, 0), Component.literal("BONK!").withStyle(ChatFormatting.GOLD), 24);
         level.sendParticles(ParticleTypes.CRIT, pos.x, pos.y + 1.0, pos.z, 12, 0.35, 0.25, 0.35, 0.0);
+        level.playSound(null, net.minecraft.core.BlockPos.containing(pos), ModSounds.TOON_BONK.get(), SoundSource.PLAYERS, 0.85f, 0.9f + level.random.nextFloat() * 0.3f);
     }
 
     public static void spawnToonText(ServerLevel level, Vec3 pos, Component text, int durationTicks) {

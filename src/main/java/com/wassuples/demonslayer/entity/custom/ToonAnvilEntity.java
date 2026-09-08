@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ModEntityTypes;
+import com.wassuples.demonslayer.sound.ModSounds;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
 import net.minecraft.core.particles.ParticleTypes;
@@ -81,7 +82,7 @@ public class ToonAnvilEntity extends Entity implements IAnimatable {
     }
 
     private void impact() {
-        this.level.playSound(null, this.blockPosition(), SoundEvents.ANVIL_LAND, SoundSource.PLAYERS, 1.0f, 0.8f);
+        this.level.playSound(null, this.blockPosition(), ModSounds.TOON_CRASH.get(), SoundSource.PLAYERS, 1.0f, 0.9f);
         if (this.level instanceof ServerLevel serverLevel) {
             serverLevel.sendParticles(ParticleTypes.EXPLOSION, this.getX(), this.getY(), this.getZ(), 1, 0, 0, 0, 0);
             serverLevel.sendParticles(ParticleTypes.LARGE_SMOKE, this.getX(), this.getY(), this.getZ(), 18, 0.7, 0.25, 0.7, 0.02);
@@ -95,7 +96,7 @@ public class ToonAnvilEntity extends Entity implements IAnimatable {
                 Entity owner = ownerUUID != null ? serverLevel.getEntity(ownerUUID) : null;
                 DamageSource ds = owner instanceof LivingEntity livingOwner ? DamageSource.ANVIL : DamageSource.ANVIL;
                 target.hurt(ds, 15.0f);
-                ToonForceHelper.applyFlattened(target, 60);
+                ToonForceHelper.applyFlattened(target, 40);
                 ToonForceHelper.tryApplyDizzy(target, owner instanceof LivingEntity l ? l : null, 0.5f);
                 ToonForceHelper.spawnBonkText(serverLevel, target.position());
                 FormAnimations.play(target, FormAnimations.TOON_BONKED);

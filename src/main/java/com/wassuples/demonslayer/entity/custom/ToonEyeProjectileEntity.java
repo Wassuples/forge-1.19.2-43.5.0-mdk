@@ -1,6 +1,7 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ModEntityTypes;
+import com.wassuples.demonslayer.sound.ModSounds;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
 import net.minecraft.core.particles.ParticleTypes;
@@ -31,8 +32,7 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
-    private static final int MAX_LIFE_TICKS = 20 * 8;
-    private static final int MAX_BOUNCES = 10;
+    private static final int MAX_LIFE_TICKS = 20 * 25;
     private int lifeTicks = MAX_LIFE_TICKS;
     private int bounces;
 
@@ -88,7 +88,7 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
             ToonForceHelper.tryApplyDizzy(target, owner, 0.3f);
             ToonForceHelper.spawnBonkText((net.minecraft.server.level.ServerLevel) this.level, target.position());
             FormAnimations.play(target, FormAnimations.TOON_BONKED);
-            this.level.playSound(null, blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.9f, 2.0f);
+            this.level.playSound(null, blockPosition(), ModSounds.TOON_BONK.get(), SoundSource.PLAYERS, 0.9f, 1.3f);
         }
 
         this.discard();
@@ -121,10 +121,7 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
                             net.minecraft.network.chat.Component.literal("BOING!").withStyle(net.minecraft.ChatFormatting.AQUA), 12);
                 }
             }
-            this.level.playSound(null, blockPosition(), SoundEvents.SLIME_JUMP, SoundSource.PLAYERS, 0.5f, 1.6f);
-            if (this.bounces >= MAX_BOUNCES) {
-                this.discard();
-            }
+            this.level.playSound(null, blockPosition(), ModSounds.TOON_BOING.get(), SoundSource.PLAYERS, 0.6f, 1.45f);
             return;
         }
 
@@ -151,4 +148,3 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
         return this.factory;
     }
 }
-

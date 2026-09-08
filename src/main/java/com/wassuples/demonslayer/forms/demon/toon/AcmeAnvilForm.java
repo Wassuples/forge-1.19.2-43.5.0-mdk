@@ -2,11 +2,11 @@ package com.wassuples.demonslayer.forms.demon.toon;
 
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
+import com.wassuples.demonslayer.sound.ModSounds;
 import com.wassuples.demonslayer.styles.IForm;
 import com.wassuples.demonslayer.util.CombatHelper;
 import com.wassuples.demonslayer.util.FormAnimations;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 
@@ -19,8 +19,8 @@ import net.minecraft.world.phys.Vec3;
 
 public class AcmeAnvilForm extends TimedForm {
     private static final int WHISTLE_TICK = 10;
-    private static final int IMPACT_TICK = 25;
-    private static final int TOTAL_TICKS = 26;
+    private static final int IMPACT_TICK = 28;
+    private static final int TOTAL_TICKS = 30;
     private LivingEntity target;
     private BlockPos targetPos;
 
@@ -68,7 +68,7 @@ public class AcmeAnvilForm extends TimedForm {
         }
 
         if (ticksActive == WHISTLE_TICK) {
-            level.playSound(null, targetPos, SoundEvents.NOTE_BLOCK_FLUTE, SoundSource.PLAYERS, 0.9f, 2.0f);
+            level.playSound(null, targetPos, ModSounds.TOON_WHISTLE_FALL.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
         }
 
         if (ticksActive == IMPACT_TICK) {
@@ -85,4 +85,3 @@ public class AcmeAnvilForm extends TimedForm {
         }
     }
 }
-

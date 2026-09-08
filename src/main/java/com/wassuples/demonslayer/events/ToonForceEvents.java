@@ -2,19 +2,17 @@ package com.wassuples.demonslayer.events;
 
 import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
+import com.wassuples.demonslayer.sound.ModSounds;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraftforge.event.entity.living.LivingDamageEvent;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.effect.MobEffectInstance;
-import net.minecraft.world.effect.MobEffects;
 
 @Mod.EventBusSubscriber(modid = "demonslayer", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class ToonForceEvents {
@@ -25,7 +23,7 @@ public class ToonForceEvents {
             player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
                 if (demon.getEquippedBda() == BloodDemonArts.TOON_FORCE) {
                     if (player.getRandom().nextFloat() < 0.25f) {
-                        event.getEntity().addEffect(new MobEffectInstance(MobEffects.CONFUSION, 100, 1));
+                        ToonForceHelper.tryApplyDizzy(event.getEntity(), player, 1.0f);
                     }
 
                     if (!event.getEntity().level.isClientSide && event.getAmount() > 0.0f
@@ -34,8 +32,8 @@ public class ToonForceEvents {
                         FormAnimations.play(event.getEntity(), FormAnimations.TOON_BONKED);
                         level.sendParticles(ParticleTypes.CLOUD, event.getEntity().getX(), event.getEntity().getEyeY(),
                                 event.getEntity().getZ(), 10, 0.25, 0.18, 0.25, 0.0);
-                        level.playSound(null, event.getEntity().blockPosition(), SoundEvents.WOODEN_BUTTON_CLICK_ON,
-                                SoundSource.PLAYERS, 0.75f, 1.8f);
+                        level.playSound(null, event.getEntity().blockPosition(), ModSounds.TOON_BONK.get(),
+                                SoundSource.PLAYERS, 0.75f, 1.2f);
                     }
                 }
             });
@@ -64,4 +62,3 @@ public class ToonForceEvents {
         }
     }
 }
-
