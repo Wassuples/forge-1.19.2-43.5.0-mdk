@@ -19,6 +19,7 @@ import net.minecraft.world.phys.Vec3;
 
 import javax.annotation.Nullable;
 import java.util.Map;
+import java.util.UUID;
 
 public final class ToonForceHelper {
     public static final String FLATTEN_UNTIL_TAG = "ds_toon_flatten_until";
@@ -27,6 +28,7 @@ public final class ToonForceHelper {
     public static final String AIRWALK_TAG = "ds_toon_airwalk";
     public static final String HOT_POTATO_UNTIL_TAG = "ds_toon_hot_potato_until";
     public static final String HOT_POTATO_OWNER_TAG = "ds_toon_hot_potato_owner";
+    private static final String HOT_POTATO_TRANSFER_LOCK_TAG = "ds_toon_hot_potato_transfer_lock";
     private static final String TOON_TEXT_UNTIL_TAG = "ds_toon_text_until";
 
     private ToonForceHelper() {
@@ -207,11 +209,14 @@ public final class ToonForceHelper {
             return;
         }
 
-        from.getPersistentData().remove(HOT_POTATO_UNTIL_TAG);
+        UUID owner = from.getPersistentData().hasUUID(HOT_POTATO_OWNER_TAG)
+                ? from.getPersistentData().getUUID(HOT_POTATO_OWNER_TAG) : null;
+        clearHotPotatoBomb(from);
         to.getPersistentData().putLong(HOT_POTATO_UNTIL_TAG, until);
+        to.getPersistentData().putLong(HOT_POTATO_TRANSFER_LOCK_TAG, level.getGameTime() + 8);
 
-        if (from.getPersistentData().hasUUID(HOT_POTATO_OWNER_TAG)) {
-            to.getPersistentData().putUUID(HOT_POTATO_OWNER_TAG, from.getPersistentData().getUUID(HOT_POTATO_OWNER_TAG));
+        if (owner != null) {
+            to.getPersistentData().putUUID(HOT_POTATO_OWNER_TAG, owner);
         }
 
         level.sendParticles(ParticleTypes.SMOKE, to.getX(), to.getEyeY(), to.getZ(), 6, 0.2, 0.2, 0.2, 0.0);
@@ -240,6 +245,9 @@ public final class ToonForceHelper {
             level.playSound(null, target.blockPosition(), net.minecraft.sounds.SoundEvents.WOODEN_BUTTON_CLICK_ON, net.minecraft.sounds.SoundSource.PLAYERS, 0.4f, 1.6f);
 
             // Hot potato transfer on collision
+            if (target.getPersistentData().getLong(HOT_POTATO_TRANSFER_LOCK_TAG) > level.getGameTime()) {
+                return;
+            }
             for (LivingEntity other : level.getEntitiesOfClass(LivingEntity.class, target.getBoundingBox().inflate(0.4))) {
                 if (other != target && other.isAlive()) {
                     transferHotPotatoBomb(target, other);
@@ -252,6 +260,7 @@ public final class ToonForceHelper {
     public static void clearHotPotatoBomb(LivingEntity target) {
         target.getPersistentData().remove(HOT_POTATO_UNTIL_TAG);
         target.getPersistentData().remove(HOT_POTATO_OWNER_TAG);
+        target.getPersistentData().remove(HOT_POTATO_TRANSFER_LOCK_TAG);
     }
 
     public static void spawnBonkText(ServerLevel level, Vec3 pos) {

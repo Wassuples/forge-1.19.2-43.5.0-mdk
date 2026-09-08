@@ -6,6 +6,8 @@ import com.wassuples.demonslayer.styles.IForm;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.entity.custom.ToonFakeTunnelEntity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class FakeTunnelForm extends ActiveForm {
@@ -19,10 +21,13 @@ public class FakeTunnelForm extends ActiveForm {
             FormAnimations.play(user, FormAnimations.TOON_TUNNEL);
             Vec3 look = user.getLookAngle().normalize();
             ToonFakeTunnelEntity tunnel = new ToonFakeTunnelEntity(level, user, look);
-            tunnel.setPos(user.getX() + look.x * 2.0, user.getY(), user.getZ() + look.z * 2.0);
+            HitResult hit = user.pick(6.0, 0.0f, false);
+            Vec3 placement = hit instanceof BlockHitResult blockHit
+                    ? blockHit.getLocation().add(Vec3.atLowerCornerOf(blockHit.getDirection().getNormal()).scale(0.06))
+                    : user.position().add(look.scale(2.0));
+            tunnel.setPos(placement.x, placement.y, placement.z);
             level.addFreshEntity(tunnel);
         }
-        // TODO: Rebuild Fake Tunnel once wall placement, pass-through rules, and readable counterplay are designed.
         ActiveFormManager.stop(user);
     }
     @Override

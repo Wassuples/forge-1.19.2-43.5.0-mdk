@@ -31,8 +31,8 @@ import software.bernie.geckolib3.core.manager.AnimationFactory;
 
 public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements IAnimatable {
     private final AnimationFactory factory = new AnimationFactory(this);
-    private static final int MAX_LIFE_TICKS = 20 * 8;
-    private static final int MAX_BOUNCES = 10;
+    private static final int MAX_LIFE_TICKS = 20 * 30;
+    private static final int MAX_BOUNCES = 128;
     private int lifeTicks = MAX_LIFE_TICKS;
     private int bounces;
 
@@ -68,6 +68,20 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
         if (!this.level.isClientSide && --this.lifeTicks <= 0) {
             this.discard();
         }
+
+        if (!this.level.isClientSide && this.tickCount > 15) {
+            LivingEntity target = this.level.getEntitiesOfClass(LivingEntity.class,
+                            this.getBoundingBox().inflate(24.0), this::isEligibleTarget)
+                    .stream().min(java.util.Comparator.comparingDouble(this::distanceToSqr)).orElse(null);
+            if (target != null) {
+                Vec3 desired = target.getEyePosition().subtract(this.position()).normalize().scale(3.6);
+                this.setDeltaMovement(this.getDeltaMovement().scale(0.9).add(desired.scale(0.1)).normalize().scale(3.6));
+            }
+        }
+    }
+
+    private boolean isEligibleTarget(LivingEntity target) {
+        return target.isAlive() && target != this.getOwner() && !target.isSpectator();
     }
 
     @Override
@@ -151,4 +165,3 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
         return this.factory;
     }
 }
-
