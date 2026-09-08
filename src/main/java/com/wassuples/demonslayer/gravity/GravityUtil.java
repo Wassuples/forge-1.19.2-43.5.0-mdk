@@ -150,22 +150,35 @@ public class GravityUtil {
         }
 
         Vec3 gUp = getWorldUp(gravityDirection);
-        // We use a stable basis where gUp is Head, and we pick a reference that is not gUp.
-        Vec3 ref = (Math.abs(gUp.y) < 0.9) ? new Vec3(0, 1, 0) : new Vec3(0, 0, 1);
+        Vec3 relForward = projectOntoPlane(lookVector, gUp);
+        if (relForward.lengthSqr() < EPSILON) {
+            relForward = getYawForwardOnGravityPlane(gYaw, gravityDirection);
+        } else {
+            relForward = relForward.normalize();
+        }
+
+        Vec3 relLeft = gUp.cross(relForward);
+        if (relLeft.lengthSqr() < EPSILON) {
+            relLeft = new Vec3(1.0D, 0.0D, 0.0D);
+        } else {
+            relLeft = relLeft.normalize();
+        }
+
+        return relLeft.scale(localVector.x)
+                .add(gUp.scale(localVector.y))
+                .add(relForward.scale(localVector.z));
+    }
+
+    private static Vec3 getYawForwardOnGravityPlane(float gYaw, GravityDirection gravityDirection) {
+        Vec3 gUp = getWorldUp(gravityDirection);
+        Vec3 ref = (Math.abs(gUp.y) < 0.9D) ? new Vec3(0.0D, 1.0D, 0.0D) : new Vec3(0.0D, 0.0D, 1.0D);
         Vec3 gForward = projectOntoPlane(ref, gUp).normalize();
         Vec3 gRight = gForward.cross(gUp).normalize();
 
         double radY = Math.toRadians(gYaw);
         double sinY = Math.sin(radY);
         double cosY = Math.cos(radY);
-
-        // Basis-relative forward/left
-        Vec3 relForward = gForward.scale(cosY).add(gRight.scale(sinY));
-        Vec3 relLeft = gUp.cross(relForward);
-
-        return relLeft.scale(localVector.x)
-                .add(gUp.scale(localVector.y))
-                .add(relForward.scale(localVector.z));
+        return gForward.scale(cosY).add(gRight.scale(sinY)).normalize();
     }
 
     public static Vec3 rotateWorldMovementForGravity(Vec3 vector, GravityDirection direction) {
@@ -321,6 +334,68 @@ public class GravityUtil {
 
         entity.setOnGround(grounded);
         return grounded;
+    }
+
+    public static boolean isAboveGroundForCustomGravity(Entity entity, GravityDirection direction, float stepHeight) {
+        if (direction == GravityDirection.DOWN) {
+            return entity.isOnGround();
+        }
+
+        return entity.isOnGround()
+            || entity.fallDistance < stepHeight
+            && !entity.level.noCollision(entity, entity.getBoundingBox().move(getWorldDown(direction).scale(stepHeight - entity.fallDistance)));
+    }
+
+    public static Vec3 maybeBackOffFromEdge(Entity entity, Vec3 movement, GravityDirection direction, float stepHeight) {
+        if (direction == GravityDirection.DOWN || stepHeight <= 0.0F) {
+            return movement;
+        }
+
+        Vec3 down = getWorldDown(direction);
+        if (movement.dot(down) < -EPSILON || !isAboveGroundForCustomGravity(entity, direction, stepHeight)) {
+            return movement;
+        }
+
+        Vec3[] lateralAxes = getLateralAxes(direction);
+        Vec3 axisA = lateralAxes[0];
+        Vec3 axisB = lateralAxes[1];
+        double amountA = movement.dot(axisA);
+        double amountB = movement.dot(axisB);
+        double amountDown = movement.dot(down);
+        Vec3 supportProbe = down.scale(stepHeight);
+        AABB box = entity.getBoundingBox();
+
+        while (amountA != 0.0D && entity.level.noCollision(entity, box.move(axisA.scale(amountA).add(supportProbe)))) {
+            amountA = backOff(amountA);
+        }
+
+        while (amountB != 0.0D && entity.level.noCollision(entity, box.move(axisB.scale(amountB).add(supportProbe)))) {
+            amountB = backOff(amountB);
+        }
+
+        while (amountA != 0.0D && amountB != 0.0D
+            && entity.level.noCollision(entity, box.move(axisA.scale(amountA).add(axisB.scale(amountB)).add(supportProbe)))) {
+            amountA = backOff(amountA);
+            amountB = backOff(amountB);
+        }
+
+        return axisA.scale(amountA).add(axisB.scale(amountB)).add(down.scale(amountDown));
+    }
+
+    private static Vec3[] getLateralAxes(GravityDirection direction) {
+        return switch (direction) {
+            case DOWN, UP -> new Vec3[]{new Vec3(1.0D, 0.0D, 0.0D), new Vec3(0.0D, 0.0D, 1.0D)};
+            case EAST, WEST -> new Vec3[]{new Vec3(0.0D, 1.0D, 0.0D), new Vec3(0.0D, 0.0D, 1.0D)};
+            case NORTH, SOUTH -> new Vec3[]{new Vec3(1.0D, 0.0D, 0.0D), new Vec3(0.0D, 1.0D, 0.0D)};
+        };
+    }
+
+    private static double backOff(double amount) {
+        double step = 0.05D;
+        if (amount < step && amount >= -step) {
+            return 0.0D;
+        }
+        return amount > 0.0D ? amount - step : amount + step;
     }
 
     private static void clampVelocityIntoSurface(Entity entity, GravityDirection direction) {

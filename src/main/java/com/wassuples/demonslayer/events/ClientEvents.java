@@ -9,7 +9,6 @@ import com.wassuples.demonslayer.demon.PlayerDemon;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.entity.custom.BodhisattvaEntity;
 import com.wassuples.demonslayer.entity.custom.BlindingMistCloudEntity;
-import com.wassuples.demonslayer.gravity.GravityDebug;
 import com.wassuples.demonslayer.gravity.GravityDirection;
 import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
@@ -121,25 +120,15 @@ public class ClientEvents {
 
                 GravityDirection direction = gravity.getGravity();
                 boolean creativeFlight = mc.player.getAbilities().flying && mc.player.getAbilities().mayfly;
-                // isCustomGravity: any non-DOWN custom gravity regardless of creative flight
-                boolean isCustomGravity = direction != GravityDirection.DOWN
+                boolean useCustomGravity = direction != GravityDirection.DOWN
                         && !mc.player.isPassenger()
-                        && !mc.player.isSpectator();
-                // useCustomGravity: apply gravity-pull step only when NOT flying
-                boolean useCustomGravity = isCustomGravity && !creativeFlight;
+                        && !mc.player.isSpectator()
+                        && !creativeFlight;
 
                 GravityUtil.refreshGravityHitbox(mc.player, direction);
 
-                // FIX (Issue 2): Always set noGravity for custom gravity, including during
-                // creative flight. Previously this was only set when !creativeFlight, so
-                // vanilla Y-gravity could fight against the gravity-relative flight axes.
-                if (isCustomGravity) {
-                    mc.player.setNoGravity(true);
-                } else if (mc.player.isNoGravity()) {
-                    mc.player.setNoGravity(false);
-                }
-
                 if (useCustomGravity) {
+                    mc.player.setNoGravity(true);
                     // Mirror server-side custom gravity locally to keep client movement packets consistent.
                     boolean grounded = GravityUtil.updateGroundStateForCustomGravity(mc.player, direction, gravity.isSurfaceDetachActive());
                     Vec3 vel = GravityUtil.applyCustomGravityStep(mc.player.getDeltaMovement(), direction, grounded);
@@ -148,14 +137,13 @@ public class ClientEvents {
                     if (grounded) {
                         Vec3 down = GravityUtil.getWorldDown(direction);
                         double downSpeed = vel.dot(down);
-                        // FIX (Issue 1): Removed the redundant .scale(0.91D) here.
-                        // GravityTravelMixin now runs on both sides and applies the correct
-                        // block-friction-scaled Y damping via demonslayer$applyMissingYFriction.
-                        Vec3 lateral = vel.subtract(down.scale(downSpeed));
+                        Vec3 lateral = vel.subtract(down.scale(downSpeed)).scale(0.91D);
                         mc.player.setDeltaMovement(down.scale(downSpeed).add(lateral));
                     }
 
                     mc.player.fallDistance = 0.0F;
+                } else if (mc.player.isNoGravity()) {
+                    mc.player.setNoGravity(false);
                 }
             });
 
@@ -369,13 +357,6 @@ public class ClientEvents {
                 event.setYaw(vanilla[0]);
                 event.setPitch(vanilla[1]);
                 event.setRoll(vanilla[2]);
-
-                // ── DEBUG (Issue 3) — this runs every render frame, so it's throttled. ────────────────
-                GravityDebug.logThrottled("camera-angles", 15, "CAM",
-                    "dir={} transition={} gYaw={} gPitch={} -> vYaw={} vPitch={} vRoll={}",
-                    direction, gravity.getTransitionProgress(), yawToUse, pitchToUse,
-                    vanilla[0], vanilla[1], vanilla[2]);
-                // ── END DEBUG ─────────────────────────────────────────────────────────────
             });
         }
 

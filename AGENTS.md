@@ -1,5 +1,24 @@
 # AGENTS.md — Demon Slayer Minecraft Forge Mod
 
+## Agent Workflow
+
+For implementation, debugging, and review tasks, read [docs/AGENT_WORKFLOW.md](docs/AGENT_WORKFLOW.md) before editing. Use its validation matrix for the systems touched.
+
+- Start with `git status --short` and inspect relevant existing diffs. Preserve user changes, IDE settings, logs, and saved worlds; stage only task-owned files when a commit is requested.
+- Define observable acceptance criteria, then trace the affected code before implementing. For multi-step work, use [docs/tasks/TEMPLATE.md](docs/tasks/TEMPLATE.md) to record scope, decisions, validation, and the next step. Small fixes can keep this in the task conversation.
+- Continue through implementation, focused validation, and review within the authorized scope. Ask only for missing decisions that materially block correctness or actions requiring authorization.
+- Use multiple agents by default for implementation and debugging: a lead, scope reviewer, bounded implementers, independent validator, and code reviewers. Follow the workflow's phase gates and two review rounds; this instruction explicitly requests delegation when tools support it. Review-only requests remain read-only. If delegation is unavailable, record the limitation and follow the documented handoff fallback; do not claim independent reviews.
+- Keep Java 17 / Forge 1.19.2 compatibility. Verify current code and build configuration when older architecture notes disagree.
+- Report checks as passed, failed, or not run with evidence. Compilation does not establish in-game correctness.
+
+## Code Review Rules
+
+- Flag client-only class references reachable from dedicated-server code and gameplay mutations performed only on the client.
+- Check C2S sender/state validation, server-thread handling, costs, cooldowns, and synchronization; clients must not authorize their own combat outcomes.
+- For capabilities and SavedData, check death/respawn, save/load compatibility, dirty marking, and reconnect behavior. Preserve the PlayerAnimator workaround unless the task explicitly addresses it.
+- For mixins, check configured class existence, target signatures, logical/physical side, and runtime application. A successful Java compile is insufficient.
+- Review only the task's changes as introduced defects; distinguish pre-existing problems. Give a concrete trigger, impact, and file location for each actionable finding.
+
 ## Project Overview
 
 This is a **Minecraft Forge 1.19.2 mod** (`demonslayer`) implementing a Demon Slayer-themed experience with:
@@ -65,7 +84,7 @@ Active forms tick server-side via `ActiveFormManager` (subscribed to `TickEvent.
 
 ### Mixins
 - Config: `src/main/resources/demonslayer.mixins.json`
-- Single mixin: `mixin/FireBlockAccessor.java` (accessor for fire block)
+- Includes `mixin/FireBlockAccessor.java` and gravity mixins. Read the current config and implementation; the list changes during movement work.
 
 ## Build & Development Commands
 
@@ -80,11 +99,8 @@ Active forms tick server-side via `ActiveFormManager` (subscribed to `TickEvent.
 ./gradlew genIntellijRuns  # First time only
 # Then use IDE run configs: runClient, runServer, runData, runGameTestServer
 
-# Format code (required before commits)
-./gradlew spotlessApply
-
-# Check formatting
-./gradlew spotlessCheck
+# Check whitespace; match surrounding Java formatting
+git diff --check
 
 # Refresh dependencies (if libraries missing)
 ./gradlew --refresh-dependencies
@@ -92,6 +108,9 @@ Active forms tick server-side via `ActiveFormManager` (subscribed to `TickEvent.
 # Clean build artifacts
 ./gradlew clean
 ```
+
+On Windows PowerShell, use `.\gradlew.bat` in place of `./gradlew`.
+Spotless is not configured in the current `build.gradle`; do not claim `spotlessApply` or `spotlessCheck` passed. If formatting automation is added later, update these commands. Avoid repository-wide formatting during unrelated tasks.
 
 ## Key Dependencies
 - **GeckoLib 3.1.19** — Animated entity models (all custom entities use GeckoLib renderers)
