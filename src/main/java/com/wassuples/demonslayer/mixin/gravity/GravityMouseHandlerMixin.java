@@ -24,7 +24,7 @@ public abstract class GravityMouseHandlerMixin {
     private void demonslayer$gravityTurn(net.minecraft.client.player.LocalPlayer player,
                                          double yawDelta, double pitchDelta) {
         player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            GravityDirection dir = gravity.getGravity();
+            GravityDirection dir = GravityUtil.getEffectiveGravity(player);
 
             if (dir == GravityDirection.DOWN) {
                 player.turn(yawDelta, pitchDelta);

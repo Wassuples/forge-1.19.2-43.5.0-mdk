@@ -38,7 +38,7 @@ public abstract class GravityCameraMixin {
         if (this.entity == null) return;
 
         this.entity.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            GravityDirection dir = gravity.getGravity();
+            GravityDirection dir = GravityUtil.getEffectiveGravity(this.entity);
             if (dir == GravityDirection.DOWN) return;
 
             float eyeH = Mth.lerp(partialTick, this.eyeHeightOld, this.eyeHeight);

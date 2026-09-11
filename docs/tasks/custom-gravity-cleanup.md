@@ -126,3 +126,72 @@ Final evidence:
 - Not run: live-client EAST/WEST and NORTH/SOUTH creative-flight testing; runtime behavior remains a manual validation boundary.
 
 Final scope acceptance by `/root/y_axis_scope`: accepted with zero open source findings.
+
+## 2026-09-11 complete movement rework — implementation handoff
+
+- **Implementer identity:** `/root/gravity_rework_impl` (delegated implementation agent).
+- **Base revision:** `fb76cf3` (`Cleanup gravity debug/helpers and fix custom-gravity movement, flight damping, and input remapping`).
+- **Decision:** Replace the competing world-space corrections with a player-local physics frame. Vanilla travel, gravity, drag, jump, creative-flight input, and friction now operate on local XYZ. `GravityMoveMixin` rotates displacement once at the `Entity.move` collision boundary, restores the rotated hitbox's gravity anchor at vanilla's `setPosRaw` site, and derives support after movement. This was independently adapted from the boundary-transform architecture described for established gravity mods; no third-party source was copied.
+- **Removed competition:** Removed the custom jump override and player-flight-tail override, replaced the travel mixin with only a local-yaw input adapter, removed event-tick gravity acceleration/velocity clamping, and removed the creative Space/Shift remap. The hard-coded world-Y vanilla step is disabled for custom gravity to prevent the reported wall bounce; custom-gravity stepping is intentionally deferred rather than emulated incorrectly.
+- **Transform evidence:** Added tests covering round trips, configured down-axis mapping, length preservation, and basis orthogonality for all six gravity directions.
+- **Validation:** Java 17 `bash gradlew test --no-daemon` completed successfully (7 actionable tasks). `git diff --check` passed. Runtime mixin application and live-client movement remain for the independent validator.
+- **Known risk for review:** Collision flags inside vanilla `Entity.move` are world-axis flags. The post-move support state is corrected, but reviewers should specifically validate swimming, elytra, piston movement, ledges, and collision-driven velocity cancellation before merge.
+
+### Blocking-review repair: full collision boundary
+
+- **Finding:** The first boundary implementation rotated every `MoverType`, disabled stepping, and left collided/requested vectors in world coordinates while vanilla derived local collision flags. It also failed to preserve world velocity when the gravity frame changed.
+- **Repair by `/root/gravity_rework_impl`:** Restrict boundary rotation to `SELF`/`PLAYER`; restore requested and collided movement to local coordinates before vanilla collision flags; transform `collide`, `collideBoundingBox`, AABB expansion/movement, shape-axis resolution, and stepping between local and world frames; preserve other mover types as world-space movement. Gravity changes now reframe velocity old-local → world → new-local in command, Infinity Castle, and client synchronization paths.
+- **Evidence:** Java 17 `compileJava --no-daemon` passed after the collision port. Transform tests now include every old/new gravity velocity transition. Third-party code was used only to understand injection architecture; implementation names, helpers, capability gates, and direction math were independently written for this Forge codebase.
+
+### Producer-contract repair
+
+- **Finding:** Keeping `deltaMovement` local outside `Player.travel` silently reinterpreted the repository's many world-space combat impulses and transition synchronization. Transition reframing fixed one symptom but not the public velocity contract.
+- **Repair by `/root/gravity_rework_impl`:** `GravityPlayerTravelMixin` now enters a local frame at the outer `Player.travel` head and restores world velocity at return. Consequently all code outside travel continues to observe and produce world velocity. The custom jump and pre-travel LocalPlayer creative flight remap were restored because those mutations occur while velocity is world-space. Transition reframing and temporary world-velocity helper APIs were removed. `Entity.move` transforms only `MoverType.SELF`; mapped 1.19.2 bytecode shows normal `LivingEntity.travel` calls `move(MoverType.SELF, deltaMovement)`, while other mover types retain their world contract. Per-move transform state is cleared on every normal return.
+- **Anchor evidence:** Mapped 1.19.2 `Entity.move` updates position with `setPos(current + collidedWorldMovement)` before collision flags, not `setPosRaw` from bounding-box min-Y. The existing gravity-aware `Entity.setPos` return injection rebuilds the rotated box, so no invalid `setPosRaw` redirect is installed.
+
+### Review round 2 completeness repairs
+
+- **Finding:** Elytra/swimming travel branches still consumed world look vectors while velocity was temporarily local. Friction/landing probes and sneak-edge support remained hard-coded to world down.
+- **Repair by `/root/gravity_rework_impl`:** Redirected the mapped `getLookAngle` calls in both `LivingEntity.travel` and `Player.travel` into the active local frame. Added gravity-relative `getBlockPosBelowThatAffectsMyMovement` and `getOnPosLegacy` positions, and replaced `Player.maybeBackOffFromEdge` for custom gravity with the existing gravity-plane support probe. Normal DOWN behavior is untouched.
+- **Step transform evidence:** Mapped 1.19.2 `Entity.collide` performs its initial broadphase using `AABB.expandTowards(Vec3)` before the movement local conversion. The mixin's `expandTowards(DDD)` `ModifyArgs` therefore targets only vanilla's later step-candidate expansions, where movement is local and must be converted to world. It does not double-rotate the initial broadphase. Collision candidates return local from `collideBoundingBox`, are compared/selected by vanilla in local axes, and are converted to world once at `collide` return.
+- **Validation evidence:** Java 17 `compileJava --no-daemon` passed and generated a refmap for all added mapped targets. Full test/build results follow in validation handoff.
+
+### Complete-rework review and validation closure
+
+Primary-source architecture reference: qouteall's MIT-licensed GravityChanger, including
+`EntityMixin`, `LivingEntityMixin`, `PlayerMixin`, and `RotationUtil` from its public source
+repository (`https://github.com/qouteall/GravityChanger`). The implementation was adapted to
+Forge 1.19.2 mappings and this mod's capability model rather than copied verbatim.
+
+| Phase | Real agent identity | Revision / state | Findings and evidence |
+| --- | --- | --- | --- |
+| Scope and architecture | `/root/gravity_rework_scope` | Clean HEAD `fb76cf3` | Identified mixed world/local physics and competing travel/move/event corrections as the systemic movement and bounce cause; recommended a single transformed collision boundary. |
+| Implementation | `/root/gravity_rework_impl` | Uncommitted rework over `fb76cf3` | Implemented the local travel frame, complete collision boundary, support/look/edge adaptations, tests, and all review repairs. |
+| Independent validation | `/root/rework_validator` | Final uncommitted diff | Initially found collision/velocity-contract and passenger geometry risks; retracted an anchor concern after exact 1.19.2 bytecode inspection and finished with zero open findings after repairs. |
+| Code review round 1 | `/root/rework_review1` | Final uncommitted diff | Found incomplete collision restoration, public velocity-contract, mover-type, stale-state, stepping, transition, and anchor risks. Final re-review closed every finding and approved the source-level design. |
+| Code review round 2 | `/root/final_rework_review2` | Final uncommitted diff | Found local-frame look, support probes, edge gates, and passenger/spectator consistency gaps. All findings were repaired; final re-review reported no open findings. |
+| Acceptance revisit | `/root/gravity_rework_scope` | Final uncommitted diff over `fb76cf3` | Source-level acceptance confirmed with zero open findings after the serialized build; live Minecraft acceptance remains explicitly pending. |
+
+Final architecture and repairs:
+
+1. Public `deltaMovement` stays world-space. `Player.travel` alone enters/exits a local frame, so existing combat knockback, pull, dash, and external velocity producers retain their established contract.
+2. Only `MoverType.SELF` crosses the local/world collision boundary. Piston, shulker, `PLAYER`, passenger, and spectator movement remains world-space.
+3. `Entity.move`, `collide`, and `collideBoundingBox` transform requested/collided vectors, AABB operations, shape axes, vanilla step candidates, and collision results at mapped boundaries before vanilla derives collision flags.
+4. Gravity-relative look vectors, friction/landing positions, jump direction, creative Space/Shift, and crouch-edge probes are applied in the coordinate frame where vanilla consumes them.
+5. The former event-tick gravity acceleration, velocity clamping, manual step rewind/teleports, RETURN friction correction, and creative tail correction were removed. Vanilla gravity, drag, friction, flight damping, and stepping now run once in the local travel frame.
+6. Effective gravity becomes DOWN consistently for passengers and spectators across movement, hitboxes, eyes, camera, mouse, and local input hooks.
+7. Exact Forge 1.19.2 bytecode showed `Entity.move` advances position with `setPos(current + collided)`, so no nonexistent/min-Y `setPosRaw` correction was added. It also showed the initial `expandTowards(Vec3)` broadphase remains world-space, while the transformed `expandTowards(DDD)` calls are later local step probes.
+
+Automated evidence:
+
+- Transform tests cover inverse mapping, configured down, and length/basis preservation for all six directions.
+- `git diff --check` passed after the final repairs.
+- Passed: `JAVA_HOME=$(mise where java@17) PATH=$(mise where java@17)/bin:$PATH bash gradlew clean test build --no-daemon` (`BUILD SUCCESSFUL`; 14 actionable tasks executed).
+- Live Minecraft all-direction testing remains required; build/refmap/static review cannot prove runtime mixin application.
+
+Final independent validation by `/root/rework_validator` ended with zero open findings. Its
+initial anchor concern was retracted after exact mapped Forge 43.5.0 bytecode showed
+`Entity.move` calling `setPos(current + collided)`. Its final passenger/spectator finding was
+repaired by applying effective DOWN gravity consistently to event hitbox refresh, pose/eye and
+support geometry, camera, mouse, local input, travel, collision, and edge handling. Both
+non-author code review rounds report zero open findings after repair.

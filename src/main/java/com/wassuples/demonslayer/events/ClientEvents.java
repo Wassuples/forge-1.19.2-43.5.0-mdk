@@ -118,26 +118,17 @@ public class ClientEvents {
                 gravity.tickInterpolation();
                 gravity.tickTransientState();
 
-                GravityDirection direction = gravity.getGravity();
-                boolean creativeFlight = mc.player.getAbilities().flying && mc.player.getAbilities().mayfly;
+                GravityDirection direction = GravityUtil.getEffectiveGravity(mc.player);
                 boolean isCustomGravity = direction != GravityDirection.DOWN
                         && !mc.player.isPassenger()
                         && !mc.player.isSpectator();
-                boolean useCustomGravity = isCustomGravity && !creativeFlight;
 
                 GravityUtil.refreshGravityHitbox(mc.player, direction);
-                if (isCustomGravity) {
-                    mc.player.setNoGravity(true);
-                } else if (mc.player.isNoGravity()) {
+                if (isCustomGravity && mc.player.isNoGravity()) {
                     mc.player.setNoGravity(false);
                 }
 
-                if (useCustomGravity) {
-                    // Mirror server-side custom gravity locally to keep client movement packets consistent.
-                    boolean grounded = GravityUtil.updateGroundStateForCustomGravity(mc.player, direction, gravity.isSurfaceDetachActive());
-                    Vec3 vel = GravityUtil.applyCustomGravityStep(mc.player.getDeltaMovement(), direction, grounded);
-                    mc.player.setDeltaMovement(vel);
-
+                if (isCustomGravity) {
                     mc.player.fallDistance = 0.0F;
                 }
             });

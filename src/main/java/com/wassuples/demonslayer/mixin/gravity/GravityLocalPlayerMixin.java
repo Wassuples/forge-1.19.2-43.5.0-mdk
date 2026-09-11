@@ -22,7 +22,7 @@ public abstract class GravityLocalPlayerMixin {
     private void demonslayer$clearQueuedAutoJump(CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
         player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            if (gravity.getGravity() != GravityDirection.DOWN) {
+            if (GravityUtil.getEffectiveGravity(player) != GravityDirection.DOWN) {
                 this.autoJumpTime = 0;
             }
         });
@@ -54,7 +54,7 @@ public abstract class GravityLocalPlayerMixin {
     private void demonslayer$disableAutoJump(CallbackInfoReturnable<Boolean> cir) {
         LocalPlayer player = (LocalPlayer) (Object) this;
         player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            if (gravity.getGravity() != GravityDirection.DOWN) {
+            if (GravityUtil.getEffectiveGravity(player) != GravityDirection.DOWN) {
                 cir.setReturnValue(false);
             }
         });
@@ -64,7 +64,7 @@ public abstract class GravityLocalPlayerMixin {
     private void demonslayer$disableClosestSpacePush(double x, double z, CallbackInfo ci) {
         LocalPlayer player = (LocalPlayer) (Object) this;
         player.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            if (gravity.getGravity() != GravityDirection.DOWN) {
+            if (GravityUtil.getEffectiveGravity(player) != GravityDirection.DOWN) {
                 ci.cancel();
             }
         });
