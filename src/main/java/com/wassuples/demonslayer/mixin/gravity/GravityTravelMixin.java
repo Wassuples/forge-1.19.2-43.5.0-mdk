@@ -1,6 +1,5 @@
 package com.wassuples.demonslayer.mixin.gravity;
 
-import com.wassuples.demonslayer.gravity.GravityDebug;
 import com.wassuples.demonslayer.gravity.GravityDirection;
 import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
@@ -57,14 +56,6 @@ public abstract class GravityTravelMixin {
         )
     )
     private void demonslayer$gravityMoveRelative(LivingEntity instance, float speed, Vec3 relativeMovement) {
-        // ── DEBUG (structural check) ── unconditional, fires on EVERY call regardless of input,
-        // capability presence, or gravity direction. If this never appears in the log, the
-        // @Redirect itself is not being hit for this entity/call site at all.
-        GravityDebug.log("MOVE-ENTRY", "{} entity={} speed={} relMove={}",
-            instance.level.isClientSide() ? "CLIENT" : "SERVER",
-            instance.getClass().getSimpleName(), speed, relativeMovement);
-        // ── END DEBUG ──
-
         // Entities without the capability (mobs, etc.) keep vanilla behaviour.
         var capOpt = instance.getCapability(PlayerGravity.GRAVITY_CAPABILITY);
         if (!capOpt.isPresent()) {
@@ -109,18 +100,7 @@ public abstract class GravityTravelMixin {
                 .add(forward.scale(inputZ))  // W / S     → forward on the gravity floor
                 .add(up.scale(inputY));      // Spc / Sft → gravity-up  (flight vertical)
 
-        // ── DEBUG (Issues 1/2/3) — see GravityDebug ─────────────────────────────────
-        Vec3 velBefore = instance.getDeltaMovement();
-        GravityDebug.log("MOVE",
-            "{} dir={} look={} in=({},{},{}) up={} fwd={} left={} worldMove={} velBefore={}",
-            instance.level.isClientSide() ? "CLIENT" : "SERVER", dir, instance.getLookAngle(),
-            inputX, inputY, inputZ, up, forward, left, worldMovement, velBefore);
-
-        instance.setDeltaMovement(velBefore.add(worldMovement));
-
-        GravityDebug.log("MOVE", "{} velAfter={}",
-            instance.level.isClientSide() ? "CLIENT" : "SERVER", instance.getDeltaMovement());
-        // ── END DEBUG ────────────────────────────────────────────────────────────────
+        instance.setDeltaMovement(instance.getDeltaMovement().add(worldMovement));
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -148,6 +128,18 @@ public abstract class GravityTravelMixin {
 
         // DOWN and UP both have X/Z as their lateral plane — vanilla handles those already.
         if (dir == GravityDirection.DOWN || dir == GravityDirection.UP) return;
+        // Flying players use vanilla's air damping on both gravity-lateral axes. World Y
+        // has already received vanilla's 0.98 factor, so convert it to the 0.91 factor
+        // vanilla applied to the other lateral world axes instead of applying ground friction.
+        if (self instanceof Player player
+                && player.getAbilities().flying
+                && !player.isPassenger()) {
+            if (!self.isInWater() && !self.isInLava() && !self.isFallFlying()) {
+                Vec3 velocity = self.getDeltaMovement();
+                self.setDeltaMovement(velocity.x, velocity.y * ((double) 0.91F / 0.98D), velocity.z);
+            }
+            return;
+        }
         if (!self.isOnGround()) return;
 
         net.minecraft.core.BlockPos groundPos = new net.minecraft.core.BlockPos(
@@ -158,18 +150,8 @@ public abstract class GravityTravelMixin {
         float friction = 0.91f * blockFriction; // mirrors vanilla's formula
 
         Vec3 vel = self.getDeltaMovement();
-        // ── DEBUG (Issue 1) ─────────────────────────────────────────────────────────
-        if (Math.abs(vel.y) > 1.0E-4) {
-            GravityDebug.log("YFRIC", "{} dir={} blockFriction={} friction={} velBefore={}",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", dir, blockFriction, friction, vel);
-        }
         // Apply the same block-friction-scaled damping to Y that vanilla applies to X/Z.
         self.setDeltaMovement(vel.x, vel.y * friction, vel.z);
-        if (Math.abs(vel.y) > 1.0E-4) {
-            GravityDebug.log("YFRIC", "{} velAfter={}",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", self.getDeltaMovement());
-        }
-        // ── END DEBUG ────────────────────────────────────────────────────────────────
     }
 
     // ═══════════════════════════════════════════════════════════════════════════

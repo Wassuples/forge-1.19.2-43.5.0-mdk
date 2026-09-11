@@ -1,12 +1,15 @@
 package com.wassuples.demonslayer.mixin.gravity;
 
 import com.wassuples.demonslayer.gravity.GravityDirection;
+import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
 import net.minecraft.client.player.LocalPlayer;
+import net.minecraft.world.phys.Vec3;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
@@ -23,6 +26,28 @@ public abstract class GravityLocalPlayerMixin {
                 this.autoJumpTime = 0;
             }
         });
+    }
+
+    @Redirect(
+        method = "aiStep()V",
+        at = @At(
+            value = "INVOKE",
+            target = "Lnet/minecraft/client/player/LocalPlayer;setDeltaMovement(Lnet/minecraft/world/phys/Vec3;)V"
+        )
+    )
+    private void demonslayer$remapCreativeFlightInput(LocalPlayer player, Vec3 requestedVelocity) {
+        GravityDirection direction = player.getCapability(PlayerGravity.GRAVITY_CAPABILITY)
+            .map(PlayerGravity::getGravity)
+            .orElse(GravityDirection.DOWN);
+        if (direction == GravityDirection.DOWN) {
+            player.setDeltaMovement(requestedVelocity);
+            return;
+        }
+
+        Vec3 currentVelocity = player.getDeltaMovement();
+        double verticalInput = requestedVelocity.y - currentVelocity.y;
+        player.setDeltaMovement(currentVelocity
+            .add(GravityUtil.getWorldUp(direction).scale(verticalInput)));
     }
 
     @Inject(method = "canAutoJump()Z", at = @At("HEAD"), cancellable = true)
@@ -45,10 +70,4 @@ public abstract class GravityLocalPlayerMixin {
         });
     }
 
-    // NOTE: The old demonslayer$capturePreFlyVelocity and demonslayer$remapFlyingVertical
-    // methods have been removed.  Creative-flight vertical remapping is now handled
-    // correctly by GravityTravelMixin (which maps relativeMovement.y → gravity-up in the
-    // moveRelative redirect) and GravityPlayerTravelMixin (which decays the gravity-up
-    // velocity component to 60 % per tick, matching vanilla's Y decay).  The old approach
-    // captured the wrong Y delta (vanilla's decay, not the input) and caused double-remapping.
 }

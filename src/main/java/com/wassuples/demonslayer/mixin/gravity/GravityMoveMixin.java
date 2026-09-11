@@ -1,6 +1,5 @@
 package com.wassuples.demonslayer.mixin.gravity;
 
-import com.wassuples.demonslayer.gravity.GravityDebug;
 import com.wassuples.demonslayer.gravity.GravityDirection;
 import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
@@ -62,14 +61,6 @@ public abstract class GravityMoveMixin {
             && p.getAbilities().mayfly;
         demonslayer$stepEligible = !flying && GravityUtil.isStandingOnCustomSurface(self, demonslayer$moveGravity);
 
-        // ── DEBUG (Issue 1) ────────────────────────────────────────────────────────────────
-        if (movement.lengthSqr() > 1.0E-7) {
-            GravityDebug.log("STEP-PRE", "{} dir={} flying={} stepEligible={} movement={}",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", demonslayer$moveGravity, flying,
-                demonslayer$stepEligible, movement);
-        }
-        // ── END DEBUG ─────────────────────────────────────────────────────────────
-
         if (!demonslayer$stepEligible) {
             // No step needed; leave vanilla maxUpStep untouched so it can resolve
             // its own step logic normally (irrelevant for wall gravity but harmless).
@@ -117,13 +108,6 @@ public abstract class GravityMoveMixin {
         double actualLen     = actualLateral.length();
 
         // Only attempt the step when we were meaningfully blocked (< 95 % of intent reached).
-        // ── DEBUG (Issue 1) ──────────────────────────────────────────────────────────
-        GravityDebug.log("STEP-POST",
-            "{} dir={} intendedLateral={} intendedLen={} actualLateral={} actualLen={} ratio={}",
-            self.level.isClientSide() ? "CLIENT" : "SERVER", demonslayer$moveGravity,
-            intendedLateral, intendedLen, actualLateral, actualLen,
-            intendedLen > 0 ? (actualLen / intendedLen) : -1.0);
-        // ── END DEBUG ──────────────────────────────────────────────────────────
         if (actualLen >= intendedLen * 0.95) { demonslayer$clear(); return; }
 
         float stepHeight = demonslayer$savedMaxUpStep;
@@ -150,14 +134,11 @@ public abstract class GravityMoveMixin {
 
         // Accept the stepped result only when it gained more lateral ground than vanilla did.
         Vec3 steppedLateral = GravityUtil.projectOntoPlane(pos3.subtract(start), down);
-        if (steppedLateral.length() > actualLen + 1.0E-5) {
+        double steppedLen = steppedLateral.length();
+        if (steppedLen > actualLen + 1.0E-5) {
             self.setPos(pos3.x, pos3.y, pos3.z);
-            GravityDebug.log("STEP-POST", "{} stepped result ACCEPTED steppedLen={} (vs actualLen={})",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", steppedLateral.length(), actualLen);
         } else {
             self.setPos(postPos.x, postPos.y, postPos.z);  // vanilla result was at least as good
-            GravityDebug.log("STEP-POST", "{} vanilla result KEPT steppedLen={} (vs actualLen={})",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", steppedLateral.length(), actualLen);
         }
 
         demonslayer$clear();
@@ -223,6 +204,9 @@ public abstract class GravityMoveMixin {
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             GravityDirection dir = gravity.getGravity();
             if (dir == GravityDirection.DOWN) return;
+            if (self instanceof Player player
+                    && player.getAbilities().flying
+                    && !player.isPassenger()) return;
             // Vanilla's ground check only fires when movement.y < 0.
             // For wall gravity (X or Z axis), this never matches, so vanilla
             // always leaves onGround=false even when standing on a surface.
@@ -232,4 +216,3 @@ public abstract class GravityMoveMixin {
         });
     }
 }
-
