@@ -7,10 +7,10 @@
   "mixins": [
     "FireBlockAccessor",
     "gravity.GravityEntityMixin",
-    "gravity.GravityLivingEntityMixin",
     "gravity.GravityMoveMixin",
-    "gravity.GravityPlayerTravelMixin",
-    "gravity.GravityTravelMixin"
+    "gravity.GravityTravelMixin",
+    "gravity.GravityLivingEntityMixin",
+    "gravity.GravityPlayerTravelMixin"
   ],
   "client": [
     "gravity.GravityCameraMixin",

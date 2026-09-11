@@ -118,32 +118,18 @@ public class ClientEvents {
                 gravity.tickInterpolation();
                 gravity.tickTransientState();
 
-                GravityDirection direction = gravity.getGravity();
-                boolean creativeFlight = mc.player.getAbilities().flying && mc.player.getAbilities().mayfly;
-                boolean useCustomGravity = direction != GravityDirection.DOWN
+                GravityDirection direction = GravityUtil.getEffectiveGravity(mc.player);
+                boolean isCustomGravity = direction != GravityDirection.DOWN
                         && !mc.player.isPassenger()
-                        && !mc.player.isSpectator()
-                        && !creativeFlight;
+                        && !mc.player.isSpectator();
 
                 GravityUtil.refreshGravityHitbox(mc.player, direction);
-
-                if (useCustomGravity) {
-                    mc.player.setNoGravity(true);
-                    // Mirror server-side custom gravity locally to keep client movement packets consistent.
-                    boolean grounded = GravityUtil.updateGroundStateForCustomGravity(mc.player, direction, gravity.isSurfaceDetachActive());
-                    Vec3 vel = GravityUtil.applyCustomGravityStep(mc.player.getDeltaMovement(), direction, grounded);
-                    mc.player.setDeltaMovement(vel);
-
-                    if (grounded) {
-                        Vec3 down = GravityUtil.getWorldDown(direction);
-                        double downSpeed = vel.dot(down);
-                        Vec3 lateral = vel.subtract(down.scale(downSpeed)).scale(0.91D);
-                        mc.player.setDeltaMovement(down.scale(downSpeed).add(lateral));
-                    }
-
-                    mc.player.fallDistance = 0.0F;
-                } else if (mc.player.isNoGravity()) {
+                if (isCustomGravity && mc.player.isNoGravity()) {
                     mc.player.setNoGravity(false);
+                }
+
+                if (isCustomGravity) {
+                    mc.player.fallDistance = 0.0F;
                 }
             });
 

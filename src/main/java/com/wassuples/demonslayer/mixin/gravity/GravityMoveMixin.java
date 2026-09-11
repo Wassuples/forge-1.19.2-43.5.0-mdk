@@ -1,235 +1,166 @@
 package com.wassuples.demonslayer.mixin.gravity;
 
-import com.wassuples.demonslayer.gravity.GravityDebug;
 import com.wassuples.demonslayer.gravity.GravityDirection;
 import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
+import net.minecraft.core.Direction;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.ModifyVariable;
+import org.spongepowered.asm.mixin.injection.Redirect;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import net.minecraft.world.phys.shapes.Shapes;
-import net.minecraft.core.Direction;
+import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
+import java.util.List;
+
+/** Translates player-local motion at the world-collision boundary. */
 @Mixin(Entity.class)
 public abstract class GravityMoveMixin {
+    @Shadow
+    private static Vec3 collideWithShapes(Vec3 movement, AABB box, List<VoxelShape> collisions) {
+        throw new AssertionError();
+    }
 
-    @Shadow public float maxUpStep;
-    @Shadow public Level level;
-    @Shadow public abstract Vec3 position();
-    @Shadow public abstract void setPos(double x, double y, double z);
-    @Shadow public abstract AABB getBoundingBox();
+    @Unique private GravityDirection demonslayer$moveGravity = GravityDirection.DOWN;
+    @Unique private boolean demonslayer$relativeMove;
 
-    @Unique private float            demonslayer$savedMaxUpStep   = -1f;
-    @Unique private Vec3             demonslayer$preMovePos       = null;
-    @Unique private Vec3             demonslayer$originalMovement = null;
-    @Unique private GravityDirection demonslayer$moveGravity      = GravityDirection.DOWN;
-    @Unique private boolean          demonslayer$stepEligible     = false;
-
-    // ── HEAD: suppress vanilla's wrong-axis step ──────────────────────────────────
-    @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At("HEAD"))
-    private void demonslayer$preMoveCapture(MoverType type, Vec3 movement, CallbackInfo ci) {
+    @ModifyVariable(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
+        at = @At("HEAD"), argsOnly = true, ordinal = 0)
+    private Vec3 demonslayer$movementToWorld(Vec3 movement, MoverType type) {
         Entity self = (Entity)(Object)this;
-        demonslayer$moveGravity = self.getCapability(PlayerGravity.GRAVITY_CAPABILITY)
-            .map(PlayerGravity::getGravity).orElse(GravityDirection.DOWN);
-
-        if (demonslayer$moveGravity == GravityDirection.DOWN) {
-            demonslayer$stepEligible = false;
-            return;
-        }
-
-        // Gate the step maneuver to grounded, non-flying entities only.
-        //
-        // The old code ran unconditionally for every move() call, including during creative
-        // flight and while jumping. Vanilla's collision result legitimately falls a few
-        // percent short of the intended distance in those cases (sliding along the wall,
-        // crossing a block boundary, floating slightly off-surface), and the old 95 %
-        // threshold treated any such shortfall as "blocked — must step". That shoved the
-        // entity 0.6 blocks away from the wall and then back; whenever the push-back
-        // didn't land flush, the entity ended up airborne for one tick, gravity snapped it
-        // back in, and you got the toward/away oscillation (Issue 1 bounce) as well as
-        // hijacked flight-vertical movement (Issue 2).
-        boolean flying = self instanceof Player p
-            && p.getAbilities().flying
-            && p.getAbilities().mayfly;
-        demonslayer$stepEligible = !flying && GravityUtil.isStandingOnCustomSurface(self, demonslayer$moveGravity);
-
-        // ── DEBUG (Issue 1) ────────────────────────────────────────────────────────────────
-        if (movement.lengthSqr() > 1.0E-7) {
-            GravityDebug.log("STEP-PRE", "{} dir={} flying={} stepEligible={} movement={}",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", demonslayer$moveGravity, flying,
-                demonslayer$stepEligible, movement);
-        }
-        // ── END DEBUG ─────────────────────────────────────────────────────────────
-
-        if (!demonslayer$stepEligible) {
-            // No step needed; leave vanilla maxUpStep untouched so it can resolve
-            // its own step logic normally (irrelevant for wall gravity but harmless).
-            return;
-        }
-
-        demonslayer$savedMaxUpStep   = this.maxUpStep;
-        demonslayer$originalMovement = movement;
-        demonslayer$preMovePos       = self.position();
-        this.maxUpStep = 0f;   // vanilla reads this field inside move(); zero = no step
+        demonslayer$moveGravity = demonslayer$getPlayerGravity(self);
+        demonslayer$relativeMove = demonslayer$moveGravity != GravityDirection.DOWN
+            && type == MoverType.SELF;
+        return demonslayer$relativeMove
+            ? GravityUtil.localToWorld(movement, demonslayer$moveGravity) : movement;
     }
 
-    // ── RETURN: redo step in the correct gravity-relative "up" direction ──────────
-    @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V", at = @At("RETURN"))
-    private void demonslayer$postMoveStep(MoverType type, Vec3 movement, CallbackInfo ci) {
-        if (!demonslayer$stepEligible
-            || demonslayer$moveGravity == GravityDirection.DOWN
-            || demonslayer$savedMaxUpStep <= 0f
-            || demonslayer$originalMovement == null) {
-            demonslayer$clear();
-            return;
-        }
-
-        // Restore maxUpStep so nothing downstream sees 0.
-        this.maxUpStep = demonslayer$savedMaxUpStep;
-        Entity self    = (Entity)(Object)this;
-
-        Vec3 postPos = self.position();   // where vanilla left the entity (step suppressed)
-        Vec3 down    = GravityUtil.getWorldDown(demonslayer$moveGravity);
-        Vec3 up      = GravityUtil.getWorldUp(demonslayer$moveGravity);
-
-        // Intended movement decomposed into its lateral component (perpendicular to gravity).
-        // BUG FIX: the original code used the full intendedMove in step 2, which for
-        // non-DOWN gravity contains a gravity-axis component (e.g., an X component when
-        // gravity is EAST) that shoves the entity into or away from the surface.
-        Vec3   intendedLateral = GravityUtil.projectOntoPlane(demonslayer$originalMovement, down);
-        double intendedLen     = intendedLateral.length();
-
-        // Nothing to step over when there is no lateral intent.
-        if (intendedLen < 1.0E-5) { demonslayer$clear(); return; }
-
-        // How much lateral displacement did vanilla actually achieve?
-        Vec3   actual        = postPos.subtract(demonslayer$preMovePos);
-        Vec3   actualLateral = GravityUtil.projectOntoPlane(actual, down);
-        double actualLen     = actualLateral.length();
-
-        // Only attempt the step when we were meaningfully blocked (< 95 % of intent reached).
-        // ── DEBUG (Issue 1) ──────────────────────────────────────────────────────────
-        GravityDebug.log("STEP-POST",
-            "{} dir={} intendedLateral={} intendedLen={} actualLateral={} actualLen={} ratio={}",
-            self.level.isClientSide() ? "CLIENT" : "SERVER", demonslayer$moveGravity,
-            intendedLateral, intendedLen, actualLateral, actualLen,
-            intendedLen > 0 ? (actualLen / intendedLen) : -1.0);
-        // ── END DEBUG ──────────────────────────────────────────────────────────
-        if (actualLen >= intendedLen * 0.95) { demonslayer$clear(); return; }
-
-        float stepHeight = demonslayer$savedMaxUpStep;
-        Vec3  start      = demonslayer$preMovePos;
-
-        // Rewind the entity to its position before move() ran.
-        self.setPos(start.x, start.y, start.z);
-
-        // 1. Step "up" along the gravity-relative up axis (always single-axis).
-        Vec3 movedUp = demonslayer$collideAxis(self, up.scale(stepHeight));
-        Vec3 pos1    = start.add(movedUp);
-        self.setPos(pos1.x, pos1.y, pos1.z);
-
-        // 2. Lateral movement only — strictly no gravity-axis component.
-        //    Passing the full original movement here is the root bug this file had:
-        //    it would push the entity along the gravity axis during the slide.
-        Vec3 movedLat = demonslayer$tryCollide(self, intendedLateral);
-        Vec3 pos2     = pos1.add(movedLat);
-        self.setPos(pos2.x, pos2.y, pos2.z);
-
-        // 3. Step back "down" to re-attach to the ledge surface (always single-axis).
-        Vec3 movedDown = demonslayer$collideAxis(self, down.scale(stepHeight));
-        Vec3 pos3      = pos2.add(movedDown);
-
-        // Accept the stepped result only when it gained more lateral ground than vanilla did.
-        Vec3 steppedLateral = GravityUtil.projectOntoPlane(pos3.subtract(start), down);
-        if (steppedLateral.length() > actualLen + 1.0E-5) {
-            self.setPos(pos3.x, pos3.y, pos3.z);
-            GravityDebug.log("STEP-POST", "{} stepped result ACCEPTED steppedLen={} (vs actualLen={})",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", steppedLateral.length(), actualLen);
-        } else {
-            self.setPos(postPos.x, postPos.y, postPos.z);  // vanilla result was at least as good
-            GravityDebug.log("STEP-POST", "{} vanilla result KEPT steppedLen={} (vs actualLen={})",
-                self.level.isClientSide() ? "CLIENT" : "SERVER", steppedLateral.length(), actualLen);
-        }
-
-        demonslayer$clear();
+    /* Before vanilla derives collision flags, put both requested and collided movement back
+       in player coordinates. Vanilla stepping therefore remains gravity-relative. */
+    @ModifyVariable(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/ProfilerFiller;pop()V", ordinal = 0),
+        argsOnly = true, ordinal = 0)
+    private Vec3 demonslayer$requestBackToLocal(Vec3 movement) {
+        return demonslayer$relativeMove ? GravityUtil.worldToLocal(movement, demonslayer$moveGravity) : movement;
     }
 
-    @Unique
-    private Vec3 demonslayer$collideAxis(Entity entity, Vec3 movement) {
-        AABB   box = entity.getBoundingBox();
-        double mx  = movement.x, my = movement.y, mz = movement.z;
-        if      (my != 0) my = Shapes.collide(Direction.Axis.Y, box, this.level.getBlockCollisions(entity, box.expandTowards(0, my, 0)), my);
-        else if (mx != 0) mx = Shapes.collide(Direction.Axis.X, box, this.level.getBlockCollisions(entity, box.expandTowards(mx, 0, 0)), mx);
-        else if (mz != 0) mz = Shapes.collide(Direction.Axis.Z, box, this.level.getBlockCollisions(entity, box.expandTowards(0, 0, mz)), mz);
-        return new Vec3(mx, my, mz);
-    }
-
-    @Unique
-    private Vec3 demonslayer$tryCollide(Entity entity, Vec3 movement) {
-        AABB   box = entity.getBoundingBox();
-        double mx  = movement.x, my = movement.y, mz = movement.z;
-
-        // Y first (vanilla convention).
-        if (my != 0) {
-            my  = Shapes.collide(Direction.Axis.Y, box, this.level.getBlockCollisions(entity, box.expandTowards(0, my, 0)), my);
-            box = box.move(0, my, 0);  // advance AABB so X/Z tests start from moved position
-        }
-
-        // Larger horizontal magnitude first, matching vanilla's Entity.collideBoundingBox.
-        boolean zFirst = Math.abs(mz) > Math.abs(mx);
-        if (zFirst) {
-            if (mz != 0) {
-                mz  = Shapes.collide(Direction.Axis.Z, box, this.level.getBlockCollisions(entity, box.expandTowards(0, 0, mz)), mz);
-                box = box.move(0, 0, mz);
-            }
-            if (mx != 0) {
-                mx = Shapes.collide(Direction.Axis.X, box, this.level.getBlockCollisions(entity, box.expandTowards(mx, 0, 0)), mx);
-            }
-        } else {
-            if (mx != 0) {
-                mx  = Shapes.collide(Direction.Axis.X, box, this.level.getBlockCollisions(entity, box.expandTowards(mx, 0, 0)), mx);
-                box = box.move(mx, 0, 0);
-            }
-            if (mz != 0) {
-                mz = Shapes.collide(Direction.Axis.Z, box, this.level.getBlockCollisions(entity, box.expandTowards(0, 0, mz)), mz);
-            }
-        }
-
-        return new Vec3(mx, my, mz);
-    }
-
-    @Unique
-    private void demonslayer$clear() {
-        demonslayer$savedMaxUpStep   = -1f;
-        demonslayer$preMovePos       = null;
-        demonslayer$originalMovement = null;
-        demonslayer$moveGravity      = GravityDirection.DOWN;
-        demonslayer$stepEligible     = false;
+    @ModifyVariable(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/util/profiling/ProfilerFiller;pop()V", ordinal = 0),
+        ordinal = 1)
+    private Vec3 demonslayer$collisionBackToLocal(Vec3 movement) {
+        return demonslayer$relativeMove ? GravityUtil.worldToLocal(movement, demonslayer$moveGravity) : movement;
     }
 
     @Inject(method = "move(Lnet/minecraft/world/entity/MoverType;Lnet/minecraft/world/phys/Vec3;)V",
         at = @At("RETURN"))
-    private void demonslayer$fixOnGroundAfterMove(MoverType type, Vec3 movement, CallbackInfo ci) {
-        Entity self = (Entity)(Object)this;
-        self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
-            GravityDirection dir = gravity.getGravity();
-            if (dir == GravityDirection.DOWN) return;
-            // Vanilla's ground check only fires when movement.y < 0.
-            // For wall gravity (X or Z axis), this never matches, so vanilla
-            // always leaves onGround=false even when standing on a surface.
-            if (GravityUtil.isStandingOnCustomSurface(self, dir)) {
-                self.setOnGround(true);
-            }
-        });
+    private void demonslayer$clearMoveFrame(MoverType type, Vec3 movement, CallbackInfo ci) {
+        demonslayer$relativeMove = false;
+        demonslayer$moveGravity = GravityDirection.DOWN;
+    }
+
+    @ModifyVariable(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At(value = "INVOKE_ASSIGN", target = "Lnet/minecraft/world/level/Level;getEntityCollisions(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/AABB;)Ljava/util/List;"),
+        ordinal = 0)
+    private Vec3 demonslayer$collideInputToLocal(Vec3 movement) {
+        GravityDirection gravity = demonslayer$getCollisionGravity((Entity)(Object)this);
+        return gravity == GravityDirection.DOWN ? movement : GravityUtil.worldToLocal(movement, gravity);
+    }
+
+    @Inject(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At("RETURN"), cancellable = true)
+    private void demonslayer$collideResultToWorld(Vec3 movement, CallbackInfoReturnable<Vec3> cir) {
+        GravityDirection gravity = demonslayer$getCollisionGravity((Entity)(Object)this);
+        if (gravity != GravityDirection.DOWN) cir.setReturnValue(GravityUtil.localToWorld(cir.getReturnValue(), gravity));
+    }
+
+    @ModifyArgs(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
+    private void demonslayer$expandInWorld(Args args) {
+        Vec3 world = GravityUtil.localToWorld(new Vec3(args.get(0), args.get(1), args.get(2)),
+            demonslayer$getCollisionGravity((Entity)(Object)this));
+        args.set(0, world.x); args.set(1, world.y); args.set(2, world.z);
+    }
+
+    @ModifyArgs(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;move(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/AABB;"))
+    private void demonslayer$boxMoveInWorld(Args args) {
+        args.set(0, GravityUtil.localToWorld(args.get(0), demonslayer$getCollisionGravity((Entity)(Object)this)));
+    }
+
+    @ModifyVariable(method = "collideBoundingBox(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Lnet/minecraft/world/level/Level;Ljava/util/List;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At("HEAD"), argsOnly = true, ordinal = 0)
+    private static Vec3 demonslayer$boundingInputToWorld(Vec3 movement, Entity entity) {
+        GravityDirection gravity = entity == null ? GravityDirection.DOWN : demonslayer$getCollisionGravity(entity);
+        return GravityUtil.localToWorld(movement, gravity);
+    }
+
+    @Inject(method = "collideBoundingBox(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Lnet/minecraft/world/level/Level;Ljava/util/List;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At("RETURN"), cancellable = true)
+    private static void demonslayer$boundingResultToLocal(Entity entity, Vec3 movement, AABB box,
+            Level level, List<VoxelShape> collisions, CallbackInfoReturnable<Vec3> cir) {
+        if (entity != null) {
+            cir.setReturnValue(GravityUtil.worldToLocal(cir.getReturnValue(), demonslayer$getCollisionGravity(entity)));
+        }
+    }
+
+    @Redirect(method = "collideBoundingBox(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Lnet/minecraft/world/level/Level;Ljava/util/List;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/Entity;collideWithShapes(Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Ljava/util/List;)Lnet/minecraft/world/phys/Vec3;"))
+    private static Vec3 demonslayer$collideWithShapesRelative(Vec3 worldMovement, AABB box,
+            List<VoxelShape> collisions, Entity entity) {
+        GravityDirection gravity = entity == null ? GravityDirection.DOWN : demonslayer$getCollisionGravity(entity);
+        if (gravity == GravityDirection.DOWN) return collideWithShapes(worldMovement, box, collisions);
+
+        Vec3 local = GravityUtil.worldToLocal(worldMovement, gravity);
+        double x = local.x, y = local.y, z = local.z;
+        Direction xWorld = demonslayer$worldDirection(new Vec3(1, 0, 0), gravity);
+        Direction yWorld = demonslayer$worldDirection(new Vec3(0, 1, 0), gravity);
+        Direction zWorld = demonslayer$worldDirection(new Vec3(0, 0, 1), gravity);
+        y = demonslayer$collideAxis(y, yWorld, box, collisions);
+        if (y != 0) box = box.move(GravityUtil.localToWorld(new Vec3(0, y, 0), gravity));
+        boolean zFirst = Math.abs(x) < Math.abs(z);
+        if (zFirst) {
+            z = demonslayer$collideAxis(z, zWorld, box, collisions);
+            if (z != 0) box = box.move(GravityUtil.localToWorld(new Vec3(0, 0, z), gravity));
+        }
+        x = demonslayer$collideAxis(x, xWorld, box, collisions);
+        if (!zFirst && x != 0) box = box.move(GravityUtil.localToWorld(new Vec3(x, 0, 0), gravity));
+        if (!zFirst) z = demonslayer$collideAxis(z, zWorld, box, collisions);
+        return GravityUtil.localToWorld(new Vec3(x, y, z), gravity);
+    }
+
+    @Unique private static double demonslayer$collideAxis(double amount, Direction worldDirection,
+            AABB box, List<VoxelShape> collisions) {
+        int sign = worldDirection.getAxisDirection().getStep();
+        return Shapes.collide(worldDirection.getAxis(), box, collisions, amount * sign) * sign;
+    }
+
+    @Unique private static Direction demonslayer$worldDirection(Vec3 localAxis, GravityDirection gravity) {
+        Vec3 world = GravityUtil.localToWorld(localAxis, gravity);
+        return Direction.getNearest((float)world.x, (float)world.y, (float)world.z);
+    }
+
+    @Unique private static GravityDirection demonslayer$getCollisionGravity(Entity entity) {
+        GravityMoveMixin mixin = (GravityMoveMixin)(Object)entity;
+        return mixin.demonslayer$relativeMove ? mixin.demonslayer$moveGravity : GravityDirection.DOWN;
+    }
+
+    @Unique private static GravityDirection demonslayer$getPlayerGravity(Entity entity) {
+        if (!(entity instanceof Player) || entity.isPassenger() || entity.isSpectator()) return GravityDirection.DOWN;
+        return entity.getCapability(PlayerGravity.GRAVITY_CAPABILITY)
+            .map(PlayerGravity::getGravity).orElse(GravityDirection.DOWN);
     }
 }
-

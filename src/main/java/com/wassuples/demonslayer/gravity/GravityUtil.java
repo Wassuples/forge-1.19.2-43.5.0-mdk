@@ -4,6 +4,7 @@ import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityDimensions;
 import net.minecraft.world.entity.Pose;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
@@ -15,6 +16,15 @@ public class GravityUtil {
     public static final double TERMINAL_SPEED = 3.92D;
 
     private GravityUtil() {
+    }
+
+    public static GravityDirection getEffectiveGravity(Entity entity) {
+        if (entity instanceof Player && (entity.isPassenger() || entity.isSpectator())) {
+            return GravityDirection.DOWN;
+        }
+        return entity.getCapability(PlayerGravity.GRAVITY_CAPABILITY)
+            .map(PlayerGravity::getGravity)
+            .orElse(GravityDirection.DOWN);
     }
 
     public static Vec3 getWorldDown(GravityDirection direction) {
@@ -169,6 +179,19 @@ public class GravityUtil {
                 .add(relForward.scale(localVector.z));
     }
 
+    /** Vanilla's input normalization and yaw rotation, expressed explicitly for local physics. */
+    public static Vec3 getInputVector(Vec3 input, float speed, float yawDegrees) {
+        double lengthSquared = input.lengthSqr();
+        if (lengthSquared < 1.0E-7D) {
+            return Vec3.ZERO;
+        }
+        Vec3 normalized = (lengthSquared > 1.0D ? input.normalize() : input).scale(speed);
+        float sin = Mth.sin(yawDegrees * ((float)Math.PI / 180F));
+        float cos = Mth.cos(yawDegrees * ((float)Math.PI / 180F));
+        return new Vec3(normalized.x * cos - normalized.z * sin, normalized.y,
+            normalized.z * cos + normalized.x * sin);
+    }
+
     private static Vec3 getYawForwardOnGravityPlane(float gYaw, GravityDirection gravityDirection) {
         Vec3 gUp = getWorldUp(gravityDirection);
         Vec3 ref = (Math.abs(gUp.y) < 0.9D) ? new Vec3(0.0D, 1.0D, 0.0D) : new Vec3(0.0D, 0.0D, 1.0D);
@@ -181,7 +204,7 @@ public class GravityUtil {
         return gForward.scale(cosY).add(gRight.scale(sinY)).normalize();
     }
 
-    public static Vec3 rotateWorldMovementForGravity(Vec3 vector, GravityDirection direction) {
+    public static Vec3 localToWorld(Vec3 vector, GravityDirection direction) {
         return switch (direction) {
             case DOWN -> vector;
             case UP -> new Vec3(-vector.x, -vector.y, vector.z);
@@ -190,6 +213,24 @@ public class GravityUtil {
             case NORTH -> new Vec3(vector.x, -vector.z, vector.y);
             case SOUTH -> new Vec3(vector.x, vector.z, -vector.y);
         };
+    }
+
+    public static Vec3 worldToLocal(Vec3 vector, GravityDirection direction) {
+        return switch (direction) {
+            case DOWN -> vector;
+            case UP -> new Vec3(-vector.x, -vector.y, vector.z);
+            case EAST -> new Vec3(vector.y, -vector.x, vector.z);
+            case WEST -> new Vec3(-vector.y, vector.x, vector.z);
+            case NORTH -> new Vec3(vector.x, vector.z, -vector.y);
+            case SOUTH -> new Vec3(vector.x, -vector.z, vector.y);
+        };
+    }
+
+
+    /** @deprecated use {@link #localToWorld(Vec3, GravityDirection)}. */
+    @Deprecated
+    public static Vec3 rotateWorldMovementForGravity(Vec3 vector, GravityDirection direction) {
+        return localToWorld(vector, direction);
     }
 
     /**
@@ -211,13 +252,6 @@ public class GravityUtil {
 
     public static float getCameraPitchOffsetDegrees(GravityDirection direction) {
         return 0.0F;
-    }
-
-    public static double[] remapTurnDeltas(double deltaX, double deltaY, GravityDirection direction) {
-        // With unified camera roll logic (making gUp point UP on screen),
-        // mouse remapping is constant across all gravity directions.
-        // gPitch+ is UP, while deltaY+ is DOWN on screen, so we negate deltaY.
-        return new double[]{deltaX, -deltaY};
     }
 
     public static float[] gravityLookToVanilla(float gYaw, float gPitch, GravityDirection direction) {
