@@ -213,13 +213,6 @@ public class GravityUtil {
         return 0.0F;
     }
 
-    public static double[] remapTurnDeltas(double deltaX, double deltaY, GravityDirection direction) {
-        // With unified camera roll logic (making gUp point UP on screen),
-        // mouse remapping is constant across all gravity directions.
-        // gPitch+ is UP, while deltaY+ is DOWN on screen, so we negate deltaY.
-        return new double[]{deltaX, -deltaY};
-    }
-
     public static float[] gravityLookToVanilla(float gYaw, float gPitch, GravityDirection direction) {
         Vec3 gUp = getWorldUp(direction);
         Vec3 ref = (Math.abs(gUp.y) < 0.9) ? new Vec3(0, 1, 0) : new Vec3(0, 0, 1);

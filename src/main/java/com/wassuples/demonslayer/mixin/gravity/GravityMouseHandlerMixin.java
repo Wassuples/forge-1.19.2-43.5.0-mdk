@@ -1,6 +1,5 @@
 package com.wassuples.demonslayer.mixin.gravity;
 
-import com.wassuples.demonslayer.gravity.GravityDebug;
 import com.wassuples.demonslayer.gravity.GravityDirection;
 import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
@@ -37,17 +36,11 @@ public abstract class GravityMouseHandlerMixin {
                 float[] init = GravityUtil.vanillaToGravityLook(player.getYRot(), player.getXRot(), dir);
                 gravity.setGravityYaw(init[0]);
                 gravity.setGravityPitch(init[1]);
-
-                GravityDebug.log("TURN-RESYNC",
-                    "dir={} vanillaYRot={} vanillaXRot={} -> resyncedGYaw={} resyncedGPitch={}",
-                    dir, player.getYRot(), player.getXRot(), init[0], init[1]);
             }
 
             // Apply mouse delta directly in gravity space
-            double[] remapped = GravityUtil.remapTurnDeltas(yawDelta, pitchDelta, dir);
-
-            float gYaw = gravity.getGravityYaw() + (float) remapped[0];
-            float gPitch = Mth.clamp(gravity.getGravityPitch() + (float) remapped[1], -89.0F, 89.0F);
+            float gYaw = gravity.getGravityYaw() + (float) yawDelta;
+            float gPitch = Mth.clamp(gravity.getGravityPitch() + (float) -pitchDelta, -89.0F, 89.0F);
 
             gravity.setGravityYaw(gYaw);
             gravity.setGravityPitch(gPitch);
@@ -59,17 +52,6 @@ public abstract class GravityMouseHandlerMixin {
             player.setXRot(vanilla[1]);
             player.yRotO = vanilla[0];
             player.xRotO = vanilla[1];
-
-            // ── DEBUG (Issue 3) ────────────────────────────────────────────────────────────────
-            if (Math.abs(yawDelta) > 1.0E-6 || Math.abs(pitchDelta) > 1.0E-6) {
-                GravityDebug.log("TURN",
-                    "dir={} rawDelta=({},{}) remapped=({},{}) gYaw={} gPitch={} -> vYaw={} vPitch={} vRoll={}",
-                    dir, yawDelta, pitchDelta, remapped[0], remapped[1], gYaw, gPitch,
-                    vanilla[0], vanilla[1], vanilla[2]);
-            }
-            // ── END DEBUG ─────────────────────────────────────────────────────────────
         });
     }
-
-    // Removed the static maps as we now use the PlayerGravity capability
 }
