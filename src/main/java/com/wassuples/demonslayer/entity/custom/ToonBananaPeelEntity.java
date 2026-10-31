@@ -3,6 +3,7 @@ package com.wassuples.demonslayer.entity.custom;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
+import com.wassuples.demonslayer.sound.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.protocol.Packet;
@@ -51,14 +52,6 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAn
     public void tick() {
         super.tick();
 
-        if (this.level.isClientSide) {
-            this.setYRot(this.getYRot() + 25.0f);
-            if (this.tickCount % 3 == 0) {
-                this.level.addParticle(net.minecraft.core.particles.ParticleTypes.ITEM_SLIME,
-                        this.getX(), this.getY() + 0.04, this.getZ(), 0, 0, 0);
-            }
-        }
-
         if (!this.level.isClientSide) {
             if (--this.lifeTicks <= 0) {
                 this.discard();
@@ -78,7 +71,7 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAn
                     ToonForceHelper.applyBananaSlip(target, this.getOwner() instanceof LivingEntity owner ? owner : null, 0.65f);
                     ToonForceHelper.spawnToonText((net.minecraft.server.level.ServerLevel) this.level, target.position().add(0, target.getBbHeight(), 0),
                             Component.literal("WHIFF!").withStyle(ChatFormatting.YELLOW), 20);
-                    this.level.playSound(null, blockPosition(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 0.9f, 1.2f);
+                    this.level.playSound(null, blockPosition(), ModSounds.TOON_SLIP.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
                     this.discard();
                     break;
                 }
@@ -116,4 +109,3 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAn
         return this.factory;
     }
 }
-

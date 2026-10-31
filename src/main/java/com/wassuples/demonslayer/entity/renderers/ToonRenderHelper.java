@@ -42,6 +42,15 @@ final class ToonRenderHelper {
         quad(vc, pose, normal, minX, minY, z, maxX, minY, z, maxX, maxY, z, minX, maxY, z, color, FULL_BRIGHT, 0, 0, 1);
     }
 
+    static void texturedQuad(PoseStack stack, MultiBufferSource buffer, ResourceLocation texture,
+                             float minX, float minY, float maxX, float maxY, float z) {
+        VertexConsumer vc = buffer.getBuffer(RenderType.entityCutoutNoCull(texture));
+        Matrix4f pose = stack.last().pose();
+        Matrix3f normal = stack.last().normal();
+        quad(vc, pose, normal, minX, minY, z, maxX, minY, z, maxX, maxY, z, minX, maxY, z,
+                0xFFFFFFFF, FULL_BRIGHT, 0, 0, 1);
+    }
+
     static void box(PoseStack stack, MultiBufferSource buffer, int color,
                     float minX, float minY, float minZ, float maxX, float maxY, float maxZ) {
         VertexConsumer vc = buffer.getBuffer(RenderType.entityTranslucent(WHITE));

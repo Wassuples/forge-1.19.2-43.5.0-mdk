@@ -3,6 +3,7 @@ package com.wassuples.demonslayer.entity.custom;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
+import com.wassuples.demonslayer.sound.ModSounds;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.sounds.SoundEvents;
@@ -135,7 +136,7 @@ public class ToonEyeProjectileEntity extends ThrowableItemProjectile implements 
                             net.minecraft.network.chat.Component.literal("BOING!").withStyle(net.minecraft.ChatFormatting.AQUA), 12);
                 }
             }
-            this.level.playSound(null, blockPosition(), SoundEvents.SLIME_JUMP, SoundSource.PLAYERS, 0.5f, 1.6f);
+            this.level.playSound(null, blockPosition(), ModSounds.TOON_BOING.get(), SoundSource.PLAYERS, 0.8f, 0.9f + this.random.nextFloat() * 0.25f);
             if (this.bounces >= MAX_BOUNCES) {
                 this.discard();
             }

@@ -35,6 +35,7 @@ import com.wassuples.demonslayer.styles.BloodDemonArts;
 import com.wassuples.demonslayer.styles.BreathingStyles;
 import com.wassuples.demonslayer.styles.DemonForms;
 import com.wassuples.demonslayer.util.DemonThreatHelper;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ModUtils;
 import com.wassuples.demonslayer.util.ToonForceHelper;
 import com.wassuples.demonslayer.util.WisteriaHelper;
@@ -460,7 +461,9 @@ public class ModEvents {
                 handleOverwhelmingAura(player, demon);
             }
 
-            handleToonForceAirwalk(player, demon);
+            if (event.phase == TickEvent.Phase.END) {
+                handleToonForceAirwalk(player, demon);
+            }
         });
 
         if (player.tickCount % 20 == 0) { // Check once per second
@@ -815,8 +818,13 @@ public class ModEvents {
                 player.fallDistance = 0.0f;
                 player.getPersistentData().putBoolean(ToonForceHelper.AIRWALK_TAG, true);
                 if (player.tickCount % 8 == 0) {
+                    FormAnimations.play(player, FormAnimations.TOON_RUN);
                     ((ServerLevel) player.level).sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
                             player.getX(), groundY - 0.05, player.getZ(), 2, 0.2, 0.02, 0.2, 0.0);
+                }
+                if (player.tickCount % 20 == 0) {
+                    player.level.playSound(null, player.blockPosition(), com.wassuples.demonslayer.sound.ModSounds.TOON_RUN.get(),
+                            net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.1f);
                 }
             } else if (player.getY() < groundY - 0.1) {
                 player.getPersistentData().remove("ds_toon_airwalk_ground_y");

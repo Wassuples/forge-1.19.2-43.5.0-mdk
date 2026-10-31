@@ -6,6 +6,7 @@ import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.styles.IForm;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
+import com.wassuples.demonslayer.sound.ModSounds;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -28,7 +29,7 @@ public class EyePopForm extends ActiveForm {
             level.addFreshEntity(eye);
             ToonForceHelper.spawnToonText(level, user.getEyePosition().add(look.scale(1.4)),
                     net.minecraft.network.chat.Component.literal("POP!").withStyle(net.minecraft.ChatFormatting.AQUA), 18);
-            level.playSound(null, user.blockPosition(), SoundEvents.SLIME_JUMP, SoundSource.PLAYERS, 1.0f, 2.0f);
+            level.playSound(null, user.blockPosition(), ModSounds.TOON_EYE_POP.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
         }
         ActiveFormManager.stop(user);
     }
@@ -38,4 +39,3 @@ public class EyePopForm extends ActiveForm {
         // no-op
     }
 }
-

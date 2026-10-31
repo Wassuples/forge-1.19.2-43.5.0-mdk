@@ -88,6 +88,10 @@ public class ToonShadowAnchorEntity extends Entity implements IAnimatable {
         return this.stuck;
     }
 
+    public Vec3 getStuckNormal() {
+        return this.stuckNormal;
+    }
+
     @Nullable
     public Vec3 findSafeTeleportPosition(Entity teleported) {
         if (!this.stuck) {

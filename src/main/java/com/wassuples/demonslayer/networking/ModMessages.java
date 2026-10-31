@@ -75,6 +75,12 @@ public class ModMessages {
                 .consumerMainThread(PieSplatS2CPacket::handle)
                 .add();
 
+        net.messageBuilder(ToonPocketS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(ToonPocketS2CPacket::new)
+                .encoder(ToonPocketS2CPacket::toBytes)
+                .consumerMainThread(ToonPocketS2CPacket::handle)
+                .add();
+
         net.messageBuilder(PlayPlayerAnimationS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PlayPlayerAnimationS2CPacket::new)
                 .encoder(PlayPlayerAnimationS2CPacket::toBytes)

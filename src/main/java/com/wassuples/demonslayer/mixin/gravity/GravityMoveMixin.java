@@ -4,7 +4,6 @@ import com.wassuples.demonslayer.gravity.GravityDirection;
 import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
 import net.minecraft.core.Direction;
-import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.MoverType;
 import net.minecraft.world.entity.player.Player;
@@ -18,12 +17,11 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArgs;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
 import java.util.List;
 
@@ -87,18 +85,20 @@ public abstract class GravityMoveMixin {
         if (gravity != GravityDirection.DOWN) cir.setReturnValue(GravityUtil.localToWorld(cir.getReturnValue(), gravity));
     }
 
-    @ModifyArgs(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
+    // Avoid ModifyArgs here: its generated Args classes fail to load under this ModLauncher runtime.
+    @Redirect(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
         at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;expandTowards(DDD)Lnet/minecraft/world/phys/AABB;"))
-    private void demonslayer$expandInWorld(Args args) {
-        Vec3 world = GravityUtil.localToWorld(new Vec3(args.get(0), args.get(1), args.get(2)),
+    private AABB demonslayer$expandInWorld(AABB box, double x, double y, double z) {
+        Vec3 world = GravityUtil.localToWorld(new Vec3(x, y, z),
             demonslayer$getCollisionGravity((Entity)(Object)this));
-        args.set(0, world.x); args.set(1, world.y); args.set(2, world.z);
+        return box.expandTowards(world.x, world.y, world.z);
     }
 
-    @ModifyArgs(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
-        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;move(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/AABB;"))
-    private void demonslayer$boxMoveInWorld(Args args) {
-        args.set(0, GravityUtil.localToWorld(args.get(0), demonslayer$getCollisionGravity((Entity)(Object)this)));
+    @ModifyArg(method = "collide(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/Vec3;",
+        at = @At(value = "INVOKE", target = "Lnet/minecraft/world/phys/AABB;move(Lnet/minecraft/world/phys/Vec3;)Lnet/minecraft/world/phys/AABB;"),
+        index = 0)
+    private Vec3 demonslayer$boxMoveInWorld(Vec3 movement) {
+        return GravityUtil.localToWorld(movement, demonslayer$getCollisionGravity((Entity)(Object)this));
     }
 
     @ModifyVariable(method = "collideBoundingBox(Lnet/minecraft/world/entity/Entity;Lnet/minecraft/world/phys/Vec3;Lnet/minecraft/world/phys/AABB;Lnet/minecraft/world/level/Level;Ljava/util/List;)Lnet/minecraft/world/phys/Vec3;",

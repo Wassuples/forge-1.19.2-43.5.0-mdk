@@ -6,6 +6,7 @@ import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.styles.IForm;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ToonForceHelper;
+import com.wassuples.demonslayer.sound.ModSounds;
 import net.minecraft.ChatFormatting;
 import net.minecraft.network.chat.Component;
 import net.minecraft.core.particles.ParticleTypes;
@@ -50,9 +51,11 @@ public class ShadowTossForm extends ActiveForm {
                 anchor.setPos(user.getEyePosition());
                 anchor.setDeltaMovement(user.getLookAngle().normalize().scale(2.1));
                 level.addFreshEntity(anchor);
+                level.sendParticles(ParticleTypes.SQUID_INK, user.getX(), user.getY() + 0.04, user.getZ(),
+                        42, 0.8, 0.03, 0.8, 0.01);
                 ToonForceHelper.spawnToonText(level, user.getEyePosition().add(user.getLookAngle().scale(1.1)),
                         Component.literal("TOSS!").withStyle(ChatFormatting.DARK_GRAY), 18);
-                level.playSound(null, user.blockPosition(), SoundEvents.ENDERMAN_SCREAM, SoundSource.PLAYERS, 0.7f, 1.6f);
+                level.playSound(null, user.blockPosition(), ModSounds.TOON_BOING.get(), SoundSource.PLAYERS, 0.7f, 0.55f);
             }
         }
         ActiveFormManager.stop(user);
@@ -63,4 +66,3 @@ public class ShadowTossForm extends ActiveForm {
         // no-op
     }
 }
-

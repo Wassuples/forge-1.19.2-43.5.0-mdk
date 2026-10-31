@@ -11,6 +11,7 @@ import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
 
 import com.wassuples.demonslayer.entity.custom.ToonAnvilEntity;
+import com.wassuples.demonslayer.sound.ModSounds;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraft.world.phys.BlockHitResult;
@@ -18,9 +19,9 @@ import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class AcmeAnvilForm extends TimedForm {
-    private static final int WHISTLE_TICK = 10;
-    private static final int IMPACT_TICK = 25;
-    private static final int TOTAL_TICKS = 26;
+    private static final int WHISTLE_TICK = 2;
+    private static final int IMPACT_TICK = 9;
+    private static final int TOTAL_TICKS = 10;
     private LivingEntity target;
     private BlockPos targetPos;
 
@@ -68,14 +69,15 @@ public class AcmeAnvilForm extends TimedForm {
         }
 
         if (ticksActive == WHISTLE_TICK) {
-            level.playSound(null, targetPos, SoundEvents.NOTE_BLOCK_FLUTE, SoundSource.PLAYERS, 0.9f, 2.0f);
+            // High pitch both sells the tiny cartoon warning and finishes the sample before impact.
+            level.playSound(null, targetPos, ModSounds.TOON_WHISTLE_FALL.get(), SoundSource.PLAYERS, 0.8f, 2.0f);
         }
 
         if (ticksActive == IMPACT_TICK) {
             if (!level.isClientSide) {
                 double x = target != null ? target.getX() : targetPos.getX() + 0.5;
                 double z = target != null ? target.getZ() : targetPos.getZ() + 0.5;
-                double y = target != null ? target.getY() + 5.0 : targetPos.getY() + 6.0;
+                double y = target != null ? target.getY() + 3.25 : targetPos.getY() + 4.0;
 
                 ToonAnvilEntity anvil = new ToonAnvilEntity(level, user);
                 anvil.setPos(x, y, z);
@@ -85,4 +87,3 @@ public class AcmeAnvilForm extends TimedForm {
         }
     }
 }
-

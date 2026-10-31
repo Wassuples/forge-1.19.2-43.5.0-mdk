@@ -7,7 +7,6 @@ import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.Mth;
-import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.LivingEntity;
@@ -45,9 +44,6 @@ public final class ToonForceHelper {
 
         applyDizzyStars(level, target);
 
-        if (source != null) {
-            target.hurt(DamageSource.thorns(source), 0.0f);
-        }
     }
 
     public static void applyDizzyStars(ServerLevel level, LivingEntity target) {
@@ -59,7 +55,8 @@ public final class ToonForceHelper {
             double x = target.getX() + Math.cos(angle) * radius;
             double y = target.getEyeY() + 0.25 + level.random.nextDouble() * 0.3;
             double z = target.getZ() + Math.sin(angle) * radius;
-            level.sendParticles(ParticleTypes.CRIT, x, y, z, 1, 0, 0, 0, 0.0);
+            level.sendParticles(i % 2 == 0 ? ParticleTypes.FIREWORK : ParticleTypes.END_ROD,
+                    x, y, z, 1, 0, 0.015, 0, 0.0);
         }
     }
 

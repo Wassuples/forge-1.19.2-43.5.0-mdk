@@ -8,6 +8,8 @@ import com.wassuples.demonslayer.util.CombatHelper;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ModUtils;
 import com.wassuples.demonslayer.util.ToonForceHelper;
+import com.wassuples.demonslayer.networking.ModMessages;
+import com.wassuples.demonslayer.networking.packet.ToonPocketS2CPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -46,6 +48,9 @@ public class PocketForm extends TimedForm {
         if (!level.isClientSide) {
             FormAnimations.play(user, FormAnimations.TOON_POCKET);
             this.roll = level.random.nextInt(4);
+            if (user instanceof net.minecraft.server.level.ServerPlayer player) {
+                ModMessages.sendToPlayer(new ToonPocketS2CPacket(TOTAL_TICKS, this.roll), player);
+            }
             showSlotFrame("[ ? | ? | ? ]", ChatFormatting.GOLD, 12);
             level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_BASEDRUM, SoundSource.PLAYERS, 0.8f, 1.6f);
         }
@@ -106,6 +111,8 @@ public class PocketForm extends TimedForm {
             return;
         }
 
+        showVictimResult(target, 0);
+
         ToonForceHelper.spawnToonText(level, target.position().add(0, target.getBbHeight() + 0.35, 0),
                 Component.literal("HAMMER!").withStyle(ChatFormatting.GOLD), 22);
         target.hurt(CombatHelper.getDamageSource(user), CombatHelper.calculateFinalDamage(user, MALLET_DAMAGE));
@@ -126,6 +133,8 @@ public class PocketForm extends TimedForm {
             level.sendParticles(ParticleTypes.SMOKE, show.x, show.y, show.z, 8, 0.2, 0.2, 0.2, 0.0);
             return;
         }
+
+        showVictimResult(target, 1);
 
         ToonForceHelper.applyHotPotatoBomb(target, user, HOT_POTATO_FUSE);
         ToonForceHelper.tryApplyDizzy(target, user, 0.25f);
@@ -206,6 +215,8 @@ public class PocketForm extends TimedForm {
             return;
         }
 
+        showVictimResult(target, 3);
+
         target.hurt(CombatHelper.getDamageSource(user), CombatHelper.calculateFinalDamage(user, FISH_DAMAGE));
         target.setDeltaMovement(new Vec3(0, 0.2, 0));
         ToonForceHelper.tryApplyDizzy(target, user, 0.15f);
@@ -217,5 +228,11 @@ public class PocketForm extends TimedForm {
         level.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, new ItemStack(Items.COD)),
                 target.getX(), target.getEyeY(), target.getZ(), 18, 0.28, 0.22, 0.28, 0.05);
         level.playSound(null, target.blockPosition(), SoundEvents.SALMON_FLOP, SoundSource.PLAYERS, 0.9f, 1.4f);
+    }
+
+    private void showVictimResult(LivingEntity target, int result) {
+        if (target instanceof net.minecraft.server.level.ServerPlayer player) {
+            ModMessages.sendToPlayer(new ToonPocketS2CPacket(18, result), player);
+        }
     }
 }

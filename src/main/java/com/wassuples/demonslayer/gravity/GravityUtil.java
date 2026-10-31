@@ -179,6 +179,16 @@ public class GravityUtil {
                 .add(relForward.scale(localVector.z));
     }
 
+    /** Movement yaw uses the collision frame, not the camera's separate yaw basis. */
+    public static float getMovementYaw(Vec3 worldLook, GravityDirection direction, float fallbackYaw) {
+        Vec3 localLook = worldToLocal(worldLook, direction);
+        // Looking along gravity has no tangent heading; keep the last usable one.
+        if (localLook.x * localLook.x + localLook.z * localLook.z < 1.0E-8D) {
+            return fallbackYaw;
+        }
+        return (float)Math.toDegrees(Math.atan2(-localLook.x, localLook.z));
+    }
+
     /** Vanilla's input normalization and yaw rotation, expressed explicitly for local physics. */
     public static Vec3 getInputVector(Vec3 input, float speed, float yawDegrees) {
         double lengthSquared = input.lengthSqr();

@@ -24,10 +24,9 @@ public abstract class GravityEntityMixin {
         at = @At("HEAD"), cancellable = true)
     private void demonslayer$gravityFrictionPosition(CallbackInfoReturnable<BlockPos> cir) {
         Entity self = (Entity)(Object)this;
-        if (self instanceof Player
-                && (self.isPassenger() || self.isSpectator())) return;
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             if (gravity.getGravity() != GravityDirection.DOWN) {
+                if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
                 cir.setReturnValue(new BlockPos(self.position().add(
                     GravityUtil.getWorldDown(gravity.getGravity()).scale(0.5000001D))));
             }
@@ -38,10 +37,9 @@ public abstract class GravityEntityMixin {
         at = @At("HEAD"), cancellable = true)
     private void demonslayer$gravityLandingPosition(CallbackInfoReturnable<BlockPos> cir) {
         Entity self = (Entity)(Object)this;
-        if (self instanceof Player
-                && (self.isPassenger() || self.isSpectator())) return;
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             if (gravity.getGravity() != GravityDirection.DOWN) {
+                if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
                 cir.setReturnValue(new BlockPos(self.position().add(
                     GravityUtil.getWorldDown(gravity.getGravity()).scale(0.20000000298023224D))));
             }
@@ -51,14 +49,16 @@ public abstract class GravityEntityMixin {
     /**
      * After vanilla recalculates the bounding box from the new position,
      * override it with our gravity-aware shape.
+     * Entity construction also calls setPos, before ServerPlayer.gameMode exists.
+     * Check for active custom gravity before calling player state methods.
      */
     @Inject(method = "setPos(DDD)V", at = @At("RETURN"))
     private void demonslayer$fixBoundingBoxAfterSetPos(double x, double y, double z, CallbackInfo ci) {
         Entity self = (Entity) (Object) this;
-        if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             GravityDirection dir = gravity.getGravity();
             if (dir != GravityDirection.DOWN) {
+                if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
                 self.setBoundingBox(GravityUtil.makeBoundingBox(self, dir));
             }
         });
@@ -67,10 +67,10 @@ public abstract class GravityEntityMixin {
     @Inject(method = "getBoundingBoxForPose(Lnet/minecraft/world/entity/Pose;)Lnet/minecraft/world/phys/AABB;", at = @At("HEAD"), cancellable = true)
     private void demonslayer$gravityPoseAabb(Pose pose, CallbackInfoReturnable<AABB> cir) {
         Entity self = (Entity) (Object) this;
-        if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             GravityDirection dir = gravity.getGravity();
             if (dir != GravityDirection.DOWN) {
+                if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
                 cir.setReturnValue(GravityUtil.makeBoundingBox(self.position(), self.getDimensions(pose), dir));
             }
         });
@@ -79,10 +79,10 @@ public abstract class GravityEntityMixin {
     @Inject(method = "getEyeY()D", at = @At("HEAD"), cancellable = true)
     private void demonslayer$gravityEyeY(CallbackInfoReturnable<Double> cir) {
         Entity self = (Entity) (Object) this;
-        if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             GravityDirection dir = gravity.getGravity();
             if (dir != GravityDirection.DOWN) {
+                if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
                 double halfHeight = self.getDimensions(self.getPose()).height * 0.5D;
                 double eyeOffset = self.getEyeHeight() - halfHeight;
                 Vec3 eyePos = self.getBoundingBox().getCenter().add(GravityUtil.getWorldUp(dir).scale(eyeOffset));
@@ -94,10 +94,10 @@ public abstract class GravityEntityMixin {
     @Inject(method = "getEyePosition()Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)
     private void demonslayer$gravityEyePosition(CallbackInfoReturnable<Vec3> cir) {
         Entity self = (Entity) (Object) this;
-        if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             GravityDirection dir = gravity.getGravity();
             if (dir != GravityDirection.DOWN) {
+                if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
                 double halfHeight = self.getDimensions(self.getPose()).height * 0.5D;
                 double eyeOffset = self.getEyeHeight() - halfHeight;
                 cir.setReturnValue(self.getBoundingBox().getCenter().add(GravityUtil.getWorldUp(dir).scale(eyeOffset)));
@@ -108,10 +108,10 @@ public abstract class GravityEntityMixin {
     @Inject(method = "getEyePosition(F)Lnet/minecraft/world/phys/Vec3;", at = @At("HEAD"), cancellable = true)
     private void demonslayer$gravityEyePositionPartial(float partialTicks, CallbackInfoReturnable<Vec3> cir) {
         Entity self = (Entity) (Object) this;
-        if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
         self.getCapability(PlayerGravity.GRAVITY_CAPABILITY).ifPresent(gravity -> {
             GravityDirection dir = gravity.getGravity();
             if (dir != GravityDirection.DOWN) {
+                if (self instanceof Player && (self.isPassenger() || self.isSpectator())) return;
                 double halfHeight = self.getDimensions(self.getPose()).height * 0.5D;
                 double eyeOffset = self.getEyeHeight() - halfHeight;
                 Vec3 interpolatedCenter = self.getPosition(partialTicks)

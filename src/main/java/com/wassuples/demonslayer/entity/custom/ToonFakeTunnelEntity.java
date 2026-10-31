@@ -26,6 +26,9 @@ public class ToonFakeTunnelEntity extends Entity implements IAnimatable {
     @Nullable
     private UUID ownerUUID;
     private int lifeTicks = MAX_LIFE_TICKS;
+    private Vec3 passageDirection = Vec3.ZERO;
+    private int ownerPassCooldown;
+
     public ToonFakeTunnelEntity(EntityType<?> type, Level level) {
         super(type, level);
         this.noPhysics = true;
@@ -37,15 +40,23 @@ public class ToonFakeTunnelEntity extends Entity implements IAnimatable {
         this.setYRot((float) (Math.atan2(-facing.x, facing.z) * (180.0 / Math.PI)));
     }
 
+    public void setPassageDirection(Vec3 direction) {
+        this.passageDirection = direction.normalize();
+    }
+
     @Override
     public void tick() {
         super.tick();
         if (!this.level.isClientSide) {
-            for (net.minecraft.world.entity.LivingEntity entity : this.level.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, this.getBoundingBox().inflate(0.5))) {
-                // The painted tunnel is real only for its painter.
-                if (this.ownerUUID != null && this.ownerUUID.equals(entity.getUUID())) {
-                    continue;
-                }
+            if (this.ownerPassCooldown > 0) this.ownerPassCooldown--;
+
+            if (this.ownerUUID != null && this.level instanceof net.minecraft.server.level.ServerLevel serverLevel
+                    && serverLevel.getEntity(this.ownerUUID) instanceof net.minecraft.world.entity.LivingEntity owner
+                    && owner.distanceToSqr(this) <= 12.25) {
+                passOwnerThroughWall(owner);
+            }
+            for (net.minecraft.world.entity.LivingEntity entity : this.level.getEntitiesOfClass(net.minecraft.world.entity.LivingEntity.class, this.getBoundingBox().inflate(0.75),
+                    entity -> this.ownerUUID == null || !this.ownerUUID.equals(entity.getUUID()))) {
                 if (entity.getDeltaMovement().lengthSqr() > 0.04) {
                     com.wassuples.demonslayer.util.ToonForceHelper.tryApplyDizzy(entity, null, 0.5f);
                     com.wassuples.demonslayer.util.FormAnimations.play(entity, com.wassuples.demonslayer.util.FormAnimations.TOON_TUNNEL_SLAM);
@@ -61,6 +72,36 @@ public class ToonFakeTunnelEntity extends Entity implements IAnimatable {
         }
     }
 
+    private void passOwnerThroughWall(net.minecraft.world.entity.LivingEntity owner) {
+        if (this.ownerPassCooldown > 0 || this.passageDirection.lengthSqr() < 0.5
+                || owner.getLookAngle().dot(this.passageDirection) <= 0.25) {
+            return;
+        }
+
+        // Collision has already zeroed movement when a player reaches a wall. Use look direction,
+        // require that the scan actually crosses solid geometry, then accept only a far-side exit.
+        boolean crossedWall = false;
+        for (double distance = 0.2; distance <= 5.0; distance += 0.2) {
+            Vec3 candidate = this.position().add(this.passageDirection.scale(distance));
+            boolean safe = this.level.noCollision(owner, owner.getBoundingBox().move(candidate.subtract(owner.position())));
+            if (!safe) {
+                crossedWall = true;
+            } else if (crossedWall) {
+                owner.teleportTo(candidate.x, candidate.y, candidate.z);
+                owner.fallDistance = 0.0f;
+                owner.hurtMarked = true;
+                this.ownerPassCooldown = 12;
+                this.level.playSound(null, owner.blockPosition(), net.minecraft.sounds.SoundEvents.PAINTING_PLACE,
+                        net.minecraft.sounds.SoundSource.PLAYERS, 0.9f, 1.7f);
+                if (this.level instanceof net.minecraft.server.level.ServerLevel serverLevel) {
+                    serverLevel.sendParticles(net.minecraft.core.particles.ParticleTypes.SQUID_INK,
+                            owner.getX(), owner.getY() + 1.0, owner.getZ(), 18, 0.3, 0.6, 0.3, 0.02);
+                }
+                return;
+            }
+        }
+    }
+
     @Override
     protected void defineSynchedData() {
     }
@@ -71,6 +112,7 @@ public class ToonFakeTunnelEntity extends Entity implements IAnimatable {
             this.ownerUUID = tag.getUUID("Owner");
         }
         this.lifeTicks = tag.contains("LifeTicks") ? tag.getInt("LifeTicks") : MAX_LIFE_TICKS;
+        this.passageDirection = new Vec3(tag.getDouble("PassageX"), tag.getDouble("PassageY"), tag.getDouble("PassageZ"));
     }
 
     @Override
@@ -79,6 +121,9 @@ public class ToonFakeTunnelEntity extends Entity implements IAnimatable {
             tag.putUUID("Owner", this.ownerUUID);
         }
         tag.putInt("LifeTicks", this.lifeTicks);
+        tag.putDouble("PassageX", this.passageDirection.x);
+        tag.putDouble("PassageY", this.passageDirection.y);
+        tag.putDouble("PassageZ", this.passageDirection.z);
     }
 
     @Override
