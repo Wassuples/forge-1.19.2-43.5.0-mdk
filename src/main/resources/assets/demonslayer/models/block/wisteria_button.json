@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/button",
+  "textures": {
+    "texture": "demonslayer:block/wisteria_planks"
+  }
+}

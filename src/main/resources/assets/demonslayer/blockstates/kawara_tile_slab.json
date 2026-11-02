@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "demonslayer:block/kawara_tile_slab"
+    },
+    "type=double": {
+      "model": "demonslayer:block/kawara_tiles"
+    },
+    "type=top": {
+      "model": "demonslayer:block/kawara_tile_slab_top"
+    }
+  }
+}

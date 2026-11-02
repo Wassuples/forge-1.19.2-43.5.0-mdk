@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "type=bottom": {
+      "model": "demonslayer:block/wisteria_slab"
+    },
+    "type=double": {
+      "model": "demonslayer:block/wisteria_planks"
+    },
+    "type=top": {
+      "model": "demonslayer:block/wisteria_slab_top"
+    }
+  }
+}

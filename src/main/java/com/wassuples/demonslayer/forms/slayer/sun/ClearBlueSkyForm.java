@@ -74,6 +74,7 @@ public class ClearBlueSkyForm extends TimedForm {
                         target instanceof BloodSickleProjectileEntity ||
                         target instanceof BlindingMistCloudEntity ||
                         target instanceof CuttingThreadCageEntity ||
+                        target instanceof ThreadBasketEntity ||
                         target instanceof KillerGoldfishEntity ||
                         target instanceof MistCloneEntity ||
                         target instanceof PoisonNeedleProjectileEntity ||

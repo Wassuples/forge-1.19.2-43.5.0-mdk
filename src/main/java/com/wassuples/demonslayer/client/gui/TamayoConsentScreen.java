@@ -38,22 +38,22 @@ public class TamayoConsentScreen extends Screen {
         int centerX = this.width / 2;
         int buttonY = this.height - 28;
 
-        this.backButton = this.addRenderableWidget(new Button(centerX - 110, buttonY, 60, 20, Component.literal("Back"), b -> {
+        this.backButton = this.addRenderableWidget(new KnyUi.KnyButton(centerX - 110, buttonY, 60, 20, Component.literal("Back"), b -> {
             if (pageIndex > 0) pageIndex--;
             updateButtons();
         }));
 
-        this.nextButton = this.addRenderableWidget(new Button(centerX - 45, buttonY, 60, 20, Component.literal("Next"), b -> {
+        this.nextButton = this.addRenderableWidget(new KnyUi.KnyButton(centerX - 45, buttonY, 60, 20, Component.literal("Next"), b -> {
             if (pageIndex < pages.size() - 1) pageIndex++;
             updateButtons();
         }));
 
-        this.acceptButton = this.addRenderableWidget(new Button(centerX + 20, buttonY, 80, 20, Component.literal("I consent"), b -> {
+        this.acceptButton = this.addRenderableWidget(new KnyUi.KnyButton(centerX + 20, buttonY, 80, 20, Component.literal("I consent"), b -> {
             ModMessages.sendToServer(new TamayoOfferResponseC2SPacket(this.tamayoEntityId, true));
             this.onClose();
         }));
 
-        this.declineButton = this.addRenderableWidget(new Button(centerX + 105, buttonY, 80, 20, Component.literal("No"), b -> {
+        this.declineButton = this.addRenderableWidget(new KnyUi.KnyButton(centerX + 105, buttonY, 80, 20, Component.literal("No"), b -> {
             ModMessages.sendToServer(new TamayoOfferResponseC2SPacket(this.tamayoEntityId, false));
             this.onClose();
         }));
@@ -75,6 +75,7 @@ public class TamayoConsentScreen extends Screen {
 
         int margin = 20;
         int maxWidth = this.width - margin * 2;
+        KnyUi.panel(poseStack, margin - 8, margin - 8, this.width - (margin - 8) * 2, this.height - (margin - 8) * 2 - 22);
 
         drawCenteredString(poseStack, this.font, this.title, this.width / 2, margin, 0xFFFFFF);
 

@@ -1,0 +1,7 @@
+{
+  "parent": "demonslayer:block/sun_forge",
+  "textures": {
+    "front": "demonslayer:block/sun_forge_front_on",
+    "top": "demonslayer:block/sun_forge_top_on"
+  }
+}

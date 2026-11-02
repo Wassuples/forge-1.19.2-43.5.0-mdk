@@ -1,5 +1,6 @@
 package com.wassuples.demonslayer.forms.demon.toon;
 
+import com.wassuples.demonslayer.entity.custom.ToonPieEntity;
 import com.wassuples.demonslayer.forms.baseForms.ParryForm;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.PieSplatS2CPacket;
@@ -12,6 +13,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.projectile.Projectile;
 
 public class PieSplatForm extends ParryForm {
     private static final int PARRY_WINDOW = 12;
@@ -29,16 +31,18 @@ public class PieSplatForm extends ParryForm {
 
     @Override
     protected void onParrySuccess(Entity attacker) {
-        if (attacker instanceof LivingEntity living) {
-            ToonForceHelper.tryApplyDizzy(living, user, 0.35f);
-            level.sendParticles(ParticleTypes.ITEM_SNOWBALL, living.getX(), living.getEyeY(), living.getZ(), 16, 0.3, 0.3, 0.3, 0.05);
-            level.playSound(null, living.blockPosition(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 0.8f, 1.6f);
-            FormAnimations.play(living, FormAnimations.TOON_BONKED);
-
-            if (living instanceof ServerPlayer player) {
-                ModMessages.sendToPlayer(new PieSplatS2CPacket(60), player);
-            }
+        // Arrows/fireballs: the pie goes to whoever fired them.
+        Entity source = attacker instanceof Projectile projectile && projectile.getOwner() != null
+                ? projectile.getOwner() : attacker;
+        if (!(source instanceof LivingEntity living) || living == user) {
+            return;
         }
+
+        // The visible pie flies into their face; impact (sound, SPLAT!, overlay, blinding) happens in ToonPieEntity.
+        level.addFreshEntity(new ToonPieEntity(level, user, living));
+        ToonForceHelper.tryApplyDizzy(living, user, 0.35f);
+        FormAnimations.play(living, FormAnimations.TOON_BONKED);
+        level.playSound(null, user.blockPosition(), SoundEvents.SNOWBALL_THROW, SoundSource.PLAYERS, 0.9f, 0.8f);
     }
 }
 

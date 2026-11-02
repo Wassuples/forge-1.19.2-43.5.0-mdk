@@ -165,6 +165,13 @@ public  class ActiveFormManager {
             }
         }
     }
+    /** Drops everything an entity had running (a non-player user that died or was unloaded). */
+    public static void forget(LivingEntity user) {
+        stop(user, false);
+        Map<IForm, ActiveForm> buffs = BUFF_FORMS.remove(user.getUUID());
+        if (buffs != null) buffs.values().forEach(ActiveForm::onStop);
+    }
+
     public static void stopBuffForm(LivingEntity user, IForm form) {
         Map<IForm, ActiveForm> playerBuffs = BUFF_FORMS.get(user.getUUID());
         if (playerBuffs != null) {

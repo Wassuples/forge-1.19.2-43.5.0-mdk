@@ -40,6 +40,24 @@ import java.util.Set;
  * Custom entity: Cold White Princess.
  */
 public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
+    /** Entity id of whoever she's breathing on (-1 = not breathing); drives the mist drawn by her renderer. */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> BREATH_TARGET =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(ColdWhitePrincessEntity.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
+
+    public int getBreathTargetId() {
+        return this.entityData.get(BREATH_TARGET);
+    }
+
+    void setBreathTarget(@Nullable LivingEntity target) {
+        this.entityData.set(BREATH_TARGET, target == null ? -1 : target.getId());
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(BREATH_TARGET, -1);
+    }
+
     private final AnimationFactory factory = new AnimationFactory(this);
     @Nullable
     private LivingEntity owner;
@@ -54,12 +72,6 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
                 .add(Attributes.MOVEMENT_SPEED, 0.0D)
                 .add(Attributes.FOLLOW_RANGE, 32.0D)
                 .add(Attributes.KNOCKBACK_RESISTANCE, 1.0D);
-    }
-
-    @Override
-    protected void defineSynchedData() {
-        // This is required for all entities, even if it's empty.
-        super.defineSynchedData();
     }
 
     @Override
@@ -151,6 +163,7 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
         @Override
         public void stop() {
             this.target = null;
+            this.princess.setBreathTarget(null);
         }
 
         @Override
@@ -161,6 +174,7 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
             }
 
             this.attackTime++;
+            if (this.princess.getBreathTargetId() != this.target.getId()) this.princess.setBreathTarget(this.target);
             this.princess.getLookControl().setLookAt(this.target, 30.0F, 30.0F);
                        // Play a continuous "breathing" sound
             if (this.attackTime % 4 == 0) {
@@ -180,13 +194,8 @@ public class ColdWhitePrincessEntity extends Monster implements IAnimatable {
                 double currentRadius = d * coneAngle;
                 Vec3 centerPoint = breathOrigin.add(direction.scale(d));
 
-                // Spawn a ring of particles to form the cone
-                for (int i = 0; i < 8; i++) {
-                    Vec3 randomOffset = new Vec3(this.princess.level.random.nextDouble() - 0.5, this.princess.level.random.nextDouble() - 0.5, this.princess.level.random.nextDouble() - 0.5)
-                            .normalize().scale(this.princess.level.random.nextDouble() * currentRadius);
-                    Vec3 particlePos = centerPoint.add(randomOffset);
-                    this.princess.level.addParticle(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 0, -0.05, 0);
-                }
+                // (The breath used to "spawn" snowflakes here with level.addParticle, which does nothing on the
+                // server, so it was invisible. The mist cone is now drawn by ColdWhitePrincessRenderer.)
 
                 // Damage entities within the cone
                 AABB damageZone = new AABB(centerPoint, centerPoint).inflate(currentRadius);

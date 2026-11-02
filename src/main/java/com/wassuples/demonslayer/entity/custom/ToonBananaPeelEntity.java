@@ -69,8 +69,8 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAn
 
                 if (target.isAlive()) {
                     ToonForceHelper.applyBananaSlip(target, this.getOwner() instanceof LivingEntity owner ? owner : null, 0.65f);
-                    ToonForceHelper.spawnToonText((net.minecraft.server.level.ServerLevel) this.level, target.position().add(0, target.getBbHeight(), 0),
-                            Component.literal("WHIFF!").withStyle(ChatFormatting.YELLOW), 20);
+                    com.wassuples.demonslayer.util.ToonSfx.spawn((net.minecraft.server.level.ServerLevel) this.level,
+                            target.position().add(0, target.getBbHeight(), 0), com.wassuples.demonslayer.util.ToonSfx.Kind.WHIFF);
                     this.level.playSound(null, blockPosition(), ModSounds.TOON_SLIP.get(), SoundSource.PLAYERS, 1.0f, 1.0f);
                     this.discard();
                     break;
@@ -81,9 +81,18 @@ public class ToonBananaPeelEntity extends ThrowableItemProjectile implements IAn
 
     @Override
     protected void onHit(net.minecraft.world.phys.HitResult hitResult) {
-        if (hitResult.getType() == net.minecraft.world.phys.HitResult.Type.BLOCK) {
-            this.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
-            this.setNoGravity(true);
+        if (hitResult instanceof net.minecraft.world.phys.BlockHitResult blockHit) {
+            if (blockHit.getDirection() == net.minecraft.core.Direction.UP) {
+                // Land flat on top of the block, ready to be stepped on.
+                net.minecraft.world.phys.Vec3 at = blockHit.getLocation();
+                this.setPos(at.x, at.y + 0.01, at.z);
+                this.setDeltaMovement(net.minecraft.world.phys.Vec3.ZERO);
+                this.setNoGravity(true);
+            } else {
+                // Hit a wall or ceiling: slide down it instead of sticking to it mid-air.
+                net.minecraft.world.phys.Vec3 v = this.getDeltaMovement();
+                this.setDeltaMovement(-v.x * 0.15, Math.min(0.0, v.y), -v.z * 0.15);
+            }
             return;
         }
         super.onHit(hitResult);

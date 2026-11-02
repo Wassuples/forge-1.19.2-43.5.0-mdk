@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.breathing.PlayerBreathProvider;
 import com.wassuples.demonslayer.breathing.PlayerStyleProvider;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
@@ -57,6 +60,7 @@ public class CompassNeedleForm extends ActiveForm {
             applyImmobility(caster, 40);
             updateTargets(caster);
             level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 1.0f, 1.5f);
+            FormAnimations.play(user, FormAnimations.AKAZA_COMPASS);
 
             CompassNeedleEntity effect = new CompassNeedleEntity(level, caster.getX(), caster.getY() + 0.01, caster.getZ());
             effect.setYRot(caster.getYRot());

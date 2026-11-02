@@ -51,7 +51,12 @@ public class ReputationEvents {
             boolean isUpperMoon = isUpperMoon(victim);
 
             PlayerRepRecord record = manager.getOrCreateRecord(killer.getUUID());
-            if (isUpperMoon || isLowerMoon) {
+            // Candidates aren't Corps members yet: Final Selection kills don't count toward rank (MISSIONS_SYSTEM.md §7).
+            boolean civilian = killer.getCapability(com.wassuples.demonslayer.ranking.PlayerProgressionProvider.PLAYER_PROGRESSION)
+                    .map(p -> p.getRank() == com.wassuples.demonslayer.ranking.Rank.CIVILIAN).orElse(false);
+            if (civilian) {
+                // no kill record, no promotion
+            } else if (isUpperMoon || isLowerMoon) {
                 // If this is the only opponent the demon currently remembers fighting, it's a solo path.
                 boolean isSolo = DemonHierarchyManager.get(serverLevel).getBattleSessionTracker().getOpponentsInBattle(victim.getUUID()).size() <= 1;
 
@@ -63,7 +68,7 @@ public class ReputationEvents {
             } else {
                 record.getKillRecord().recordDemonKill();
             }
-            RankAdvancementChecker.checkAdvancement(killer, record);
+            if (!civilian) RankAdvancementChecker.checkAdvancement(killer, record);
 
             RepEventType baseEvent;
             if (isUpperMoon) {

@@ -1,5 +1,7 @@
 package com.wassuples.demonslayer.forms.demon.gyutaro;
 
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.entity.custom.BloodSickleProjectileEntity;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -30,6 +32,7 @@ public class FlyingBloodSicklesForm extends TimedForm {
     @Override
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 1.0f, 0.8f);
+        FormAnimations.play(user, FormAnimations.GYUTARO_THROW);
     }
 
     @Override

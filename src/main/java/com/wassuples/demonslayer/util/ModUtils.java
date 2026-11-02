@@ -60,11 +60,7 @@ public final class ModUtils {
      * <p>Serialization is performed via the missions capability NBT.
      */
     public static void syncMissions(ServerPlayer player) {
-        player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
-            CompoundTag nbt = new CompoundTag();
-            missions.saveNBTData(nbt);
-            ModMessages.sendToPlayer(new PlayerMissionSyncS2CPacket(nbt), player);
-        });
+        com.wassuples.demonslayer.missions.MissionManager.sync(player);
     }
 
     /** Sends the player's currently selected breathing style/form to the client. */

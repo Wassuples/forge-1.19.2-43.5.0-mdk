@@ -4,7 +4,6 @@ import com.mojang.logging.LogUtils;
 import com.wassuples.demonslayer.block.ModBlocks;
 import com.wassuples.demonslayer.block.ModFlammableBlocks;
 import com.wassuples.demonslayer.client.animation.ClientFormAnimations;
-import com.wassuples.demonslayer.client.gui.SleepQTEOverlay;
 import com.wassuples.demonslayer.client.gui.SunForgeScreen;
 import com.wassuples.demonslayer.client.gui.SwordsmithTableScreen;
 import com.wassuples.demonslayer.effects.ModEffects;
@@ -17,7 +16,6 @@ import com.wassuples.demonslayer.entity.renderers.hashira.*;
 import com.wassuples.demonslayer.events.ModEvents;
 import com.wassuples.demonslayer.gamerule.ModGameRules;
 import com.wassuples.demonslayer.item.ModItems;
-import com.wassuples.demonslayer.missions.MissionReloadListener;
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.recipe.ModRecipes;
@@ -33,7 +31,9 @@ import net.minecraft.world.entity.SpawnPlacements;
 import net.minecraft.world.level.levelgen.Heightmap;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.EntityRenderersEvent;
-import net.minecraftforge.client.event.RegisterGuiOverlaysEvent;
+import net.minecraft.client.renderer.entity.LivingEntityRenderer;
+import net.minecraft.world.entity.EntityType;
+import com.wassuples.demonslayer.entity.renderers.ScaleSkinLayer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.entity.EntityAttributeCreationEvent;
@@ -97,6 +97,9 @@ public class DemonSlayer {
         ModEntityTypes.register(modEventBus);
         ModEffects.register(modEventBus);
         ModBiomes.register(modEventBus);
+        com.wassuples.demonslayer.worldgen.ModFeatures.register(modEventBus);
+        com.wassuples.demonslayer.worldgen.ModStructures.register(modEventBus);
+        com.wassuples.demonslayer.particle.ModParticles.register(modEventBus);
         ModSounds.register(modEventBus);
 
 
@@ -129,6 +132,8 @@ public class DemonSlayer {
             SpawnPlacements.register(ModEntityTypes.CROW.get(), SpawnPlacements.Type.ON_GROUND, Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, CrowEntity::checkCrowSpawnRules);
 
             ModFlammableBlocks.register();
+            ((net.minecraft.world.level.block.FlowerPotBlock) net.minecraft.world.level.block.Blocks.FLOWER_POT)
+                    .addPlant(com.wassuples.demonslayer.block.ModBlocks.WISTERIA_SAPLING.getId(), com.wassuples.demonslayer.block.ModBlocks.POTTED_WISTERIA_SAPLING);
         });
 
         ModMessages.register();
@@ -143,7 +148,6 @@ public class DemonSlayer {
 
     /** Registers the mission JSON reload listener so missions refresh on {@code /reload}. */
     private void registerReloadListeners(final AddReloadListenerEvent event) {
-         event.addListener(new MissionReloadListener());
      }
 
     /**
@@ -153,10 +157,43 @@ public class DemonSlayer {
      */
     @Mod.EventBusSubscriber(modid = MOD_ID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents {
-        /** Registers HUD overlays (e.g. Sleep QTE) above all other GUI layers. */
+        // The sleep QTE is drawn by EnmuDreamOverlay (registered in ClientEvents); the old SleepQTEOverlay was
+        // registered here too, which drew the key sequence twice.
+
+        /** Skin-tight model used to draw Killer Fish Scales onto humanoid skin. */
         @SubscribeEvent
-        public static void registerGuiOverlays(RegisterGuiOverlaysEvent event) {
-            event.registerAboveAll("sleep_qte", SleepQTEOverlay.HUD_SLEEP_QTE);
+        public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
+            event.registerLayerDefinition(ScaleSkinLayer.WIDE, () -> ScaleSkinLayer.createLayer(false));
+            event.registerLayerDefinition(com.wassuples.demonslayer.entity.models.KasugaiCrowModel.LAYER,
+                    com.wassuples.demonslayer.entity.models.KasugaiCrowModel::createLayer);
+            event.registerLayerDefinition(ScaleSkinLayer.SLIM, () -> ScaleSkinLayer.createLayer(true));
+            event.registerLayerDefinition(com.wassuples.demonslayer.entity.renderers.hand.HandDemonModel.LAYER,
+                    com.wassuples.demonslayer.entity.renderers.hand.HandDemonModel::createBodyLayer);
+        }
+
+        /** Adds the fish-scale skin layer to both player skins and to every humanoid entity renderer. */
+        @SubscribeEvent
+        @SuppressWarnings({"unchecked", "rawtypes"})
+        public static void addRenderLayers(EntityRenderersEvent.AddLayers event) {
+            for (String skin : event.getSkins()) {
+                LivingEntityRenderer renderer = event.getSkin(skin);
+                if (renderer != null) {
+                    renderer.addLayer(new ScaleSkinLayer(renderer, event.getEntityModels(), "slim".equals(skin)));
+                    renderer.addLayer(new DomaFansLayer(renderer));
+                }
+            }
+            for (EntityType<?> type : net.minecraftforge.registries.ForgeRegistries.ENTITY_TYPES.getValues()) {
+                if (type == EntityType.PLAYER) continue;
+                LivingEntityRenderer renderer;
+                try {
+                    renderer = event.getRenderer((EntityType) type);
+                } catch (ClassCastException notLiving) {
+                    continue;
+                }
+                if (renderer != null && renderer.getModel() instanceof net.minecraft.client.model.HumanoidModel) {
+                    renderer.addLayer(new ScaleSkinLayer(renderer, event.getEntityModels(), false));
+                }
+            }
         }
 
         /** Binds every custom entity type to its client-side renderer. */
@@ -183,11 +220,31 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.TOON_SHADOW_ANCHOR.get(), ToonShadowAnchorRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.TOON_FAKE_TUNNEL.get(), ToonFakeTunnelRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.TOON_ANVIL.get(), ToonAnvilRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.CUTTING_THREAD_CAGE.get(), CuttingThreadCageRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_SFX_TEXT.get(), ToonSfxTextRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.WHISPER_WAVE.get(), WhisperWaveRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.OBI_SASH.get(), ObiSashRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.FISH_SCHOOL.get(), FishSchoolRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.SCALE_ARMOR.get(), ScaleArmorRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.HANTENGU_DRUMS.get(), HantenguDrumsRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.WOOD_DRAGON_STRIKE.get(), WoodDragonStrikeRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.THUNDER_DRAGONS.get(), ThunderDragonsRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.SOUND_BLAST.get(), SoundBlastRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.AKAZA_ART.get(), AkazaArtRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.DOMA_ART.get(), DomaArtRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.BLOOD_ARC_DOME.get(), BloodArcDomeRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.BLOOD_RING_WAVE.get(), BloodRingWaveRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.DREAM_AURA.get(), DreamAuraRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_DIZZY_BIRDS.get(), ToonDizzyBirdsRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_PIE.get(), ToonPieRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.TOON_SLOT_MACHINE.get(), ToonSlotMachineRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.CUTTING_THREAD_CAGE.get(), ThreadTrapRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.THREAD_BASKET.get(), ThreadTrapRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.THREAD_WHEEL.get(), ThreadWheelRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.CROW.get(), CrowRenderer::new);
             // HASHIRA
             event.registerEntityRenderer(ModEntityTypes.HASHIRA.get(), HashiraRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.STORY_NPC.get(), com.wassuples.demonslayer.entity.renderers.StoryNpcRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.CAPTIVE_DEMON.get(), com.wassuples.demonslayer.entity.renderers.CaptiveDemonRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.WATER_HASHIRA.get(), WaterHashiraRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.INSECT_HASHIRA.get(), InsectHashiraRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.LOVE_HASHIRA.get(), LoveHashiraRenderer::new);
@@ -201,7 +258,7 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.THUNDER_HASHIRA.get(), ThunderHashiraRenderer::new);
             // DEMONS
             event.registerEntityRenderer(ModEntityTypes.NEMESIS_DEMON.get(), NemesisDemonRenderer::new);
-            event.registerEntityRenderer(ModEntityTypes.HAND_DEMON.get(), HandDemonRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.HAND_DEMON.get(), com.wassuples.demonslayer.entity.renderers.hand.HandDemonRenderer::new);
             // MOONS
             event.registerEntityRenderer(ModEntityTypes.LOWER_MOON_SIX.get(), LowerMoonSixRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.LOWER_MOON_FIVE.get(), LowerMoonFiveRenderer::new);
@@ -233,8 +290,8 @@ public class DemonSlayer {
      */
     public void onAttributeCreate(EntityAttributeCreationEvent event) {
         event.put(ModEntityTypes.MIST_CLONE.get(), MistCloneEntity.createAttributes().build());
-        event.put(ModEntityTypes.CUTTING_THREAD_CAGE.get(), CuttingThreadCageEntity.createAttributes().build());
-        event.put(ModEntityTypes.THREAD_WHEEL.get(), ThreadWheelEntity.createAttributes().build());
+        event.put(ModEntityTypes.STORY_NPC.get(), com.wassuples.demonslayer.entity.custom.story.StoryNpcEntity.createAttributes().build());
+        event.put(ModEntityTypes.CAPTIVE_DEMON.get(), com.wassuples.demonslayer.entity.custom.CaptiveDemonEntity.createAttributes().build());
         event.put(ModEntityTypes.MOTHER_EYE.get(), MotherEyeEntity.createAttributes().build());
         event.put(ModEntityTypes.KILLER_GOLDFISH.get(), KillerGoldfishEntity.createAttributes().build());
         event.put(ModEntityTypes.WATER_PRISON_POT.get(), WaterPrisonEntity.createAttributes().build());

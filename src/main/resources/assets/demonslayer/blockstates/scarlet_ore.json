@@ -1,1 +1,7 @@
-
+{
+  "variants": {
+    "": {
+      "model": "demonslayer:block/scarlet_ore"
+    }
+  }
+}

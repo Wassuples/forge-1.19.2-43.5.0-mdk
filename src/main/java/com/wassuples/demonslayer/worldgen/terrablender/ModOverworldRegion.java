@@ -22,27 +22,8 @@ public class ModOverworldRegion extends Region {
 
     @Override
     public void addBiomes(Registry<Biome> registry, Consumer<Pair<Climate.ParameterPoint, ResourceKey<Biome>>> mapper) {
-        this.addBiome(mapper, Climate.parameters(
-                        Climate.Parameter.span(-1.0f, 1.0f), // Temperature
-                        Climate.Parameter.span(-1.0f, 1.0f), // Humidity
-                        Climate.Parameter.span(0.3f, 0.8f),  // Continentalness
-                        Climate.Parameter.span(-0.4f, 0.2f), // Erosion (Low)
-                        Climate.Parameter.span(0.9f, 1.4f),  // Depth (High)
-                        Climate.Parameter.span(0.5f, 1.0f),  // Weirdness (High)
-                        0.0f), // Offset
-                ModBiomes.FUJIKASANE_PLATEAU
-        );
-
-        this.addBiome(mapper, Climate.parameters(
-                        Climate.Parameter.span(-1.0f, 1.0f), // Temperature
-                        Climate.Parameter.span(-1.0f, 1.0f), // Humidity
-                        Climate.Parameter.span(0.3f, 0.8f),  // Continentalness
-                        Climate.Parameter.span(0.2f, 0.7f),  // Erosion (High)
-                        Climate.Parameter.span(0.7f, 1.1f),  // Depth (High)
-                        Climate.Parameter.span(0.5f, 1.0f),  // Weirdness (High)
-                        0.0f), // Offset
-                ModBiomes.FUJIKASANE_SLOPES
-        );
+        // Mt. Fujikasane is no longer a biome: it is a single structure per world (worldgen/fujikasane). Its old biome
+        // entries stay registered (data/demonslayer/worldgen/biome) so existing worlds still load, but nothing places them.
 
         // Mount Yoko
         this.addBiome(mapper, Climate.parameters(

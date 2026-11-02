@@ -4,8 +4,9 @@ import com.wassuples.demonslayer.effects.ForcedSleepEffect;
 import com.wassuples.demonslayer.effects.ModEffects;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
-import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.networking.packet.SpawnSonicBeamS2CPacket;
+import com.wassuples.demonslayer.entity.custom.HantenguDrumsEntity;
+import com.wassuples.demonslayer.entity.custom.SoundBlastEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -48,10 +49,15 @@ public class CompressedSoundWavesForm extends ActiveForm {
             target.hurt(DamageSource.sonicBoom(user), 25.0F);
             target.addEffect(new MobEffectInstance(ModEffects.FORCED_SLEEP.get(), KNOCKOUT_DURATION, 0));
             ForcedSleepEffect.setCaster(target, user);
-            ModMessages.sendToClients(new SpawnSonicBeamS2CPacket(start, entityHit.getLocation()));
+            level.addFreshEntity(new SoundBlastEntity(level, user, start, entityHit.getLocation(), true));
         } else {
-            ModMessages.sendToClients(new SpawnSonicBeamS2CPacket(start, end));
+            level.addFreshEntity(new SoundBlastEntity(level, user, start, end, false));
         }
+        FormAnimations.play(user, FormAnimations.HANTENGU_SOUND);
+        // Zohakuten's drums appear behind him and one booms as he cries out.
+        HantenguDrumsEntity drums = new HantenguDrumsEntity(level, user, 24);
+        level.addFreshEntity(drums);
+        drums.beat();
         ActiveFormManager.stop(user);
     }
 

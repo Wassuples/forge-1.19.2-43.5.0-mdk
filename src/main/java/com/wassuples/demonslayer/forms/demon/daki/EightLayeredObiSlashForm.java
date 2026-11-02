@@ -1,7 +1,9 @@
 package com.wassuples.demonslayer.forms.demon.daki;
 
 import com.mojang.math.Vector3f;
+import com.wassuples.demonslayer.entity.custom.ObiSashEntity;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.sounds.SoundEvents;
@@ -33,33 +35,22 @@ public class EightLayeredObiSlashForm extends TimedForm {
     }
 
     @Override
+    public void onStart() {
+        // Eight sashes from the obi bow at Daki's back; each reaches full length on its damage tick.
+        level.addFreshEntity(new ObiSashEntity(level, user, (float) RANGE));
+        FormAnimations.play(user, FormAnimations.DAKI_OBI);
+    }
+
+    @Override
     public void onTick() {
         super.onTick();
 
         if (ticksActive > 0 && ticksActive % TICKS_BETWEEN_SLASHES == 0) {
             performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.8f);
             level.playSound(null, user.blockPosition(), SoundEvents.LEASH_KNOT_PLACE, SoundSource.PLAYERS, 0.8f, 1.2f);
-
-            final int segments = 20;
-            Vec3 eyePos = user.getEyePosition();
-            Vec3 lookDir = user.getLookAngle();
-            Vec3 origin = eyePos.subtract(lookDir.scale(1.5));
-            Vec3 sideDir = new Vec3(-lookDir.z, 0, lookDir.x).normalize();
-
-            for (int i = 0; i <= segments; i++) {
-                double progress = (double) i / segments;
-                Vec3 pathPoint = origin.add(lookDir.scale(progress * RANGE));
-
-                double wind_amplitude = 1.2;
-                double wind_frequency = 2.0 + level.random.nextDouble();
-                double windOffset = Math.sin(progress * Math.PI * wind_frequency) * wind_amplitude;
-                Vec3 particlePos = pathPoint.add(sideDir.scale(windOffset));
-
-                level.sendParticles(OBI_PINK, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
-                if (i % 3 == 0) {
-                    level.sendParticles(OBI_PATTERN, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
-                }
-            }
+            // Visuals are drawn by ObiSashEntity; a few silk shreds where the slash ends.
+            Vec3 end = user.getEyePosition().add(user.getLookAngle().scale(RANGE));
+            level.sendParticles(OBI_PINK, end.x, end.y, end.z, 4, 0.3, 0.3, 0.3, 0.02);
             dealThrustDamage(user, RANGE, DAMAGE_PER_SLASH);
         }
     }

@@ -26,7 +26,7 @@ public class StoneHashiraEntity extends HashiraEntity {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, @Nullable SpawnGroupData pSpawnData, @Nullable CompoundTag pDataTag) {
-        this.setItemSlot(EquipmentSlot.MAINHAND, NichirinSwordItem.createSword(SwordModel.STONE));
+        this.setItemSlot(EquipmentSlot.MAINHAND, com.wassuples.demonslayer.item.custom.HashiraSwordHelper.createSwordForStyle(this.getBreathingStyle()));
         return super.finalizeSpawn(pLevel, pDifficulty, pReason, pSpawnData, pDataTag);
     }
 }

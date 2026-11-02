@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -34,6 +37,7 @@ public class FlyingPlanetThousandWheelsForm extends TimedForm {
     private static final float LAUNCH_STRENGTH = 1.8f;
     private static final DustParticleOptions VORTEX_PARTICLE = new DustParticleOptions(new Vector3f(0.4f, 0.6f, 1.0f), 1.0f);
     private final Set<UUID> hitEntities = new HashSet<>();
+    private AkazaArtEntity art;
 
     public FlyingPlanetThousandWheelsForm(LivingEntity user, IForm form) {
         super(user, form, DURATION);
@@ -42,6 +46,14 @@ public class FlyingPlanetThousandWheelsForm extends TimedForm {
     @Override
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 1.5f);
+        this.art = new AkazaArtEntity(level, user, AkazaArtEntity.Mode.WHEELS, DURATION + 6);
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.AKAZA_WHEEL);
+    }
+
+    @Override
+    public void onStop() {
+        if (art != null) art.finish(6);
     }
 
     @Override
@@ -55,10 +67,13 @@ public class FlyingPlanetThousandWheelsForm extends TimedForm {
                 .add(user.getLookAngle().scale(1.5 + progress))
                 .add(0, currentHeight, 0);
 
-        double particleRadius = 1.0 + (ATTACK_RADIUS * progress * 0.5);
-        spawnParticleArcInWorld(level, attackCenter, particleRadius, 360, 20, (float) (progress * 180), 90, VORTEX_PARTICLE);
-        if (ticksActive % 4 == 0) {
-            level.sendParticles(ParticleTypes.SWEEP_ATTACK, attackCenter.x, attackCenter.y, attackCenter.z, 1, 0, 0, 0, 0);
+        // The rising wheel of kicks is drawn by AkazaArtEntity.
+
+        // "...strikes Akaza's target from below and launches them both upward."
+        if (ticksActive == 3) {
+            Vec3 v = user.getDeltaMovement();
+            user.setDeltaMovement(v.x * 0.5, 0.95, v.z * 0.5);
+            user.hurtMarked = true;
         }
 
         AABB hitBox = new AABB(attackCenter, attackCenter).inflate(ATTACK_RADIUS, 1.0, ATTACK_RADIUS);

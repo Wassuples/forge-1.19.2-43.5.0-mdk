@@ -29,6 +29,20 @@ public class NichirinSwordItem extends SwordItem {
         return stack;
     }
 
+    /**
+     * Hashira weapons are drawn by {@code HashiraWeaponRenderer} (their item models are {@code builtin/entity}); the
+     * plain blade keeps its baked model, so this renderer is only ever asked to draw Hashira swords.
+     */
+    @Override
+    public void initializeClient(java.util.function.Consumer<net.minecraftforge.client.extensions.common.IClientItemExtensions> consumer) {
+        consumer.accept(new net.minecraftforge.client.extensions.common.IClientItemExtensions() {
+            @Override
+            public net.minecraft.client.renderer.BlockEntityWithoutLevelRenderer getCustomRenderer() {
+                return com.wassuples.demonslayer.client.weapon.HashiraWeaponRenderer.get();
+            }
+        });
+    }
+
     @Override
     public boolean hurtEnemy(ItemStack stack, LivingEntity target, LivingEntity attacker) {
         // nothing.

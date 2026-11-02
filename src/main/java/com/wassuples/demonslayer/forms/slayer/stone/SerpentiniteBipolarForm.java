@@ -59,6 +59,7 @@ public class SerpentiniteBipolarForm extends TimedForm {
         List<LivingEntity> hitTargets = level.getEntitiesOfClass(LivingEntity.class, hitBox, e -> e != user && e.isAlive());
 
         for (LivingEntity target : hitTargets) {
+            if (com.wassuples.demonslayer.entity.custom.story.StoryNpcEvents.spares(user, target)) continue;   // an NPC slayer's allies
             if (user instanceof ServerPlayer player) {
                 target.hurt(DamageSource.playerAttack(player), DAMAGE_PER_TICK);
             } else {

@@ -44,6 +44,7 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
     protected final ContainerData data;
     private int progress = 0;
     private int maxProgress = 100;
+    private boolean sunlit = false;
 
     public SunForgeBlockEntity(BlockPos pPos, BlockState pState) {
         super(ModBlockEntities.SUN_FORGE_BE.get(), pPos, pState);
@@ -53,6 +54,7 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
                 return switch (pIndex) {
                     case 0 -> SunForgeBlockEntity.this.progress;
                     case 1 -> SunForgeBlockEntity.this.maxProgress;
+                    case 2 -> SunForgeBlockEntity.this.sunlit ? 1 : 0;
                     default -> 0;
                 };
             }
@@ -62,19 +64,20 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
                 switch (pIndex) {
                     case 0 -> SunForgeBlockEntity.this.progress = pValue;
                     case 1 -> SunForgeBlockEntity.this.maxProgress = pValue;
+                    case 2 -> SunForgeBlockEntity.this.sunlit = pValue != 0;
                 }
             }
 
             @Override
             public int getCount() {
-                return 2;
+                return 3;
             }
         };
     }
 
     @Override
     public Component getDisplayName() {
-        return Component.literal("Sun Forge");
+        return Component.translatable("block.demonslayer.sun_forge");
     }
 
     @Nullable
@@ -131,7 +134,9 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        if (!pLevel.canSeeSky(pPos.above()) || !pLevel.isDay()) {
+        sunlit = pLevel.canSeeSky(pPos.above()) && pLevel.isDay() && !pLevel.isRaining();
+        if (!sunlit) {
+            setLit(pLevel, pPos, pState, false);
             if (progress > 0) {
                 progress = Math.max(0, progress - 2);
                 setChanged(pLevel, pPos, pState);
@@ -148,6 +153,7 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
             }
 
             progress++;
+            setLit(pLevel, pPos, pState, true);
             setChanged(pLevel, pPos, pState);
 
             if (progress >= maxProgress) {
@@ -156,7 +162,16 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
             }
         } else {
             progress = 0;
+            setLit(pLevel, pPos, pState, false);
             setChanged(pLevel, pPos, pState);
+        }
+    }
+
+    private void setLit(Level level, BlockPos pos, BlockState state, boolean lit) {
+        BlockState current = level.getBlockState(pos);
+        if (current.hasProperty(com.wassuples.demonslayer.block.SunForgeBlock.LIT)
+                && current.getValue(com.wassuples.demonslayer.block.SunForgeBlock.LIT) != lit) {
+            level.setBlock(pos, current.setValue(com.wassuples.demonslayer.block.SunForgeBlock.LIT, lit), 3);
         }
     }
 
@@ -172,7 +187,8 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
         ItemStack resultSlot = itemHandler.getStackInSlot(2);
         ItemStack result = recipe.getResultItem();
 
-        return canInsertAmountIntoOutput(resultSlot) && canInsertItemIntoOutput(resultSlot, result);
+        return canInsertItemIntoOutput(resultSlot, result)
+                && resultSlot.getCount() + result.getCount() <= Math.min(resultSlot.isEmpty() ? 64 : resultSlot.getMaxStackSize(), result.getMaxStackSize());
     }
 
     private void craftItem(SunForgeRecipe recipe) {
@@ -192,7 +208,7 @@ public class SunForgeBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     private boolean canInsertItemIntoOutput(ItemStack inventory, ItemStack stack) {
-        return inventory.isEmpty() || inventory.getItem() == stack.getItem();
+        return inventory.isEmpty() || ItemStack.isSameItemSameTags(inventory, stack);
     }
 
     private boolean canInsertAmountIntoOutput(ItemStack inventory) {

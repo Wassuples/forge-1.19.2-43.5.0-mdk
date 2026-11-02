@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.BlockPos;
@@ -66,14 +69,19 @@ public class FrozenLotusForm extends TimedForm {
             }
         }
 
-        spawnParticleArc(user, ParticleTypes.SNOWFLAKE, ATTACK_RANGE, 120, 50);
-        spawnParticleArc(user, ParticleTypes.SWEEP_ATTACK, ATTACK_RANGE, 120, 5);
-
+        // Fan sweep of freezing mist + crystal lotuses blooming in the cone (replaces ~95 particles).
+        java.util.List<Vec3> lotusSpots = new java.util.ArrayList<>();
         for (int i = 0; i < 4; i++) {
             Vec3 randomPosInCone = getRandomPointInCone(user, ATTACK_RANGE * 0.8, ATTACK_ANGLE_DEGREES);
-            BlockPos groundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(randomPosInCone)).above();
-            spawnIceLotusVFX(level, Vec3.atCenterOf(groundPos));
+            BlockPos groundPos = level.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, new BlockPos(randomPosInCone));
+            if (Math.abs(groundPos.getY() - user.getY()) > 4) groundPos = new BlockPos(randomPosInCone.x, user.getY(), randomPosInCone.z);
+            lotusSpots.add(Vec3.atBottomCenterOf(groundPos).add(0, 0.05, 0));
         }
+        DomaArtEntity art = new DomaArtEntity(level, user, DomaArtEntity.Mode.FROZEN_LOTUS, DURATION + 4, user.position(), userLookDir);
+        art.setSeed(level.random.nextInt());
+        art.setPoints(user.position(), lotusSpots);
+        level.addFreshEntity(art);
+        FormAnimations.play(user, FormAnimations.DOMA_SWEEP);
     }
 
     private void spawnIceLotusVFX(ServerLevel level, Vec3 center) {

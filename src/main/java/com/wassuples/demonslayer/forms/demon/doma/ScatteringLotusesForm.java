@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.entity.custom.LotusShardProjectileEntity;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
@@ -28,6 +31,7 @@ public class ScatteringLotusesForm extends ActiveForm {
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.0f, 1.2f);
         level.playSound(null, user.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 1.0f);
+        FormAnimations.play(user, FormAnimations.DOMA_FLICK);
 
         for (int i = 0; i < PROJECTILE_COUNT; i++) {
             LotusShardProjectileEntity shard = new LotusShardProjectileEntity(level, user);

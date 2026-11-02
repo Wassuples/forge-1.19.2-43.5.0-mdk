@@ -1,5 +1,7 @@
 package com.wassuples.demonslayer.forms.demon.gyokko;
 
+import com.wassuples.demonslayer.util.FormAnimations;
+
 
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.OctopusPotEntity;
@@ -33,6 +35,7 @@ public class OctopusVaseHellForm extends ActiveForm {
 
     @Override
     public void onStart() {
+        FormAnimations.play(user, FormAnimations.GYOKKO_VASE);
         BlockHitResult hitResult = (BlockHitResult) user.pick(MAX_SPAWN_RANGE, 0, false);
         if (hitResult.getType() == HitResult.Type.MISS) {
             level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.7f, 1.5f);

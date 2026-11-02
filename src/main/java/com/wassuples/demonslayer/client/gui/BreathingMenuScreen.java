@@ -63,8 +63,8 @@ public class BreathingMenuScreen extends Screen {
     private final int tabYStart = (int) (5 * GUI_SCALE);
     private final int tabXSpacing = (int) (22 * GUI_SCALE);
 
-    private final int textColor = 0xCCCCCC;
-    private final int goldColor = 0xFFD700;
+    private final int textColor = 0xE6DCDC;
+    private final int goldColor = 0xE8C15A;
     private final int redColor = 0xFF5555;
     private final int grayColor = 0xAAAAAA;
 
@@ -183,6 +183,14 @@ public class BreathingMenuScreen extends Screen {
             .put(BreathingStyles.SAND, BreathingStyles.MIST)
             .build();
 
+    /** Opens the menu straight on the demon tab's Arts page (Shift + menu key for demons). */
+    public static BreathingMenuScreen openAtArts() {
+        BreathingMenuScreen screen = new BreathingMenuScreen();
+        screen.currentTab = Tab.DEMON_PROGRESSION;
+        screen.currentDemonTab = DemonSubTab.BDA;
+        return screen;
+    }
+
     public BreathingMenuScreen() {
         super(Component.literal("Breathing Menu"));
     }
@@ -201,12 +209,12 @@ public class BreathingMenuScreen extends Screen {
         }));
 
         int subTabButtonY = topPos + subWindowYOffset + 5;
-        this.rankSubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 5, subTabButtonY, 50, 20, Component.literal("Rank"), (b) -> this.currentDemonTab = DemonSubTab.RANK));
-        this.bdaSubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 60, subTabButtonY, 50, 20, Component.literal("BDA"), (b) -> this.currentDemonTab = DemonSubTab.BDA));
-        this.physiologySubTabButton = this.addRenderableWidget(new Button(leftPos + subWindowXOffset + 115, subTabButtonY, 70, 20, Component.literal("Physiology"), (b) -> this.currentDemonTab = DemonSubTab.PHYSIOLOGY));
+        this.rankSubTabButton = this.addRenderableWidget(new KnyUi.KnyButton(leftPos + subWindowXOffset + 5, subTabButtonY, 50, 20, Component.literal("Rank"), (b) -> this.currentDemonTab = DemonSubTab.RANK));
+        this.bdaSubTabButton = this.addRenderableWidget(new KnyUi.KnyButton(leftPos + subWindowXOffset + 60, subTabButtonY, 50, 20, Component.literal("Arts"), (b) -> this.currentDemonTab = DemonSubTab.BDA));
+        this.physiologySubTabButton = this.addRenderableWidget(new KnyUi.KnyButton(leftPos + subWindowXOffset + 115, subTabButtonY, 70, 20, Component.literal("Physiology"), (b) -> this.currentDemonTab = DemonSubTab.PHYSIOLOGY));
 
         this.rankUpButton = null; // removed: replaced by challenge system
-        this.challengeButton = this.addRenderableWidget(new Button(0, 0, 110, 20,
+        this.challengeButton = this.addRenderableWidget(new KnyUi.KnyButton(0, 0, 110, 20,
                 Component.literal("Challenge!"),
                 (b) -> {
                     if (this.selectedChallengeEntry != null) {
@@ -215,7 +223,7 @@ public class BreathingMenuScreen extends Screen {
                     }
                 }
         ));
-        this.refreshChallengeButton = this.addRenderableWidget(new Button(0, 0, 50, 12,
+        this.refreshChallengeButton = this.addRenderableWidget(new KnyUi.KnyButton(0, 0, 50, 12,
                 Component.literal("Refresh"),
                 (b) -> {
                     ChallengeListS2CPacket.CACHED_LIST.clear();
@@ -223,17 +231,17 @@ public class BreathingMenuScreen extends Screen {
                     ModMessages.sendToServer(new RequestChallengeListC2SPacket());
                 }
         ));
-        this.purchaseBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("Purchase"), (b) -> {
+        this.purchaseBdaButton = this.addRenderableWidget(new KnyUi.KnyButton(0, 0, 80, 20, Component.literal("Purchase"), (b) -> {
             if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new PurchaseBdaC2SPacket(this.selectedBdaForUpgrade));
         }));
-        this.equipBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("Equip"), (b) -> {
+        this.equipBdaButton = this.addRenderableWidget(new KnyUi.KnyButton(0, 0, 80, 20, Component.literal("Equip"), (b) -> {
             if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new EquipBdaC2SPacket(this.selectedBdaForUpgrade));
         }));
-        this.upgradeBdaButton = this.addRenderableWidget(new Button(0, 0, 80, 20, Component.literal("UPGRADE"), (b) -> {
+        this.upgradeBdaButton = this.addRenderableWidget(new KnyUi.KnyButton(0, 0, 80, 20, Component.literal("UPGRADE"), (b) -> {
             if (this.selectedBdaForUpgrade != null) ModMessages.sendToServer(new UpgradeBdaC2SPacket(this.selectedBdaForUpgrade));
         }));
 
-        this.switchStyleButton = this.addRenderableWidget(new Button(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Switch Style"), (b) -> {
+        this.switchStyleButton = this.addRenderableWidget(new KnyUi.KnyButton(leftPos + windowWidth - 92, topPos + 5, 80, 20, Component.literal("Switch Style"), (b) -> {
             if (this.selectedStyleForMoveList != null) ModMessages.sendToServer(new SwitchStyleC2SPacket(this.selectedStyleForMoveList.ordinal()));
         }));
         this.prepareMoveList();
@@ -255,10 +263,11 @@ public class BreathingMenuScreen extends Screen {
     public void render(PoseStack poseStack, int mouseX, int mouseY, float partialTick) {
         this.renderBackground(poseStack);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
-        RenderSystem.setShaderTexture(0, BACKGROUND_TEXTURE);
         int x = (this.width - this.windowWidth) / 2;
         int y = (this.height - this.windowHeight) / 2;
-        this.blit(poseStack, x, y, 0, 0, this.windowWidth, this.windowHeight);
+        // The mod's shared panel style (KnyUi) instead of the old scenic background texture.
+        KnyUi.panel(poseStack, x, y, this.windowWidth, this.windowHeight);
+        fill(poseStack, x + 4, y + tabYStart + 24, x + this.windowWidth - 4, y + tabYStart + 25, KnyUi.GOLD_DARK);
 
         this.profileButton.isActive = (this.currentTab == Tab.PROFILE);
         this.stylesButton.isActive = (this.currentTab == Tab.SKILL_TREE);
@@ -515,7 +524,7 @@ public class BreathingMenuScreen extends Screen {
         int subWindowX = leftPos + subWindowXOffset;
         int subWindowY = topPos + subWindowYOffset;
 
-        fill(poseStack, subWindowX, subWindowY + 28, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
+        KnyUi.inset(poseStack, subWindowX, subWindowY + 28, subWindowWidth, subWindowY + subWindowHeight - (subWindowY + 28));
 
         this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             String bdpText = "Blood Demon Points: " + demon.getBloodPoints();
@@ -631,88 +640,187 @@ public class BreathingMenuScreen extends Screen {
         });
     }
 
+    // ------------------------------------------------------------------------------------------- Arts page
+
+    private static final int ART_CARD_H = 22;
+    private static final int ART_SEPARATOR_H = 14;
+    private static final int ART_LIST_W = 128;
+    private final List<int[]> artFormSlots = new ArrayList<>(); // x, y, w, h, form ordinal
+
+    /** List rows: a String is a section separator, a BloodDemonArts is a card. Canon arts first, then the mod's own. */
+    private List<Object> artRows() {
+        List<Object> rows = new ArrayList<>();
+        List<BloodDemonArts> canon = this.demonArtsList.stream().filter(BloodDemonArts::isCanon).collect(Collectors.toList());
+        List<BloodDemonArts> custom = this.demonArtsList.stream().filter(b -> !b.isCanon()).collect(Collectors.toList());
+        if (!canon.isEmpty()) {
+            rows.add("Canon Arts");
+            rows.addAll(canon);
+        }
+        if (!custom.isEmpty()) {
+            rows.add("Mod Arts");
+            rows.addAll(custom);
+        }
+        return rows;
+    }
+
+    private int artRowHeight(Object row) {
+        return row instanceof String ? ART_SEPARATOR_H : ART_CARD_H;
+    }
+
+    private int artContentHeight() {
+        int h = 0;
+        for (Object row : artRows()) h += artRowHeight(row);
+        return h;
+    }
+
+    private int artRowTop(BloodDemonArts art) {
+        int y = 0;
+        for (Object row : artRows()) {
+            if (row == art) return y;
+            y += artRowHeight(row);
+        }
+        return 0;
+    }
+
     private void renderBdaManagementView(PoseStack poseStack, int leftPos, int topPos, int mouseX, int mouseY) {
         if (this.minecraft == null || this.minecraft.player == null) return;
-
         int contentTopY = topPos + subWindowYOffset + 32;
-        int listWidth = BDA_LIST_WIDTH;
         int listLeft = leftPos + subWindowXOffset + 5;
-        int listHeight = subWindowHeight - 38;
-
+        int listHeight = getBdaListHeight();
         this.syncBdaSelection();
         this.clampBdaListScroll(listHeight);
+        artFormSlots.clear();
 
-        RenderSystem.enableScissor((int)(listLeft * minecraft.getWindow().getGuiScale()), (int)((this.height - (contentTopY + listHeight)) * minecraft.getWindow().getGuiScale()), (int)(listWidth * minecraft.getWindow().getGuiScale()), (int)(listHeight * minecraft.getWindow().getGuiScale()));
-        for (int i = 0; i < demonArtsList.size(); i++) {
-            BloodDemonArts bda = demonArtsList.get(i);
-            int entryY = contentTopY + (i * moveListEntryHeight) - (int)bdaUpgradeScroll;
-            if (entryY + moveListEntryHeight >= contentTopY && entryY <= contentTopY + listHeight) {
-                if (bda == this.selectedBdaForUpgrade) {
-                    fill(poseStack, listLeft - 2, entryY, listLeft + listWidth, entryY + moveListEntryHeight, 0x80FFFFFF);
-                } else if (i % 2 == 0) {
-                    fill(poseStack, listLeft - 2, entryY, listLeft + listWidth, entryY + moveListEntryHeight, 0x18FFFFFF);
+        this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
+            // --- Left: art cards with Canon / Mod separators ---
+            double scale = minecraft.getWindow().getGuiScale();
+            RenderSystem.enableScissor((int) (listLeft * scale), (int) ((this.height - (contentTopY + listHeight)) * scale),
+                    (int) (ART_LIST_W * scale), (int) (listHeight * scale));
+            int y = contentTopY - (int) bdaUpgradeScroll;
+            for (Object row : artRows()) {
+                int h = artRowHeight(row);
+                if (y + h >= contentTopY && y <= contentTopY + listHeight) {
+                    if (row instanceof String label) {
+                        KnyUi.separator(poseStack, this.font, listLeft, y + 3, ART_LIST_W, label);
+                    } else {
+                        BloodDemonArts art = (BloodDemonArts) row;
+                        boolean hover = mouseX >= listLeft && mouseX < listLeft + ART_LIST_W && mouseY >= Math.max(y, contentTopY)
+                                && mouseY < Math.min(y + h - 2, contentTopY + listHeight);
+                        KnyUi.card(poseStack, listLeft, y, ART_LIST_W, h - 2, art == this.selectedBdaForUpgrade, hover);
+                        this.font.drawShadow(poseStack, this.font.plainSubstrByWidth(art.getDisplayName(), ART_LIST_W - 10), listLeft + 6, y + 2, KnyUi.TEXT);
+                        String status;
+                        int color;
+                        if (demon.getEquippedBda() == art) {
+                            status = "Equipped · Tier " + demon.getBdaTier(art);
+                            color = KnyUi.GOLD_LIGHT;
+                        } else if (demon.isBdaUnlocked(art)) {
+                            status = "Owned · Tier " + demon.getBdaTier(art);
+                            color = 0xFF9AD0FF;
+                        } else {
+                            int cost = DemonProgressionHelper.getModifiedBdaPurchaseCost(demon, art);
+                            status = cost < 0 ? "Not for sale" : cost + " BDP";
+                            color = cost < 0 ? KnyUi.DIM : (demon.getBloodPoints() >= cost ? KnyUi.GOOD : KnyUi.BAD);
+                        }
+                        this.font.draw(poseStack, status, listLeft + 6, y + 11, color);
+                    }
                 }
-                String displayName = font.plainSubstrByWidth(bda.getDisplayName(), listWidth - 6);
-                this.font.draw(poseStack, displayName, listLeft + 2, entryY + 2, textColor);
+                y += h;
             }
-        }
-        RenderSystem.disableScissor();
-        this.renderBdaScrollbar(poseStack, listLeft + listWidth + 3, contentTopY, listHeight);
+            RenderSystem.disableScissor();
+            this.renderBdaScrollbar(poseStack, listLeft + ART_LIST_W + 2, contentTopY, listHeight);
 
-        if (this.selectedBdaForUpgrade != null) {
-            int detailX = listLeft + listWidth + 10;
-            int yOffset = contentTopY + 5;
-            font.draw(poseStack, this.selectedBdaForUpgrade.getDisplayName(), detailX, yOffset, goldColor);
-            yOffset += 12;
-            font.drawWordWrap(this.selectedBdaForUpgrade.getDescription().copy().withStyle(ChatFormatting.GRAY), detailX, yOffset, 130, textColor);
-            yOffset += 45;
-
-            final int finalYOffset = yOffset;
-            this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
-                int buttonX = leftPos + (windowWidth / 2) - 40;
-                int buttonY = topPos + windowHeight - 40;
-                if (demon.isBdaUnlocked(this.selectedBdaForUpgrade)) {
-                    this.upgradeBdaButton.visible = true;
-                    this.equipBdaButton.visible = true;
-
-                    this.equipBdaButton.x = buttonX - 42;
-                    this.equipBdaButton.y = buttonY;
-                    this.equipBdaButton.setWidth(80);
-                    this.equipBdaButton.active = demon.getEquippedBda() != this.selectedBdaForUpgrade;
-
-                    this.upgradeBdaButton.x = buttonX + 42;
-                    this.upgradeBdaButton.y = buttonY;
-                    this.upgradeBdaButton.setWidth(80);
-
-                    int currentTier = demon.getBdaTier(this.selectedBdaForUpgrade);
-                    int maxTier = DemonProgressionHelper.BDA_UPGRADE_COSTS.get(this.selectedBdaForUpgrade) != null ? DemonProgressionHelper.BDA_UPGRADE_COSTS.get(this.selectedBdaForUpgrade).size() : 0;
-
-                    font.draw(poseStack, "Tier: " + currentTier + " / " + maxTier, detailX, finalYOffset, textColor);
-
-                    int cost = DemonProgressionHelper.getModifiedBdaUpgradeCost(demon, this.selectedBdaForUpgrade);
-                    if (cost != -1) {
-                        font.draw(poseStack, "Next Cost: " + cost + " BDP", detailX, finalYOffset + 12, textColor);
-                        this.upgradeBdaButton.active = demon.getBloodPoints() >= cost;
-                    } else {
-                        font.draw(poseStack, Component.literal("Max Tier Reached").withStyle(ChatFormatting.AQUA), detailX, finalYOffset + 12, 0xFFFFFF);
-                        this.upgradeBdaButton.active = false;
-                    }
-                } else {
-                    this.purchaseBdaButton.visible = true;
-                    this.purchaseBdaButton.x = buttonX;
-                    this.purchaseBdaButton.y = buttonY;
-
-                    int cost = DemonProgressionHelper.getModifiedBdaPurchaseCost(demon, this.selectedBdaForUpgrade);
-                    if (cost != -1) {
-                        Component costText = Component.literal("Cost: " + cost + " BDP").withStyle(demon.getBloodPoints() >= cost ? ChatFormatting.GREEN : ChatFormatting.RED);
-                        font.draw(poseStack, costText, detailX, finalYOffset, 0xFFFFFF);
-                        this.purchaseBdaButton.active = demon.getBloodPoints() >= cost;
-                    } else {
-                        font.draw(poseStack, Component.literal("Not Purchasable").withStyle(ChatFormatting.GRAY), detailX, finalYOffset, 0xFFFFFF);
-                        this.purchaseBdaButton.active = false;
-                    }
+            BloodDemonArts art = this.selectedBdaForUpgrade;
+            if (art == null) return;
+            // --- Right: details ---
+            int dx = listLeft + ART_LIST_W + 10;
+            int dw = leftPos + subWindowXOffset + subWindowWidth - 6 - dx;
+            int dy = contentTopY + 1;
+            this.font.drawShadow(poseStack, art.getDisplayName(), dx, dy, KnyUi.accent());
+            int maxTier = DemonProgressionHelper.BDA_UPGRADE_COSTS.get(art) != null ? DemonProgressionHelper.BDA_UPGRADE_COSTS.get(art).size() : 0;
+            int tier = demon.isBdaUnlocked(art) ? demon.getBdaTier(art) : 0;
+            int px = dx + this.font.width(art.getDisplayName()) + 6;
+            for (int t = 0; t < maxTier; t++) {
+                fill(poseStack, px + t * 7, dy + 1, px + t * 7 + 5, dy + 6, t < tier ? KnyUi.GOLD : 0x60FFFFFF);
+            }
+            dy += 11;
+            for (net.minecraft.util.FormattedCharSequence line : this.font.split(art.getDescription(), dw)) {
+                this.font.draw(poseStack, line, dx, dy, KnyUi.DIM);
+                dy += 9;
+                if (dy > contentTopY + 30) break;
+            }
+            dy += 3;
+            List<com.wassuples.demonslayer.styles.DemonForms> forms = Arrays.stream(com.wassuples.demonslayer.styles.DemonForms.values())
+                    .filter(f -> f.getStyle() == art).collect(Collectors.toList());
+            int gridBottom = topPos + windowHeight - 28;
+            if (forms.isEmpty()) {
+                this.font.draw(poseStack, "A buff art with no forms of its own:", dx, dy, KnyUi.TEXT);
+                this.font.draw(poseStack, "it empowers every slayer style you use.", dx, dy + 10, KnyUi.TEXT);
+            } else {
+                com.wassuples.demonslayer.styles.DemonForms current = demon.getEquippedBda() == art ? demon.getCurrentDemonForm() : null;
+                int slotW = (dw - 3) / 2, slotH = 20;
+                for (int i = 0; i < forms.size(); i++) {
+                    com.wassuples.demonslayer.styles.DemonForms form = forms.get(i);
+                    int sx = dx + (i % 2) * (slotW + 3);
+                    int sy = dy + (i / 2) * (slotH + 2);
+                    if (sy + slotH > gridBottom) break;
+                    boolean hover = mouseX >= sx && mouseX < sx + slotW && mouseY >= sy && mouseY < sy + slotH;
+                    KnyUi.card(poseStack, sx, sy, slotW, slotH, form == current, hover);
+                    RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
+                    RenderSystem.enableBlend();
+                    RenderSystem.setShaderTexture(0, form.getIcon());
+                    blit(poseStack, sx + 2, sy + 2, 0, 0, 16, 16, 16, 16);
+                    int cd = com.wassuples.demonslayer.client.ClientCooldowns.remaining(form);
+                    if (cd > 0) fill(poseStack, sx + 2, sy + 2, sx + 18, sy + 2 + Mth.ceil(16 * com.wassuples.demonslayer.client.ClientCooldowns.fraction(form)), 0xB0000000);
+                    this.font.draw(poseStack, this.font.plainSubstrByWidth(form.getDisplayName(), slotW - 24), sx + 21, sy + 2, KnyUi.TEXT);
+                    String meta = (form.getBreathCost() > 0 ? form.getBreathCost() + " hunger · " : "")
+                            + String.format("%.1fs", form.getCooldownTicks(this.minecraft.player) / 20.0f)
+                            + (form.getInputType() == com.wassuples.demonslayer.styles.IForm.InputType.HOLD ? " · hold" : "");
+                    this.font.draw(poseStack, this.font.plainSubstrByWidth(meta, slotW - 24), sx + 21, sy + 11, KnyUi.DIM);
+                    artFormSlots.add(new int[]{sx, sy, slotW, slotH, form.ordinal()});
                 }
-            });
+            }
+
+            // --- Buttons ---
+            int buttonY = topPos + windowHeight - 24;
+            if (demon.isBdaUnlocked(art)) {
+                this.equipBdaButton.visible = true;
+                this.upgradeBdaButton.visible = true;
+                this.equipBdaButton.x = dx;
+                this.equipBdaButton.y = buttonY;
+                this.equipBdaButton.setWidth(84);
+                boolean equipped = demon.getEquippedBda() == art;
+                this.equipBdaButton.setMessage(Component.literal(equipped ? "Equipped" : "Equip"));
+                this.equipBdaButton.active = !equipped;
+                this.upgradeBdaButton.x = dx + 88;
+                this.upgradeBdaButton.y = buttonY;
+                this.upgradeBdaButton.setWidth(100);
+                int cost = DemonProgressionHelper.getModifiedBdaUpgradeCost(demon, art);
+                this.upgradeBdaButton.setMessage(Component.literal(cost < 0 ? "Max tier" : "Upgrade · " + cost));
+                this.upgradeBdaButton.active = cost >= 0 && demon.getBloodPoints() >= cost;
+            } else {
+                this.purchaseBdaButton.visible = true;
+                this.purchaseBdaButton.x = dx;
+                this.purchaseBdaButton.y = buttonY;
+                this.purchaseBdaButton.setWidth(110);
+                int cost = DemonProgressionHelper.getModifiedBdaPurchaseCost(demon, art);
+                this.purchaseBdaButton.setMessage(Component.literal(cost < 0 ? "Not for sale" : "Buy · " + cost + " BDP"));
+                this.purchaseBdaButton.active = cost >= 0 && demon.getBloodPoints() >= cost;
+            }
+        });
+
+        // Form tooltips.
+        for (int[] slot : artFormSlots) {
+            if (mouseX >= slot[0] && mouseX < slot[0] + slot[2] && mouseY >= slot[1] && mouseY < slot[1] + slot[3]) {
+                com.wassuples.demonslayer.styles.DemonForms form = com.wassuples.demonslayer.styles.DemonForms.values()[slot[4]];
+                List<net.minecraft.util.FormattedCharSequence> lines = new ArrayList<>();
+                lines.add(Component.literal(form.getDisplayName()).withStyle(ChatFormatting.GOLD).getVisualOrderText());
+                String desc = form.getDescription();
+                if (desc != null && !desc.endsWith(" desc.")) lines.addAll(this.font.split(net.minecraft.network.chat.FormattedText.of(desc), 200));
+                boolean equipped = this.minecraft.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).map(d -> d.getEquippedBda() == form.getStyle()).orElse(false);
+                if (equipped) lines.add(Component.literal("Click to select").withStyle(ChatFormatting.GRAY).getVisualOrderText());
+                this.renderTooltip(poseStack, lines, mouseX, mouseY);
+                break;
+            }
         }
     }
 
@@ -733,7 +841,8 @@ public class BreathingMenuScreen extends Screen {
                 int iconY = contentY + (int)pos.y;
 
                 RenderSystem.setShaderTexture(0, DEMON_WIDGETS_TEXTURE);
-                blit(poseStack, iconX, iconY, 0, 0, 16, 16);
+                RenderSystem.enableBlend();
+                blit(poseStack, iconX, iconY, passive.ordinal() * 16, 0, 16, 16);
 
                 String tierText = tier + "/" + maxTier;
                 font.draw(poseStack, tierText, iconX + 18, iconY + 4, textColor);
@@ -866,15 +975,32 @@ public class BreathingMenuScreen extends Screen {
             if (this.currentDemonTab == DemonSubTab.BDA) {
                 int contentTopY = (this.height - this.windowHeight) / 2 + subWindowYOffset + 32;
                 int listLeft = (this.width - this.windowWidth) / 2 + subWindowXOffset + 5;
-                int listWidth = BDA_LIST_WIDTH;
-                int listHeight = subWindowHeight - 38;
-                if (pMouseX >= listLeft && pMouseX < listLeft + listWidth && pMouseY >= contentTopY && pMouseY < contentTopY + listHeight) {
-                    int clickedIndex = (int) ((pMouseY - contentTopY + bdaUpgradeScroll) / moveListEntryHeight);
-                    if (clickedIndex >= 0 && clickedIndex < this.demonArtsList.size()) {
-                        this.selectedBdaIndex = clickedIndex;
-                        this.selectedBdaForUpgrade = this.demonArtsList.get(clickedIndex);
-                        this.ensureBdaSelectionIsVisible(listHeight);
-                        return true;
+                int listHeight = getBdaListHeight();
+                if (pMouseX >= listLeft && pMouseX < listLeft + ART_LIST_W && pMouseY >= contentTopY && pMouseY < contentTopY + listHeight) {
+                    double local = pMouseY - contentTopY + bdaUpgradeScroll;
+                    int y = 0;
+                    for (Object row : artRows()) {
+                        int h = artRowHeight(row);
+                        if (local >= y && local < y + h) {
+                            if (row instanceof BloodDemonArts art) {
+                                this.selectedBdaForUpgrade = art;
+                                this.selectedBdaIndex = this.demonArtsList.indexOf(art);
+                                this.ensureBdaSelectionIsVisible(listHeight);
+                            }
+                            return true;
+                        }
+                        y += h;
+                    }
+                }
+                for (int[] slot : artFormSlots) {
+                    if (pMouseX >= slot[0] && pMouseX < slot[0] + slot[2] && pMouseY >= slot[1] && pMouseY < slot[1] + slot[3]) {
+                        com.wassuples.demonslayer.styles.DemonForms form = com.wassuples.demonslayer.styles.DemonForms.values()[slot[4]];
+                        boolean equipped = this.minecraft != null && this.minecraft.player != null && this.minecraft.player
+                                .getCapability(PlayerDemonProvider.PLAYER_DEMON).map(d -> d.getEquippedBda() == form.getStyle()).orElse(false);
+                        if (equipped) {
+                            ModMessages.sendToServer(new SelectFormC2SPacket(form.ordinal(), true));
+                            return true;
+                        }
                     }
                 }
             }
@@ -941,7 +1067,7 @@ public class BreathingMenuScreen extends Screen {
         int subWindowWidth = (int) (240 * GUI_SCALE);
         int subWindowHeight = (int) (128 * GUI_SCALE);
 
-        fill(poseStack, subWindowX, subWindowY, subWindowX + subWindowWidth, subWindowY + subWindowHeight, 0x90000000);
+        KnyUi.inset(poseStack, subWindowX, subWindowY, subWindowWidth, subWindowY + subWindowHeight - (subWindowY));
 
         // HEADER
         RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
@@ -1199,14 +1325,14 @@ public class BreathingMenuScreen extends Screen {
     }
 
     private void clampBdaListScroll(int listHeight) {
-        int maxScroll = Math.max(0, (this.demonArtsList.size() * moveListEntryHeight) - listHeight);
+        int maxScroll = Math.max(0, artContentHeight() - listHeight);
         this.bdaUpgradeScroll = Mth.clamp(this.bdaUpgradeScroll, 0, maxScroll);
     }
 
     private void ensureBdaSelectionIsVisible(int listHeight) {
-        if (this.selectedBdaIndex < 0) return;
-        int itemTopY = this.selectedBdaIndex * this.moveListEntryHeight;
-        int itemBottomY = itemTopY + this.moveListEntryHeight;
+        if (this.selectedBdaIndex < 0 || this.selectedBdaForUpgrade == null) return;
+        int itemTopY = artRowTop(this.selectedBdaForUpgrade);
+        int itemBottomY = itemTopY + ART_CARD_H;
 
         if (itemTopY < this.bdaUpgradeScroll) {
             this.bdaUpgradeScroll = itemTopY;
@@ -1217,7 +1343,7 @@ public class BreathingMenuScreen extends Screen {
     }
 
     private void renderBdaScrollbar(PoseStack poseStack, int x, int y, int height) {
-        int contentHeight = this.demonArtsList.size() * moveListEntryHeight;
+        int contentHeight = artContentHeight();
         if (contentHeight <= height) return;
 
         fill(poseStack, x, y, x + 2, y + height, 0x50000000);
@@ -1270,9 +1396,8 @@ public class BreathingMenuScreen extends Screen {
             return true;
         }
         if (this.currentTab == Tab.DEMON_PROGRESSION && this.currentDemonTab == DemonSubTab.BDA) {
-            int listHeight = subWindowHeight - 38;
-            int maxScroll = Math.max(0, (this.demonArtsList.size() * moveListEntryHeight) - listHeight);
-            this.bdaUpgradeScroll = Mth.clamp(this.bdaUpgradeScroll - (pDelta * 10), 0, maxScroll);
+            this.bdaUpgradeScroll -= pDelta * ART_CARD_H;
+            this.clampBdaListScroll(getBdaListHeight());
             return true;
         }
         return super.mouseScrolled(pMouseX, pMouseY, pDelta);
@@ -1310,16 +1435,12 @@ public class BreathingMenuScreen extends Screen {
 
         @Override
         public void renderButton(PoseStack pPoseStack, int pMouseX, int pMouseY, float pPartialTick) {
+            boolean lit = this.isActive || this.isHoveredOrFocused();
+            KnyUi.buttonFrame(pPoseStack, this.x, this.y, this.width, this.height, true, this.isHoveredOrFocused(), this.isActive);
             RenderSystem.setShaderTexture(0, WIDGETS_TEXTURE);
             RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
-
-            int vOffset = 0;
-
-            if (this.isActive || this.isHoveredOrFocused()) {
-                vOffset = 20;
-            }
-
-            blit(pPoseStack, this.x, this.y, this.u, vOffset, this.width, this.height, 256, 256);
+            RenderSystem.enableBlend();
+            blit(pPoseStack, this.x + 2, this.y + 2, this.u + 2, (lit ? 20 : 0) + 2, 16, 16, 256, 256);
         }
     }
 }

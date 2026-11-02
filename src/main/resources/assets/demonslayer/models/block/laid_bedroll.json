@@ -1,0 +1,196 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "mat": "demonslayer:block/laid_bedroll",
+    "particle": "demonslayer:block/laid_bedroll"
+  },
+  "elements": [
+    {
+      "from": [
+        1,
+        0,
+        0
+      ],
+      "to": [
+        15,
+        1,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            0,
+            15,
+            16
+          ],
+          "texture": "#mat"
+        },
+        "down": {
+          "uv": [
+            1,
+            0,
+            15,
+            16
+          ],
+          "texture": "#mat",
+          "cullface": "down"
+        },
+        "north": {
+          "uv": [
+            1,
+            4,
+            15,
+            5
+          ],
+          "texture": "#mat"
+        },
+        "south": {
+          "uv": [
+            1,
+            15,
+            15,
+            16
+          ],
+          "texture": "#mat"
+        },
+        "east": {
+          "uv": [
+            0,
+            4,
+            16,
+            5
+          ],
+          "texture": "#mat"
+        },
+        "west": {
+          "uv": [
+            0,
+            4,
+            16,
+            5
+          ],
+          "texture": "#mat"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        1,
+        0.5
+      ],
+      "to": [
+        14,
+        2.5,
+        4
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            2,
+            0,
+            14,
+            4
+          ],
+          "texture": "#mat"
+        },
+        "north": {
+          "uv": [
+            2,
+            0,
+            14,
+            2
+          ],
+          "texture": "#mat"
+        },
+        "south": {
+          "uv": [
+            2,
+            2,
+            14,
+            4
+          ],
+          "texture": "#mat"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#mat"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            4,
+            2
+          ],
+          "texture": "#mat"
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        1,
+        13
+      ],
+      "to": [
+        15,
+        3,
+        16
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            1,
+            12,
+            15,
+            15
+          ],
+          "texture": "#mat"
+        },
+        "north": {
+          "uv": [
+            1,
+            12,
+            15,
+            14
+          ],
+          "texture": "#mat"
+        },
+        "south": {
+          "uv": [
+            1,
+            14,
+            15,
+            16
+          ],
+          "texture": "#mat"
+        },
+        "east": {
+          "uv": [
+            0,
+            12,
+            3,
+            14
+          ],
+          "texture": "#mat"
+        },
+        "west": {
+          "uv": [
+            0,
+            12,
+            3,
+            14
+          ],
+          "texture": "#mat"
+        }
+      }
+    }
+  ]
+}

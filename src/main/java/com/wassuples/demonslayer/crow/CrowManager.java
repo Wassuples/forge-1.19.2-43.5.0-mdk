@@ -42,17 +42,28 @@ public final class CrowManager {
                 data.setNeedsRespawn(true);
             }
 
-            if (!data.hasCrow() && !data.needsRespawn()) {
+            if (!data.hasCrow() && !data.needsRespawn() && isAssigned(player)) {
                 spawnCrow(player, data);
             }
         });
+    }
+
+    /**
+     * Kasugai crows are assigned at the end of the Final Selection: civilians (rank below Mizunoto) don't get one.
+     * Demon players keep the behaviour they had before.
+     */
+    public static boolean isAssigned(ServerPlayer player) {
+        boolean demon = player.getCapability(com.wassuples.demonslayer.demon.PlayerDemonProvider.PLAYER_DEMON).map(d -> d.isDemon()).orElse(false);
+        if (demon) return true;
+        return player.getCapability(com.wassuples.demonslayer.ranking.PlayerProgressionProvider.PLAYER_PROGRESSION)
+                .map(p -> p.getRank().ordinal() >= com.wassuples.demonslayer.ranking.Rank.MIZUNOTO.ordinal()).orElse(false);
     }
 
     public static void handlePlayerSleep(ServerPlayer player) {
         if (player.level.isClientSide) return;
         player.getCapability(PlayerCrowProvider.PLAYER_CROW).ifPresent(data -> {
             data.setOwnerDimension(player.level.dimension());
-            if (data.needsRespawn()) {
+            if (data.needsRespawn() && isAssigned(player)) {
                 spawnCrow(player, data);
             }
         });

@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.BodhisattvaEntity;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
@@ -40,6 +43,7 @@ public class RimeBodhisattvaForm extends ActiveForm {
     @Override
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 2.0f, 1.0f);
+        FormAnimations.play(user, FormAnimations.DOMA_SUMMON);
 
         // Global singleton rule: this summoner can only ever have one Bodhisattva at a time.
         if (!level.isClientSide) {

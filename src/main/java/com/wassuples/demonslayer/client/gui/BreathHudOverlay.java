@@ -16,7 +16,7 @@ import net.minecraftforge.client.gui.overlay.IGuiOverlay;
  */
 public class BreathHudOverlay {
     private static final ResourceLocation BREATH_BAR_TEXTURE =
-            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/breath_bar.png");
+            new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/breath_gauge.png");
 
     public static final IGuiOverlay HUD_BREATH = (gui, poseStack, partialTick, screenWidth, screenHeight) -> {
         int barWidth = 12;
@@ -48,9 +48,7 @@ public class BreathHudOverlay {
                         12,      // total texture width
                         100);    // total texture height
 
-                // The debug text proves the data is correct, so you can comment this out if you wish.
-                String debugText = "Breath: " + currentBreath + "/" + maxBreath;
-                GuiComponent.drawString(poseStack, Minecraft.getInstance().font, debugText, 5, 5, 0xFFFFFF);
+                // (The "Breath: x/y" debug text that used to sit in the top-left corner is gone.)
             });
         }
     };

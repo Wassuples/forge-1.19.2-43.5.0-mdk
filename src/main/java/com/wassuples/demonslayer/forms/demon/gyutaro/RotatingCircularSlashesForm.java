@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.gyutaro;
 
+import com.wassuples.demonslayer.entity.custom.BloodRingWaveEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
@@ -41,6 +44,8 @@ public class RotatingCircularSlashesForm extends TimedForm {
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_HURT_SWEET_BERRY_BUSH, SoundSource.PLAYERS, 1.5f, 0.8f);
         level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 1.5f);
+        FormAnimations.play(user, FormAnimations.GYUTARO_SPIN);
+        level.addFreshEntity(new BloodRingWaveEntity(level, user, WAVE_DURATION, (float) MAX_RANGE, (float) WAVE_HEIGHT));
     }
 
     @Override
@@ -67,18 +72,9 @@ public class RotatingCircularSlashesForm extends TimedForm {
             }
         }
 
-        this.rotation += 30.0f; // Rotation speed
-        for (int i = 0; i < 36; i++) {
-            double angle = Math.toRadians(i * 10 + this.rotation);
-            for (double y = 0; y <= WAVE_HEIGHT; y += 0.5) {
-                Vec3 particlePos = user.position().add(
-                        Math.cos(angle) * currentRadius,
-                        y,
-                        Math.sin(angle) * currentRadius
-                );
-                level.sendParticles(level.random.nextFloat() > 0.3f ? BLOOD_PARTICLE : ParticleTypes.SWEEP_ATTACK,
-                        particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
-            }
+        // Visuals: BloodRingWaveEntity draws the expanding ring of sickles on the same radius timeline.
+        if (ticksActive % 4 == 0) {
+            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.7f, 1.2f + progress * 0.6f);
         }
     }
 }

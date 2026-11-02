@@ -38,6 +38,15 @@ public class ToonShadowAnchorEntity extends Entity implements IAnimatable {
     @Nullable
     private UUID ownerUUID;
 
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> OWNER_ID =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(ToonShadowAnchorEntity.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Float> TOSS_YAW =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(ToonShadowAnchorEntity.class, net.minecraft.network.syncher.EntityDataSerializers.FLOAT);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Boolean> STUCK =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(ToonShadowAnchorEntity.class, net.minecraft.network.syncher.EntityDataSerializers.BOOLEAN);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> STUCK_FACE =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(ToonShadowAnchorEntity.class, net.minecraft.network.syncher.EntityDataSerializers.INT);
+
     public ToonShadowAnchorEntity(EntityType<?> type, Level level) {
         super(type, level);
         this.noPhysics = true;
@@ -46,6 +55,22 @@ public class ToonShadowAnchorEntity extends Entity implements IAnimatable {
     public ToonShadowAnchorEntity(Level level, Entity owner) {
         this(ModEntityTypes.TOON_SHADOW_ANCHOR.get(), level);
         this.ownerUUID = owner.getUUID();
+        this.entityData.set(OWNER_ID, owner.getId());
+        this.entityData.set(TOSS_YAW, owner.getYRot());
+    }
+
+    /** Network id of the owner, so clients can draw their real silhouette and hide their real shadow. */
+    public int getOwnerEntityId() {
+        return this.entityData.get(OWNER_ID);
+    }
+
+    public float getTossYaw() {
+        return this.entityData.get(TOSS_YAW);
+    }
+
+    @Nullable
+    public Entity getOwnerEntity() {
+        return this.level.getEntity(getOwnerEntityId());
     }
 
     @Override
@@ -72,23 +97,36 @@ public class ToonShadowAnchorEntity extends Entity implements IAnimatable {
                     this.setPos(hitPos);
                     this.setDeltaMovement(Vec3.ZERO);
                     this.stuck = true;
+                    this.entityData.set(STUCK, true);
+                    this.entityData.set(STUCK_FACE, hit.getDirection().get3DDataValue());
                 } else {
                     this.move(MoverType.SELF, motion);
                 }
             }
         }
 
-        if (this.level.isClientSide && this.tickCount % 2 == 0) {
-            this.level.addParticle(net.minecraft.core.particles.ParticleTypes.SMOKE,
-                    this.getX(), this.getY() + 0.1, this.getZ(), 0, 0, 0);
+        if (this.level.isClientSide) {
+            // While the shadow is away, its owner casts none (see ToonShadowSuppressMixin).
+            int ownerId = getOwnerEntityId();
+            if (ownerId >= 0) {
+                net.minecraftforge.fml.DistExecutor.unsafeRunWhenOn(net.minecraftforge.api.distmarker.Dist.CLIENT, () -> () ->
+                        com.wassuples.demonslayer.client.toon.ToonShadowClient.markTossed(ownerId));
+            }
+            if (!isStuck() && this.tickCount % 2 == 0) {
+                this.level.addParticle(net.minecraft.core.particles.ParticleTypes.SQUID_INK,
+                        this.getX(), this.getY(), this.getZ(), 0, 0, 0);
+            }
         }
     }
 
     public boolean isStuck() {
-        return this.stuck;
+        return this.level.isClientSide ? this.entityData.get(STUCK) : this.stuck;
     }
 
     public Vec3 getStuckNormal() {
+        if (this.level.isClientSide) {
+            return Vec3.atLowerCornerOf(net.minecraft.core.Direction.from3DDataValue(this.entityData.get(STUCK_FACE)).getNormal());
+        }
         return this.stuckNormal;
     }
 
@@ -146,6 +184,10 @@ public class ToonShadowAnchorEntity extends Entity implements IAnimatable {
 
     @Override
     protected void defineSynchedData() {
+        this.entityData.define(OWNER_ID, -1);
+        this.entityData.define(TOSS_YAW, 0.0f);
+        this.entityData.define(STUCK, false);
+        this.entityData.define(STUCK_FACE, net.minecraft.core.Direction.UP.get3DDataValue());
     }
 
     @Override

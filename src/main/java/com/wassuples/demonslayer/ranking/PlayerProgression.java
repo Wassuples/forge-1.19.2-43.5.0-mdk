@@ -55,6 +55,8 @@ public class PlayerProgression {
     public int getDemonKills() { return demonKills; }
     public int getDemonKillsThisRank() { return demonKillsThisRank; }
     public void incrementDemonKills() { demonKills++; demonKillsThisRank++; }
+    /** Mission kill-record bonus: counts toward the current rank's kill requirement (not the lifetime total). */
+    public void addKillRecordBonus(int kills) { demonKillsThisRank += Math.max(0, kills); }
     public boolean hasKilledKizuki() { return killedKizuki; }
     public void recordKizukiKill() { killedKizuki = true; }
 

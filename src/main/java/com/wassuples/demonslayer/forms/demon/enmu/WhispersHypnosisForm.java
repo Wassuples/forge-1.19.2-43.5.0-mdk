@@ -1,7 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.enmu;
 
 import com.mojang.math.Vector3f;
-import com.wassuples.demonslayer.effects.ForcedSleepEffect;
+import com.wassuples.demonslayer.entity.custom.WhisperWaveEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.effects.ModEffects;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
@@ -45,20 +46,12 @@ public class WhispersHypnosisForm extends ActiveForm {
     @Override
     public void onStart() {
         LivingEntity target = getLookedAtEntity(user, MAX_RANGE);
+        FormAnimations.play(user, FormAnimations.ENMU_WHISPER);
         if (target != null) {
             level.playSound(null, user.getX(), user.getY(), user.getZ(), SoundEvents.PHANTOM_AMBIENT, SoundSource.PLAYERS, 1.0f, 1.5f);
-
-            target.addEffect(new MobEffectInstance(ModEffects.FORCED_SLEEP.get(), SLEEP_DURATION, 0));
-            ForcedSleepEffect.setCaster(target, user);
-
-            final DustParticleOptions whisperParticle = new DustParticleOptions(new Vector3f(0.2f, 0.1f, 0.3f), 1.0f);
-            spawnLineParticles(level, whisperParticle, user.getEyePosition(), target.getEyePosition(), 15);
-
-            if (target instanceof ServerPlayer sleepingPlayer) {
-                List<Integer> keys = new ArrayList<>(List.of(0, 1, 2, 3)); // 0=up, 1=left, 2=down, 3=right
-                Collections.shuffle(keys);
-                ModMessages.sendToPlayer(new StartSleepQTES2CPacket(keys), sleepingPlayer);
-            }
+            // The whisper travels visibly from the mouth on Enmu's hand; the sleep (and the QTE for players)
+            // is applied by the wave when it reaches the target.
+            level.addFreshEntity(new WhisperWaveEntity(level, user, target, SLEEP_DURATION));
         } else {
             level.playSound(null, user.blockPosition(), SoundEvents.SHIELD_BLOCK, SoundSource.PLAYERS, 0.7f, 1.5f);
         }

@@ -4,6 +4,7 @@ import com.wassuples.demonslayer.entity.custom.WeepingSpearProjectileEntity;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
 import com.wassuples.demonslayer.styles.IForm;
+import com.wassuples.demonslayer.util.FormAnimations;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
@@ -34,6 +35,7 @@ public class WeepingSpearsForm extends ActiveForm {
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.TRIDENT_THROW, SoundSource.PLAYERS, 1.5f, 0.8f);
         performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.0f);
+        FormAnimations.play(user, FormAnimations.HANTENGU_THRUST);
 
         for (int i = 0; i < SPEAR_COUNT; i++) {
             WeepingSpearProjectileEntity spear = new WeepingSpearProjectileEntity(level, user);

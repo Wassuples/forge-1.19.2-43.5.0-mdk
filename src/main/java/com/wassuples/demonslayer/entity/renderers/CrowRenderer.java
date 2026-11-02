@@ -1,31 +1,22 @@
 package com.wassuples.demonslayer.entity.renderers;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexConsumer;
+import com.wassuples.demonslayer.DemonSlayer;
 import com.wassuples.demonslayer.entity.custom.CrowEntity;
-import com.wassuples.demonslayer.entity.models.CrowModel;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.RenderType;
+import com.wassuples.demonslayer.entity.models.KasugaiCrowModel;
 import net.minecraft.client.renderer.entity.EntityRendererProvider;
+import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
-import software.bernie.geckolib3.renderers.geo.GeoEntityRenderer;
 
-import javax.annotation.Nullable;
+/** Draws the Kasugai crow ({@link KasugaiCrowModel}). */
+public class CrowRenderer extends MobRenderer<CrowEntity, KasugaiCrowModel> {
+    private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/kasugai_crow.png");
 
-/**
- * Client-side GeckoLib renderer for Crow entity.
- */
-public class CrowRenderer extends GeoEntityRenderer<CrowEntity> {
-    public CrowRenderer(EntityRendererProvider.Context renderManager) {
-        super(renderManager, new CrowModel());
-        this.shadowRadius = 0.3f;
+    public CrowRenderer(EntityRendererProvider.Context ctx) {
+        super(ctx, new KasugaiCrowModel(ctx.bakeLayer(KasugaiCrowModel.LAYER)), 0.25F);
     }
 
     @Override
-    public RenderType getRenderType(CrowEntity animatable, float partialTicks, PoseStack stack,
-                                    @Nullable MultiBufferSource bufferSource, @Nullable VertexConsumer buffer,
-                                    int packedLight, ResourceLocation texture) {
-        return RenderType.entityCutout(getTextureLocation(animatable));
+    public ResourceLocation getTextureLocation(CrowEntity crow) {
+        return TEXTURE;
     }
 }
-

@@ -65,6 +65,8 @@ public final class RepDeltaCalculator {
         map.put(RepEventType.DEMON_SURVIVED_ENCOUNTER, new RepDelta(0, 0, 5, -10, 0));
 
         map.put(RepEventType.COMPLETE_STANDARD_CORPS_MISSION, new RepDelta(18, 0, 0, 0, 0));
+        map.put(RepEventType.FINAL_SELECTION_PASSED, new RepDelta(10, 0, 0, 0, 0));
+        map.put(RepEventType.FINAL_SELECTION_HAND_DEMON_SLAIN, new RepDelta(20, 0, 0, 15, 0));
         map.put(RepEventType.ABANDON_CORPS_MISSION, new RepDelta(-20, 0, 0, 0, 0));
         map.put(RepEventType.COMPLETE_MISSION_WITH_TANJIRO, new RepDelta(12, 15, 0, 0, 0));
         map.put(RepEventType.REPORT_NEZUKO_TO_DSHQ, new RepDelta(25, -60, 0, 0, 0));

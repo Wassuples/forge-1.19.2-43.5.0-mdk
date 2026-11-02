@@ -54,9 +54,7 @@ public class LotusShardProjectileEntity extends Projectile implements IAnimatabl
 
         this.setPos(this.getX() + this.getDeltaMovement().x, this.getY() + this.getDeltaMovement().y, this.getZ() + this.getDeltaMovement().z);
 
-        if (this.level.isClientSide) {
-            this.level.addParticle(ParticleTypes.SNOWFLAKE, this.getX(), this.getY(), this.getZ(), 0, 0, 0);
-        }
+        // The frost trail is drawn by LotusShardRenderer.
     }
 
     @Override

@@ -1,34 +1,120 @@
 {
   "toon_boing": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_boing"]
+    "sounds": [
+      "demonslayer:toon/toon_boing"
+    ]
   },
   "toon_slip": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_slip"]
+    "sounds": [
+      "demonslayer:toon/toon_slip"
+    ]
   },
   "toon_whistle_fall": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_whistle_fall"]
+    "sounds": [
+      "demonslayer:toon/toon_whistle_fall"
+    ]
   },
   "toon_crash": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_crash"]
+    "sounds": [
+      "demonslayer:toon/toon_crash"
+    ]
   },
   "toon_bonk": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_bonk"]
+    "sounds": [
+      "demonslayer:toon/toon_bonk"
+    ]
   },
   "toon_splat": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_splat"]
+    "sounds": [
+      "demonslayer:toon/toon_splat"
+    ]
   },
   "toon_eye_pop": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_eye_pop"]
+    "sounds": [
+      "demonslayer:toon/toon_eye_pop"
+    ]
   },
   "toon_run": {
     "category": "player",
-    "sounds": ["demonslayer:toon/toon_run"]
+    "sounds": [
+      "demonslayer:toon/toon_run"
+    ]
+  },
+  "dialogue_blip": {
+    "category": "master",
+    "subtitle": "subtitles.demonslayer.dialogue_blip",
+    "sounds": [
+      "demonslayer:story/dialogue_blip"
+    ]
+  },
+  "dialogue_open": {
+    "category": "master",
+    "subtitle": "subtitles.demonslayer.dialogue_open",
+    "sounds": [
+      "demonslayer:story/dialogue_open"
+    ]
+  },
+  "mission_bell": {
+    "category": "master",
+    "subtitle": "subtitles.demonslayer.mission_bell",
+    "sounds": [
+      "demonslayer:story/mission_bell"
+    ]
+  },
+  "night_drum": {
+    "category": "master",
+    "subtitle": "subtitles.demonslayer.night_drum",
+    "sounds": [
+      "demonslayer:story/night_drum"
+    ]
+  },
+  "mission_failed": {
+    "category": "master",
+    "subtitle": "subtitles.demonslayer.mission_failed",
+    "sounds": [
+      "demonslayer:story/mission_failed"
+    ]
+  },
+  "resolve": {
+    "category": "player",
+    "subtitle": "subtitles.demonslayer.resolve",
+    "sounds": [
+      "demonslayer:story/resolve"
+    ]
+  },
+  "demon_growl": {
+    "category": "hostile",
+    "subtitle": "subtitles.demonslayer.demon_growl",
+    "sounds": [
+      "demonslayer:story/demon_growl"
+    ]
+  },
+  "notice": {
+    "category": "master",
+    "subtitle": "subtitles.demonslayer.notice",
+    "sounds": [
+      "demonslayer:story/notice"
+    ]
+  },
+  "demon_hiss": {
+    "category": "hostile",
+    "subtitle": "subtitles.demonslayer.demon_hiss",
+    "sounds": [
+      "demonslayer:story/demon_hiss"
+    ]
+  },
+  "demon_crumble": {
+    "category": "hostile",
+    "subtitle": "subtitles.demonslayer.demon_crumble",
+    "sounds": [
+      "demonslayer:story/demon_crumble"
+    ]
   }
 }

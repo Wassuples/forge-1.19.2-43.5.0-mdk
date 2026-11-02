@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.gyokko;
 
+import com.wassuples.demonslayer.entity.custom.FishSchoolEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.ActiveForm;
@@ -52,6 +55,8 @@ public class TenThousandFishBarrageForm extends ActiveForm {
         );
         level.playSound(null, user.blockPosition(), SoundEvents.FISHING_BOBBER_SPLASH, SoundSource.PLAYERS, 1.5f, 0.8f);
         performGenericAttack(user, SoundEvents.PLAYER_ATTACK_SWEEP, 1.0f, 1.2f);
+        FormAnimations.play(user, FormAnimations.GYOKKO_VASE);
+        List<Vec3[]> streams = new java.util.ArrayList<>();
         for (Vec3 localOrigin : origins) {
             Vec3 startPoint = user.position().add(localOrigin.yRot(-user.getYRot() * Mth.DEG_TO_RAD));
             double spread = 4.0;
@@ -60,12 +65,11 @@ public class TenThousandFishBarrageForm extends ActiveForm {
                     (level.random.nextDouble() - 0.5) * spread,
                     (level.random.nextDouble() - 0.5) * spread
             );
-            final DustParticleOptions fishParticle = new DustParticleOptions(new Vector3f(0.3f, 0.8f, 0.6f), 0.7f);
-            double weaveAmplitude = 0.4 + level.random.nextDouble() * 0.4;
-            double weaveFrequency = 3.0 + level.random.nextDouble() * 2.0;
-            spawnParticleStreamWithWeave(level, fishParticle, startPoint, finalTargetPoint, weaveAmplitude, weaveFrequency, 60);
+            streams.add(new Vec3[]{startPoint, finalTargetPoint});
             dealAOEDamage(user, finalTargetPoint, IMPACT_RADIUS, DAMAGE_PER_HIT, 0.5f);
         }
+        // The shoal of goldfish (replaces the 360-particle dust streams).
+        level.addFreshEntity(new FishSchoolEntity(level, user.position(), streams));
         ActiveFormManager.stop(user);
     }
 

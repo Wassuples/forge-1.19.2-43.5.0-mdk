@@ -1,5 +1,7 @@
 package com.wassuples.demonslayer.forms.demon.gyokko;
 
+import com.wassuples.demonslayer.entity.custom.ScaleArmorEntity;
+
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
@@ -59,6 +61,7 @@ public class KillerFishScalesForm extends TimedForm {
         // Shared effects for both modes
         user.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SPEED, DURATION + 5, 2));
         user.addEffect(new MobEffectInstance(MobEffects.DAMAGE_RESISTANCE, DURATION + 5, 1));
+        level.addFreshEntity(new ScaleArmorEntity(level, user, DURATION));
         level.playSound(null, user.blockPosition(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 1.5f, 1.2f);
 
         if (isHoming) {
@@ -77,13 +80,7 @@ public class KillerFishScalesForm extends TimedForm {
     public void onTick() {
         super.onTick();
 
-        // Shared spinning particle effect for both modes
-        final DustParticleOptions scaleParticle = new DustParticleOptions(new Vector3f(0.3f, 0.9f, 0.7f), 1.0f);
-        for (int i = 0; i < 5; i++) {
-            double angle = (ticksActive * 0.5) + (i * Math.PI / 2.5);
-            Vec3 offset = new Vec3(Math.cos(angle), 0, Math.sin(angle)).scale(1.2);
-            level.sendParticles(scaleParticle, user.getX() + offset.x, user.getY() + 1.0, user.getZ() + offset.z, 1, 0, 0.1, 0, 0);
-        }
+        // No particles: the scales on the skin (ScaleArmorEntity / ScaleSkinLayer) are the whole visual.
 
         if (isHoming) {
             // --- Homing Bounce Attack Logic ---
@@ -97,7 +94,6 @@ public class KillerFishScalesForm extends TimedForm {
                 // --- HIT AND BOUNCE ---
                 dealAOEDamage(user, user.position(), DAMAGE_RADIUS, DAMAGE_PER_HIT, 0.8f);
                 level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 1.0f, 1.8f);
-                level.sendParticles(ParticleTypes.EXPLOSION, this.currentTarget.getX(), this.currentTarget.getY(0.5), this.currentTarget.getZ(), 1, 0.2, 0.2, 0.2, 0);
                 this.bouncesLeft--;
 
                 LivingEntity oldTarget = this.currentTarget;
@@ -119,8 +115,6 @@ public class KillerFishScalesForm extends TimedForm {
             }
         } else {
             // --- Forward Dash Attack Logic ---
-            level.sendParticles(ParticleTypes.SWEEP_ATTACK, user.getX(), user.getY(0.5), user.getZ(), 2, 0.1, 0.1, 0.1, 0.0);
-
             List<LivingEntity> hitEntities = level.getEntitiesOfClass(LivingEntity.class,
                     user.getBoundingBox().inflate(1.0),
                     e -> e != user && e.isAlive() && !alreadyHit.contains(e) && !(e instanceof Player && ((Player) e).isCreative()));

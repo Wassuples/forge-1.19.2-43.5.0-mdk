@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -60,6 +63,11 @@ public class WintryIciclesForm extends TimedForm {
     public void onStart() {
         if (!level.isClientSide) {
             level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.GLASS_HIT, SoundSource.PLAYERS, 1.0f, 2.0f);
+            // Icicles forming above the target and plunging on the damage tick (replaces the rising dust).
+            DomaArtEntity art = new DomaArtEntity(level, user, DomaArtEntity.Mode.WINTRY_ICICLES, TELEGRAPH_DURATION + 16, targetPoint, user.getLookAngle());
+            art.setSeed(level.random.nextInt());
+            level.addFreshEntity(art);
+            FormAnimations.play(user, FormAnimations.DOMA_POINT);
         }
     }
 
@@ -68,26 +76,11 @@ public class WintryIciclesForm extends TimedForm {
         super.onTick();
 
         if (!level.isClientSide) {
-            if (ticksActive <= TELEGRAPH_DURATION) {
-                double angle = (ticksActive * 0.4);
-                double radius = IMPACT_RADIUS * 0.8;
-                Vec3 particlePos = targetPoint.add(new Vec3(Math.cos(angle) * radius, 0.2, Math.sin(angle) * radius));
-                level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 2, 0, 0, 0, 0);
-            }
 
             if (ticksActive == TELEGRAPH_DURATION) {
                 level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.5f, 0.8f);
                 level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.WITHER_BREAK_BLOCK, SoundSource.PLAYERS, 1.2f, 1.0f);
 
-                int icicleCount = 7;
-                for (int i = 0; i < icicleCount; i++) {
-                    Vec3 icicleBasePos = targetPoint.add(new Vec3(
-                            (level.random.nextDouble() - 0.5) * (IMPACT_RADIUS),
-                            0.1,
-                            (level.random.nextDouble() - 0.5) * (IMPACT_RADIUS)
-                    ));
-                    spawnIcicleVFX(level, icicleBasePos);
-                }
 
                 AABB eruptionBox = new AABB(targetPoint, targetPoint).inflate(IMPACT_RADIUS, 2.0, IMPACT_RADIUS);
                 List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, eruptionBox, e -> e != user && e.isAlive());

@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "demonslayer:block/vermilion_pillar_top",
+    "side": "demonslayer:block/vermilion_pillar"
+  }
+}

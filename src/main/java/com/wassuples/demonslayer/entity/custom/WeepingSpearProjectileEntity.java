@@ -50,9 +50,12 @@ public class WeepingSpearProjectileEntity extends AbstractArrow implements IAnim
         if (--this.life <= 0) {
             this.discard();
         }
-        if (this.level.isClientSide && !this.inGround) {
-            this.level.addParticle(ParticleTypes.SOUL_FIRE_FLAME, this.getX(), this.getY(), this.getZ(), 0.0D, 0.0D, 0.0D);
-        }
+        // The blue streak and falling tears are drawn by WeepingSpearRenderer (no particles).
+    }
+
+    /** Whether the spear has stuck into a block (client and server both track this). */
+    public boolean isStuck() {
+        return this.inGround;
     }
 
     @Override

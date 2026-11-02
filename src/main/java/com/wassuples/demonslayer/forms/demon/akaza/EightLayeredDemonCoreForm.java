@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.ParticleTypes;
@@ -32,8 +35,17 @@ public class EightLayeredDemonCoreForm extends TimedForm {
     private static final double CONE_ANGLE_DEGREES = 40.0;
     private static final double CONE_ANGLE_COS = Math.cos(Math.toRadians(CONE_ANGLE_DEGREES));
 
+    private AkazaArtEntity art;
+
     public EightLayeredDemonCoreForm(LivingEntity user, IForm form) {
         super(user, form, NUMBER_OF_PUNCHES * TICKS_BETWEEN_PUNCHES);
+    }
+
+    @Override
+    public void onStart() {
+        this.art = new AkazaArtEntity(level, user, AkazaArtEntity.Mode.EIGHT_CORE, NUMBER_OF_PUNCHES * TICKS_BETWEEN_PUNCHES + 10);
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.AKAZA_EIGHT);
     }
 
     @Override
@@ -45,11 +57,6 @@ public class EightLayeredDemonCoreForm extends TimedForm {
             float currentDamage = BASE_DAMAGE + ((punchNumber - 1) * DAMAGE_RAMP_PER_PUNCH);
 
             level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_ATTACK_IMPACT, SoundSource.PLAYERS, 0.8f + (punchNumber * 0.05f), 1.2f + (punchNumber * 0.1f));
-            level.sendParticles(ParticleTypes.SONIC_BOOM,
-                    user.getX() + user.getLookAngle().x * 3,
-                    user.getEyeY() + user.getLookAngle().y * 3,
-                    user.getZ() + user.getLookAngle().z * 3,
-                    1, 0, 0, 0, 0);
 
             AABB broadPhaseBox = user.getBoundingBox().inflate(CONE_RANGE);
             List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, broadPhaseBox, e -> e != user && e.isAlive());
@@ -74,6 +81,7 @@ public class EightLayeredDemonCoreForm extends TimedForm {
     @Override
     public void onStop() {
         level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.2f, 1.0f);
+        if (art != null) art.finish(10);
 
         AABB broadPhaseBox = user.getBoundingBox().inflate(CONE_RANGE);
         List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, broadPhaseBox, e -> e != user && e.isAlive());

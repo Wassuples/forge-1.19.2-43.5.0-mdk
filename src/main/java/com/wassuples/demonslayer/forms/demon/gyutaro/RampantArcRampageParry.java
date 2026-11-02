@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.gyutaro;
 
+import com.wassuples.demonslayer.entity.custom.BloodArcDomeEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.ParryForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -28,6 +31,7 @@ public class RampantArcRampageParry extends ParryForm {
     private static final DustParticleOptions BLOOD_PARTICLE = new DustParticleOptions(new Vector3f(0.7f, 0.1f, 0.1f), 1.0f);
 
     private float rotation = 0;
+    private BloodArcDomeEntity dome;
 
     public RampantArcRampageParry(LivingEntity user, IForm form) {
         super(user, form, PARRY_WINDOW);
@@ -37,17 +41,20 @@ public class RampantArcRampageParry extends ParryForm {
     public void onStart() {
         super.onStart();
         level.playSound(null, user.blockPosition(), SoundEvents.SLIME_SQUISH, SoundSource.PLAYERS, 1.0f, 0.7f);
+        FormAnimations.play(user, FormAnimations.GYUTARO_GUARD);
+        // Guard animation and the whirling sickles both last exactly the parry window.
+        this.dome = new BloodArcDomeEntity(level, user, PARRY_WINDOW, (float) COUNTER_RADIUS);
+        level.addFreshEntity(this.dome);
     }
 
     @Override
     public void onTick() {
         super.onTick();
 
-        this.rotation += 40.0f;
-        double radius = 2.0;
-
-        spawnParticleArcInWorld(level, user.getEyePosition(), radius, 360, 10, this.rotation, 0, BLOOD_PARTICLE);
-        spawnParticleArcInWorld(level, user.getEyePosition(), radius, 360, 10, -this.rotation, 90, ParticleTypes.SWEEP_ATTACK);
+        // Visuals are drawn by BloodArcDomeEntity (whirling blood sickles); only a whoosh here.
+        if (ticksActive % 5 == 0) {
+            level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_SWEEP, SoundSource.PLAYERS, 0.4f, 1.6f + level.random.nextFloat() * 0.3f);
+        }
     }
 
     @Override
@@ -57,11 +64,11 @@ public class RampantArcRampageParry extends ParryForm {
 
         dealAOEDamage(user, user.position(), COUNTER_RADIUS, COUNTER_DAMAGE, COUNTER_KNOCKBACK);
 
-        for (int i = 0; i < 200; i++) {
-            Vec3 randomDir = new Vec3(level.random.nextDouble() - 0.5, level.random.nextDouble() - 0.5, level.random.nextDouble() - 0.5).normalize();
-            Vec3 particlePos = user.getEyePosition().add(randomDir.scale(level.random.nextDouble() * COUNTER_RADIUS));
-            level.sendParticles(i % 3 == 0 ? ParticleTypes.SWEEP_ATTACK : BLOOD_PARTICLE,
-                    particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
+        if (this.dome != null && this.dome.isAlive()) {
+            this.dome.burst(); // the whirling sickles fly outward
         }
+        // Replace the guard (which would keep sweeping after the form ends) with a short outward fling.
+        FormAnimations.play(user, FormAnimations.GYUTARO_BURST);
+        level.sendParticles(BLOOD_PARTICLE, user.getX(), user.getEyeY(), user.getZ(), 30, 1.2, 0.8, 1.2, 0.1);
     }
 }

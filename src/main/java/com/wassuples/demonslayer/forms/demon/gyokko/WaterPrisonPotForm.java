@@ -1,5 +1,7 @@
 package com.wassuples.demonslayer.forms.demon.gyokko;
 
+import com.wassuples.demonslayer.util.FormAnimations;
+
 
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.WaterPrisonEntity;
@@ -33,6 +35,7 @@ public class WaterPrisonPotForm extends ActiveForm {
 
     @Override
     public void onStart() {
+        FormAnimations.play(user, FormAnimations.GYOKKO_VASE);
         LivingEntity target = getLookedAtEntity(user, MAX_RANGE);
 
         if (target != null) {

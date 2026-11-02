@@ -2,9 +2,6 @@ package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.crow.CrowManager;
 import com.wassuples.demonslayer.entity.ModEntityTypes;
-import com.wassuples.demonslayer.missions.Mission;
-import com.wassuples.demonslayer.missions.MissionRegistry;
-import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import com.wassuples.demonslayer.nemesis.DemonDisplayData;
 import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
 import com.wassuples.demonslayer.networking.ModMessages;
@@ -186,27 +183,7 @@ public class CrowEntity extends TamableAnimal implements IAnimatable {
                 DemonHierarchyManager hierarchyManager = DemonHierarchyManager.get(serverPlayer.getLevel());
                 List<DemonDisplayData> kizuki = hierarchyManager.getDemonDisplayData().kizuki();
                 List<DemonDisplayData> fodder = hierarchyManager.getDemonDisplayData().fodder();
-                List<Mission> active = new ArrayList<>();
-                List<Mission> available = new ArrayList<>();
-                List<Mission> completed = new ArrayList<>();
-                // Populate mission lists from player data
-                serverPlayer.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(playerMissions -> {
-                    List<Mission> allMissions = MissionRegistry.getAllMissions();
-                    for (Mission mission : allMissions) {
-                        if (playerMissions.isActive(mission.id())) {
-                            active.add(mission);
-                        } else if (playerMissions.isCompleted(mission.id())) {
-                            completed.add(mission);
-                        } else {
-                            serverPlayer.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression -> {
-                                if (progression.getRank().ordinal() >= mission.requirement().ordinal()) {
-                                    available.add(mission);
-                                }
-                            });
-                        }
-                    }
-                });
-                ModMessages.sendToPlayer(new OpenCrowDispatchS2CPacket(kizuki, fodder, active, available, completed), serverPlayer);
+                ModMessages.sendToPlayer(new OpenCrowDispatchS2CPacket(kizuki, fodder, com.wassuples.demonslayer.missions.MissionManager.buildViews(serverPlayer)), serverPlayer);
             }
             return InteractionResult.sidedSuccess(player.level.isClientSide);
         }

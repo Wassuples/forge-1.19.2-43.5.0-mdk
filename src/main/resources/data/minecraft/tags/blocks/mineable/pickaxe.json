@@ -1,0 +1,12 @@
+{
+  "replace": false,
+  "values": [
+    "demonslayer:scarlet_ore",
+    "demonslayer:sun_forge",
+    "demonslayer:gravity_teleporter",
+    "demonslayer:stone_lantern",
+    "demonslayer:kawara_tiles",
+    "demonslayer:kawara_tile_stairs",
+    "demonslayer:kawara_tile_slab"
+  ]
+}

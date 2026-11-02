@@ -1,92 +1,54 @@
-[31Oct2026 14:08:48.985] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 1.19, --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 43.5.0, --fml.mcVersion, 1.19.2, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20220805.130853, --mixin.config, demonslayer.mixins.json]
-[31Oct2026 14:08:48.994] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.11 by Oracle Corporation; OS Windows 10 arch amd64 version 10.0
-[31Oct2026 14:08:49.144] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/96650/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23131!/ Service=ModLauncher Env=CLIENT
-[31Oct2026 14:08:49.475] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.19.2-43.5.0\127dd8c16243efb106d9c85717ca61eb55fbbfa3\javafmllanguage-1.19.2-43.5.0.jar is missing mods.toml file
-[31Oct2026 14:08:49.478] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.19.2-43.5.0\161b579c6f52a4441b04376763e7aedaf1a097f1\lowcodelanguage-1.19.2-43.5.0.jar is missing mods.toml file
-[31Oct2026 14:08:49.483] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.19.2-43.5.0\6ca236cd5718398c2ba7abef7cc7f1f6e21dbc38\mclanguage-1.19.2-43.5.0.jar is missing mods.toml file
-[31Oct2026 14:08:49.488] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.19.2-43.5.0\222e1c483f50a0b8b1397e833049b51445cc7dfb\fmlcore-1.19.2-43.5.0.jar is missing mods.toml file
-[31Oct2026 14:08:49.632] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
-[31Oct2026 14:08:51.898] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
-[31Oct2026 14:08:51.905] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --assetIndex, 1.19]
-[31Oct2026 14:08:51.980] [main/WARN] [mixin/]: Reference map 'demonslayer.refmap.json' for demonslayer.mixins.json could not be read. If this is a development environment you can ignore this message
-[31Oct2026 14:08:53.736] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
-[31Oct2026 14:08:53.737] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
-[31Oct2026 14:08:53.744] [main/INFO] [mixin/]: Remapping refMap player-animation-lib-minecraft_common-refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
-[31Oct2026 14:08:57.035] [pool-3-thread-1/INFO] [net.minecraft.util.datafix.DataFixers/]: Building unoptimized datafixer
-[31Oct2026 14:08:58.638] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/assets/.mcassetsroot' uses unexpected schema
-[31Oct2026 14:08:58.640] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/data/.mcassetsroot' uses unexpected schema
-[31Oct2026 14:08:58.651] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
-[31Oct2026 14:08:58.654] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
-[31Oct2026 14:08:58.773] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
-[31Oct2026 14:09:01.754] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 43.5.0, for MC 1.19.2 with MCP 20220805.130853
-[31Oct2026 14:09:01.756] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v43.5.0 Initialized
-[31Oct2026 14:09:02.927] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: [demonslayer]
-[31Oct2026 14:09:03.398] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: Default, Mod Resources
-[31Oct2026 14:09:03.738] [Worker-Main-2/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/heat_lightning.png not found
-[31Oct2026 14:09:03.794] [Worker-Main-2/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/wisteria_poison.png not found
-[31Oct2026 14:09:03.833] [Worker-Main-2/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/paralyzing_poison.png not found
-[31Oct2026 14:09:03.836] [Worker-Main-2/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/forced_sleep.png not found
-[31Oct2026 14:09:04.037] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
-[31Oct2026 14:09:04.125] [Render thread/INFO] [terrablender/]: Registered region minecraft:overworld to index 0 for type OVERWORLD
-[31Oct2026 14:09:04.125] [Render thread/INFO] [terrablender/]: Registered region minecraft:nether to index 0 for type NETHER
-[31Oct2026 14:09:04.125] [Render thread/INFO] [terrablender/]: Registered region demonslayer:overworld to index 1 for type OVERWORLD
-[31Oct2026 14:09:05.337] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: UP_TO_DATE Current: 43.5.0 Target: null
-[31Oct2026 14:09:07.635] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/scarlet_ore.json' missing model for variant: 'demonslayer:scarlet_ore#'
-[31Oct2026 14:09:07.635] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/scarlet_ore.json': java.lang.NullPointerException: Cannot invoke "net.minecraft.client.renderer.block.model.BlockModelDefinition.isMultiPart()" because "blockmodeldefinition" is null
-[31Oct2026 14:09:07.636] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/sun_forge.json' missing model for variant: 'demonslayer:sun_forge#'
-[31Oct2026 14:09:07.636] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/swordsmiths_table.json' missing model for variant: 'demonslayer:swordsmiths_table#'
-[31Oct2026 14:09:07.636] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Exception loading blockstate definition: 'demonslayer:blockstates/gravity_teleporter.json' missing model for variant: 'demonslayer:gravity_teleporter#'
-[31Oct2026 14:09:09.115] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_giyu#inventory' referenced from: demonslayer:nichirin_blade_giyu#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_giyu.json
-[31Oct2026 14:09:09.115] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_shinobu#inventory' referenced from: demonslayer:nichirin_blade_shinobu#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_shinobu.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_mitsuri#inventory' referenced from: demonslayer:nichirin_blade_mitsuri#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_mitsuri.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_obanai#inventory' referenced from: demonslayer:nichirin_blade_obanai#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_obanai.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_sanemi#inventory' referenced from: demonslayer:nichirin_blade_sanemi#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_sanemi.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_gyomei#inventory' referenced from: demonslayer:nichirin_blade_gyomei#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_gyomei.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_muichiro#inventory' referenced from: demonslayer:nichirin_blade_muichiro#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_muichiro.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_rengoku#inventory' referenced from: demonslayer:nichirin_blade_rengoku#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_rengoku.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_tengen#inventory' referenced from: demonslayer:nichirin_blade_tengen#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_tengen.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_jigoro#inventory' referenced from: demonslayer:nichirin_blade_jigoro#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_jigoro.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_blade_kanae#inventory' referenced from: demonslayer:nichirin_blade_kanae#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_blade_kanae.json
-[31Oct2026 14:09:09.117] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:muzans_blood#inventory' referenced from: demonslayer:muzans_blood#inventory: java.io.FileNotFoundException: demonslayer:models/item/muzans_blood.json
-[31Oct2026 14:09:09.118] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:raw_scarlet#inventory' referenced from: demonslayer:raw_scarlet#inventory: java.lang.NullPointerException: Cannot assign field "name" because "blockmodel" is null
-[31Oct2026 14:09:09.118] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:scarlet_crimson_iron_sand#inventory' referenced from: demonslayer:scarlet_crimson_iron_sand#inventory: java.lang.NullPointerException: Cannot assign field "name" because "blockmodel" is null
-[31Oct2026 14:09:09.119] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:nichirin_steel#inventory' referenced from: demonslayer:nichirin_steel#inventory: java.io.FileNotFoundException: demonslayer:models/item/nichirin_steel.json
-[31Oct2026 14:09:09.119] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:hand_demon_spawn_egg#inventory' referenced from: demonslayer:hand_demon_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/hand_demon_spawn_egg.json
-[31Oct2026 14:09:09.119] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_one_spawn_egg#inventory' referenced from: demonslayer:lower_moon_one_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_one_spawn_egg.json
-[31Oct2026 14:09:09.119] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_two_spawn_egg#inventory' referenced from: demonslayer:lower_moon_two_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_two_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_three_spawn_egg#inventory' referenced from: demonslayer:lower_moon_three_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_three_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_four_spawn_egg#inventory' referenced from: demonslayer:lower_moon_four_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_four_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_five_spawn_egg#inventory' referenced from: demonslayer:lower_moon_five_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_five_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:lower_moon_six_spawn_egg#inventory' referenced from: demonslayer:lower_moon_six_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/lower_moon_six_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_one_spawn_egg#inventory' referenced from: demonslayer:upper_moon_one_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_one_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_two_spawn_egg#inventory' referenced from: demonslayer:upper_moon_two_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_two_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_three_spawn_egg#inventory' referenced from: demonslayer:upper_moon_three_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_three_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_four_spawn_egg#inventory' referenced from: demonslayer:upper_moon_four_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_four_spawn_egg.json
-[31Oct2026 14:09:09.120] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:upper_moon_five_spawn_egg#inventory' referenced from: demonslayer:upper_moon_five_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/upper_moon_five_spawn_egg.json
-[31Oct2026 14:09:09.125] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:tamayo_spawn_egg#inventory' referenced from: demonslayer:tamayo_spawn_egg#inventory: java.io.FileNotFoundException: demonslayer:models/item/tamayo_spawn_egg.json
-[31Oct2026 14:09:09.127] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:scarlet_ore#inventory' referenced from: demonslayer:scarlet_ore#inventory: java.lang.NullPointerException: Cannot assign field "name" because "blockmodel" is null
-[31Oct2026 14:09:09.127] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:sun_forge#inventory' referenced from: demonslayer:sun_forge#inventory: java.io.FileNotFoundException: demonslayer:models/item/sun_forge.json
-[31Oct2026 14:09:09.127] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:swordsmiths_table#inventory' referenced from: demonslayer:swordsmiths_table#inventory: java.io.FileNotFoundException: demonslayer:models/item/swordsmiths_table.json
-[31Oct2026 14:09:09.127] [Worker-Main-1/WARN] [net.minecraft.client.resources.model.ModelBakery/]: Unable to load model: 'demonslayer:gravity_teleporter#inventory' referenced from: demonslayer:gravity_teleporter#inventory: java.io.FileNotFoundException: demonslayer:models/item/gravity_teleporter.json
-[31Oct2026 14:09:09.446] [Worker-Main-7/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, unable to load demonslayer:textures/block/wisteria_sapling.png : java.io.IOException: Could not read info from the PNG file demonslayer:textures/block/wisteria_sapling.png Image not of any known type, or corrupt
-[31Oct2026 14:09:11.253] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
-[31Oct2026 14:09:11.254] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
-[31Oct2026 14:09:11.328] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Realtek HD Audio 2nd output (Realtek(R) Audio)
-[31Oct2026 14:09:11.328] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
-[31Oct2026 14:09:11.477] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x512x4 minecraft:textures/atlas/blocks.png-atlas
-[31Oct2026 14:09:11.484] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x128x4 minecraft:textures/atlas/signs.png-atlas
-[31Oct2026 14:09:11.484] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
-[31Oct2026 14:09:11.485] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
-[31Oct2026 14:09:11.485] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
-[31Oct2026 14:09:11.487] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
-[31Oct2026 14:09:11.487] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
-[31Oct2026 14:09:12.263] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
-[31Oct2026 14:09:12.741] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
-[31Oct2026 14:09:12.742] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
-[31Oct2026 14:09:12.743] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
-[31Oct2026 14:09:13.412] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
-[31Oct2026 14:09:41.397] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 8 recipes
-[31Oct2026 14:09:41.808] [Render thread/ERROR] [net.minecraft.world.level.storage.loot.LootTables/]: Couldn't parse loot table demonslayer:blocks/wisteria_leaves
+[02Nov2026 19:21:00.773] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher running: args [--launchTarget, forgeclientuserdev, --version, MOD_DEV, --assetIndex, 1.19, --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --gameDir, ., --fml.forgeVersion, 43.5.0, --fml.mcVersion, 1.19.2, --fml.forgeGroup, net.minecraftforge, --fml.mcpVersion, 20220805.130853, --mixin.config, demonslayer.mixins.json]
+[02Nov2026 19:21:00.780] [main/INFO] [cpw.mods.modlauncher.Launcher/MODLAUNCHER]: ModLauncher 10.0.9+10.0.9+main.dcd20f30 starting: java version 17.0.11 by Oracle Corporation; OS Windows 10 arch amd64 version 10.0
+[02Nov2026 19:21:00.928] [main/INFO] [mixin/]: SpongePowered MIXIN Subsystem Version=0.8.5 Source=union:/C:/Users/96650/.gradle/caches/modules-2/files-2.1/org.spongepowered/mixin/0.8.5/9d1c0c3a304ae6697ecd477218fa61b850bf57fc/mixin-0.8.5.jar%23131!/ Service=ModLauncher Env=CLIENT
+[02Nov2026 19:21:01.337] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\javafmllanguage\1.19.2-43.5.0\127dd8c16243efb106d9c85717ca61eb55fbbfa3\javafmllanguage-1.19.2-43.5.0.jar is missing mods.toml file
+[02Nov2026 19:21:01.342] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\lowcodelanguage\1.19.2-43.5.0\161b579c6f52a4441b04376763e7aedaf1a097f1\lowcodelanguage-1.19.2-43.5.0.jar is missing mods.toml file
+[02Nov2026 19:21:01.346] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\mclanguage\1.19.2-43.5.0\6ca236cd5718398c2ba7abef7cc7f1f6e21dbc38\mclanguage-1.19.2-43.5.0.jar is missing mods.toml file
+[02Nov2026 19:21:01.352] [main/WARN] [net.minecraftforge.fml.loading.moddiscovery.ModFileParser/LOADING]: Mod file C:\Users\96650\.gradle\caches\modules-2\files-2.1\net.minecraftforge\fmlcore\1.19.2-43.5.0\222e1c483f50a0b8b1397e833049b51445cc7dfb\fmlcore-1.19.2-43.5.0.jar is missing mods.toml file
+[02Nov2026 19:21:01.481] [main/INFO] [net.minecraftforge.fml.loading.moddiscovery.JarInJarDependencyLocator/]: No dependencies to load found. Skipping!
+[02Nov2026 19:21:03.027] [main/INFO] [mixin/]: Compatibility level set to JAVA_17
+[02Nov2026 19:21:03.038] [main/INFO] [cpw.mods.modlauncher.LaunchServiceHandler/MODLAUNCHER]: Launching target 'forgeclientuserdev' with arguments [--version, MOD_DEV, --gameDir, ., --assetsDir, C:\Users\96650\.gradle\caches\forge_gradle\assets, --assetIndex, 1.19]
+[02Nov2026 19:21:03.145] [main/WARN] [mixin/]: Reference map 'demonslayer.refmap.json' for demonslayer.mixins.json could not be read. If this is a development environment you can ignore this message
+[02Nov2026 19:21:03.398] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
+[02Nov2026 19:21:03.398] [main/INFO] [mixin/]: Remapping refMap terrablender.refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
+[02Nov2026 19:21:03.413] [main/INFO] [mixin/]: Remapping refMap player-animation-lib-minecraft_common-refmap.json using D:\Programming\forge-1.19.2-43.5.0-mdk\build\createSrgToMcp\output.srg
+[02Nov2026 19:21:09.707] [pool-3-thread-1/INFO] [net.minecraft.util.datafix.DataFixers/]: Building unoptimized datafixer
+[02Nov2026 19:21:11.857] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/assets/.mcassetsroot' uses unexpected schema
+[02Nov2026 19:21:11.857] [Render thread/WARN] [net.minecraft.server.packs.VanillaPackResources/]: Assets URL 'union:/C:/Users/96650/.gradle/caches/forge_gradle/minecraft_user_repo/net/minecraftforge/forge/1.19.2-43.5.0_mapped_official_1.19.2/forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/data/.mcassetsroot' uses unexpected schema
+[02Nov2026 19:21:11.878] [Render thread/INFO] [com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService/]: Environment: authHost='https://authserver.mojang.com', accountsHost='https://api.mojang.com', sessionHost='https://sessionserver.mojang.com', servicesHost='https://api.minecraftservices.com', name='PROD'
+[02Nov2026 19:21:11.886] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Setting user: Dev
+[02Nov2026 19:21:12.002] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Backend library: LWJGL version 3.3.1 build 7
+[02Nov2026 19:21:12.721] [modloading-worker-0/INFO] [net.minecraftforge.common.ForgeMod/FORGEMOD]: Forge mod loading, version 43.5.0, for MC 1.19.2 with MCP 20220805.130853
+[02Nov2026 19:21:12.721] [modloading-worker-0/INFO] [net.minecraftforge.common.MinecraftForge/FORGE]: MinecraftForge v43.5.0 Initialized
+[02Nov2026 19:21:14.441] [Render thread/INFO] [net.minecraftforge.gametest.ForgeGameTestHooks/]: Enabled Gametest Namespaces: [demonslayer]
+[02Nov2026 19:21:14.942] [Render thread/INFO] [net.minecraft.server.packs.resources.ReloadableResourceManager/]: Reloading ResourceManager: Default, Mod Resources
+[02Nov2026 19:21:15.592] [Render thread/INFO] [terrablender/]: Registered region minecraft:overworld to index 0 for type OVERWORLD
+[02Nov2026 19:21:15.593] [Render thread/INFO] [terrablender/]: Registered region minecraft:nether to index 0 for type NETHER
+[02Nov2026 19:21:15.593] [Render thread/INFO] [terrablender/]: Registered region demonslayer:overworld to index 1 for type OVERWORLD
+[02Nov2026 19:21:15.619] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Starting version check at https://files.minecraftforge.net/net/minecraftforge/forge/promotions_slim.json
+[02Nov2026 19:21:15.951] [Worker-Main-6/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/heat_lightning.png not found
+[02Nov2026 19:21:16.000] [Worker-Main-6/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/wisteria_poison.png not found
+[02Nov2026 19:21:16.048] [Worker-Main-6/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/paralyzing_poison.png not found
+[02Nov2026 19:21:16.055] [Worker-Main-6/ERROR] [net.minecraft.client.renderer.texture.TextureAtlas/]: Using missing texture, file demonslayer:textures/mob_effect/forced_sleep.png not found
+[02Nov2026 19:21:17.197] [Forge Version Check/INFO] [net.minecraftforge.fml.VersionChecker/]: [forge] Found status: UP_TO_DATE Current: 43.5.0 Target: null
+[02Nov2026 19:21:25.631] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:item.goat_horn.play
+[02Nov2026 19:21:25.631] [Render thread/WARN] [net.minecraft.client.sounds.SoundEngine/]: Missing sound for event: minecraft:entity.goat.screaming.horn_break
+[02Nov2026 19:21:25.710] [Render thread/INFO] [com.mojang.blaze3d.audio.Library/]: OpenAL initialized on device OpenAL Soft on Realtek HD Audio 2nd output (Realtek(R) Audio)
+[02Nov2026 19:21:25.711] [Render thread/INFO] [net.minecraft.client.sounds.SoundEngine/SOUNDS]: Sound engine started
+[02Nov2026 19:21:25.858] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 1024x1024x4 minecraft:textures/atlas/blocks.png-atlas
+[02Nov2026 19:21:25.867] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x128x4 minecraft:textures/atlas/signs.png-atlas
+[02Nov2026 19:21:25.868] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/banner_patterns.png-atlas
+[02Nov2026 19:21:25.868] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x512x4 minecraft:textures/atlas/shield_patterns.png-atlas
+[02Nov2026 19:21:25.869] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x4 minecraft:textures/atlas/chest.png-atlas
+[02Nov2026 19:21:25.870] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/beds.png-atlas
+[02Nov2026 19:21:25.870] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 512x256x4 minecraft:textures/atlas/shulker_boxes.png-atlas
+[02Nov2026 19:21:26.632] [Render thread/WARN] [net.minecraft.client.renderer.ShaderInstance/]: Shader rendertype_entity_translucent_emissive could not find sampler named Sampler2 in the specified shader program.
+[02Nov2026 19:21:26.871] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/particles.png-atlas
+[02Nov2026 19:21:26.872] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 256x256x0 minecraft:textures/atlas/paintings.png-atlas
+[02Nov2026 19:21:26.873] [Render thread/INFO] [net.minecraft.client.renderer.texture.TextureAtlas/]: Created: 128x128x0 minecraft:textures/atlas/mob_effects.png-atlas
+[02Nov2026 19:21:28.006] [Realms Notification Availability checker #1/INFO] [com.mojang.realmsclient.client.RealmsClient/]: Could not authorize you against Realms server: java.lang.RuntimeException: Failed to parse into SignedJWT: 0
+[02Nov2026 19:21:47.525] [Render thread/INFO] [net.minecraft.world.item.crafting.RecipeManager/]: Loaded 9 recipes
+[02Nov2026 19:21:48.020] [Render thread/ERROR] [net.minecraft.world.level.storage.loot.LootTables/]: Couldn't parse loot table demonslayer:blocks/wisteria_leaves
 com.google.gson.JsonSyntaxException: Unknown type 'minecraft:any_of'
 	at net.minecraft.world.level.storage.loot.GsonAdapterFactory$JsonAdapter.deserialize(GsonAdapterFactory.java:94) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at com.google.gson.internal.bind.TreeTypeAdapter.read(TreeTypeAdapter.java:69) ~[gson-2.8.9.jar:?]
@@ -168,9 +130,10 @@ com.google.gson.JsonSyntaxException: Unknown type 'minecraft:any_of'
 	at net.minecraft.client.MouseHandler.lambda$setup$5(MouseHandler.java:184) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43) ~[lwjgl-glfw-3.3.1.jar:build 7]
 	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
-	at org.lwjgl.glfw.GLFW.glfwWaitEventsTimeout(GLFW.java:3474) ~[lwjgl-glfw-3.3.1.jar:build 7]
-	at com.mojang.blaze3d.systems.RenderSystem.limitDisplayFPS(RenderSystem.java:187) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1146) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:164) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:337) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1143) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at net.minecraft.client.Minecraft.run(Minecraft.java:700) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at net.minecraft.client.main.Main.run(Main.java:212) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at net.minecraft.client.main.Main.main(Main.java:51) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
@@ -187,51 +150,68 @@ com.google.gson.JsonSyntaxException: Unknown type 'minecraft:any_of'
 	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
 	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
 	at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
-[31Oct2026 14:09:42.172] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1179 advancements
-[31Oct2026 14:09:42.594] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.19.2
-[31Oct2026 14:09:42.595] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
-[31Oct2026 14:09:42.738] [Server thread/INFO] [terrablender/]: Initialized TerraBlender biomes for level stem minecraft:the_nether
-[31Oct2026 14:09:42.942] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
-[31Oct2026 14:09:45.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[31Oct2026 14:09:45.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[31Oct2026 14:09:45.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[31Oct2026 14:09:45.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[31Oct2026 14:09:45.301] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[31Oct2026 14:09:45.449] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
-[31Oct2026 14:09:45.964] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 54%
-[31Oct2026 14:09:46.128] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
-[31Oct2026 14:09:46.145] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 3200 ms
-[31Oct2026 14:09:46.284] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
-[31Oct2026 14:09:46.286] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
-[31Oct2026 14:09:46.397] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
-[31Oct2026 14:09:46.900] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
-[31Oct2026 14:09:47.010] [Server thread/INFO] [net.minecraftforge.common.AdvancementLoadFix/]: Using new advancement loading for net.minecraft.server.PlayerAdvancements@78219e38
-[31Oct2026 14:09:47.044] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:7eb03d9c] logged in with entity id 7 at (22.19182940731292, -58.0, -12.822188113814818)
-[31Oct2026 14:09:47.105] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
-[31Oct2026 14:09:48.175] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 190 advancements
-[31Oct2026 14:09:49.931] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[31Oct2026 14:09:49.948] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:overworld
-[31Oct2026 14:09:49.962] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_nether
-[31Oct2026 14:09:49.963] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/demonslayer:infinity_castle
-[31Oct2026 14:09:49.964] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_end
-[31Oct2026 14:09:55.796] [Render thread/WARN] [net.minecraft.client.renderer.texture.TextureManager/]: Failed to load texture: demonslayer:textures/gui/icons/default_icon.png
-java.io.FileNotFoundException: demonslayer:textures/gui/icons/default_icon.png
-	at net.minecraft.server.packs.resources.ResourceProvider.lambda$getResourceOrThrow$0(ResourceProvider.java:16) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at java.util.Optional.orElseThrow(Optional.java:403) ~[?:?]
-	at net.minecraft.server.packs.resources.ResourceProvider.getResourceOrThrow(ResourceProvider.java:15) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.renderer.texture.SimpleTexture$TextureImage.load(SimpleTexture.java:85) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.renderer.texture.SimpleTexture.getTextureImage(SimpleTexture.java:59) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.renderer.texture.SimpleTexture.load(SimpleTexture.java:29) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.renderer.texture.TextureManager.loadTexture(TextureManager.java:94) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.renderer.texture.TextureManager.register(TextureManager.java:65) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.renderer.texture.TextureManager.getTexture(TextureManager.java:117) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at com.mojang.blaze3d.systems.RenderSystem._setShaderTexture(RenderSystem.java:799) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at com.mojang.blaze3d.systems.RenderSystem.setShaderTexture(RenderSystem.java:791) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at com.wassuples.demonslayer.client.gui.FormSelectionScreen.render(FormSelectionScreen.java:94) ~[main/:?]
-	at net.minecraftforge.client.ForgeHooksClient.drawScreenInternal(ForgeHooksClient.java:444) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraftforge.client.ForgeHooksClient.drawScreen(ForgeHooksClient.java:437) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.renderer.GameRenderer.render(GameRenderer.java:896) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
-	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1115) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+[02Nov2026 19:21:48.222] [Render thread/ERROR] [net.minecraft.world.level.storage.loot.LootTables/]: Couldn't parse loot table demonslayer:blocks/hanging_wisteria
+com.google.gson.JsonSyntaxException: Unknown type 'minecraft:any_of'
+	at net.minecraft.world.level.storage.loot.GsonAdapterFactory$JsonAdapter.deserialize(GsonAdapterFactory.java:94) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at com.google.gson.internal.bind.TreeTypeAdapter.read(TreeTypeAdapter.java:69) ~[gson-2.8.9.jar:?]
+	at com.google.gson.internal.bind.TypeAdapterRuntimeTypeWrapper.read(TypeAdapterRuntimeTypeWrapper.java:41) ~[gson-2.8.9.jar:?]
+	at com.google.gson.internal.bind.ArrayTypeAdapter.read(ArrayTypeAdapter.java:72) ~[gson-2.8.9.jar:?]
+	at com.google.gson.Gson.fromJson(Gson.java:963) ~[gson-2.8.9.jar:?]
+	at com.google.gson.Gson.fromJson(Gson.java:1034) ~[gson-2.8.9.jar:?]
+	at com.google.gson.internal.bind.TreeTypeAdapter$GsonContextImpl.deserialize(TreeTypeAdapter.java:162) ~[gson-2.8.9.jar:?]
+	at net.minecraft.util.GsonHelper.convertToObject(GsonHelper.java:374) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.util.GsonHelper.getAsObject(GsonHelper.java:391) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.world.level.storage.loot.LootPool$Serializer.deserialize(LootPool.java:191) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.world.level.storage.loot.LootPool$Serializer.deserialize(LootPool.java:187) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at com.google.gson.internal.bind.TreeTypeAdapter.read(TreeTypeAdapter.java:69) ~[gson-2.8.9.jar:?]
+	at com.google.gson.internal.bind.TypeAdapterRuntimeTypeWrapper.read(TypeAdapterRuntimeTypeWrapper.java:41) ~[gson-2.8.9.jar:?]
+	at com.google.gson.internal.bind.ArrayTypeAdapter.read(ArrayTypeAdapter.java:72) ~[gson-2.8.9.jar:?]
+	at com.google.gson.Gson.fromJson(Gson.java:963) ~[gson-2.8.9.jar:?]
+	at com.google.gson.Gson.fromJson(Gson.java:1034) ~[gson-2.8.9.jar:?]
+	at com.google.gson.internal.bind.TreeTypeAdapter$GsonContextImpl.deserialize(TreeTypeAdapter.java:162) ~[gson-2.8.9.jar:?]
+	at net.minecraft.util.GsonHelper.convertToObject(GsonHelper.java:374) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.util.GsonHelper.getAsObject(GsonHelper.java:391) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.world.level.storage.loot.LootTable$Serializer.deserialize(LootTable.java:256) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.world.level.storage.loot.LootTable$Serializer.deserialize(LootTable.java:253) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at com.google.gson.internal.bind.TreeTypeAdapter.read(TreeTypeAdapter.java:69) ~[gson-2.8.9.jar:?]
+	at com.google.gson.Gson.fromJson(Gson.java:963) ~[gson-2.8.9.jar:?]
+	at com.google.gson.Gson.fromJson(Gson.java:1034) ~[gson-2.8.9.jar:?]
+	at com.google.gson.Gson.fromJson(Gson.java:1006) ~[gson-2.8.9.jar:?]
+	at net.minecraftforge.common.ForgeHooks.loadLootTable(ForgeHooks.java:929) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.world.level.storage.loot.LootTables.lambda$apply$0(LootTables.java:41) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at java.util.HashMap.forEach(HashMap.java:1421) ~[?:?]
+	at net.minecraft.world.level.storage.loot.LootTables.apply(LootTables.java:38) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.world.level.storage.loot.LootTables.apply(LootTables.java:16) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.server.packs.resources.SimplePreparableReloadListener.lambda$reload$1(SimplePreparableReloadListener.java:12) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at java.util.concurrent.CompletableFuture$UniAccept.tryFire(CompletableFuture.java:718) ~[?:?]
+	at java.util.concurrent.CompletableFuture$Completion.run(CompletableFuture.java:482) ~[?:?]
+	at net.minecraft.server.packs.resources.SimpleReloadInstance.lambda$new$3(SimpleReloadInstance.java:65) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.doRunTask(BlockableEventLoop.java:143) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.util.thread.ReentrantBlockableEventLoop.doRunTask(ReentrantBlockableEventLoop.java:22) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.pollTask(BlockableEventLoop.java:116) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.managedBlock(BlockableEventLoop.java:126) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldOpenFlows.loadWorldStem(WorldOpenFlows.java:130) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldOpenFlows.loadWorldStem(WorldOpenFlows.java:109) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldOpenFlows.doLoadLevel(WorldOpenFlows.java:148) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldOpenFlows.doLoadLevel(WorldOpenFlows.java:136) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldOpenFlows.loadLevel(WorldOpenFlows.java:58) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldSelectionList$WorldListEntry.loadWorld(WorldSelectionList.java:586) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldSelectionList$WorldListEntry.joinWorld(WorldSelectionList.java:448) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.worldselection.WorldSelectionList$WorldListEntry.mouseClicked(WorldSelectionList.java:375) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.components.AbstractSelectionList.mouseClicked(AbstractSelectionList.java:336) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.components.events.ContainerEventHandler.mouseClicked(ContainerEventHandler.java:28) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.MouseHandler.lambda$onPress$0(MouseHandler.java:88) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.gui.screens.Screen.wrapScreenError(Screen.java:522) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.MouseHandler.onPress(MouseHandler.java:85) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.MouseHandler.lambda$setup$4(MouseHandler.java:185) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.util.thread.BlockableEventLoop.execute(BlockableEventLoop.java:90) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.MouseHandler.lambda$setup$5(MouseHandler.java:184) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at org.lwjgl.glfw.GLFWMouseButtonCallbackI.callback(GLFWMouseButtonCallbackI.java:43) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at org.lwjgl.system.JNI.invokeV(Native Method) ~[lwjgl-3.3.1.jar:build 7]
+	at org.lwjgl.glfw.GLFW.glfwPollEvents(GLFW.java:3403) ~[lwjgl-glfw-3.3.1.jar:build 7]
+	at com.mojang.blaze3d.systems.RenderSystem.flipFrame(RenderSystem.java:164) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at com.mojang.blaze3d.platform.Window.updateDisplay(Window.java:337) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
+	at net.minecraft.client.Minecraft.runTick(Minecraft.java:1143) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at net.minecraft.client.Minecraft.run(Minecraft.java:700) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at net.minecraft.client.main.Main.run(Main.java:212) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
 	at net.minecraft.client.main.Main.main(Main.java:51) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar:?]
@@ -248,324 +228,177 @@ java.io.FileNotFoundException: demonslayer:textures/gui/icons/default_icon.png
 	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:26) ~[modlauncher-10.0.9.jar:?]
 	at cpw.mods.modlauncher.BootstrapLaunchConsumer.accept(BootstrapLaunchConsumer.java:23) ~[modlauncher-10.0.9.jar:?]
 	at cpw.mods.bootstraplauncher.BootstrapLauncher.main(BootstrapLauncher.java:141) ~[bootstraplauncher-1.1.2.jar:?]
-[31Oct2026 14:09:59.768] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Blood Demon Art Deactivated.
-[31Oct2026 14:10:00.657] [Worker-Main-4/WARN] [com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService/]: Couldn't look up profile properties for com.mojang.authlib.GameProfile@79e94c26[id=380df991-f603-344c-a090-369bad2a924a,name=Dev,properties={},legacy=false]
-com.mojang.authlib.exceptions.AuthenticationUnavailableException: Cannot contact authentication server
-	at com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService.makeRequest(YggdrasilAuthenticationService.java:134) ~[authlib-3.11.49.jar%23107!/:?]
-	at com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService.makeRequest(YggdrasilAuthenticationService.java:106) ~[authlib-3.11.49.jar%23107!/:?]
-	at com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService.fillGameProfile(YggdrasilMinecraftSessionService.java:197) ~[authlib-3.11.49.jar%23107!/:?]
-	at com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService$1.load(YggdrasilMinecraftSessionService.java:64) ~[authlib-3.11.49.jar%23107!/:?]
-	at com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService$1.load(YggdrasilMinecraftSessionService.java:61) ~[authlib-3.11.49.jar%23107!/:?]
-	at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3533) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2282) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2159) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2049) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.google.common.cache.LocalCache.get(LocalCache.java:3966) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.google.common.cache.LocalCache.getOrLoad(LocalCache.java:3989) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.google.common.cache.LocalCache$LocalLoadingCache.get(LocalCache.java:4950) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.google.common.cache.LocalCache$LocalLoadingCache.getUnchecked(LocalCache.java:4956) ~[guava-31.0.1-jre.jar%23109!/:?]
-	at com.mojang.authlib.yggdrasil.YggdrasilMinecraftSessionService.fillProfileProperties(YggdrasilMinecraftSessionService.java:172) ~[authlib-3.11.49.jar%23107!/:?]
-	at net.minecraft.client.Minecraft.getProfileProperties(Minecraft.java:2405) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/:?]
-	at net.minecraft.client.resources.SkinManager.lambda$registerSkins$4(SkinManager.java:117) ~[forge-1.19.2-43.5.0_mapped_official_1.19.2-recomp.jar%23189!/:?]
-	at java.util.concurrent.ForkJoinTask$RunnableExecuteAction.exec(ForkJoinTask.java:1395) ~[?:?]
-	at java.util.concurrent.ForkJoinTask.doExec(ForkJoinTask.java:373) ~[?:?]
-	at java.util.concurrent.ForkJoinPool$WorkQueue.topLevelExec(ForkJoinPool.java:1182) ~[?:?]
-	at java.util.concurrent.ForkJoinPool.scan(ForkJoinPool.java:1655) ~[?:?]
-	at java.util.concurrent.ForkJoinPool.runWorker(ForkJoinPool.java:1622) ~[?:?]
-	at java.util.concurrent.ForkJoinWorkerThread.run(ForkJoinWorkerThread.java:165) ~[?:?]
-Caused by: com.google.gson.JsonSyntaxException: java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $
-	at com.google.gson.internal.bind.ReflectiveTypeAdapterFactory$Adapter.read(ReflectiveTypeAdapterFactory.java:226) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:963) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:928) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:877) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:848) ~[gson-2.8.9.jar%23159!/:?]
-	at com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService.makeRequest(YggdrasilAuthenticationService.java:112) ~[authlib-3.11.49.jar%23107!/:?]
-	... 21 more
-Caused by: java.lang.IllegalStateException: Expected BEGIN_OBJECT but was STRING at line 1 column 1 path $
-	at com.google.gson.stream.JsonReader.beginObject(JsonReader.java:384) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.internal.bind.ReflectiveTypeAdapterFactory$Adapter.read(ReflectiveTypeAdapterFactory.java:215) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:963) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:928) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:877) ~[gson-2.8.9.jar%23159!/:?]
-	at com.google.gson.Gson.fromJson(Gson.java:848) ~[gson-2.8.9.jar%23159!/:?]
-	at com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService.makeRequest(YggdrasilAuthenticationService.java:112) ~[authlib-3.11.49.jar%23107!/:?]
-	... 21 more
-[31Oct2026 14:10:08.881] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
-[31Oct2026 14:10:08.888] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:overworld
-[31Oct2026 14:10:08.893] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_nether
-[31Oct2026 14:10:08.894] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/demonslayer:infinity_castle
-[31Oct2026 14:10:08.896] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_end
-[31Oct2026 14:10:12.470] [Render thread/ERROR] [com.mojang.blaze3d.platform.Window/]: ########## GL ERROR ##########
-[31Oct2026 14:10:12.470] [Render thread/ERROR] [com.mojang.blaze3d.platform.Window/]: @ Render
-[31Oct2026 14:10:12.470] [Render thread/ERROR] [com.mojang.blaze3d.platform.Window/]: 65540: Invalid scancode -1
-[31Oct2026 14:10:19.748] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$85#BEAST_7 tick=945002 dim=minecraft:overworld buff=true
-[31Oct2026 14:10:21.448] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$85#BEAST_7 tick=945036 dim=minecraft:overworld buff=true
-[31Oct2026 14:10:29.194] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$82#BEAST_4 tick=945191 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:29.194] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=SliceNDiceForm form=com.wassuples.demonslayer.styles.BreathingForms$82#BEAST_4 player=Dev
-[31Oct2026 14:10:30.385] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$82#BEAST_4 notifyClient=true tick=945215
-[31Oct2026 14:10:31.658] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] You must be in the air to use this form!
-[31Oct2026 14:10:32.851] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$83#BEAST_5 tick=945264 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:32.851] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=CrazyCuttingForm form=com.wassuples.demonslayer.styles.BreathingForms$83#BEAST_5 player=Dev
-[31Oct2026 14:10:34.334] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$83#BEAST_5 notifyClient=true tick=945294
-[31Oct2026 14:10:35.157] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 tick=945310 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:35.157] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PalisadeBiteForm form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 player=Dev
-[31Oct2026 14:10:35.733] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 notifyClient=true tick=945322
-[31Oct2026 14:10:35.896] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 tick=945325 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:35.896] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PalisadeBiteForm form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 player=Dev
-[31Oct2026 14:10:36.484] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 notifyClient=true tick=945337
-[31Oct2026 14:10:37.347] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 tick=945354 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:37.347] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PalisadeBiteForm form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 player=Dev
-[31Oct2026 14:10:37.934] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$84#BEAST_6 notifyClient=true tick=945366
-[31Oct2026 14:10:38.498] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$85#BEAST_7 tick=945377 dim=minecraft:overworld buff=true
-[31Oct2026 14:10:41.047] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$85#BEAST_7 tick=945428 dim=minecraft:overworld buff=true
-[31Oct2026 14:10:41.551] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$85#BEAST_7 tick=945438 dim=minecraft:overworld buff=true
-[31Oct2026 14:10:42.845] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$86#BEAST_8 tick=945464 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:42.846] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ExplosiveRushForm form=com.wassuples.demonslayer.styles.BreathingForms$86#BEAST_8 player=Dev
-[31Oct2026 14:10:43.835] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$86#BEAST_8 notifyClient=true tick=945484
-[31Oct2026 14:10:45.000] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$87#BEAST_9 tick=945507 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:45.000] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ExtendingBendySlashForm form=com.wassuples.demonslayer.styles.BreathingForms$87#BEAST_9 player=Dev
-[31Oct2026 14:10:45.146] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$87#BEAST_9 notifyClient=true tick=945510
-[31Oct2026 14:10:53.951] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$87#BEAST_9 tick=945686 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:53.952] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ExtendingBendySlashForm form=com.wassuples.demonslayer.styles.BreathingForms$87#BEAST_9 player=Dev
-[31Oct2026 14:10:54.952] [Server thread/INFO] [net.minecraft.world.entity.npc.Villager/]: Villager Villager['Villager'/3, l='ServerLevel[Building World for Demon Slayer]', x=63.71, y=-60.00, z=-32.71] died, message: 'Villager was slain by Dev'
-[31Oct2026 14:10:54.961] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$87#BEAST_9 notifyClient=true tick=945706
-[31Oct2026 14:10:54.961] [Render thread/INFO] [net.minecraft.world.entity.npc.Villager/]: Villager Villager['Villager'/3, l='ClientLevel', x=63.69, y=-60.00, z=-32.72] died, message: 'Villager died'
-[31Oct2026 14:10:57.446] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$88#BEAST_10 tick=945756 dim=minecraft:overworld buff=false
-[31Oct2026 14:10:57.446] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=WhirlingFangsForm form=com.wassuples.demonslayer.styles.BreathingForms$88#BEAST_10 player=Dev
-[31Oct2026 14:11:08.050] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$85#BEAST_7 tick=945968 dim=minecraft:overworld buff=true
-[31Oct2026 14:11:12.651] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$86#BEAST_8 tick=946060 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:12.651] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$88#BEAST_10 notifyClient=true tick=946060
-[31Oct2026 14:11:12.651] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ExplosiveRushForm form=com.wassuples.demonslayer.styles.BreathingForms$86#BEAST_8 player=Dev
-[31Oct2026 14:11:13.636] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.BreathingForms$86#BEAST_8 notifyClient=true tick=946080
-[31Oct2026 14:11:15.708] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Blood Demon Art Activated.
-[31Oct2026 14:11:17.895] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 tick=946165 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:17.895] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=AcmeAnvilForm form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 player=Dev
-[31Oct2026 14:11:18.385] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 notifyClient=true tick=946175
-[31Oct2026 14:11:29.553] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 tick=946398 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:29.553] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=AcmeAnvilForm form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 player=Dev
-[31Oct2026 14:11:30.034] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 notifyClient=true tick=946408
-[31Oct2026 14:11:32.207] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 tick=946451 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:32.207] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=AcmeAnvilForm form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 player=Dev
-[31Oct2026 14:11:32.684] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 notifyClient=true tick=946461
-[31Oct2026 14:11:35.145] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=946510 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:35.145] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:11:35.734] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=946522
-[31Oct2026 14:11:36.001] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=946527 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:36.001] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:11:36.584] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=946539
-[31Oct2026 14:11:37.249] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=946552 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:37.249] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:11:37.648] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=946560 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:37.649] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=946560
-[31Oct2026 14:11:37.649] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:11:38.234] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=946572
-[31Oct2026 14:11:39.546] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=946598 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:39.546] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:11:39.952] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=946606 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:39.952] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=946606
-[31Oct2026 14:11:39.953] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:11:40.535] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=946618
-[31Oct2026 14:11:40.849] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 tick=946624 dim=minecraft:overworld buff=false
-[31Oct2026 14:11:40.849] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=BananaPeelForm form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 player=Dev
-[31Oct2026 14:11:40.850] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 notifyClient=true tick=946624
-[31Oct2026 14:12:10.044] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947208 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:10.044] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:10.045] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947208
-[31Oct2026 14:12:13.350] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947274 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:13.350] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:13.351] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947274
-[31Oct2026 14:12:15.201] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947311 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:15.201] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:15.201] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947311
-[31Oct2026 14:12:17.851] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947364 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:17.851] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:17.851] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947364
-[31Oct2026 14:12:19.048] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947388 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:19.048] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:19.048] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947388
-[31Oct2026 14:12:32.699] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947661 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:32.699] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:32.700] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947661
-[31Oct2026 14:12:34.195] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947691 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:34.195] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:34.196] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947691
-[31Oct2026 14:12:35.198] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947711 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:35.198] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:35.198] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947711
-[31Oct2026 14:12:35.402] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947715 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:35.402] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:35.403] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947715
-[31Oct2026 14:12:35.597] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947719 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:35.597] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:35.597] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947719
-[31Oct2026 14:12:35.851] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947724 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:35.851] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:35.852] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947724
-[31Oct2026 14:12:35.996] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=947727 dim=minecraft:overworld buff=false
-[31Oct2026 14:12:35.996] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:12:35.997] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=947727
-[31Oct2026 14:13:02.201] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=948251 dim=minecraft:overworld buff=false
-[31Oct2026 14:13:02.201] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:13:02.201] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=948251
-[31Oct2026 14:13:17.804] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 tick=948563 dim=minecraft:overworld buff=false
-[31Oct2026 14:13:17.804] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=EyePopForm form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 player=Dev
-[31Oct2026 14:13:17.805] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$38#TOON_FORCE_1 notifyClient=true tick=948563
-[31Oct2026 14:13:19.997] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 tick=948607 dim=minecraft:overworld buff=false
-[31Oct2026 14:13:19.997] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=AcmeAnvilForm form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 player=Dev
-[31Oct2026 14:13:20.486] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 notifyClient=true tick=948617
-[31Oct2026 14:13:22.152] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 tick=948650 dim=minecraft:overworld buff=false
-[31Oct2026 14:13:22.152] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=AcmeAnvilForm form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 player=Dev
-[31Oct2026 14:13:22.635] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 notifyClient=true tick=948660
-[31Oct2026 14:13:23.951] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 tick=948686 dim=minecraft:overworld buff=false
-[31Oct2026 14:13:23.952] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=AcmeAnvilForm form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 player=Dev
-[31Oct2026 14:13:24.435] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 notifyClient=true tick=948696
-[31Oct2026 14:14:14.200] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 tick=949691 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:14.200] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=AcmeAnvilForm form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 player=Dev
-[31Oct2026 14:14:14.687] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$39#TOON_FORCE_2 notifyClient=true tick=949701
-[31Oct2026 14:14:16.250] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949732 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:16.250] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:16.837] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949744
-[31Oct2026 14:14:16.852] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949744 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:16.852] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:17.204] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949751 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:17.204] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949751
-[31Oct2026 14:14:17.204] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:17.451] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949756 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:17.451] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949756
-[31Oct2026 14:14:17.451] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:17.704] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949761 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:17.704] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949761
-[31Oct2026 14:14:17.704] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:17.950] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949766 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:17.950] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949766
-[31Oct2026 14:14:17.950] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:18.536] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949778
-[31Oct2026 14:14:19.653] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949800 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:19.653] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:19.948] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949806 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:19.948] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949806
-[31Oct2026 14:14:19.948] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:20.149] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949810 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:20.149] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949810
-[31Oct2026 14:14:20.149] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:20.356] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949814 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:20.356] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949814
-[31Oct2026 14:14:20.356] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:20.598] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949819 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:20.598] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949819
-[31Oct2026 14:14:20.598] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:20.797] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949823 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:20.797] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949823
-[31Oct2026 14:14:20.799] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:21.047] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949828 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:21.047] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949828
-[31Oct2026 14:14:21.047] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:21.251] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949832 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:21.251] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949832
-[31Oct2026 14:14:21.251] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:21.453] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949836 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:21.454] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949836
-[31Oct2026 14:14:21.454] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:21.649] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949840 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:21.649] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949840
-[31Oct2026 14:14:21.649] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:21.847] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949844 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:21.847] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949844
-[31Oct2026 14:14:21.847] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:22.049] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949848 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:22.051] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949848
-[31Oct2026 14:14:22.051] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:22.267] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Isao of the Sacred Sakaki'/433, l='ServerLevel[Building World for Demon Slayer]', x=33.48, y=-58.00, z=-16.48] died: Isao of the Sacred Sakaki was slain by Dev
-[31Oct2026 14:14:22.636] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949860
-[31Oct2026 14:14:24.053] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949888 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:24.053] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:24.403] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949895 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:24.403] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949895
-[31Oct2026 14:14:24.403] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:24.654] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949900 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:24.654] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949900
-[31Oct2026 14:14:24.655] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:24.899] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949905 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:24.900] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949905
-[31Oct2026 14:14:24.900] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:25.102] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949909 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:25.102] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949909
-[31Oct2026 14:14:25.102] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:25.305] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=949913 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:25.305] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949913
-[31Oct2026 14:14:25.305] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:25.887] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=949925
-[31Oct2026 14:14:40.751] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 tick=950222 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:40.751] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PieSplatForm form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 player=Dev
-[31Oct2026 14:14:41.338] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$40#TOON_FORCE_3 notifyClient=true tick=950234
-[31Oct2026 14:14:41.651] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 tick=950240 dim=minecraft:overworld buff=false
-[31Oct2026 14:14:41.651] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=BananaPeelForm form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 player=Dev
-[31Oct2026 14:14:41.651] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 notifyClient=true tick=950240
-[31Oct2026 14:15:33.856] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 tick=951284 dim=minecraft:overworld buff=false
-[31Oct2026 14:15:33.856] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=BananaPeelForm form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 player=Dev
-[31Oct2026 14:15:33.856] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 notifyClient=true tick=951284
-[31Oct2026 14:15:57.005] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 tick=951747 dim=minecraft:overworld buff=false
-[31Oct2026 14:15:57.005] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=BananaPeelForm form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 player=Dev
-[31Oct2026 14:15:57.005] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 notifyClient=true tick=951747
-[31Oct2026 14:17:56.352] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 tick=954134 dim=minecraft:overworld buff=false
-[31Oct2026 14:17:56.352] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=BananaPeelForm form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 player=Dev
-[31Oct2026 14:17:56.352] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$41#TOON_FORCE_4 notifyClient=true tick=954134
-[31Oct2026 14:17:57.649] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 tick=954160 dim=minecraft:overworld buff=false
-[31Oct2026 14:17:57.650] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ShadowTossForm form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 player=Dev
-[31Oct2026 14:17:57.650] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 notifyClient=true tick=954160
-[31Oct2026 14:17:59.155] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 tick=954190 dim=minecraft:overworld buff=false
-[31Oct2026 14:17:59.155] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ShadowTossForm form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 player=Dev
-[31Oct2026 14:17:59.156] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 notifyClient=true tick=954190
-[31Oct2026 14:18:00.455] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 tick=954216 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:00.455] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ShadowTossForm form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 player=Dev
-[31Oct2026 14:18:00.456] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 notifyClient=true tick=954216
-[31Oct2026 14:18:02.351] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 tick=954254 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:02.351] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FakeTunnelForm form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 player=Dev
-[31Oct2026 14:18:02.351] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 notifyClient=true tick=954254
-[31Oct2026 14:18:04.050] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 tick=954288 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:04.050] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PocketForm form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 player=Dev
-[31Oct2026 14:18:06.039] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 notifyClient=true tick=954328
-[31Oct2026 14:18:07.305] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 tick=954353 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:07.305] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PocketForm form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 player=Dev
-[31Oct2026 14:18:08.892] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Fortune Cookie: BOING!
-[31Oct2026 14:18:09.288] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 notifyClient=true tick=954393
-[31Oct2026 14:18:32.901] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 tick=954865 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:32.901] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ShadowTossForm form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 player=Dev
-[31Oct2026 14:18:32.901] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 notifyClient=true tick=954865
-[31Oct2026 14:18:50.257] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 tick=955212 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:50.257] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=ShadowTossForm form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 player=Dev
-[31Oct2026 14:18:50.257] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$42#TOON_FORCE_5 notifyClient=true tick=955212
-[31Oct2026 14:18:53.406] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 tick=955275 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:53.406] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FakeTunnelForm form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 player=Dev
-[31Oct2026 14:18:53.406] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 notifyClient=true tick=955275
-[31Oct2026 14:18:56.001] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 tick=955327 dim=minecraft:overworld buff=false
-[31Oct2026 14:18:56.001] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=FakeTunnelForm form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 player=Dev
-[31Oct2026 14:18:56.001] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$43#TOON_FORCE_6 notifyClient=true tick=955327
-[31Oct2026 14:24:09.553] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 tick=961598 dim=minecraft:overworld buff=false
-[31Oct2026 14:24:09.554] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PocketForm form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 player=Dev
-[31Oct2026 14:24:11.542] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 notifyClient=true tick=961638
-[31Oct2026 14:24:21.157] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 tick=961830 dim=minecraft:overworld buff=false
-[31Oct2026 14:24:21.157] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PocketForm form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 player=Dev
-[31Oct2026 14:24:23.144] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 notifyClient=true tick=961870
-[31Oct2026 14:24:25.612] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 tick=961919 dim=minecraft:overworld buff=false
-[31Oct2026 14:24:25.612] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PocketForm form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 player=Dev
-[31Oct2026 14:24:27.593] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 notifyClient=true tick=961959
-[31Oct2026 14:25:10.011] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] start request player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 tick=962807 dim=minecraft:overworld buff=false
-[31Oct2026 14:25:10.011] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] started activeFormClass=PocketForm form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 player=Dev
-[31Oct2026 14:25:11.993] [Server thread/INFO] [com.wassuples.demonslayer.DemonSlayer/]: [ActiveForm] stop player=Dev form=com.wassuples.demonslayer.styles.DemonForms$44#TOON_FORCE_7 notifyClient=true tick=962847
-[31Oct2026 14:29:39.293] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!
-[31Oct2026 14:29:39.347] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Internal Exception: java.nio.channels.ClosedChannelException
-[31Oct2026 14:29:39.347] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
-[31Oct2026 14:29:39.357] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
-[31Oct2026 14:29:39.406] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
-[31Oct2026 14:29:39.406] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
-[31Oct2026 14:29:39.406] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
-[31Oct2026 14:29:39.670] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:overworld
-[31Oct2026 14:29:39.901] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_nether
-[31Oct2026 14:29:39.901] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/demonslayer:infinity_castle
-[31Oct2026 14:29:39.903] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Building World for Demon Slayer]'/minecraft:the_end
-[31Oct2026 14:29:39.917] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (Building World for Demon Slayer): All chunks are saved
-[31Oct2026 14:29:39.918] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
-[31Oct2026 14:29:39.918] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (infinity_castle): All chunks are saved
-[31Oct2026 14:29:39.918] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
-[31Oct2026 14:29:39.918] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[02Nov2026 19:21:48.494] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 1179 advancements
+[02Nov2026 19:21:48.905] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Starting integrated minecraft server version 1.19.2
+[02Nov2026 19:21:48.905] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Generating keypair
+[02Nov2026 19:21:49.109] [Server thread/INFO] [terrablender/]: Initialized TerraBlender biomes for level stem minecraft:overworld
+[02Nov2026 19:21:49.109] [Server thread/INFO] [terrablender/]: Initialized TerraBlender biomes for level stem minecraft:the_nether
+[02Nov2026 19:21:49.404] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Preparing start region for dimension minecraft:overworld
+[02Nov2026 19:21:51.944] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.231] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.232] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.232] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.446] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 0%
+[02Nov2026 19:21:58.937] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 15%
+[02Nov2026 19:21:59.428] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 31%
+[02Nov2026 19:21:59.944] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 58%
+[02Nov2026 19:22:01.309] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 59%
+[02Nov2026 19:22:01.309] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 59%
+[02Nov2026 19:22:01.420] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 63%
+[02Nov2026 19:22:01.935] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 83%
+[02Nov2026 19:22:02.446] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Preparing spawn area: 90%
+[02Nov2026 19:22:02.688] [Server thread/INFO] [net.minecraftforge.server.permission.PermissionAPI/]: Successfully initialized permission handler forge:default_handler
+[02Nov2026 19:22:02.712] [Render thread/INFO] [net.minecraft.server.level.progress.LoggerChunkProgressListener/]: Time elapsed: 13297 ms
+[02Nov2026 19:22:02.796] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing view distance to 12, from 10
+[02Nov2026 19:22:02.798] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Changing simulation distance to 12, from 0
+[02Nov2026 19:22:02.899] [Render thread/WARN] [io.netty.util.internal.SystemPropertyUtil/]: Unable to parse the boolean system property 'java.net.preferIPv6Addresses':system - using the default value: false
+[02Nov2026 19:22:03.529] [Netty Local Client IO #0/INFO] [net.minecraftforge.network.NetworkHooks/]: Connected to a modded server.
+[02Nov2026 19:22:03.608] [Server thread/INFO] [net.minecraftforge.common.AdvancementLoadFix/]: Using new advancement loading for net.minecraft.server.PlayerAdvancements@5f3a27b8
+[02Nov2026 19:22:03.627] [Server thread/INFO] [net.minecraft.server.players.PlayerList/]: Dev[local:E:78aa0368] logged in with entity id 83 at (411.213803719872, 188.0, 310.0748915039246)
+[02Nov2026 19:22:03.710] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev joined the game
+[02Nov2026 19:22:06.384] [Render thread/WARN] [net.minecraft.client.ClientRecipeBook/]: Unknown recipe category: demonslayer:swordsmithing/demonslayer:nichirin_blade
+[02Nov2026 19:22:06.735] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 29 advancements
+[02Nov2026 19:22:08.580] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[02Nov2026 19:22:08.592] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:overworld
+[02Nov2026 19:22:08.695] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/demonslayer:infinity_castle
+[02Nov2026 19:22:08.698] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_end
+[02Nov2026 19:22:08.699] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_nether
+[02Nov2026 19:23:45.312] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 21195]
+[02Nov2026 19:23:45.326] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 21195
+[02Nov2026 19:23:50.857] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 23706]
+[02Nov2026 19:23:50.858] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 23706
+[02Nov2026 19:23:58.586] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 2260]
+[02Nov2026 19:23:58.587] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 2260
+[02Nov2026 19:24:06.053] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 15074]
+[02Nov2026 19:24:06.057] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 15074
+[02Nov2026 19:24:10.057] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 17554]
+[02Nov2026 19:24:10.057] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 17554
+[02Nov2026 19:24:10.800] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 19969]
+[02Nov2026 19:24:10.801] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 19969
+[02Nov2026 19:24:11.548] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 22384]
+[02Nov2026 19:24:11.550] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 22384
+[02Nov2026 19:24:15.850] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 22670]
+[02Nov2026 19:24:15.861] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 22670
+[02Nov2026 19:24:21.087] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 22974]
+[02Nov2026 19:24:21.088] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 22974
+[02Nov2026 19:24:24.300] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 23239]
+[02Nov2026 19:24:24.398] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 23239
+[02Nov2026 19:24:25.107] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Invalid unit
+[02Nov2026 19:24:28.609] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 1325]
+[02Nov2026 19:24:28.609] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 1325
+[02Nov2026 19:24:42.090] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[02Nov2026 19:24:42.096] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:overworld
+[02Nov2026 19:24:42.105] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/demonslayer:infinity_castle
+[02Nov2026 19:24:42.105] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_end
+[02Nov2026 19:24:42.106] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_nether
+[02Nov2026 19:25:05.400] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set the time to 14770]
+[02Nov2026 19:25:05.410] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set the time to 14770
+[02Nov2026 19:25:35.149] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Ender the Omen-Born'/553, l='ServerLevel[Mission]', x=381.53, y=151.00, z=280.17] died: Ender the Omen-Born was slain by Yui Hoshino
+[02Nov2026 19:25:48.146] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Takeshi the Comic'/691, l='ServerLevel[Mission]', x=367.66, y=148.00, z=314.67] died: Takeshi the Comic was slain by Shinji Arai
+[02Nov2026 19:25:53.648] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Courier the Withered Pine'/619, l='ServerLevel[Mission]', x=356.47, y=140.00, z=303.13] died: Courier the Withered Pine was slain by Chiyo Nakai
+[02Nov2026 19:25:59.996] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Barney Bartholomew the First'/813, l='ServerLevel[Mission]', x=400.95, y=163.00, z=281.75] died: Barney Bartholomew the First was slain by Genya Shinazugawa
+[02Nov2026 19:26:03.397] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Talion the Silent Sparrow'/827, l='ServerLevel[Mission]', x=400.52, y=163.00, z=282.50] died: Talion the Silent Sparrow was slain by Genya Shinazugawa
+[02Nov2026 19:26:06.446] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Masaru of Oda's Ashes'/833, l='ServerLevel[Mission]', x=402.70, y=163.36, z=283.31] died: Masaru of Oda's Ashes was slain by Genya Shinazugawa
+[02Nov2026 19:26:06.449] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Atlas the Blade of Outer Heaven'/877, l='ServerLevel[Mission]', x=358.31, y=142.00, z=286.31] died: Atlas the Blade of Outer Heaven was killed by magic
+[02Nov2026 19:26:07.448] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Steve the Giraffe'/881, l='ServerLevel[Mission]', x=431.50, y=140.42, z=212.30] died: Steve the Giraffe was killed by magic
+[02Nov2026 19:26:07.949] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Shinobi of the Shura Path'/880, l='ServerLevel[Mission]', x=454.26, y=139.00, z=229.55] died: Shinobi of the Shura Path was killed by magic
+[02Nov2026 19:26:08.597] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Shou the Last of Sekigahara'/843, l='ServerLevel[Mission]', x=401.86, y=163.00, z=282.07] died: Shou the Last of Sekigahara was slain by Genya Shinazugawa
+[02Nov2026 19:26:09.946] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Goku the Ink and Iron'/835, l='ServerLevel[Mission]', x=402.70, y=163.00, z=283.44] died: Goku the Ink and Iron was slain by Genya Shinazugawa
+[02Nov2026 19:26:11.451] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['PBody the Blockborn'/841, l='ServerLevel[Mission]', x=401.21, y=164.00, z=285.63] died: PBody the Blockborn was slain by Cicero the Last Oracle
+[02Nov2026 19:26:11.769] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Belphegor the Amber Oni'/946, l='ServerLevel[Mission]', x=400.12, y=164.07, z=284.66] died: Belphegor the Amber Oni was slain by Shinobi of the End Sky
+[02Nov2026 19:26:12.151] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Cicero the Last Oracle'/942, l='ServerLevel[Mission]', x=401.04, y=164.84, z=285.32] died: Cicero the Last Oracle was slain by Mettaton the Blockborn
+[02Nov2026 19:26:12.301] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Steve the Amber Oni'/940, l='ServerLevel[Mission]', x=399.80, y=164.02, z=285.37] died: Steve the Amber Oni was slain by Wheatley the Ink and Iron
+[02Nov2026 19:26:12.302] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kaede the Devil of Famine'/912, l='ServerLevel[Mission]', x=399.94, y=163.78, z=284.70] died: Kaede the Devil of Famine was slain by Shinobi of the End Sky
+[02Nov2026 19:26:12.302] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Wheatley the Ink and Iron'/950, l='ServerLevel[Mission]', x=401.03, y=163.87, z=284.70] died: Wheatley the Ink and Iron was slain by Shinobi of the End Sky
+[02Nov2026 19:26:12.303] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Minoru Bartholomew the Last'/968, l='ServerLevel[Mission]', x=401.66, y=164.70, z=285.81] died: Minoru Bartholomew the Last was slain by Shinobi of the End Sky
+[02Nov2026 19:26:12.303] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Technoblade the Les Enfants Terribles'/820, l='ServerLevel[Mission]', x=400.01, y=163.95, z=284.64] died: Technoblade the Les Enfants Terribles was slain by Shinobi of the End Sky
+[02Nov2026 19:26:12.303] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Mettaton the Blockborn'/948, l='ServerLevel[Mission]', x=400.22, y=163.97, z=284.70] died: Mettaton the Blockborn was slain by Shinobi of the End Sky
+[02Nov2026 19:26:12.303] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Genji of Silent Tatami'/824, l='ServerLevel[Mission]', x=400.15, y=164.00, z=285.53] died: Genji of Silent Tatami was slain by Shinobi of the End Sky
+[02Nov2026 19:26:12.858] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Takumi of Frozen Koi'/964, l='ServerLevel[Mission]', x=400.10, y=164.09, z=284.97] died: Takumi of Frozen Koi was slain by Cicero the Last Oracle
+[02Nov2026 19:26:12.859] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Minos of Falling Sakura'/932, l='ServerLevel[Mission]', x=400.03, y=163.15, z=284.70] died: Minos of Falling Sakura was slain by Cicero the Last Oracle
+[02Nov2026 19:26:12.995] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Tesshu the Bone Lacquer Guard'/991, l='ServerLevel[Mission]', x=440.28, y=164.00, z=346.72] died: Tesshu the Bone Lacquer Guard was slain by Ryota Kudo
+[02Nov2026 19:26:13.358] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Ayame the Bamboo Duelist'/917, l='ServerLevel[Mission]', x=399.94, y=163.00, z=284.58] died: Ayame the Bamboo Duelist was killed by magic whilst trying to escape Shinobi of the End Sky
+[02Nov2026 19:26:13.453] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Libitina of Stone Lanterns'/898, l='ServerLevel[Mission]', x=400.07, y=163.06, z=284.70] died: Libitina of Stone Lanterns was killed by magic whilst trying to escape Shinobi of the End Sky
+[02Nov2026 19:26:13.900] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Gael the Unstoppable'/904, l='ServerLevel[Mission]', x=371.38, y=132.54, z=223.34] died: Gael the Unstoppable was killed by magic
+[02Nov2026 19:26:14.497] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Valentine of Shattered Shuriken'/970, l='ServerLevel[Mission]', x=399.59, y=164.00, z=285.40] died: Valentine of Shattered Shuriken was slain by Shinobi of the End Sky
+[02Nov2026 19:26:15.298] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Jubei of the Bleeding Torii'/1001, l='ServerLevel[Mission]', x=412.45, y=160.00, z=352.55] died: Jubei of the Bleeding Torii was slain by Tanjiro Kamado
+[02Nov2026 19:26:15.600] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kleiner the Shrine's Last Warden'/995, l='ServerLevel[Mission]', x=337.07, y=135.00, z=269.64] died: Kleiner the Shrine's Last Warden was killed by magic
+[02Nov2026 19:26:16.248] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Mettaton the Harbinger of Grief'/990, l='ServerLevel[Mission]', x=354.43, y=149.00, z=281.54] died: Mettaton the Harbinger of Grief was killed by magic
+[02Nov2026 19:26:16.448] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kunai of Thunder Drums'/980, l='ServerLevel[Mission]', x=373.58, y=146.00, z=231.48] died: Kunai of Thunder Drums was killed by magic
+[02Nov2026 19:26:16.449] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Shinigami the Blood Oath Keeper'/982, l='ServerLevel[Mission]', x=404.78, y=137.00, z=210.91] died: Shinigami the Blood Oath Keeper was killed by magic
+[02Nov2026 19:26:16.495] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Shinobi of the End Sky'/956, l='ServerLevel[Mission]', x=400.75, y=164.00, z=285.90] died: Shinobi of the End Sky was slain by Genya Shinazugawa
+[02Nov2026 19:26:17.850] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Lust of the Forty-Seven'/1077, l='ServerLevel[Mission]', x=394.50, y=143.00, z=242.00] died: Lust of the Forty-Seven was killed by magic
+[02Nov2026 19:26:18.351] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Abaddon of Burning Rebellion'/1046, l='ServerLevel[Mission]', x=346.00, y=150.00, z=293.00] died: Abaddon of Burning Rebellion was killed by magic
+[02Nov2026 19:26:18.754] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Maliketh of the Rotted Bridge'/979, l='ServerLevel[Mission]', x=455.70, y=164.00, z=317.70] died: Maliketh of the Rotted Bridge suffocated in a wall
+[02Nov2026 19:26:18.800] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Azazel of Eight Banners'/999, l='ServerLevel[Mission]', x=440.67, y=164.00, z=319.67] died: Azazel of Eight Banners suffocated in a wall
+[02Nov2026 19:26:18.898] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kage the Last of Sekigahara'/993, l='ServerLevel[Mission]', x=360.78, y=142.00, z=302.50] died: Kage the Last of Sekigahara was slain by Shinji Arai
+[02Nov2026 19:26:19.351] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Enma of the Eight Islands'/1048, l='ServerLevel[Mission]', x=366.23, y=148.75, z=256.70] died: Enma of the Eight Islands was killed by magic
+[02Nov2026 19:26:19.749] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Yori the Serpent of Yomi'/1005, l='ServerLevel[Mission]', x=327.50, y=144.00, z=293.27] died: Yori the Serpent of Yomi was killed by magic
+[02Nov2026 19:26:19.799] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Vergil the Wretched Ascendant'/931, l='ServerLevel[Mission]', x=297.46, y=111.00, z=320.84] died: Vergil the Wretched Ascendant was killed by magic
+[02Nov2026 19:26:20.147] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Mohg the Grieving Plum'/1049, l='ServerLevel[Mission]', x=447.97, y=143.00, z=235.10] died: Mohg the Grieving Plum was killed by magic
+[02Nov2026 19:26:20.851] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Buu of the Cursed Harvest'/1047, l='ServerLevel[Mission]', x=335.70, y=141.00, z=262.25] died: Buu of the Cursed Harvest was killed by magic
+[02Nov2026 19:26:20.852] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Raiden of the Bleeding Torii'/1050, l='ServerLevel[Mission]', x=337.55, y=144.00, z=312.12] died: Raiden of the Bleeding Torii was killed by magic
+[02Nov2026 19:26:21.300] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Gordon the Fox Spirit'/1006, l='ServerLevel[Mission]', x=406.70, y=164.00, z=332.70] died: Gordon the Fox Spirit suffocated in a wall
+[02Nov2026 19:26:21.397] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kotaro the Conqueror'/1000, l='ServerLevel[Mission]', x=448.40, y=169.92, z=329.51] died: Kotaro the Conqueror was slain by Inosuke Hashibira
+[02Nov2026 19:26:21.699] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Ren of Burning Rebellion'/1003, l='ServerLevel[Mission]', x=356.49, y=146.75, z=252.70] died: Ren of Burning Rebellion was killed by magic
+[02Nov2026 19:26:21.846] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Ender of the Sengoku Wastes'/992, l='ServerLevel[Mission]', x=386.50, y=160.00, z=336.92] died: Ender of the Sengoku Wastes was slain by Sayo Kanda
+[02Nov2026 19:26:22.847] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Shigeru of Wailing Depths'/1004, l='ServerLevel[Mission]', x=445.74, y=172.92, z=327.42] died: Shigeru of Wailing Depths was slain by Takumi Sano
+[02Nov2026 19:26:23.497] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kazuya of the Blood-Red Mon'/1101, l='ServerLevel[Mission]', x=399.31, y=164.00, z=279.75] died: Kazuya of the Blood-Red Mon was slain by Kojiro the Tester
+[02Nov2026 19:26:23.500] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Yuuji of Whispering Steps'/974, l='ServerLevel[Mission]', x=445.70, y=164.00, z=279.70] died: Yuuji of Whispering Steps suffocated in a wall
+[02Nov2026 19:26:23.648] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Toriel the Harbinger of Grief'/1115, l='ServerLevel[Mission]', x=413.50, y=141.00, z=210.29] died: Toriel the Harbinger of Grief was killed by magic
+[02Nov2026 19:26:26.047] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Genji the Lad'/905, l='ServerLevel[Mission]', x=378.50, y=160.00, z=324.90] died: Genji the Lad was slain by Sayo Kanda
+[02Nov2026 19:26:26.256] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Monty the Jade Spear'/983, l='ServerLevel[Mission]', x=456.62, y=164.00, z=314.62] died: Monty the Jade Spear suffocated in a wall
+[02Nov2026 19:26:27.496] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kojiro the Tester'/1099, l='ServerLevel[Mission]', x=398.67, y=163.00, z=281.67] died: Kojiro the Tester was slain by Genya Shinazugawa
+[02Nov2026 19:26:31.000] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['V1 the Steel Ronin'/975, l='ServerLevel[Mission]', x=389.62, y=164.00, z=328.62] died: V1 the Steel Ronin suffocated in a wall
+[02Nov2026 19:26:31.796] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Nagato the Undying'/1122, l='ServerLevel[Mission]', x=367.42, y=145.40, z=295.74] died: Nagato the Undying was slain by Shinji Arai
+[02Nov2026 19:26:35.447] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Blaze the Son of Sparda'/1132, l='ServerLevel[Mission]', x=362.48, y=140.00, z=292.03] died: Blaze the Son of Sparda was slain by Shinji Arai
+[02Nov2026 19:26:39.205] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity StoryNpcEntity['Genya Shinazugawa'/105, l='ServerLevel[Mission]', x=400.88, y=163.00, z=283.93] died: Genya Shinazugawa was slain by Kokushibo the First Moon
+[02Nov2026 19:26:41.798] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Shinpachi of Izumo's Shadow'/997, l='ServerLevel[Mission]', x=439.61, y=164.00, z=273.61] died: Shinpachi of Izumo's Shadow suffocated in a wall
+[02Nov2026 19:27:10.668] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] entity.demonslayer.crow was slain by Dev
+[02Nov2026 19:27:20.499] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Chara the Blade of Dawn'/994, l='ServerLevel[Mission]', x=422.32, y=167.00, z=274.96] died: Chara the Blade of Dawn was slain by Chiyo Nakai
+[02Nov2026 19:27:30.400] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity StoryNpcEntity['Chiyo Nakai'/85, l='ServerLevel[Mission]', x=420.82, y=170.00, z=280.35] died: Chiyo Nakai was slain by Captive Demon
+[02Nov2026 19:28:56.252] [Server thread/INFO] [net.minecraft.world.entity.LivingEntity/]: Named entity NemesisDemonEntity['Kokushibo the First Moon'/1140, l='ServerLevel[Mission]', x=400.34, y=161.00, z=283.91] died: Kokushibo the First Moon was slain by entity.demonslayer.kanae_kocho
+[02Nov2026 19:29:12.720] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev has made the advancement [Stone Age]
+[02Nov2026 19:29:12.738] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Dev has made the advancement [Stone Age]
+[02Nov2026 19:29:12.778] [Render thread/INFO] [net.minecraft.advancements.AdvancementList/]: Loaded 62 advancements
+[02Nov2026 19:29:15.478] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] This form hasn't been unlocked yet.
+[02Nov2026 19:29:19.567] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] This form hasn't been unlocked yet.
+[02Nov2026 19:29:25.363] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set own game mode to Spectator Mode]
+[02Nov2026 19:29:25.363] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set own game mode to Spectator Mode
+[02Nov2026 19:29:30.626] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: [Dev: Set own game mode to Creative Mode]
+[02Nov2026 19:29:30.627] [Render thread/INFO] [net.minecraft.client.gui.components.ChatComponent/]: [System] [CHAT] Set own game mode to Creative Mode
+[02Nov2026 19:29:38.442] [Server thread/INFO] [net.minecraft.client.server.IntegratedServer/]: Saving and pausing game...
+[02Nov2026 19:29:38.447] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:overworld
+[02Nov2026 19:29:38.457] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/demonslayer:infinity_castle
+[02Nov2026 19:29:38.458] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_end
+[02Nov2026 19:29:38.459] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_nether
+[02Nov2026 19:29:40.306] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Dev lost connection: Disconnected
+[02Nov2026 19:29:40.306] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Dev left the game
+[02Nov2026 19:29:40.330] [Server thread/INFO] [net.minecraft.server.network.ServerGamePacketListenerImpl/]: Stopping singleplayer server as player logged out
+[02Nov2026 19:29:40.342] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Stopping server
+[02Nov2026 19:29:40.342] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving players
+[02Nov2026 19:29:40.342] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving worlds
+[02Nov2026 19:29:41.806] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:overworld
+[02Nov2026 19:29:47.598] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/demonslayer:infinity_castle
+[02Nov2026 19:29:47.600] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_end
+[02Nov2026 19:29:47.601] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: Saving chunks for level 'ServerLevel[Mission]'/minecraft:the_nether
+[02Nov2026 19:29:47.614] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (Mission): All chunks are saved
+[02Nov2026 19:29:47.614] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (infinity_castle): All chunks are saved
+[02Nov2026 19:29:47.614] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[02Nov2026 19:29:47.614] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[02Nov2026 19:29:47.614] [Server thread/INFO] [net.minecraft.server.MinecraftServer/]: ThreadedAnvilChunkStorage: All dimensions are saved
+[02Nov2026 19:30:10.733] [Render thread/INFO] [net.minecraft.client.Minecraft/]: Stopping!

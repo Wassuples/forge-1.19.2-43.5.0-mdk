@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.ActiveFormManager;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -34,6 +37,7 @@ public class AirTypeForm extends TimedForm {
     private final Vec3 direction;
     private Vec3 currentPos;
     private final List<UUID> hitEntities = new ArrayList<>();
+    private AkazaArtEntity art;
 
     public AirTypeForm(LivingEntity user, IForm form) {
         // The duration is calculated based on how long it takes to travel the max range
@@ -46,6 +50,10 @@ public class AirTypeForm extends TimedForm {
     public void onStart() {
         // Play a sharp, punchy sound effect
         level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_ATTACK_STRONG, SoundSource.PLAYERS, 0.8f, 1.5f);
+        // The flying fist of air (replaces the sonic-boom particle per tick).
+        this.art = new AkazaArtEntity(level, user, AkazaArtEntity.Mode.AIR, (int) (MAX_RANGE / TRAVEL_SPEED) + 10, this.currentPos, this.direction);
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.AKAZA_PUNCH);
     }
 
     @Override
@@ -53,7 +61,6 @@ public class AirTypeForm extends TimedForm {
         super.onTick();
         this.currentPos = this.currentPos.add(this.direction.scale(TRAVEL_SPEED));
 
-        level.sendParticles(ParticleTypes.SONIC_BOOM, this.currentPos.x, this.currentPos.y, this.currentPos.z, 1, 0, 0, 0, 0);
 
         AABB hitBox = new AABB(this.currentPos, this.currentPos).inflate(HITBOX_SIZE);
         List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, hitBox,
@@ -71,11 +78,13 @@ public class AirTypeForm extends TimedForm {
             }
 
             level.playSound(null, this.currentPos.x, this.currentPos.y, this.currentPos.z, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.0f, 1.2f);
+            if (art != null) art.impact(this.currentPos, 10);
             ActiveFormManager.stop(user);
             return;
         }
 
         if (!level.getBlockState(new BlockPos(this.currentPos)).isAir()) {
+            if (art != null) art.impact(this.currentPos, 10);
             ActiveFormManager.stop(user);
         }
     }

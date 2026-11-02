@@ -1,6 +1,14 @@
 package com.wassuples.demonslayer.forms.demon.toon;
 
 import com.wassuples.demonslayer.entity.custom.ToonAnvilEntity;
+import com.wassuples.demonslayer.entity.custom.ToonSlotMachineEntity;
+import com.wassuples.demonslayer.util.ToonSfx;
+import com.wassuples.demonslayer.util.ToonPocketOutcome;
+import com.wassuples.demonslayer.entity.custom.ToonBananaPeelEntity;
+import com.wassuples.demonslayer.entity.custom.ToonPieEntity;
+import com.wassuples.demonslayer.sound.ModSounds;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import com.wassuples.demonslayer.demon.PlayerDemonProvider;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -8,8 +16,6 @@ import com.wassuples.demonslayer.util.CombatHelper;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ModUtils;
 import com.wassuples.demonslayer.util.ToonForceHelper;
-import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.networking.packet.ToonPocketS2CPacket;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.particles.ItemParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
@@ -29,12 +35,6 @@ public class PocketForm extends TimedForm {
     private static final float FISH_DAMAGE = 1.0f;
     private static final int RESOLVE_TICK = 32;
     private static final int TOTAL_TICKS = 40;
-    private static final String[] SLOT_FRAMES = {
-            "[ 7 | HAMMER | COD ]",
-            "[ BOMB | ? | COOKIE ]",
-            "[ COD | 7 | HAMMER ]",
-            "[ COOKIE | BOMB | ? ]"
-    };
     private int roll = -1;
     private boolean resolved;
 
@@ -47,11 +47,9 @@ public class PocketForm extends TimedForm {
         super.onStart();
         if (!level.isClientSide) {
             FormAnimations.play(user, FormAnimations.TOON_POCKET);
-            this.roll = level.random.nextInt(4);
-            if (user instanceof net.minecraft.server.level.ServerPlayer player) {
-                ModMessages.sendToPlayer(new ToonPocketS2CPacket(TOTAL_TICKS, this.roll), player);
-            }
-            showSlotFrame("[ ? | ? | ? ]", ChatFormatting.GOLD, 12);
+            this.roll = level.random.nextInt(ToonPocketOutcome.count());
+            // The slot machine is a world object now, so the caster AND their targets watch it spin.
+            level.addFreshEntity(new ToonSlotMachineEntity(level, user, this.roll, RESOLVE_TICK, TOTAL_TICKS + 12));
             level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_BASEDRUM, SoundSource.PLAYERS, 0.8f, 1.6f);
         }
     }
@@ -63,43 +61,43 @@ public class PocketForm extends TimedForm {
             return;
         }
 
-        if (ticksActive > 0 && ticksActive < RESOLVE_TICK && ticksActive % 5 == 0) {
-            String frame = SLOT_FRAMES[(ticksActive / 5 + level.random.nextInt(SLOT_FRAMES.length)) % SLOT_FRAMES.length];
-            showSlotFrame(frame, ChatFormatting.YELLOW, 10);
-            level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_HAT, SoundSource.PLAYERS, 0.45f, 1.2f + ticksActive * 0.025f);
+        if (ticksActive > 0 && ticksActive < RESOLVE_TICK && ticksActive % 3 == 0) {
+            // reel clicks, slowing down as the reels stop (they stop at RESOLVE_TICK-12, -6 and 0)
+            if (ticksActive < RESOLVE_TICK - 12 || ticksActive % 6 == 0) {
+                level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_HAT, SoundSource.PLAYERS, 0.45f, 1.2f + ticksActive * 0.025f);
+            }
+            if (ticksActive % 6 == 0) {
+                sparkle();
+            }
+        }
+        if (ticksActive == RESOLVE_TICK - 12 || ticksActive == RESOLVE_TICK - 6) {
+            level.playSound(null, user.blockPosition(), SoundEvents.NOTE_BLOCK_BASEDRUM, SoundSource.PLAYERS, 0.7f, 1.4f);
         }
 
         if (ticksActive >= RESOLVE_TICK) {
             resolved = true;
-            showSlotFrame(resultFrame(), ChatFormatting.GREEN, 26);
+            sparkle();
             level.playSound(null, user.blockPosition(), SoundEvents.PLAYER_LEVELUP, SoundSource.PLAYERS, 0.75f, 1.7f);
-            switch (roll) {
-                case 0 -> mallet();
-                case 1 -> hotPotato();
-                case 2 -> fortuneCookie();
-                default -> fish();
+            switch (ToonPocketOutcome.byIndex(roll)) {
+                case MALLET -> mallet();
+                case HOT_POTATO -> hotPotato();
+                case FORTUNE_COOKIE -> fortuneCookie();
+                case FISH -> fish();
+                case SPRING_GLOVE -> springGlove();
+                case MAGNET -> magnet();
+                case RUBBER_CHICKEN -> rubberChicken();
+                case RAIN_CLOUD -> rainCloud();
+                case CREAM_PIE -> creamPie();
+                case BANANA_BUNCH -> bananaBunch();
+                case CUCKOO_CLOCK -> cuckooClock();
+                case SPRING_SHOES -> springShoes();
             }
         }
     }
 
-    private void showSlotFrame(String text, ChatFormatting color, int durationTicks) {
-        Vec3 pos = slotMachinePos();
-        ToonForceHelper.spawnToonText(level, pos, Component.literal(text).withStyle(color), durationTicks);
-        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y - 0.2, pos.z, 10, 0.35, 0.2, 0.35, 0.02);
-    }
-
-    private Vec3 slotMachinePos() {
-        Vec3 look = user.getLookAngle().normalize();
-        return user.getEyePosition().add(look.scale(1.65)).add(0, 0.35, 0);
-    }
-
-    private String resultFrame() {
-        return switch (roll) {
-            case 0 -> "[ HAMMER | HAMMER | HAMMER ]";
-            case 1 -> "[ BOMB | BOMB | BOMB ]";
-            case 2 -> "[ COOKIE | COOKIE | COOKIE ]";
-            default -> "[ COD | COD | COD ]";
-        };
+    private void sparkle() {
+        Vec3 pos = ToonSlotMachineEntity.anchorFor(user);
+        level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pos.x, pos.y - 0.2, pos.z, 10, 0.45, 0.25, 0.45, 0.02);
     }
 
     private void mallet() {
@@ -231,8 +229,142 @@ public class PocketForm extends TimedForm {
     }
 
     private void showVictimResult(LivingEntity target, int result) {
-        if (target instanceof net.minecraft.server.level.ServerPlayer player) {
-            ModMessages.sendToPlayer(new ToonPocketS2CPacket(18, result), player);
+        // Victims already watched the in-world slot machine; give the result a punchy word over their head.
+        ToonSfx.Kind kind = switch (result) {
+            case 0 -> ToonSfx.Kind.HAMMER;
+            case 1 -> ToonSfx.Kind.TICK;
+            default -> ToonSfx.Kind.FISH;
+        };
+        ToonSfx.spawn(level, target.position().add(0, target.getBbHeight() + 0.9, 0), kind, 0.8f);
+    }
+
+    // ------------------------------------------------------------------ extra gadgets
+
+    /** "Whiff" feedback when a targeted gadget has nobody to hit. */
+    private void whiff(String text) {
+        Vec3 show = user.getEyePosition().add(user.getLookAngle().scale(1.6));
+        ToonSfx.spawn(level, show, ToonSfx.Kind.CUSTOM, text, -1, 20, 0.9f);
+        level.sendParticles(ParticleTypes.POOF, show.x, show.y, show.z, 8, 0.2, 0.2, 0.2, 0.02);
+    }
+
+    /** Boxing glove on a spring: one huge punch that sends the target flying. */
+    private void springGlove() {
+        LivingEntity target = CombatHelper.getLookedAtEntity(user, 7.0);
+        if (target == null) {
+            whiff("BOING?");
+            return;
         }
+        Vec3 push = target.position().subtract(user.position()).multiply(1.0, 0.0, 1.0);
+        push = push.lengthSqr() < 1.0E-4 ? user.getLookAngle() : push.normalize();
+        target.hurt(CombatHelper.getDamageSource(user), CombatHelper.calculateFinalDamage(user, 5.0f));
+        target.setDeltaMovement(push.scale(2.2).add(0, 0.55, 0));
+        target.hurtMarked = true;
+        ToonForceHelper.tryApplyDizzy(target, user, 0.5f);
+        FormAnimations.play(target, FormAnimations.TOON_BONKED);
+        ToonSfx.spawn(level, target.getEyePosition().add(0, 0.5, 0), ToonSfx.Kind.POW, 1.2f);
+        level.sendParticles(ParticleTypes.EXPLOSION, target.getX(), target.getEyeY(), target.getZ(), 1, 0, 0, 0, 0);
+        level.playSound(null, user.blockPosition(), SoundEvents.PISTON_EXTEND, SoundSource.PLAYERS, 1.0f, 1.3f);
+        level.playSound(null, target.blockPosition(), ModSounds.TOON_BONK.get(), SoundSource.PLAYERS, 1.0f, 0.8f);
+    }
+
+    /** Giant horseshoe magnet: yanks every nearby enemy toward the caster. */
+    private void magnet() {
+        List<LivingEntity> pulled = level.getEntitiesOfClass(LivingEntity.class, user.getBoundingBox().inflate(10.0),
+                e -> e != user && e.isAlive() && !e.isSpectator());
+        Vec3 pos = user.getEyePosition().add(user.getLookAngle().scale(1.2));
+        ToonSfx.spawn(level, pos.add(0, 0.6, 0), ToonSfx.Kind.THWOOMP);
+        level.playSound(null, user.blockPosition(), SoundEvents.IRON_GOLEM_ATTACK, SoundSource.PLAYERS, 1.0f, 0.6f);
+        for (LivingEntity e : pulled) {
+            Vec3 toUser = user.position().subtract(e.position());
+            double dist = Math.max(1.0, toUser.length());
+            e.setDeltaMovement(toUser.normalize().scale(Math.min(1.6, 0.35 * dist)).add(0, 0.25, 0));
+            e.hurtMarked = true;
+            level.sendParticles(ParticleTypes.ELECTRIC_SPARK, e.getX(), e.getY() + e.getBbHeight() * 0.5, e.getZ(),
+                    6, 0.2, 0.3, 0.2, 0.05);
+        }
+        if (pulled.isEmpty()) {
+            whiff("CLANK?");
+        }
+    }
+
+    /** Rubber chicken slap: barely hurts, hugely humiliating. */
+    private void rubberChicken() {
+        LivingEntity target = CombatHelper.getLookedAtEntity(user, 4.5);
+        if (target == null) {
+            whiff("BAWK?");
+            return;
+        }
+        target.hurt(CombatHelper.getDamageSource(user), CombatHelper.calculateFinalDamage(user, 2.0f));
+        Vec3 push = user.getLookAngle().multiply(1.0, 0.0, 1.0).normalize();
+        target.setDeltaMovement(push.scale(0.9).add(0, 0.35, 0));
+        target.hurtMarked = true;
+        ToonForceHelper.tryApplyDizzy(target, user, 0.35f);
+        ToonForceHelper.recordHumiliation(user, target, "rubber_chicken");
+        FormAnimations.play(target, FormAnimations.TOON_BONKED);
+        ToonSfx.spawn(level, target.getEyePosition().add(0, 0.6, 0), ToonSfx.Kind.BAWK, 1.1f);
+        level.sendParticles(new ItemParticleOption(ParticleTypes.ITEM, new ItemStack(Items.FEATHER)),
+                target.getX(), target.getEyeY(), target.getZ(), 20, 0.3, 0.3, 0.3, 0.08);
+        level.playSound(null, target.blockPosition(), SoundEvents.CHICKEN_HURT, SoundSource.PLAYERS, 1.2f, 0.6f);
+    }
+
+    /** A personal rain cloud over the target (or over the caster, if nobody is there: it's that kind of day). */
+    private void rainCloud() {
+        LivingEntity target = CombatHelper.getLookedAtEntity(user, 12.0);
+        LivingEntity victim = target != null ? target : user;
+        ToonForceHelper.applyRainCloud(victim, 120);
+        ToonSfx.spawn(level, victim.position().add(0, victim.getBbHeight() + 1.5, 0), ToonSfx.Kind.CUSTOM,
+                target != null ? "DRIZZLE!" : "UH OH...", -1, 26, 1.0f);
+        level.playSound(null, victim.blockPosition(), SoundEvents.WEATHER_RAIN_ABOVE, SoundSource.PLAYERS, 1.0f, 1.4f);
+    }
+
+    /** Pulls out a cream pie and throws it (same visible pie as Pie Splat). */
+    private void creamPie() {
+        LivingEntity target = CombatHelper.getLookedAtEntity(user, 10.0);
+        if (target == null) {
+            whiff("SPLAT?");
+            return;
+        }
+        level.addFreshEntity(new ToonPieEntity(level, user, target));
+        FormAnimations.play(user, FormAnimations.TOON_PIE_SPLAT);
+        level.playSound(null, user.blockPosition(), SoundEvents.SNOWBALL_THROW, SoundSource.PLAYERS, 0.9f, 0.8f);
+    }
+
+    /** Scatters a ring of banana peels. Careful where you step afterwards. */
+    private void bananaBunch() {
+        int count = 6;
+        for (int i = 0; i < count; i++) {
+            double angle = Math.PI * 2.0 * i / count + level.random.nextDouble() * 0.4;
+            ToonBananaPeelEntity peel = new ToonBananaPeelEntity(level, user);
+            peel.setPos(user.getX(), user.getY() + 1.2, user.getZ());
+            peel.setDeltaMovement(Math.cos(angle) * 0.45, 0.35, Math.sin(angle) * 0.45);
+            level.addFreshEntity(peel);
+        }
+        ToonSfx.spawn(level, user.getEyePosition().add(0, 0.6, 0), ToonSfx.Kind.YEET);
+        level.playSound(null, user.blockPosition(), SoundEvents.SLIME_JUMP, SoundSource.PLAYERS, 0.8f, 1.6f);
+    }
+
+    /** Cuckoo clock: the target's head gets the birds. No target? Guess whose head. */
+    private void cuckooClock() {
+        LivingEntity target = CombatHelper.getLookedAtEntity(user, 8.0);
+        LivingEntity victim = target != null ? target : user;
+        ToonForceHelper.spawnDizzyBirds(level, victim, 100);
+        victim.addEffect(new MobEffectInstance(MobEffects.CONFUSION, 100, 0, true, false, true));
+        victim.addEffect(new MobEffectInstance(MobEffects.MOVEMENT_SLOWDOWN, 60, 1, true, false, false));
+        ToonSfx.spawn(level, victim.position().add(0, victim.getBbHeight() + 0.9, 0), ToonSfx.Kind.CUCKOO);
+        level.playSound(null, victim.blockPosition(), SoundEvents.NOTE_BLOCK_FLUTE, SoundSource.PLAYERS, 1.0f, 1.8f);
+        level.playSound(null, victim.blockPosition(), SoundEvents.NOTE_BLOCK_FLUTE, SoundSource.PLAYERS, 1.0f, 1.4f);
+    }
+
+    /** Spring shoes: a huge cartoon bounce forward, landing safely. */
+    private void springShoes() {
+        Vec3 look = user.getLookAngle().multiply(1.0, 0.0, 1.0);
+        look = look.lengthSqr() < 1.0E-4 ? Vec3.ZERO : look.normalize();
+        user.setDeltaMovement(look.scale(0.9).add(0, 1.45, 0));
+        user.hurtMarked = true;
+        user.fallDistance = 0.0f;
+        ToonForceHelper.grantSafeLanding(user, 20 * 10);
+        ToonSfx.spawn(level, user.position().add(0, 0.3, 0), ToonSfx.Kind.BOING, 1.2f);
+        level.sendParticles(ParticleTypes.ITEM_SLIME, user.getX(), user.getY() + 0.1, user.getZ(), 20, 0.4, 0.05, 0.4, 0.15);
+        level.playSound(null, user.blockPosition(), ModSounds.TOON_BOING.get(), SoundSource.PLAYERS, 1.0f, 0.7f);
     }
 }

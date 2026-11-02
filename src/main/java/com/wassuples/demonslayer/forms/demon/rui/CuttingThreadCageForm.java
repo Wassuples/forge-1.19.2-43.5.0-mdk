@@ -8,20 +8,20 @@ import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.HitResult;
 import net.minecraft.world.phys.Vec3;
 
 import static com.wassuples.demonslayer.util.CombatHelper.getLookedAtEntity;
 
 /**
- * Rui Blood Demon Art form: Cutting Thread Cage.
+ * Rui Blood Demon Art form: Cutting Thread Cage. Throws a dome of threads around the looked-at target (or
+ * the looked-at spot), which traps and contracts. All behaviour lives in {@link CuttingThreadCageEntity}.
  *
  * @see com.wassuples.demonslayer.styles.DemonForms
- * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
  */
 public class CuttingThreadCageForm extends TimedForm {
-    private static final int DURATION = 5; // A very short form, as the cage does the work
+    private static final int DURATION = 5;
+    private static final double RANGE = 16.0;
 
     public CuttingThreadCageForm(LivingEntity user, IForm form) {
         super(user, form, DURATION);
@@ -30,33 +30,34 @@ public class CuttingThreadCageForm extends TimedForm {
     @Override
     public void onStart() {
         Vec3 targetPos = null;
-        LivingEntity lookedAtEntity = getLookedAtEntity(user, 16.0D);
-
+        LivingEntity lookedAtEntity = getLookedAtEntity(user, RANGE);
         if (lookedAtEntity != null) {
             targetPos = lookedAtEntity.position();
         } else {
-            BlockHitResult hitResult = (BlockHitResult) user.pick(16.0D, 0, false);
-            if (hitResult.getType() != HitResult.Type.MISS) {
-                targetPos = hitResult.getLocation();
+            HitResult hit = user.pick(RANGE, 0, false);
+            if (hit.getType() != HitResult.Type.MISS) {
+                targetPos = hit.getLocation();
             }
         }
 
-        if (targetPos != null) {
-            user.level.playSound(null, user.blockPosition(), SoundEvents.SPIDER_AMBIENT, SoundSource.PLAYERS, 1.2F, 0.8F);
-
-            CuttingThreadCageEntity cage = ModEntityTypes.CUTTING_THREAD_CAGE.get().create(level);
-            if (cage != null) {
-                cage.setPos(targetPos);
-                cage.setOwner(user);
-                level.addFreshEntity(cage);
-            }
-        } else {
+        if (targetPos == null) {
+            level.playSound(null, user.blockPosition(), SoundEvents.TRIPWIRE_CLICK_OFF, SoundSource.PLAYERS, 0.8f, 0.6f);
             ActiveFormManager.stop(user);
+            return;
+        }
+
+        CuttingThreadCageEntity cage = ModEntityTypes.CUTTING_THREAD_CAGE.get().create(level);
+        if (cage != null) {
+            cage.setOwner(user);
+            cage.placeOnGround(targetPos);
+            level.addFreshEntity(cage);
+            level.playSound(null, cage.blockPosition(), SoundEvents.TRIPWIRE_ATTACH, SoundSource.PLAYERS, 1.2f, 1.4f);
+            level.playSound(null, user.blockPosition(), SoundEvents.SPIDER_AMBIENT, SoundSource.PLAYERS, 0.8f, 0.8f);
         }
     }
 
     @Override
     public void onTick() {
-        super.onTick(); // Handles stopping the form
+        super.onTick();
     }
 }

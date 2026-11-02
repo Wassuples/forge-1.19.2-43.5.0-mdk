@@ -34,6 +34,8 @@ public class HashiraEntity extends AbstractFormUsingEntity {
 
     public HashiraEntity(EntityType<? extends AbstractFormUsingEntity> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
+        // The blade is dropped once by ModEvents.onHashiraDeathDropSword; never drop the held copy as well.
+        this.setDropChance(net.minecraft.world.entity.EquipmentSlot.MAINHAND, 0.0F);
     }
 
     public static AttributeSupplier.Builder createAttributes() {

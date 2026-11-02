@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.ParticleTypes;
@@ -44,6 +47,8 @@ public class FreezingCloudsForm extends TimedForm {
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.5f, 1.8f);
         level.playSound(null, user.blockPosition(), SoundEvents.POWDER_SNOW_FALL, SoundSource.PLAYERS, 2.0f, 0.8f);
+        level.addFreshEntity(new DomaArtEntity(level, user, DomaArtEntity.Mode.FREEZING_CLOUDS, DURATION + 10));
+        FormAnimations.play(user, FormAnimations.DOMA_WAVE);
     }
 
     @Override
@@ -57,17 +62,7 @@ public class FreezingCloudsForm extends TimedForm {
         Vec3 cloudCenter = user.position().add(lookDir.scale(currentDistance));
         Vec3 sideDir = new Vec3(-lookDir.z, 0, lookDir.x).normalize();
 
-        for (int i = 0; i < 40; i++) {
-            double offset = (level.random.nextDouble() - 0.5) * (CLOUD_WIDTH * 2);
-            Vec3 particlePos = cloudCenter.add(sideDir.scale(offset));
-            particlePos = particlePos.add(0, (level.random.nextDouble() - 0.5) * 4.0, 0); // Add some vertical randomness
-
-            level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
-            if (i % 5 == 0) {
-                level.sendParticles(ParticleTypes.WHITE_ASH, particlePos.x, particlePos.y, particlePos.z, 1, 0, 0, 0, 0);
-            }
-        }
-
+        // The rolling wall of mist is drawn by DomaArtEntity (replaces 48 particles per tick).
         AABB hitBox = new AABB(cloudCenter, cloudCenter).inflate(CLOUD_WIDTH, 2.0, CLOUD_WIDTH);
         List<LivingEntity> potentialTargets = level.getEntitiesOfClass(LivingEntity.class, hitBox,
                 e -> e != user && e.isAlive() && !hitEntities.contains(e.getUUID()));

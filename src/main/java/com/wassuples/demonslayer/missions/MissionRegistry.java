@@ -1,71 +1,58 @@
 package com.wassuples.demonslayer.missions;
 
-import com.wassuples.demonslayer.DemonSlayer;
-import com.wassuples.demonslayer.ranking.PlayerProgressionProvider;
+import com.wassuples.demonslayer.missions.story.FinalSelectionMission;
+import com.wassuples.demonslayer.missions.story.PlannedMission;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.event.OnDatapackSyncEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
- * Global server-side registry of all available {@link Mission} instances.
- *
- * <p>Populated by {@link MissionReloadListener} from JSON datapacks on server start
- * and {@code /reload}. Synced to clients on datapack sync events.
- *
- * <p>Provides lookup by ID, filtering by rank requirement, and random mission selection.
- *
- * @see Mission
- * @see MissionReloadListener
+ * All story missions, in order. Missions are code-defined scripts (see {@link StoryMission}); the ones not built yet
+ * are registered as {@link PlannedMission} placeholders so the crow's list shows the whole story.
  */
-@Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID)
-public class MissionRegistry {
-    private static final Map<ResourceLocation, Mission> MISSIONS = new HashMap<>();
+public final class MissionRegistry {
+    private static final Map<ResourceLocation, StoryMission> MISSIONS = new LinkedHashMap<>();
 
-    static void loadAll(Collection<MissionDefinition> definitions) {
-        MISSIONS.clear();
-        definitions.stream().map(Mission::fromDefinition).forEach(mission -> MISSIONS.put(mission.id(), mission));
+    public static final ResourceLocation FINAL_SELECTION_ID = FinalSelectionMission.ID;
+
+    static {
+        register(FinalSelectionMission.INSTANCE);
+        Object[][] planned = {
+                {"kidnappers_bog", 1, Arc.II}, {"asakusa", 2, Arc.III}, {"tamayo", 3, Arc.III},
+                {"tsuzumi_mansion", 4, Arc.IV}, {"mt_natagumo", 5, Arc.V}, {"mothers_doll", 6, Arc.V},
+                {"spider_family", 7, Arc.V}, {"the_traitor", 8, Arc.V}, {"the_lower_moon", 9, Arc.VI},
+                {"mugen_train", 10, Arc.VII}, {"akaza", 11, Arc.VII}, {"entertainment_district", 12, Arc.VIII},
+                {"daki_and_gyutaro", 13, Arc.VIII}, {"swordsmith_village", 14, Arc.IX}, {"hashira_training", 15, Arc.X},
+                {"infinity_castle_summoning", 16, Arc.X}, {"shinobu_vs_doma", 17, Arc.XI}, {"zenitsu_vs_kaigaku", 18, Arc.XI},
+                {"tanjiro_giyu_vs_akaza", 19, Arc.XI}, {"kanao_inosuke_vs_doma", 20, Arc.XI}, {"mitsuri_obanai_vs_nakime", 21, Arc.XI},
+                {"slayers_vs_kokushibo", 22, Arc.XI}, {"slayers_vs_muzan", 23, Arc.XII}, {"slayers_vs_demon_tanjiro", 24, Arc.XII}
+        };
+        for (Object[] p : planned) {
+            register(new PlannedMission((String) p[0], (Integer) p[1], (Arc) p[2]));
+        }
     }
 
-    public static Mission getMission(ResourceLocation id) {
+    private MissionRegistry() {
+    }
+
+    private static void register(StoryMission mission) {
+        MISSIONS.put(mission.id(), mission);
+    }
+
+    @Nullable
+    public static StoryMission get(ResourceLocation id) {
         return MISSIONS.get(id);
     }
 
-    public static List<Mission> getAllMissions() {
-        return List.copyOf(MISSIONS.values());
-    }
-
-    @SubscribeEvent
-    public static void onDatapackSync(OnDatapackSyncEvent event) {
-        // TODO: send mission registry packets to clients
-    }
-
-    public static List<Mission> getAvailableMissionsForPlayer(ServerPlayer player) {
-        final List<Mission> availableMissions = new ArrayList<>();
-
-        player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(progression ->
-                player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(playerMissions -> {
-
-                    List<Mission> filteredMissions = MISSIONS.values().stream()
-                            .filter(mission -> {
-                                if (playerMissions.isActive(mission.id()) || playerMissions.isCompleted(mission.id())) {
-                                    return false;
-                                }
-                                if (mission.type() == MissionType.RANK_UP) {
-                                    return progression.getRank().ordinal() == mission.requirement().ordinal() - 1;
-                                }
-                                return progression.getRank().ordinal() >= mission.requirement().ordinal();
-                            })
-                            .collect(Collectors.toList());
-
-                    availableMissions.addAll(filteredMissions);
-                })
-        );
-
-        return availableMissions;
+    /** All missions ordered by number. */
+    public static List<StoryMission> getAllMissions() {
+        List<StoryMission> list = new ArrayList<>(MISSIONS.values());
+        list.sort(Comparator.comparingInt(StoryMission::number));
+        return list;
     }
 }

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:block/fence_post",
+  "textures": {
+    "texture": "demonslayer:block/wisteria_planks"
+  }
+}

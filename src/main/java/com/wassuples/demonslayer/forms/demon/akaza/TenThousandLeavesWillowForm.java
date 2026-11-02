@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.BlockParticleOption;
@@ -36,6 +39,7 @@ public class TenThousandLeavesWillowForm extends TimedForm {
     private static final float KNOCKBACK = 1.5f;
 
     private final Set<UUID> hitEntities = new HashSet<>();
+    private AkazaArtEntity art;
 
     public TenThousandLeavesWillowForm(LivingEntity user, IForm form) {
         super(user, form, DURATION);
@@ -46,6 +50,9 @@ public class TenThousandLeavesWillowForm extends TimedForm {
         applyImmobility(user, DURATION + 5);
         level.playSound(null, user.blockPosition(), SoundEvents.WITHER_BREAK_BLOCK, SoundSource.PLAYERS, 1.2f, 0.8f);
         level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_DIG, SoundSource.PLAYERS, 1.0f, 1.0f);
+        this.art = new AkazaArtEntity(level, user, AkazaArtEntity.Mode.WILLOW, DURATION + 5, user.position(), user.getLookAngle());
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.AKAZA_WILLOW);
     }
 
     @Override
@@ -83,14 +90,15 @@ public class TenThousandLeavesWillowForm extends TimedForm {
         if (groundState.isAir()) {
             groundState = Blocks.STONE.defaultBlockState();
         }
-        spawnParticleArcInWorld(level, user.position(), currentRadius, 360, 40, 0, 0, new BlockParticleOption(ParticleTypes.BLOCK, groundState));
-        if (ticksActive % 4 == 0) {
-            spawnParticleArcInWorld(level, user.position(), currentRadius, 360, 5, 0, 0, ParticleTypes.SWEEP_ATTACK);
+        // A handful of real ground debris on the wave (the ring itself is drawn by AkazaArtEntity; was 40/tick).
+        if (ticksActive % 2 == 0) {
+            spawnParticleArcInWorld(level, user.position(), currentRadius, 360, 6, 0, 0, new BlockParticleOption(ParticleTypes.BLOCK, groundState));
         }
     }
 
     @Override
     public void onStop() {
         removeImmobility(user);
+        if (art != null) art.finish(5);
     }
 }

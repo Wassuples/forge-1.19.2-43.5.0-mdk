@@ -77,6 +77,26 @@ public class ModItems {
             () -> new NichirinSwordItem(Tiers.NETHERITE, 10, 5f,
                     new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_NICHIRIN_TAB)));
 
+    /** Given to new civilians: their teacher's recommendation to the Ubuyashiki household; points to Mt. Fujikasane. */
+    public static final RegistryObject<Item> LETTER_OF_INTRODUCTION = ITEMS.register("letter_of_introduction",
+            () -> new com.wassuples.demonslayer.item.custom.LetterOfIntroductionItem(new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
+
+    /** Rolled straw mat the twins hand the candidates: rest on it by day until nightfall. */
+    public static final RegistryObject<Item> BEDROLL = ITEMS.register("bedroll",
+            () -> new com.wassuples.demonslayer.item.custom.BedrollItem(new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
+    /** A rice ball wrapped in nori: the candidates' ration on the mountain. */
+    public static final RegistryObject<Item> ONIGIRI = ITEMS.register("onigiri",
+            () -> new Item(new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)
+                    .food(new net.minecraft.world.food.FoodProperties.Builder().nutrition(6).saturationMod(0.7F).build())));
+    /** Wisteria incense: lit, demons can't bear the smoke for 30 seconds. */
+    public static final RegistryObject<Item> WISTERIA_INCENSE = ITEMS.register("wisteria_incense",
+            () -> new com.wassuples.demonslayer.item.custom.WisteriaIncenseItem(new Item.Properties().stacksTo(16).tab(ModCreativeModeTab.DEMON_SLAYER_TAB)));
+
+    /** The five ores laid out at the Final Selection ceremony; the new slayer picks one for their blade. */
+    public static final java.util.List<RegistryObject<Item>> SELECTION_ORES = java.util.stream.IntStream.range(0, 5)
+            .mapToObj(i -> ITEMS.register("selection_ore_" + i, () -> new Item(new Item.Properties().stacksTo(1).tab(ModCreativeModeTab.DEMON_SLAYER_TAB))))
+            .toList();
+
     public static final RegistryObject<Item> MUZANS_BLOOD = ITEMS.register("muzans_blood",
             () -> new MuzansBloodItem(new Item.Properties().tab(ModCreativeModeTab.DEMON_SLAYER_TAB)
                     .food(new FoodProperties.Builder().alwaysEat().effect(() -> new MobEffectInstance(MobEffects.CONFUSION, 200, 1), 1.0F).build())));

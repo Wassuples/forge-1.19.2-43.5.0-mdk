@@ -1,5 +1,7 @@
 package com.wassuples.demonslayer.forms.demon.gyokko;
 
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.KillerGoldfishEntity;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
@@ -25,6 +27,7 @@ public class ThousandNeedleFishKillForm extends ActiveForm {
 
     @Override
     public void onStart() {
+        FormAnimations.play(user, FormAnimations.GYOKKO_VASE);
         level.playSound(null, user.blockPosition(), SoundEvents.BUBBLE_COLUMN_UPWARDS_AMBIENT, SoundSource.PLAYERS, 1.0f, 1.0f);
 
         for (int i = 0; i < FISH_COUNT; i++) {

@@ -48,7 +48,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Cutting Thread Cage desc.",
+            "Rui creates a web-shaped strings that completely surrounds his opponent to cut them to pieces. The manga depicts this as a wall of spider webs, whilst the anime depicts it as a narrow structure comprised of webs which shrinks to become even thinner.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -82,7 +82,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Murderous Eye Basket desc.",
+            "Rui creates a net made out threads similar to Cat's cradle and manipulates it to manifest a spherical cage from his threads around the target, that continuously shrinks until it cuts the target to pieces.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -118,7 +118,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Cutting Thread Rotation desc.",
+            "Rui creates a rotating wheel of threads, that upon reaching the opponent will cut them to pieces.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -565,7 +565,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Weeping Spears desc.",
+            "Aizetsu (Sorrow) thrusts his cross-bladed yari, sending out a volley of long-ranged projections of the spear. They fly at high speed and pierce through several targets before stopping.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -599,7 +599,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Crazed Cry of Thunderdeath desc.",
+            "Zohakuten (Hatred) strikes a drum and two colossal wooden dragons circle the battlefield, one carrying Sekido's electricity and the other Urogi's sound waves. The sound dragon's cry slows, weakens and disorients everyone in the arena, then the thunder dragon rains lightning down on them. Crouch to stop.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -633,7 +633,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Countless Striking Trees desc.",
+            "Zohakuten (Hatred) beats his drums incessantly, and with every beat a wooden dragon tears out of the ground and slams down on a foe within a wide range. Zohakuten cannot move while drumming. Use again to stop.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -671,7 +671,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Compressed Sound Waves desc.",
+            "Zohakuten (Hatred) opens his mouth and unleashes a deafening cry compressed into a thin beam, powerful enough to knock even a Hashira unconscious. Whoever it hits is put to sleep.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1066,7 +1066,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Frozen Lotus desc.",
+            "Doma sweeps his golden fan, sending a crescent of freezing mist across a wide arc in front of him. Ice lotuses bloom wherever it passes, cutting and chilling everyone they catch.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1097,7 +1097,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Barren Hanging Garden desc.",
+            "Doma whirls with his fans open, and weeping tendrils of ice lash down and out all around him in eight quick waves, cutting, chilling and driving back everyone close by.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1129,7 +1129,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Freezing Clouds desc.",
+            "Doma waves his fans and a wide wall of his frozen, powdered blood rolls forward. Anyone who breathes it in is badly slowed and weakened.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1159,7 +1159,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Lotus Vines desc.",
+            "Ice vines snake along the ground to the target, then a garden of crystal lotuses blooms there, slowing and cutting anyone who stands in it.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1190,7 +1190,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Cold White Princesses desc.",
+            "Doma creates two small ice princesses beside him. They fight for him and breathe out freezing mist that chills and freezes everything in front of them.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1225,7 +1225,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Wintry Icicles desc.",
+            "Great icicles take shape in the air above the target and plunge down a moment later, impaling everything beneath them.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1257,7 +1257,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Scattering Lotuses desc.",
+            "With a flick of his fans Doma scatters a volley of small crystal lotuses that spin through the air like blades.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1289,7 +1289,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Crystalline Divine Child desc.",
+            "Hold to gather ice, then release to create small ice clones of Doma, one for every second held (up to six). The clones fight on their own using his techniques.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1326,7 +1326,7 @@ public enum DemonForms implements IForm {
             0,
             50,
             100,
-            "Rime — Water Lily Bodhisattva desc.",
+            "Doma creates a colossal ice Bodhisattva seated on a giant lotus and rides on its shoulder. It walks at his command, breathes torrents of freezing mist and sweeps enemies aside with its giant hand.",
             20) {
         @Override
         public void performAction(LivingEntity user, ServerLevel level) {
@@ -1519,6 +1519,12 @@ public enum DemonForms implements IForm {
     @Override public int getBreathCost() { return this.breathCost; }
     @Override public int getStyleMasteryToUnlock() { return styleMasteryToUnlock; }
     @Override public int getMasteryGoal() { return masteryGoal; }
+
+    /** Each form's own icon: {@code textures/gui/icons/demon/<form id>.png} (e.g. {@code cryo_1.png}). */
+    @Override public net.minecraft.resources.ResourceLocation getIcon() {
+        return new net.minecraft.resources.ResourceLocation(com.wassuples.demonslayer.DemonSlayer.MOD_ID,
+                "textures/gui/icons/demon/" + name().toLowerCase(java.util.Locale.ROOT) + ".png");
+    }
 
     @Override public int getCooldownTicks(LivingEntity user) {
         Rank rank = getPlayerRank(user);

@@ -25,7 +25,7 @@ This is a **Minecraft Forge 1.19.2 mod** (`demonslayer`) implementing a Demon Sl
 - **Nemesis System**: A persistent, evolving demon hierarchy (Twelve Kizuki) with named NPCs, personalities, memories, and relationships
 - **Combat Forms**: Enum-based ability system for both slayer breathing techniques and demon Blood Demon Arts
 - **Player Capabilities**: Forge capabilities for breath, style, demon state, progression, cooldowns, and crow companion
-- **Missions**: Data-driven quest system loaded from JSON
+- **Missions**: Scripted story missions (code-defined, see `docs/MISSIONS_IMPLEMENTATION.md`) following `docs/MISSIONS_SYSTEM.md`
 
 **Authors**: Wassuples, Inverted | **Version**: 0.0.9 | **Java**: 17
 
@@ -54,7 +54,7 @@ Player and combat-target state use the capability pattern. Providers in each pac
 - `ranking/` — `PlayerProgression` (slayer rank progression)
 - `cooldown/` — `PlayerCooldowns` (ability cooldown tracking)
 - `crow/` — `PlayerCrow` (crow companion state)
-- `missions/` — `PlayerMissions` (active mission tracking)
+- `missions/` — `PlayerMissions` (active story mission run, completed missions + outcomes, story flags, perks)
 - `glow/` — `GlowCapability` (entity highlight state, attached to `LivingEntity` in `ClientEvents.ForgeEventHandlers`)
 
 **Critical**: Player capabilities are attached in `ModEvents.onAttachCapabilities()`. Data persistence across death uses map-based workarounds due to PlayerAnimator conflicts — see the comment block at the top of `ModEvents.java`.
@@ -144,14 +144,17 @@ com.wassuples.demonslayer/
 ├── recipe/         — Custom recipes
 ├── styles/         — Form enums + interfaces
 ├── util/           — Helpers (CombatHelper, DemonThreatHelper, etc.)
-└── worldgen/       — Biomes, TerraBlender regions, inventories
+├── dialogue/       — NPC conversations (server-driven) and NpcDialogues routing
+├── particle/       — Mod particle types (client factories in client/particle)
+└── worldgen/       — Biomes, TerraBlender regions, structures (Mt. Fujikasane), inventories
 ```
 
 ### Entity Registration Pattern
 All entities in `entity/ModEntityTypes.java` using `DeferredRegister<EntityType<?>>`. Renderers registered in `DemonSlayer.ClientModEvents.registerEntityRenderers()`.
 
 ### Data-Driven Content
-- **Missions**: JSON in `src/main/resources/data/demonslayer/missions/`, loaded via `MissionReloadListener`
+- **Missions**: code-defined `StoryMission` scripts registered in `missions/MissionRegistry`; text in `lang/en_us.json` under `mission.demonslayer.*`
+- **Presentation rule**: NPCs talk in the world (speech bubbles) or in the dialogue screen, story messages use the mod HUD (`MissionContext.notice/banner`), effects use `ModParticles`/`ModSounds`; avoid chat, vanilla titles and vanilla particles for mod content
 - **Nemesis Blueprints**: JSON in `run/config/demonslayer/blueprints/`, loaded by `BlueprintLoader` (defaults are seeded from bundled `data/demonslayer/nemesis/blueprints` resources)
 - **Generated resources**: `src/generated/resources/` (run `./gradlew runData` to regenerate)
 

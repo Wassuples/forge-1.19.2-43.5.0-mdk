@@ -39,7 +39,8 @@ public class WisteriaPoisonEffect extends MobEffect {
                     .map(PlayerDemon::isDemon)
                     .orElse(false);
         }
-        else if (pLivingEntity instanceof DemonEntity || pLivingEntity instanceof HandDemonEntity || pLivingEntity instanceof NemesisDemonEntity) {
+        else if (pLivingEntity instanceof DemonEntity || pLivingEntity instanceof HandDemonEntity || pLivingEntity instanceof NemesisDemonEntity
+                || pLivingEntity instanceof com.wassuples.demonslayer.entity.custom.CaptiveDemonEntity) {
             isSusceptible = true;
         }
 

@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.ParticleTypes;
@@ -40,6 +43,8 @@ public class BarrenHangingGardenForm extends TimedForm {
     @Override
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.ENDER_DRAGON_FLAP, SoundSource.PLAYERS, 1.0f, 1.5f);
+        level.addFreshEntity(new DomaArtEntity(level, user, DomaArtEntity.Mode.HANGING_GARDEN, NUMBER_OF_WAVES * TICKS_BETWEEN_WAVES + 6));
+        FormAnimations.play(user, FormAnimations.DOMA_SPIN);
     }
 
     @Override
@@ -49,8 +54,7 @@ public class BarrenHangingGardenForm extends TimedForm {
         if (ticksActive > 0 && ticksActive % TICKS_BETWEEN_WAVES == 0) {
             level.playSound(null, user.blockPosition(), SoundEvents.GLASS_BREAK, SoundSource.PLAYERS, 1.0f, 1.8f);
 
-            spawnParticleArcInWorld(level, user.position(), WAVE_RADIUS, 360, 40, 0, 0, ParticleTypes.SNOWFLAKE);
-            spawnParticleArcInWorld(level, user.position(), WAVE_RADIUS, 360, 5, 0, 0, ParticleTypes.SWEEP_ATTACK);
+            // The lashing ice tendrils are drawn by DomaArtEntity (replaces 45 particles per wave).
 
             AABB effectZone = user.getBoundingBox().inflate(WAVE_RADIUS);
             List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, effectZone, e -> e != user && e.isAlive());

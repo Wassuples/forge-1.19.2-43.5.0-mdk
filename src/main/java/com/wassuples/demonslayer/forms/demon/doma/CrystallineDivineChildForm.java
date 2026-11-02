@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.CrystallineDivineChildEntity;
 import com.wassuples.demonslayer.forms.baseForms.ChargeableForm;
@@ -24,6 +27,8 @@ public class CrystallineDivineChildForm extends ChargeableForm {
     private static final int CLONE_CHARGE_TIME = 20; // 1s/clone
     private static final int MAX_CLONES = 6;
 
+    private DomaArtEntity art;
+
     public CrystallineDivineChildForm(LivingEntity user, IForm form) {
         super(user, form);
     }
@@ -41,22 +46,23 @@ public class CrystallineDivineChildForm extends ChargeableForm {
     @Override
     protected void onChargeStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.5f, 1.8f);
+        this.art = new DomaArtEntity(level, user, DomaArtEntity.Mode.CRYSTAL_CHARGE, getMaxChargeTicks() + 40);
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.DOMA_CHARGE);
     }
 
     @Override
     protected void onChargingTick() {
-        int clonesToSpawn = Math.min(chargeTicks / CLONE_CHARGE_TIME, MAX_CLONES);
-        for (int i = 0; i < clonesToSpawn; i++) {
-            double angle = (user.tickCount * 0.05) + (i * (2 * Math.PI / Math.max(1, clonesToSpawn)));
-            double radius = 2.5;
-            Vec3 offset = new Vec3(Math.cos(angle) * radius, 0.5, Math.sin(angle) * radius);
-            Vec3 particlePos = user.position().add(offset);
-            spawnIceLotusVFX(level, particlePos);
-        }
+        // The orbiting crystal lotuses (one per clone) are drawn by DomaArtEntity.
     }
 
     @Override
     protected void onChargeRelease(float chargeRatio) {
+        if (art != null) {
+            art.discard();
+            art = null;
+        }
+        FormAnimations.play(user, FormAnimations.DOMA_SUMMON);
         int clonesToSpawn = Math.min(chargeTicks / CLONE_CHARGE_TIME, MAX_CLONES);
         if (clonesToSpawn > 0) {
             level.playSound(null, user.blockPosition(), SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.5f, 1.5f);
@@ -101,5 +107,10 @@ public class CrystallineDivineChildForm extends ChargeableForm {
 
     @Override
     protected void onChargeEnd() {
+        if (art != null) {
+            art.discard();
+            art = null;
+            FormAnimations.play(user, FormAnimations.DOMA_END);
+        }
     }
 }

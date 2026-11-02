@@ -44,10 +44,9 @@ public class ToggleBdaModeC2SPacket {
 
                     // Send feedback to the player
                     if (newState) {
-                        player.sendSystemMessage(Component.literal("Blood Demon Art Activated.").withStyle(ChatFormatting.RED));
+                        // Feedback is the client-side banner (DemonBannerOverlay); no chat/action-bar message.
                         player.level.playSound(null, player.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 0.7f, 1.5f);
                     } else {
-                        player.sendSystemMessage(Component.literal("Blood Demon Art Deactivated.").withStyle(ChatFormatting.GRAY));
                         player.level.playSound(null, player.blockPosition(), SoundEvents.BEACON_DEACTIVATE, SoundSource.PLAYERS, 0.7f, 1.5f);
                     }
                 }

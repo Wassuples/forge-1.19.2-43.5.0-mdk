@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/slab_top",
+  "textures": {
+    "bottom": "demonslayer:block/kawara_tiles",
+    "side": "demonslayer:block/kawara_tiles",
+    "top": "demonslayer:block/kawara_tiles"
+  }
+}

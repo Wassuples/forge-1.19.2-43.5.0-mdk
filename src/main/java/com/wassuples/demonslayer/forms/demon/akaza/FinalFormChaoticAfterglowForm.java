@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -32,6 +35,9 @@ public class FinalFormChaoticAfterglowForm extends TimedForm {
     private static final DustParticleOptions BLUE_PARTICLE = new DustParticleOptions(new Vector3f(0.4f, 0.8f, 1.0f), 1.0f);
     private static final DustParticleOptions SILVER_PARTICLE = new DustParticleOptions(new Vector3f(0.9f, 0.9f, 0.95f), 1.0f);
 
+    private AkazaArtEntity art;
+    private boolean released = false;
+
     public FinalFormChaoticAfterglowForm(LivingEntity user, IForm form) {
         super(user, form, DURATION);
     }
@@ -42,21 +48,16 @@ public class FinalFormChaoticAfterglowForm extends TimedForm {
 
         level.playSound(null, user.blockPosition(), SoundEvents.BEACON_ACTIVATE, SoundSource.PLAYERS, 2.0f, 1.5f);
         level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_HEARTBEAT, SoundSource.PLAYERS, 1.0f, 1.0f);
+        this.art = new AkazaArtEntity(level, user, AkazaArtEntity.Mode.AFTERGLOW, DURATION + 30);
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.AKAZA_FINAL);
     }
 
     @Override
     public void onTick() {
         super.onTick();
 
-        if (ticksActive < DURATION - 5) {
-            double progress = (double) ticksActive / (DURATION - 5);
-            double radius = 5.0 * (1.0 - progress);
-            for (int i = 0; i < 20; i++) {
-                double angle = (level.random.nextDouble() * 2 * Math.PI);
-                Vec3 offset = new Vec3(Math.cos(angle), (level.random.nextDouble() - 0.5) * 4.0, Math.sin(angle)).scale(radius);
-                level.sendParticles(level.random.nextBoolean() ? BLUE_PARTICLE : SILVER_PARTICLE, user.getX() + offset.x, user.getY() + 1.0, user.getZ() + offset.z, 1, 0, 0, 0, 0);
-            }
-        }
+        // The gathering light is drawn by AkazaArtEntity (replaces 20 dust particles per tick).
 
         if (ticksActive == DURATION - 5) {
             level.playSound(null, user.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 1.5f, 1.2f);
@@ -66,26 +67,25 @@ public class FinalFormChaoticAfterglowForm extends TimedForm {
             List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, effectZone, e -> e != user && e.isAlive());
             DamageSource unblockableSource = DamageSource.mobAttack(user).setIsFall().setMagic();
 
+            java.util.List<Vec3> struck = new java.util.ArrayList<>();
             for (LivingEntity target : targets) {
                 target.hurt(unblockableSource, DAMAGE);
-
-                for (int i = 0; i < 50; i++) {
-                    Vec3 randomStart = target.position().add(new Vec3(
-                            (level.random.nextDouble() - 0.5) * 6.0,
-                            (level.random.nextDouble() - 0.5) * 6.0,
-                            (level.random.nextDouble() - 0.5) * 6.0
-                    ));
-                    spawnLineParticles(level, level.random.nextBoolean() ? BLUE_PARTICLE : ParticleTypes.CRIT, randomStart, target.getEyePosition(), 3);
-                }
+                if (struck.size() < 24) struck.add(target.position());
             }
-
-            level.sendParticles(ParticleTypes.FLASH, user.getX(), user.getEyeY(), user.getZ(), 1, 0, 0, 0, 0);
-            level.sendParticles(ParticleTypes.SONIC_BOOM, user.getX(), user.getEyeY(), user.getZ(), 5, 0, 0, 0, 0);
+            // Countless strikes converging on every target (replaces 150 line particles per target).
+            if (art != null) art.impact(user.position(), struck, 28);
+            level.playSound(null, user.blockPosition(), SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.PLAYERS, 2.5f, 0.6f);
+            level.playSound(null, user.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 2.5f, 0.7f);
+            released = true;
         }
     }
 
     @Override
     public void onStop() {
         removeImmobility(user);
+        if (art != null && !released) {
+            art.discard();
+            FormAnimations.play(user, FormAnimations.AKAZA_END);
+        }
     }
 }

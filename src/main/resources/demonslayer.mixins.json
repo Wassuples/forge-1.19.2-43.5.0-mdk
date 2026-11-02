@@ -10,12 +10,16 @@
     "gravity.GravityMoveMixin",
     "gravity.GravityTravelMixin",
     "gravity.GravityLivingEntityMixin",
-    "gravity.GravityPlayerTravelMixin"
+    "gravity.GravityPlayerTravelMixin",
+    "toon.ServerGamePacketListenerAccessor"
   ],
   "client": [
     "gravity.GravityCameraMixin",
     "gravity.GravityLocalPlayerMixin",
-    "gravity.GravityMouseHandlerMixin"
+    "gravity.GravityMouseHandlerMixin",
+    "toon.ToonCameraMixin",
+    "toon.ToonShadowSuppressMixin",
+    "toon.ToonTunnelCollisionMixin"
   ],
   "server": [],
   "injectors": {

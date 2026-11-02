@@ -1,9 +1,6 @@
 package com.wassuples.demonslayer.entity.custom;
 
 import com.wassuples.demonslayer.entity.ally.SummonAllies;
-import com.wassuples.demonslayer.networking.ModMessages;
-import com.wassuples.demonslayer.networking.packet.ClearLesserEyesS2CPacket;
-import com.wassuples.demonslayer.networking.packet.SyncLesserEyesS2CPacket;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.protocol.Packet;
@@ -44,6 +41,20 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
     private UUID casterUUID;
     private final int lifeTime = 1200; // 60 seconds max
     private final List<BlockPos> lesserEyePositions = new ArrayList<>();
+    /**
+     * Lesser eye positions, synced through entity data so only players tracking this Mother Eye receive them and
+     * several Enmus never overwrite each other (replaces the old global Sync/ClearLesserEyes packets).
+     */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<CompoundTag> LESSER_EYES =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(MotherEyeEntity.class,
+                    net.minecraft.network.syncher.EntityDataSerializers.COMPOUND_TAG);
+    /** Game tick at which the lesser eyes last re-opened (drives the client "eyes opening" animation). */
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> EYES_OPENED_TICK =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(MotherEyeEntity.class,
+                    net.minecraft.network.syncher.EntityDataSerializers.INT);
+    private static final net.minecraft.network.syncher.EntityDataAccessor<Integer> CASTER_ID =
+            net.minecraft.network.syncher.SynchedEntityData.defineId(MotherEyeEntity.class,
+                    net.minecraft.network.syncher.EntityDataSerializers.INT);
 
     public MotherEyeEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
         super(pEntityType, pLevel);
@@ -64,13 +75,11 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
 
         Entity caster = getCaster();
         if (caster == null || !this.getPassengers().contains(caster)) {
-            ModMessages.sendToClients(new ClearLesserEyesS2CPacket());
             this.discard();
             return;
         }
 
         if (this.tickCount > lifeTime) {
-            ModMessages.sendToClients(new ClearLesserEyesS2CPacket());
             this.discard();
             return;
         }
@@ -113,14 +122,40 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
         this.lesserEyePositions.clear();
         this.lesserEyePositions.addAll(newEyePositions);
 
+        CompoundTag tag = new CompoundTag();
+        tag.putLongArray("Eyes", newEyePositions.stream().mapToLong(BlockPos::asLong).toArray());
+        this.entityData.set(LESSER_EYES, tag);
         if (!newEyePositions.isEmpty()) {
-            ModMessages.sendToClients(new SyncLesserEyesS2CPacket(newEyePositions));
+            this.entityData.set(EYES_OPENED_TICK, this.tickCount);
         }
     }
 
-
+    /** Server: the live list. Client: decoded from synced data. */
     public List<BlockPos> getLesserEyePositions() {
-        return this.lesserEyePositions;
+        if (!this.level.isClientSide) {
+            return this.lesserEyePositions;
+        }
+        long[] packed = this.entityData.get(LESSER_EYES).getLongArray("Eyes");
+        List<BlockPos> list = new ArrayList<>(packed.length);
+        for (long p : packed) list.add(BlockPos.of(p));
+        return list;
+    }
+
+    public int getEyesOpenedTick() {
+        return this.entityData.get(EYES_OPENED_TICK);
+    }
+
+    /** Network id of the caster (riding Enmu), for client visuals. */
+    public int getCasterEntityId() {
+        return this.entityData.get(CASTER_ID);
+    }
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(LESSER_EYES, new CompoundTag());
+        this.entityData.define(EYES_OPENED_TICK, -1000);
+        this.entityData.define(CASTER_ID, -1);
     }
 
     @Nullable
@@ -133,6 +168,7 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
 
     public void setCaster(@Nullable Entity caster) {
         this.casterUUID = caster != null ? caster.getUUID() : null;
+        this.entityData.set(CASTER_ID, caster != null ? caster.getId() : -1);
     }
 
     @Override
@@ -204,15 +240,10 @@ public class MotherEyeEntity extends Monster implements IAnimatable {
 
     @Override
     public double getPassengersRidingOffset() {
-        // Adjust the 0.25F value to move the player up or down as needed.
-        return this.getBbHeight() * 0.001F;
+        // Enmu stands on top of the flesh mound drawn by MotherEyeRenderer (top ≈ 0.95 blocks).
+        return 1.2D;
     }
 
-    @Override
-    public void onClientRemoval() {
-        super.onClientRemoval();
-        ModMessages.sendToClients(new ClearLesserEyesS2CPacket());
-    }
 
     @Override
     public void knockback(double pStrength, double pX, double pZ) { }

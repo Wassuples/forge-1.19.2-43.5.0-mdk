@@ -25,7 +25,7 @@ public final class WisteriaHelper {
             for (int dy = -radius; dy <= radius; dy++) {
                 for (int dz = -radius; dz <= radius; dz++) {
                     pos.set(center.getX() + dx, center.getY() + dy, center.getZ() + dz);
-                    if (level.getBlockState(pos).is(ModBlocks.WISTERIA_LEAVES.get())) {
+                    if (level.getBlockState(pos).is(ModBlocks.WISTERIA_LEAVES.get()) || level.getBlockState(pos).is(ModBlocks.HANGING_WISTERIA.get())) {
                         return true;
                     }
                 }
@@ -49,7 +49,7 @@ public final class WisteriaHelper {
             for (int dy = -radius; dy <= radius; dy++) {
                 for (int dz = -radius; dz <= radius; dz++) {
                     pos.set(center.getX() + dx, center.getY() + dy, center.getZ() + dz);
-                    if (!level.getBlockState(pos).is(ModBlocks.WISTERIA_LEAVES.get())) {
+                    if (!level.getBlockState(pos).is(ModBlocks.WISTERIA_LEAVES.get()) && !level.getBlockState(pos).is(ModBlocks.HANGING_WISTERIA.get())) {
                         continue;
                     }
 

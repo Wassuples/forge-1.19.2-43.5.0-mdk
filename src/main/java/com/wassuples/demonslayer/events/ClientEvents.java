@@ -136,7 +136,6 @@ public class ClientEvents {
             DemonThreatEffects.clientTick();
 
             PieSplatOverlay.tick();
-            ToonPocketOverlay.tick();
             LesserEyeRendererManager.tick();
 
             if (mc.player.getVehicle() instanceof BodhisattvaEntity) {
@@ -195,7 +194,9 @@ public class ClientEvents {
 
             if (KeyBinding.OPEN_MENU_KEY.consumeClick()) {
                 if (mc.screen == null) {
-                    mc.setScreen(new BreathingMenuScreen());
+                    boolean demon = mc.player.getCapability(PlayerDemonProvider.PLAYER_DEMON).map(d -> d.isDemon()).orElse(false);
+                    // Shift + menu key opens the menu straight on the Arts page for demons.
+                    mc.setScreen(demon && mc.player.isShiftKeyDown() ? BreathingMenuScreen.openAtArts() : new BreathingMenuScreen());
                 }
             }
 
@@ -423,7 +424,13 @@ public class ClientEvents {
             event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "vignette", VignetteHudOverlay.HUD_VIGNETTE);
             event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "red_static", RedStaticHudOverlay.HUD_RED_STATIC);
             event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "pie_splat", PieSplatOverlay.HUD_PIE_SPLAT);
-            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "toon_pocket", ToonPocketOverlay.HUD);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "enmu_dream", EnmuDreamOverlay.HUD);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "demon_banner", com.wassuples.demonslayer.client.gui.DemonBannerOverlay.HUD);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "mission_tracker", com.wassuples.demonslayer.client.mission.MissionTrackerOverlay.HUD);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "mission_notices", com.wassuples.demonslayer.client.mission.MissionNoticeOverlay.HUD);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "letter_compass", com.wassuples.demonslayer.client.mission.LetterCompassOverlay.HUD);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "story_boss_bar", com.wassuples.demonslayer.client.mission.BossBarOverlay.HUD);
+            event.registerAbove(VanillaGuiOverlay.HOTBAR.id(), "rest_fade", com.wassuples.demonslayer.client.mission.RestFadeOverlay.HUD);
         }
     }
 

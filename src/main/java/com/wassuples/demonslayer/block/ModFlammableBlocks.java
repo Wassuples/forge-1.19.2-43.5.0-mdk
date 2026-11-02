@@ -15,6 +15,15 @@ public final class ModFlammableBlocks {
         FireBlockAccessor accessor = (FireBlockAccessor) fire;
 
         accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_LOG.get(), 5, 5);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_WOOD.get(), 5, 5);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.STRIPPED_WISTERIA_LOG.get(), 5, 5);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.STRIPPED_WISTERIA_WOOD.get(), 5, 5);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_PLANKS.get(), 5, 20);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_STAIRS.get(), 5, 20);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_SLAB.get(), 5, 20);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_FENCE.get(), 5, 20);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_FENCE_GATE.get(), 5, 20);
+        accessor.demonslayer$invokeSetFlammable(ModBlocks.HANGING_WISTERIA.get(), 15, 100);
         accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_LEAVES.get(), 30, 60);
         accessor.demonslayer$invokeSetFlammable(ModBlocks.WISTERIA_SAPLING.get(), 60, 100);
     }

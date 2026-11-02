@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.ColdWhitePrincessEntity;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
@@ -29,6 +32,7 @@ public class ColdWhitePrincessesForm extends ActiveForm {
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.AMETHYST_BLOCK_CHIME, SoundSource.PLAYERS, 1.5f, 1.5f);
         level.playSound(null, user.blockPosition(), SoundEvents.AMBIENT_CAVE, SoundSource.PLAYERS, 1.0f, 1.8f);
+        FormAnimations.play(user, FormAnimations.DOMA_SUMMON);
 
         Vec3 lookDir = user.getLookAngle();
         Vec3 sideDir = new Vec3(-lookDir.z, 0, lookDir.x).normalize();

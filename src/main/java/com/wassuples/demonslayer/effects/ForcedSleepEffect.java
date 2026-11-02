@@ -32,8 +32,11 @@ public class ForcedSleepEffect extends MobEffect {
         super(pCategory, pColor);
     }
 
+    private static final String DREAM_AURA_TAG = "ds_dream_aura_id";
+
     @Override
     public void applyEffectTick(LivingEntity target, int amplifier) {
+        ensureDreamVisuals(target);
         applyImmobility(target, 5);
         if (!target.hasEffect(MobEffects.BLINDNESS)) {
             target.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, target.getEffect(this).getDuration(), 0, false, false, true));
@@ -41,8 +44,33 @@ public class ForcedSleepEffect extends MobEffect {
         }
     }
 
+    /**
+     * Visual layer only: makes sure every sleeper has a {@link com.wassuples.demonslayer.entity.custom.DreamAuraEntity}
+     * (Z z z, dream halo; visible to everyone) and plays the slumped-over animation on players. Checked every
+     * 10 ticks so any source of Forced Sleep gets it, without touching the effect's gameplay.
+     */
+    private static void ensureDreamVisuals(LivingEntity target) {
+        if (!(target.level instanceof net.minecraft.server.level.ServerLevel level) || target.tickCount % 10 != 0
+                && target.getPersistentData().contains(DREAM_AURA_TAG)) {
+            return;
+        }
+        int auraId = target.getPersistentData().getInt(DREAM_AURA_TAG);
+        boolean hasAura = target.getPersistentData().contains(DREAM_AURA_TAG)
+                && level.getEntity(auraId) instanceof com.wassuples.demonslayer.entity.custom.DreamAuraEntity aura && aura.isAlive();
+        if (!hasAura) {
+            com.wassuples.demonslayer.entity.custom.DreamAuraEntity aura = new com.wassuples.demonslayer.entity.custom.DreamAuraEntity(level, target);
+            level.addFreshEntity(aura);
+            target.getPersistentData().putInt(DREAM_AURA_TAG, aura.getId());
+            com.wassuples.demonslayer.util.FormAnimations.play(target, com.wassuples.demonslayer.util.FormAnimations.ENMU_SLUMBER);
+        }
+    }
+
     @Override
     public void removeAttributeModifiers(LivingEntity pLivingEntity, AttributeMap pAttributeMap, int pAmplifier) {
+        if (!pLivingEntity.level.isClientSide && pLivingEntity.getPersistentData().contains(DREAM_AURA_TAG)) {
+            pLivingEntity.getPersistentData().remove(DREAM_AURA_TAG);
+            com.wassuples.demonslayer.util.FormAnimations.play(pLivingEntity, com.wassuples.demonslayer.util.FormAnimations.ENMU_WAKE);
+        }
         removeImmobility(pLivingEntity);
         pLivingEntity.removeEffect(MobEffects.BLINDNESS);
         pLivingEntity.removeEffect(MobEffects.WEAKNESS);

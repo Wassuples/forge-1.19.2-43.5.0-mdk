@@ -20,6 +20,10 @@ public enum RepEventType {
     DEMON_SURVIVED_ENCOUNTER,
 
     COMPLETE_STANDARD_CORPS_MISSION,
+    /** Mission 0 default branch (MISSIONS_SYSTEM.md §7): Corps +10. */
+    FINAL_SELECTION_PASSED,
+    /** Mission 0, Hand Demon slain: Corps +20, Demon Notoriety +15. */
+    FINAL_SELECTION_HAND_DEMON_SLAIN,
     ABANDON_CORPS_MISSION,
     COMPLETE_MISSION_WITH_TANJIRO,
     REPORT_NEZUKO_TO_DSHQ,

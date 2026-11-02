@@ -45,16 +45,32 @@ public class ModEntityTypes {
 
     public static final RegistryObject<EntityType<CuttingThreadCageEntity>> CUTTING_THREAD_CAGE =
             ENTITY_TYPES.register("cutting_thread_cage",
-                    () -> EntityType.Builder.of(CuttingThreadCageEntity::new, MobCategory.MISC)
-                            .sized(8.0f, 4.0f)
+                    () -> EntityType.Builder.<CuttingThreadCageEntity>of(CuttingThreadCageEntity::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f) // trap radius comes from ThreadTrapEntity, not the box
+                            .clientTrackingRange(8)
+                            .updateInterval(20)
                             .noSave()
                             .fireImmune()
                             .build("cutting_thread_cage"));
 
+    public static final RegistryObject<EntityType<ThreadBasketEntity>> THREAD_BASKET =
+            ENTITY_TYPES.register("thread_basket",
+                    () -> EntityType.Builder.<ThreadBasketEntity>of(ThreadBasketEntity::new, MobCategory.MISC)
+                            .sized(1.0f, 1.0f)
+                            .clientTrackingRange(10)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("thread_basket"));
+
     public static final RegistryObject<EntityType<ThreadWheelEntity>> THREAD_WHEEL =
             ENTITY_TYPES.register("thread_wheel",
-                    () -> EntityType.Builder.of(ThreadWheelEntity::new, MobCategory.MISC)
-                            .sized(2.0f, 2.0f)
+                    () -> EntityType.Builder.<ThreadWheelEntity>of(ThreadWheelEntity::new, MobCategory.MISC)
+                            .sized(ThreadWheelEntity.DIAMETER, ThreadWheelEntity.DIAMETER)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
                             .build("thread_wheel"));
 
     public static final RegistryObject<EntityType<MotherEyeEntity>> MOTHER_EYE =
@@ -67,6 +83,8 @@ public class ModEntityTypes {
             ENTITY_TYPES.register("blood_sickle",
                     () -> EntityType.Builder.<BloodSickleProjectileEntity>of(BloodSickleProjectileEntity::new, MobCategory.MISC)
                             .sized(1.0f, 1.0f)
+                            .clientTrackingRange(8)
+                            .updateInterval(1) // smooth homing curves for the spinning blade
                             .build("blood_sickle"));
 
     public static final RegistryObject<EntityType<PoisonNeedleProjectileEntity>> POISON_NEEDLE =
@@ -164,13 +182,17 @@ public class ModEntityTypes {
             ENTITY_TYPES.register("toon_shadow_anchor",
                     () -> EntityType.Builder.<ToonShadowAnchorEntity>of(ToonShadowAnchorEntity::new, MobCategory.MISC)
                             .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(1)
                             .noSave()
                             .build("toon_shadow_anchor"));
 
     public static final RegistryObject<EntityType<ToonFakeTunnelEntity>> TOON_FAKE_TUNNEL =
             ENTITY_TYPES.register("toon_fake_tunnel",
                     () -> EntityType.Builder.<ToonFakeTunnelEntity>of(ToonFakeTunnelEntity::new, MobCategory.MISC)
-                            .sized(2.0f, 3.0f)
+                            .sized(2.0f, 2.0f)
+                            .clientTrackingRange(10)
+                            .updateInterval(20)
                             .noSave()
                             .build("toon_fake_tunnel"));
 
@@ -179,6 +201,176 @@ public class ModEntityTypes {
                     () -> EntityType.Builder.<ToonAnvilEntity>of(ToonAnvilEntity::new, MobCategory.MISC)
                             .sized(1.2f, 1.0f)
                             .build("toon_anvil"));
+
+    public static final RegistryObject<EntityType<WhisperWaveEntity>> WHISPER_WAVE =
+            ENTITY_TYPES.register("whisper_wave",
+                    () -> EntityType.Builder.<WhisperWaveEntity>of(WhisperWaveEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("whisper_wave"));
+
+    public static final RegistryObject<EntityType<DreamAuraEntity>> DREAM_AURA =
+            ENTITY_TYPES.register("dream_aura",
+                    () -> EntityType.Builder.<DreamAuraEntity>of(DreamAuraEntity::new, MobCategory.MISC)
+                            .sized(0.6f, 0.6f)
+                            .clientTrackingRange(6)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("dream_aura"));
+
+    public static final RegistryObject<EntityType<BloodArcDomeEntity>> BLOOD_ARC_DOME =
+            ENTITY_TYPES.register("blood_arc_dome",
+                    () -> EntityType.Builder.<BloodArcDomeEntity>of(BloodArcDomeEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("blood_arc_dome"));
+
+    public static final RegistryObject<EntityType<BloodRingWaveEntity>> BLOOD_RING_WAVE =
+            ENTITY_TYPES.register("blood_ring_wave",
+                    () -> EntityType.Builder.<BloodRingWaveEntity>of(BloodRingWaveEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(10)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("blood_ring_wave"));
+
+    public static final RegistryObject<EntityType<ObiSashEntity>> OBI_SASH =
+            ENTITY_TYPES.register("obi_sash",
+                    () -> EntityType.Builder.<ObiSashEntity>of(ObiSashEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("obi_sash"));
+
+    public static final RegistryObject<EntityType<FishSchoolEntity>> FISH_SCHOOL =
+            ENTITY_TYPES.register("fish_school",
+                    () -> EntityType.Builder.<FishSchoolEntity>of(FishSchoolEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("fish_school"));
+
+    public static final RegistryObject<EntityType<ScaleArmorEntity>> SCALE_ARMOR =
+            ENTITY_TYPES.register("scale_armor",
+                    () -> EntityType.Builder.<ScaleArmorEntity>of(ScaleArmorEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("scale_armor"));
+
+    public static final RegistryObject<EntityType<HantenguDrumsEntity>> HANTENGU_DRUMS =
+            ENTITY_TYPES.register("hantengu_drums",
+                    () -> EntityType.Builder.<HantenguDrumsEntity>of(HantenguDrumsEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("hantengu_drums"));
+
+    public static final RegistryObject<EntityType<WoodDragonStrikeEntity>> WOOD_DRAGON_STRIKE =
+            ENTITY_TYPES.register("wood_dragon_strike",
+                    () -> EntityType.Builder.<WoodDragonStrikeEntity>of(WoodDragonStrikeEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("wood_dragon_strike"));
+
+    public static final RegistryObject<EntityType<ThunderDragonsEntity>> THUNDER_DRAGONS =
+            ENTITY_TYPES.register("thunder_dragons",
+                    () -> EntityType.Builder.<ThunderDragonsEntity>of(ThunderDragonsEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(10)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("thunder_dragons"));
+
+    public static final RegistryObject<EntityType<SoundBlastEntity>> SOUND_BLAST =
+            ENTITY_TYPES.register("sound_blast",
+                    () -> EntityType.Builder.<SoundBlastEntity>of(SoundBlastEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("sound_blast"));
+
+    public static final RegistryObject<EntityType<AkazaArtEntity>> AKAZA_ART =
+            ENTITY_TYPES.register("akaza_art",
+                    () -> EntityType.Builder.<AkazaArtEntity>of(AkazaArtEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("akaza_art"));
+
+    public static final RegistryObject<EntityType<DomaArtEntity>> DOMA_ART =
+            ENTITY_TYPES.register("doma_art",
+                    () -> EntityType.Builder.<DomaArtEntity>of(DomaArtEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(8)
+                            .updateInterval(2)
+                            .noSave()
+                            .fireImmune()
+                            .build("doma_art"));
+
+    public static final RegistryObject<EntityType<ToonSfxTextEntity>> TOON_SFX_TEXT =
+            ENTITY_TYPES.register("toon_sfx_text",
+                    () -> EntityType.Builder.<ToonSfxTextEntity>of(ToonSfxTextEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(6)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("toon_sfx_text"));
+
+    public static final RegistryObject<EntityType<ToonDizzyBirdsEntity>> TOON_DIZZY_BIRDS =
+            ENTITY_TYPES.register("toon_dizzy_birds",
+                    () -> EntityType.Builder.<ToonDizzyBirdsEntity>of(ToonDizzyBirdsEntity::new, MobCategory.MISC)
+                            .sized(0.8f, 0.4f)
+                            .clientTrackingRange(6)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("toon_dizzy_birds"));
+
+    public static final RegistryObject<EntityType<ToonPieEntity>> TOON_PIE =
+            ENTITY_TYPES.register("toon_pie",
+                    () -> EntityType.Builder.<ToonPieEntity>of(ToonPieEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.3f)
+                            .clientTrackingRange(6)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("toon_pie"));
+
+    public static final RegistryObject<EntityType<ToonSlotMachineEntity>> TOON_SLOT_MACHINE =
+            ENTITY_TYPES.register("toon_slot_machine",
+                    () -> EntityType.Builder.<ToonSlotMachineEntity>of(ToonSlotMachineEntity::new, MobCategory.MISC)
+                            .sized(1.2f, 0.9f)
+                            .clientTrackingRange(6)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("toon_slot_machine"));
 
 
 
@@ -195,7 +387,7 @@ public class ModEntityTypes {
     public static final RegistryObject<EntityType<HandDemonEntity>> HAND_DEMON =
             ENTITY_TYPES.register("hand_demon",
                     () -> EntityType.Builder.of(HandDemonEntity::new, MobCategory.MONSTER)
-                            .sized(2.0f, 3.5f) // A large entity
+                            .sized(3.0f, 3.0f) // a crawling mass of arms (model drawn at 1.6x)
                             .build("hand_demon"));
 
     //##########################################################
@@ -341,6 +533,22 @@ public class ModEntityTypes {
                     () -> EntityType.Builder.of(ThunderHashiraEntity::new, MobCategory.MONSTER)
                             .sized(0.6f, 1.4f)
                             .build(new ResourceLocation(DemonSlayer.MOD_ID, "jigoro").toString()));
+
+    /** Named story characters (Ubuyashiki twins, Final Selection candidates...): see StoryCharacter. */
+    public static final RegistryObject<EntityType<com.wassuples.demonslayer.entity.custom.story.StoryNpcEntity>> STORY_NPC =
+            ENTITY_TYPES.register("story_npc",
+                    () -> EntityType.Builder.of(com.wassuples.demonslayer.entity.custom.story.StoryNpcEntity::new, MobCategory.MISC)
+                            .sized(0.6f, 1.8f)
+                            .clientTrackingRange(10)
+                            .build(new ResourceLocation(DemonSlayer.MOD_ID, "story_npc").toString()));
+
+    /** Demons penned on Mt. Fujikasane's mountaintop for the Final Selection (not part of the Nemesis hierarchy). */
+    public static final RegistryObject<EntityType<com.wassuples.demonslayer.entity.custom.CaptiveDemonEntity>> CAPTIVE_DEMON =
+            ENTITY_TYPES.register("captive_demon",
+                    () -> EntityType.Builder.of(com.wassuples.demonslayer.entity.custom.CaptiveDemonEntity::new, MobCategory.MONSTER)
+                            .sized(0.6f, 1.95f)
+                            .clientTrackingRange(8)
+                            .build(new ResourceLocation(DemonSlayer.MOD_ID, "captive_demon").toString()));
 
     public static final RegistryObject<EntityType<CrowEntity>> CROW =
             ENTITY_TYPES.register("crow",

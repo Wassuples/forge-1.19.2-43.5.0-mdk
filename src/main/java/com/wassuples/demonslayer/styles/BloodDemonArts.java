@@ -37,6 +37,14 @@ public enum BloodDemonArts {
     public String getDisplayName() {
         return this.displayName;
     }
+    /**
+     * True for arts from the franchise itself (Upper/Lower Moons), false for the mod's own creations such as Toon
+     * Force. The Arts page lists the two groups under separate headings.
+     */
+    public boolean isCanon() {
+        return this != TOON_FORCE && this != NONE;
+    }
+
     public Component getDescription() {
         return Component.literal(this.description);
     }

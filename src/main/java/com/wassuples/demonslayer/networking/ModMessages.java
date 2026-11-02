@@ -165,6 +165,36 @@ public class ModMessages {
                 .consumerMainThread(AbandonMissionC2SPacket::handle)
                 .add();
 
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.OpenDialogueS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(com.wassuples.demonslayer.networking.packet.OpenDialogueS2CPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.OpenDialogueS2CPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.OpenDialogueS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.DialogueChoiceC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(com.wassuples.demonslayer.networking.packet.DialogueChoiceC2SPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.DialogueChoiceC2SPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.DialogueChoiceC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.MissionNoticeS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(com.wassuples.demonslayer.networking.packet.MissionNoticeS2CPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.MissionNoticeS2CPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.MissionNoticeS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.RestStateS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(com.wassuples.demonslayer.networking.packet.RestStateS2CPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.RestStateS2CPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.RestStateS2CPacket::handle)
+                .add();
+
         net.messageBuilder(PlayerDemonSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(PlayerDemonSyncS2CPacket::new)
                 .encoder(PlayerDemonSyncS2CPacket::toBytes)
@@ -235,6 +265,12 @@ public class ModMessages {
                 .encoder(ToggleBdaModeC2SPacket::toBytes)
                 .decoder(ToggleBdaModeC2SPacket::new)
                 .consumerMainThread(ToggleBdaModeC2SPacket::handle)
+                .add();
+
+        net.messageBuilder(CooldownSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(CooldownSyncS2CPacket::new)
+                .encoder(CooldownSyncS2CPacket::toBytes)
+                .consumerMainThread(CooldownSyncS2CPacket::handle)
                 .add();
 
         net.messageBuilder(StopFormS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
@@ -317,6 +353,11 @@ public class ModMessages {
 
     public static <MSG> void sendToPlayer(MSG message, ServerPlayer player) {
         INSTANCE.send(PacketDistributor.PLAYER.with(() -> player), message);
+    }
+
+    /** To every player tracking {@code entity}, and the entity itself if it is a player. */
+    public static <MSG> void sendToTrackingAndSelf(MSG message, net.minecraft.world.entity.Entity entity) {
+        INSTANCE.send(PacketDistributor.TRACKING_ENTITY_AND_SELF.with(() -> entity), message);
     }
 
     public static <MSG> void sendToClients(MSG message) {

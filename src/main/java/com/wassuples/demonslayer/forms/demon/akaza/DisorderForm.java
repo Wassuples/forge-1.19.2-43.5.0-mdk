@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.ParticleTypes;
@@ -32,6 +35,7 @@ public class DisorderForm extends TimedForm {
     private static final float KNOCKBACK_STRENGTH = 1.2F;
     private static final double CONE_ANGLE_COS = Math.cos(Math.toRadians(CONE_ANGLE_DEGREES));
     private final Set<UUID> knockedBackEntities = new HashSet<>();
+    private AkazaArtEntity art;
 
     public DisorderForm(LivingEntity user, IForm form) {
         super(user, form, 100);
@@ -46,6 +50,9 @@ public class DisorderForm extends TimedForm {
     public void onStart() {
         applyImmobility(user, Integer.MAX_VALUE);
         level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_ROAR, SoundSource.PLAYERS, 1.0f, 1.2f);
+        this.art = new AkazaArtEntity(level, user, AkazaArtEntity.Mode.DISORDER, 100);
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.AKAZA_BARRAGE);
     }
 
     @Override
@@ -81,11 +88,7 @@ public class DisorderForm extends TimedForm {
                     }
                 }
             }
-            int particlesPerPulse = 5 + (ticksActive / 30);
-            for (int i = 0; i < particlesPerPulse; i++) {
-                Vec3 randomPosInCone = getRandomPointInCone(user, CONE_RANGE, CONE_ANGLE_DEGREES);
-                level.sendParticles(ParticleTypes.SONIC_BOOM, randomPosInCone.x, randomPosInCone.y, randomPosInCone.z, 1, 0, 0, 0, 0);
-            }
+            // The storm of fists is drawn by AkazaArtEntity (replaces 5-8 sonic-boom particles per pulse).
         }
     }
 
@@ -93,6 +96,8 @@ public class DisorderForm extends TimedForm {
     public void onStop() {
         removeImmobility(user);
         level.playSound(null, user.blockPosition(), SoundEvents.WARDEN_AGITATED, SoundSource.PLAYERS, 0.8f, 1.0f);
+        if (art != null) art.finish(4);
+        if (ticksActive < duration) FormAnimations.play(user, FormAnimations.AKAZA_END);
     }
 
     private Vec3 getRandomPointInCone(LivingEntity entity, double maxRange, double angleDegrees) {

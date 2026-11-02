@@ -29,6 +29,11 @@ public class KillRecord {
         recordDemonKill();
     }
 
+    /** Mission kill-record bonus: counts toward the current rank only. */
+    public void addBonusKills(int kills) {
+        killsAtCurrentRank += Math.max(0, kills);
+    }
+
     public void resetForRankAdvance() {
         killsAtCurrentRank = 0;
     }

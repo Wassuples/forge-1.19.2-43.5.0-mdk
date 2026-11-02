@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.mojang.math.Vector3f;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
@@ -32,8 +35,20 @@ public class ExplosiveFlurryForm extends TimedForm {
 
     private static final DustParticleOptions AFTERIMAGE_PARTICLE = new DustParticleOptions(new Vector3f(0.4f, 0.6f, 1.0f), 0.8f);
 
+    private AkazaArtEntity art;
+
     public ExplosiveFlurryForm(LivingEntity user, IForm form) {
         super(user, form, NUMBER_OF_KICKS * TICKS_BETWEEN_KICKS);
+    }
+
+    @Override
+    public void onStart() {
+        // One seed shared by the visual and the player animation, so the legs follow the drawn kick arcs.
+        int seed = level.random.nextInt(1 << 30);
+        this.art = new AkazaArtEntity(level, user, AkazaArtEntity.Mode.FLURRY, NUMBER_OF_KICKS * TICKS_BETWEEN_KICKS + 10);
+        this.art.setSeed(seed);
+        level.addFreshEntity(this.art);
+        FormAnimations.play(user, FormAnimations.AKAZA_FLURRY + "#" + seed);
     }
 
     @Override
@@ -46,8 +61,7 @@ public class ExplosiveFlurryForm extends TimedForm {
 
             dealDirectionalDamage(user, 4.0, DAMAGE_PER_KICK, 0.2);
 
-            spawnParticleArc(user, ParticleTypes.SONIC_BOOM, 1.0, 60, 1);
-            spawnAfterimageVFX();
+            // Crescent kick arcs are drawn by AkazaArtEntity.
         }
     }
 
@@ -57,7 +71,7 @@ public class ExplosiveFlurryForm extends TimedForm {
         if (target != null) {
             level.playSound(null, target.blockPosition(), SoundEvents.WARDEN_SONIC_BOOM, SoundSource.PLAYERS, 1.5f, 1.0f);
             level.playSound(null, target.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.PLAYERS, 1.0f, 1.2f);
-            level.sendParticles(ParticleTypes.EXPLOSION_EMITTER, target.getX(), target.getEyeY(), target.getZ(), 1, 0, 0, 0, 0);
+            if (art != null) art.impact(target.getEyePosition(), 10);
 
             if (user instanceof ServerPlayer player) {
                 target.hurt(DamageSource.playerAttack(player), FINAL_KICK_DAMAGE);
@@ -68,6 +82,8 @@ public class ExplosiveFlurryForm extends TimedForm {
             Vec3 launchVec = user.getLookAngle().scale(FINAL_KICK_KNOCKBACK);
             target.setDeltaMovement(launchVec.x, 0.8, launchVec.z);
             target.hurtMarked = true;
+        } else if (art != null) {
+            art.finish(4);
         }
     }
 

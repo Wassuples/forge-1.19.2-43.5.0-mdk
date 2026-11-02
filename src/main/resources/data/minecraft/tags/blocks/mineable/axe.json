@@ -1,0 +1,22 @@
+{
+  "replace": false,
+  "values": [
+    "demonslayer:swordsmiths_table",
+    "demonslayer:wisteria_log",
+    "demonslayer:wisteria_wood",
+    "demonslayer:stripped_wisteria_log",
+    "demonslayer:stripped_wisteria_wood",
+    "demonslayer:wisteria_planks",
+    "demonslayer:wisteria_stairs",
+    "demonslayer:wisteria_slab",
+    "demonslayer:wisteria_fence",
+    "demonslayer:wisteria_fence_gate",
+    "demonslayer:wisteria_door",
+    "demonslayer:wisteria_trapdoor",
+    "demonslayer:wisteria_button",
+    "demonslayer:wisteria_pressure_plate",
+    "demonslayer:vermilion_pillar",
+    "demonslayer:black_lacquer",
+    "demonslayer:shoji_screen"
+  ]
+}

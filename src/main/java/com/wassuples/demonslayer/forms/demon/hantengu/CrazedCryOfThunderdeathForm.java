@@ -1,7 +1,10 @@
 package com.wassuples.demonslayer.forms.demon.hantengu;
 
 import com.mojang.math.Vector3f;
+import com.wassuples.demonslayer.entity.custom.HantenguDrumsEntity;
+import com.wassuples.demonslayer.entity.custom.ThunderDragonsEntity;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
+import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -16,6 +19,7 @@ import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import javax.annotation.Nullable;
 import java.util.List;
 
 import static com.wassuples.demonslayer.util.MovementHelper.applyImmobility;
@@ -33,11 +37,17 @@ public class CrazedCryOfThunderdeathForm extends TimedForm {
     private static final int LIGHTNING_TICK_RATE = 5;
     private static final double ARENA_RADIUS = 25.0;
 
+    private static final int DURATION = WIND_UP_TICKS + LIGHTNING_START_TICKS + 100; // 240 ticks = 12 seconds
+
     private boolean soundWaveFired = false;
     private final Vec3 arenaCenter;
+    @Nullable
+    private ThunderDragonsEntity dragons;
+    @Nullable
+    private HantenguDrumsEntity drums;
 
     public CrazedCryOfThunderdeathForm(LivingEntity user, IForm form) {
-        super(user, form, WIND_UP_TICKS + LIGHTNING_START_TICKS + 100); // 60 + 80 + 100 = 240 ticks total or 12 seconds
+        super(user, form, DURATION);
         this.arenaCenter = user.position().add(user.getLookAngle().scale(ARENA_RADIUS));
     }
 
@@ -45,6 +55,13 @@ public class CrazedCryOfThunderdeathForm extends TimedForm {
     public void onStart() {
         applyImmobility(user, Integer.MAX_VALUE);
         level.playSound(null, user.blockPosition(), SoundEvents.WITHER_SPAWN, SoundSource.PLAYERS, 1.5f, 1.2f);
+        // Two wooden dragons circling the arena on the same path the old particle markers used.
+        this.dragons = new ThunderDragonsEntity(level, user, arenaCenter, (float) ARENA_RADIUS, DURATION);
+        level.addFreshEntity(this.dragons);
+        this.drums = new HantenguDrumsEntity(level, user, DURATION);
+        level.addFreshEntity(this.drums);
+        this.drums.beat(); // "Zohakuten strikes a drum, commanding two wooden dragons..."
+        FormAnimations.play(user, FormAnimations.HANTENGU_CRY);
     }
 
     @Override
@@ -56,20 +73,14 @@ public class CrazedCryOfThunderdeathForm extends TimedForm {
             return;
         }
 
-        final DustParticleOptions woodParticle = new DustParticleOptions(new Vector3f(0.4f, 0.2f, 0.1f), 1.0f);
-        double angle1 = (ticksActive * 0.05);
-        Vec3 dragon1Pos = arenaCenter.add(Math.cos(angle1) * ARENA_RADIUS, 10, Math.sin(angle1) * ARENA_RADIUS);
-        level.sendParticles(woodParticle, dragon1Pos.x, dragon1Pos.y, dragon1Pos.z, 10, 1, 1, 1, 0);
-
-        double angle2 = (ticksActive * 0.05) + Math.PI;
-        Vec3 dragon2Pos = arenaCenter.add(Math.cos(angle2) * ARENA_RADIUS, 10, Math.sin(angle2) * ARENA_RADIUS);
-        level.sendParticles(woodParticle, dragon2Pos.x, dragon2Pos.y, dragon2Pos.z, 10, 1, 1, 1, 0);
-        level.sendParticles(ParticleTypes.SOUL_FIRE_FLAME, dragon2Pos.x, dragon2Pos.y, dragon2Pos.z, 5, 0.5, 0.5, 0.5, 0.1);
+        // The circling dragons are drawn by ThunderDragonsEntity; the drums boom through the wind-up.
+        if (drums != null && ticksActive < WIND_UP_TICKS && ticksActive % 6 == 4) {
+            drums.beat();
+        }
 
         if (!soundWaveFired && ticksActive >= WIND_UP_TICKS) {
             soundWaveFired = true;
             level.playSound(null, arenaCenter.x, arenaCenter.y, arenaCenter.z, SoundEvents.WARDEN_SONIC_BOOM, SoundSource.HOSTILE, 3.0f, 0.8f);
-            level.sendParticles(ParticleTypes.SONIC_BOOM, arenaCenter.x, arenaCenter.y, arenaCenter.z, 1, 0, 0, 0, 0);
 
             List<LivingEntity> targets = level.getEntitiesOfClass(LivingEntity.class, new AABB(arenaCenter, arenaCenter).inflate(ARENA_RADIUS));
             for (LivingEntity target : targets) {
@@ -90,6 +101,7 @@ public class CrazedCryOfThunderdeathForm extends TimedForm {
                 if (!targets.isEmpty()) {
                     LivingEntity randomTarget = targets.get(level.random.nextInt(targets.size()));
                     EntityType.LIGHTNING_BOLT.spawn(level, null, null, randomTarget.blockPosition(), MobSpawnType.TRIGGERED, true, false);
+                    if (dragons != null) dragons.bolt(randomTarget.position());
                 }
             }
         }
@@ -98,5 +110,14 @@ public class CrazedCryOfThunderdeathForm extends TimedForm {
     @Override
     public void onStop() {
         removeImmobility(user);
+        if (dragons != null) {
+            dragons.discard();
+            dragons = null;
+        }
+        if (drums != null) {
+            drums.discard();
+            drums = null;
+        }
+        FormAnimations.play(user, FormAnimations.HANTENGU_END);
     }
 }

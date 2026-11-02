@@ -18,6 +18,17 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> TOON_SPLAT = registerSoundEvent("toon_splat");
     public static final RegistryObject<SoundEvent> TOON_EYE_POP = registerSoundEvent("toon_eye_pop");
     public static final RegistryObject<SoundEvent> TOON_RUN = registerSoundEvent("toon_run");
+    // story / UI (synthesised for the mod, see sounds/story/)
+    public static final RegistryObject<SoundEvent> DIALOGUE_BLIP = registerSoundEvent("dialogue_blip");
+    public static final RegistryObject<SoundEvent> DIALOGUE_OPEN = registerSoundEvent("dialogue_open");
+    public static final RegistryObject<SoundEvent> MISSION_BELL = registerSoundEvent("mission_bell");
+    public static final RegistryObject<SoundEvent> NIGHT_DRUM = registerSoundEvent("night_drum");
+    public static final RegistryObject<SoundEvent> MISSION_FAILED = registerSoundEvent("mission_failed");
+    public static final RegistryObject<SoundEvent> RESOLVE = registerSoundEvent("resolve");
+    public static final RegistryObject<SoundEvent> DEMON_GROWL = registerSoundEvent("demon_growl");
+    public static final RegistryObject<SoundEvent> NOTICE = registerSoundEvent("notice");
+    public static final RegistryObject<SoundEvent> DEMON_HISS = registerSoundEvent("demon_hiss");
+    public static final RegistryObject<SoundEvent> DEMON_CRUMBLE = registerSoundEvent("demon_crumble");
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
         return SOUND_EVENTS.register(name, () -> new SoundEvent(new ResourceLocation(DemonSlayer.MOD_ID, name)));
     }

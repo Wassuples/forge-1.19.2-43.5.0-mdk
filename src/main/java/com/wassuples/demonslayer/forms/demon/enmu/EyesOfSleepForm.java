@@ -1,5 +1,7 @@
 package com.wassuples.demonslayer.forms.demon.enmu;
 
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.entity.ModEntityTypes;
 import com.wassuples.demonslayer.entity.custom.MotherEyeEntity;
 import com.wassuples.demonslayer.forms.ActiveFormManager;
@@ -47,6 +49,7 @@ public class EyesOfSleepForm extends ActiveForm {
             motherEye.setCaster(user);
             level.addFreshEntity(motherEye);
             user.startRiding(motherEye, true);
+            FormAnimations.play(user, FormAnimations.ENMU_EYES);
 
             level.playSound(null, spawnPos, SoundEvents.SLIME_SQUISH, SoundSource.NEUTRAL, 1.5f, 0.8f);
         }

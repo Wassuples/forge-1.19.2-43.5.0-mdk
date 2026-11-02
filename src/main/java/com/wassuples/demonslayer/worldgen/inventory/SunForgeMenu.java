@@ -21,7 +21,7 @@ public class SunForgeMenu extends AbstractContainerMenu {
     private final ContainerData data;
 
     public SunForgeMenu(int id, Inventory inv, FriendlyByteBuf extraData) {
-        this(id, inv, inv.player.level.getBlockEntity(extraData.readBlockPos()), new SimpleContainerData(2));
+        this(id, inv, inv.player.level.getBlockEntity(extraData.readBlockPos()), new SimpleContainerData(3));
     }
 
     public SunForgeMenu(int id, Inventory inv, BlockEntity entity, ContainerData data) {
@@ -35,7 +35,12 @@ public class SunForgeMenu extends AbstractContainerMenu {
         addSlot(new SlotItemHandler(blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(null), 0, 44, 24));
         addSlot(new SlotItemHandler(blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(null), 1, 44, 48));
         // Output (right)
-        addSlot(new SlotItemHandler(blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(null), 2, 116, 36));
+        addSlot(new SlotItemHandler(blockEntity.getCapability(ForgeCapabilities.ITEM_HANDLER).orElseThrow(null), 2, 116, 36) {
+            @Override
+            public boolean mayPlace(ItemStack stack) {
+                return false;
+            }
+        });
 
         addDataSlots(data);
 
@@ -47,12 +52,20 @@ public class SunForgeMenu extends AbstractContainerMenu {
         return data.get(0) > 0;
     }
 
-    public int getScaledProgress() {
-        int progress = this.data.get(0);
-        int maxProgress = this.data.get(1);  // Max Progress
-        int progressArrowSize = 26; // This is the height in pixels of your arrow
+    /** True while the forge has open sky above it during a clear day. */
+    public boolean isSunlit() {
+        return data.get(2) != 0;
+    }
 
-        return maxProgress != 0 && progress != 0 ? progress * progressArrowSize / maxProgress : 0;
+    /** Progress scaled to {@code size} pixels. */
+    public int getScaledProgress(int size) {
+        int progress = this.data.get(0);
+        int maxProgress = this.data.get(1);
+        return maxProgress != 0 && progress != 0 ? Math.min(size, progress * size / maxProgress) : 0;
+    }
+
+    public int getProgressPercent() {
+        return getScaledProgress(100);
     }
 
     private static final int HOTBAR_SLOT_COUNT = 9;

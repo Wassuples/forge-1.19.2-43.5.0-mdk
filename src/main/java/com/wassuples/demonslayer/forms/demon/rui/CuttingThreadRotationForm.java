@@ -10,10 +10,10 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * Rui Blood Demon Art form: Cutting Thread Rotation.
+ * Rui Blood Demon Art form: Cutting Thread Rotation. Launches a rolling wheel of threads along the ground in
+ * the direction the user is facing. All behaviour lives in {@link ThreadWheelEntity}.
  *
  * @see com.wassuples.demonslayer.styles.DemonForms
- * @see com.wassuples.demonslayer.forms.baseForms.TimedForm
  */
 public class CuttingThreadRotationForm extends TimedForm {
     public CuttingThreadRotationForm(LivingEntity user, IForm form) {
@@ -22,19 +22,22 @@ public class CuttingThreadRotationForm extends TimedForm {
 
     @Override
     public void onStart() {
-        user.level.playSound(null, user.blockPosition(), SoundEvents.SPIDER_HURT, SoundSource.PLAYERS, 1.2F, 0.7F);
-
         ThreadWheelEntity wheel = ModEntityTypes.THREAD_WHEEL.get().create(level);
-        if (wheel != null) {
-            Vec3 spawnPos = user.position().add(user.getLookAngle().scale(1.5));
-            wheel.moveTo(spawnPos.x, spawnPos.y + 0.5, spawnPos.z, user.getYRot(), user.getXRot());
-            wheel.setOwner(user);
+        if (wheel == null) return;
 
-            final double SPEED = 0.4;
-            wheel.setDirection(user.getLookAngle(), SPEED);
+        Vec3 look = user.getLookAngle();
+        Vec3 flat = new Vec3(look.x, 0, look.z);
+        flat = flat.lengthSqr() < 1.0E-4 ? Vec3.directionFromRotation(0, user.getYRot()) : flat.normalize();
+        Vec3 spawn = user.position().add(flat.scale(1.6));
 
-            level.addFreshEntity(wheel);
-        }
+        wheel.setPos(spawn.x, user.getY() + 0.5, spawn.z);
+        wheel.setOwner(user);
+        wheel.setDirection(flat, 0);
+        wheel.snapToGround();
+        level.addFreshEntity(wheel);
+
+        level.playSound(null, user.blockPosition(), SoundEvents.TRIPWIRE_ATTACH, SoundSource.PLAYERS, 1.0f, 1.8f);
+        level.playSound(null, user.blockPosition(), SoundEvents.SPIDER_HURT, SoundSource.PLAYERS, 0.8f, 0.7f);
     }
 
     @Override

@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.akaza;
 
+import com.wassuples.demonslayer.entity.custom.AkazaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.ParticleTypes;
@@ -64,7 +67,8 @@ public class CrownSplitterForm extends TimedForm {
             target.hurtMarked = true;
 
             Vec3 shockwaveCenter = target.position();
-            level.sendParticles(ParticleTypes.SONIC_BOOM, shockwaveCenter.x, shockwaveCenter.y + 1.0, shockwaveCenter.z, 1, 0, 0, 0, 0);
+            level.addFreshEntity(new AkazaArtEntity(level, user, AkazaArtEntity.Mode.CROWN, 12, shockwaveCenter, user.getLookAngle()));
+            FormAnimations.play(user, FormAnimations.AKAZA_UPPERKICK);
 
             List<LivingEntity> shockwaveTargets = level.getEntitiesOfClass(LivingEntity.class,
                     new AABB(shockwaveCenter, shockwaveCenter).inflate(SHOCKWAVE_RADIUS),
@@ -85,6 +89,8 @@ public class CrownSplitterForm extends TimedForm {
             this.isLunge = true;
             Vec3 direction = user.getLookAngle();
             this.lungeDirection = new Vec3(direction.x, 0, direction.z).normalize();
+            level.addFreshEntity(new AkazaArtEntity(level, user, AkazaArtEntity.Mode.LUNGE, 10));
+            FormAnimations.play(user, FormAnimations.AKAZA_PUNCH);
         }
     }
 

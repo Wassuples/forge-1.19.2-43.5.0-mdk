@@ -26,7 +26,7 @@ public class MistHashiraEntity extends HashiraEntity {
 
     @Override
     public SpawnGroupData finalizeSpawn(ServerLevelAccessor pLevel, DifficultyInstance pDifficulty, MobSpawnType pReason, @Nullable SpawnGroupData pSpawnData, @Nullable CompoundTag pDataTag) {
-        this.setItemSlot(EquipmentSlot.MAINHAND, NichirinSwordItem.createSword(SwordModel.MIST));
+        this.setItemSlot(EquipmentSlot.MAINHAND, com.wassuples.demonslayer.item.custom.HashiraSwordHelper.createSwordForStyle(this.getBreathingStyle()));
         return super.finalizeSpawn(pLevel, pDifficulty, pReason, pSpawnData, pDataTag);
     }
 }

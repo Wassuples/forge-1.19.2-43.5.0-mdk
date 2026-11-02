@@ -1,7 +1,6 @@
 package com.wassuples.demonslayer.reputation;
 
 import com.wassuples.demonslayer.entity.custom.CrowEntity;
-import com.wassuples.demonslayer.missions.Mission;
 import com.wassuples.demonslayer.nemesis.battle.BattleOutcome;
 import com.wassuples.demonslayer.reputation.witness.WitnessScanner;
 import com.wassuples.demonslayer.reputation.witness.WitnessType;
@@ -14,7 +13,6 @@ import net.minecraft.world.entity.Entity;
 import java.util.*;
 
 public final class ReputationService {
-    private static final Map<ResourceLocation, List<RepEventType>> MISSION_COMPLETION_EVENTS = buildMissionCompletionMap();
     private static final Map<ResourceLocation, List<RepEventType>> MISSION_ABANDON_EVENTS = buildMissionAbandonMap();
 
     private ReputationService() {
@@ -40,19 +38,6 @@ public final class ReputationService {
         for (WitnessType witnessType : witnessTypes) {
             manager.queueWitnessEvent(playerId, eventType, witnessType, gameTime);
         }
-    }
-
-    public static void onMissionCompleted(ServerPlayer player, Mission mission) {
-        ServerLevel level = player.getLevel();
-        applyAutoEvent(level, player.getUUID(), RepEventType.COMPLETE_STANDARD_CORPS_MISSION);
-
-        for (RepEventType eventType : MISSION_COMPLETION_EVENTS.getOrDefault(mission.id(), List.of())) {
-            applyAutoEvent(level, player.getUUID(), eventType);
-        }
-
-        // These integrations depend on systems not yet implemented in the workspace:
-        // - Mission-side ally attribution (Tanjiro present / shared mission participation)
-        // - Mission branch outcomes beyond existing mission IDs
     }
 
     public static void onMissionAbandoned(ServerPlayer player, ResourceLocation missionId) {
@@ -129,18 +114,6 @@ public final class ReputationService {
         if (demonRep <= 699) return 0.80f;
         if (demonRep <= 849) return 1.20f;
         return 1.50f;
-    }
-
-    private static Map<ResourceLocation, List<RepEventType>> buildMissionCompletionMap() {
-        Map<ResourceLocation, List<RepEventType>> map = new HashMap<>();
-
-        // Current mission assets present in workspace.
-        map.put(new ResourceLocation("demonslayer", "final_selection_mission0"), List.of());
-        map.put(new ResourceLocation("demonslayer", "story_final_selection"),
-                List.of());
-
-        // Deferred IDs from REPUTATION_SYSTEM.md will be added as mission content lands.
-        return map;
     }
 
     private static Map<ResourceLocation, List<RepEventType>> buildMissionAbandonMap() {

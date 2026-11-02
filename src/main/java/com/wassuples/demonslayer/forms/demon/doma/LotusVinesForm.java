@@ -1,5 +1,8 @@
 package com.wassuples.demonslayer.forms.demon.doma;
 
+import com.wassuples.demonslayer.entity.custom.DomaArtEntity;
+import com.wassuples.demonslayer.util.FormAnimations;
+
 import com.wassuples.demonslayer.forms.baseForms.TimedForm;
 import com.wassuples.demonslayer.styles.IForm;
 import net.minecraft.core.particles.ParticleTypes;
@@ -64,6 +67,17 @@ public class LotusVinesForm extends TimedForm {
     @Override
     public void onStart() {
         level.playSound(null, user.blockPosition(), SoundEvents.FROGSPAWN_HATCH, SoundSource.PLAYERS, 1.0f, 1.2f);
+        // Vines snaking to the target, then the garden of ice lotuses (replaces the particle trail and lotus dust).
+        java.util.List<Vec3> garden = new java.util.ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            double a = Math.PI * 2.0 * i / 5 + level.random.nextDouble() * 0.6;
+            double r = i == 0 ? 0.0 : 1.2 + level.random.nextDouble() * (GARDEN_RADIUS - 1.6);
+            garden.add(targetPoint.add(Math.cos(a) * r, 0.05, Math.sin(a) * r));
+        }
+        DomaArtEntity art = new DomaArtEntity(level, user, DomaArtEntity.Mode.LOTUS_VINES, VINE_TRAVEL_DURATION + GARDEN_LINGER_DURATION + 4, startPoint, user.getLookAngle());
+        art.setPoints(targetPoint, garden);
+        level.addFreshEntity(art);
+        FormAnimations.play(user, FormAnimations.DOMA_POINT);
     }
 
     @Override
@@ -73,30 +87,13 @@ public class LotusVinesForm extends TimedForm {
         if (ticksActive <= VINE_TRAVEL_DURATION) {
             double progress = (double) ticksActive / VINE_TRAVEL_DURATION;
 
-            for (int i = 0; i < 3; i++) {
-                Vec3 vinePath = startPoint.lerp(targetPoint, progress);
-
-                double weave_amplitude = 1.2;
-                double weave_frequency = 2.0;
-                double weave_offset = Math.sin(progress * Math.PI * weave_frequency + (i * 2)) * weave_amplitude;
-                Vec3 sideDir = targetPoint.subtract(startPoint).cross(new Vec3(0, 1, 0)).normalize();
-                Vec3 particlePos = vinePath.add(sideDir.scale(weave_offset));
-
-                level.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y + 0.2, particlePos.z, 1, 0, 0, 0, 0);
-            }
+            // Vines drawn by DomaArtEntity.
 
         } else {
             if (!hasBloomed) {
                 hasBloomed = true;
                 level.playSound(null, targetPoint.x, targetPoint.y, targetPoint.z, SoundEvents.AMETHYST_CLUSTER_BREAK, SoundSource.PLAYERS, 1.5f, 1.8f);
-                for (int i = 0; i < 5; i++) {
-                    Vec3 lotusPos = targetPoint.add(new Vec3(
-                            (level.random.nextDouble() - 0.5) * (GARDEN_RADIUS * 2),
-                            0.2,
-                            (level.random.nextDouble() - 0.5) * (GARDEN_RADIUS * 2)
-                    ));
-                    spawnIceLotusVFX(level, lotusPos);
-                }
+                // The garden blooms (DomaArtEntity).
             }
 
             AABB gardenBox = new AABB(targetPoint, targetPoint).inflate(GARDEN_RADIUS, 2.0, GARDEN_RADIUS);
@@ -113,14 +110,7 @@ public class LotusVinesForm extends TimedForm {
                 }
             }
 
-            if (ticksActive % 2 == 0) {
-                Vec3 mistPos = targetPoint.add(new Vec3(
-                        (level.random.nextDouble() - 0.5) * (GARDEN_RADIUS * 2),
-                        0.5 + level.random.nextDouble(),
-                        (level.random.nextDouble() - 0.5) * (GARDEN_RADIUS * 2)
-                ));
-                level.sendParticles(ParticleTypes.WHITE_ASH, mistPos.x, mistPos.y, mistPos.z, 1, 0, 0, 0, 0);
-            }
+            // Garden mist drawn by DomaArtEntity.
         }
     }
 

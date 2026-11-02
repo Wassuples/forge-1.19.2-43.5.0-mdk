@@ -1,0 +1,16 @@
+{
+  "structures": [
+    {
+      "structure": "demonslayer:fujikasane",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "minecraft:concentric_rings",
+    "distance": 8,
+    "spread": 1,
+    "count": 1,
+    "preferred_biomes": "#demonslayer:fujikasane_preferred",
+    "salt": 1931482617
+  }
+}

@@ -21,9 +21,6 @@ import com.wassuples.demonslayer.gravity.GravityUtil;
 import com.wassuples.demonslayer.gravity.PlayerGravity;
 import com.wassuples.demonslayer.item.custom.HashiraSwordHelper;
 import com.wassuples.demonslayer.item.custom.NichirinSwordItem;
-import com.wassuples.demonslayer.missions.Mission;
-import com.wassuples.demonslayer.missions.MissionObjective;
-import com.wassuples.demonslayer.missions.MissionRegistry;
 import com.wassuples.demonslayer.missions.PlayerMissionsProvider;
 import com.wassuples.demonslayer.nemesis.DemonHierarchyManager;
 import com.wassuples.demonslayer.nemesis.ai.NemesisDemonEntity;
@@ -38,6 +35,7 @@ import com.wassuples.demonslayer.util.DemonThreatHelper;
 import com.wassuples.demonslayer.util.FormAnimations;
 import com.wassuples.demonslayer.util.ModUtils;
 import com.wassuples.demonslayer.util.ToonForceHelper;
+import com.wassuples.demonslayer.entity.custom.ToonFakeTunnelEntity;
 import com.wassuples.demonslayer.util.WisteriaHelper;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.BlockPos;
@@ -362,11 +360,7 @@ public class ModEvents {
 
         player.getCapability(PLAYER_PROGRESSION).ifPresent(progression -> ModMessages.sendToPlayer(new PlayerProgressionSyncS2CPacket(player.getId(), progression.getRank(), progression.getUnlockedStyles(), progression.getStyleMasteryMap(), progression.getFormMasteryMap()), player));
 
-        player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(mission -> {
-            CompoundTag nbt = new CompoundTag();
-            mission.saveNBTData(nbt);
-            ModMessages.sendToPlayer(new PlayerMissionSyncS2CPacket(nbt), player);
-        });
+        com.wassuples.demonslayer.missions.MissionManager.sync(player);
 
         player.getCapability(PlayerDemonProvider.PLAYER_DEMON).ifPresent(demon -> {
             CompoundTag nbt = new CompoundTag();
@@ -419,6 +413,8 @@ public class ModEvents {
         ToonForceHelper.tickHotPotatoBomb(player);
         ToonForceHelper.tickFlattened(player);
         ToonForceHelper.tickBananaSpin(player);
+        ToonForceHelper.tickRainCloud(player);
+        ToonFakeTunnelEntity.tickOwnerPassage(player);
 
         // WISTERIA: demon players are poisoned near wisteria leaves.
         if (player.tickCount % 10 == 0) {
@@ -466,85 +462,7 @@ public class ModEvents {
             }
         });
 
-        if (player.tickCount % 20 == 0) { // Check once per second
-            final ResourceLocation finalSelectionId = new ResourceLocation(DemonSlayer.MOD_ID, "story_final_selection");
-
-            player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
-                if (missions.isActive(finalSelectionId)) {
-                    final ResourceLocation requiredBiome = new ResourceLocation(DemonSlayer.MOD_ID, "fujikasane_forest");
-                    final String biomeEnteredKey = "fujikasane_entered";
-                    final String bossSpawnedKey = "boss_spawned";
-
-                    Map<String, Integer> progress = missions.getProgress(finalSelectionId);
-                    ResourceLocation currentBiome = player.level.getBiome(player.blockPosition()).unwrapKey().get().location();
-
-                    Mission mission = MissionRegistry.getMission(finalSelectionId);
-                    if (mission == null) return;
-
-                    if (currentBiome.equals(requiredBiome)) {
-                        // --- Player is INSIDE the biome ---
-                        if (!progress.containsKey(biomeEnteredKey)) {
-                            missions.updateProgress(finalSelectionId, biomeEnteredKey, 1);
-                            player.sendSystemMessage(Component.literal("You have entered Mt. Fujikasane. The trial begins now. Do not leave.").withStyle(ChatFormatting.DARK_PURPLE));
-                        }
-
-                        if (!progress.containsKey(bossSpawnedKey)) {
-                            int startTime = progress.getOrDefault("survive_objective", (int)player.level.getGameTime());
-                            long timeElapsed = player.level.getGameTime() - startTime;
-
-                            // Check if 6 days have passed
-                            if (timeElapsed >= (24000 * 6)) {
-                                BlockPos spawnPos = player.blockPosition().north(5);
-                                ModEntityTypes.HAND_DEMON.get().spawn((ServerLevel)player.level, null, null, spawnPos, MobSpawnType.EVENT, true, false);
-                                player.sendSystemMessage(Component.literal("A massive, grotesque demon emerges from the trees... It reeks of countless devoured slayers.").withStyle(ChatFormatting.DARK_RED));
-                                missions.updateProgress(finalSelectionId, bossSpawnedKey, 1);
-                            }
-                        }
-                    } else {
-                        // --- Player is OUTSIDE the biome ---
-                        if (progress.containsKey(biomeEnteredKey)) {
-                            missions.abandonMission(finalSelectionId);
-                            player.sendSystemMessage(Component.literal("You have fled Mt. Fujikasane. Your trial has ended in failure.").withStyle(ChatFormatting.RED));
-                            player.level.playSound(null, player.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.PLAYERS, 0.5f, 1.0f);
-                            ModUtils.syncMissions(player);
-                        }
-                    }
-                }
-            });
-        }
-
-        if (player.tickCount % 40 == 0) {
-            player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).ifPresent(missions -> {
-                Set<ResourceLocation> activeMissionIds = new HashSet<>(missions.getActiveMissionIds());
-
-                activeMissionIds.forEach(missionId -> {
-                    Mission mission = MissionRegistry.getMission(missionId);
-                    if (mission != null) {
-                        boolean allObjectivesComplete = true;
-                        for (MissionObjective objective : mission.objectives()) {
-                            if (!objective.isComplete(player, missions.getProgress(missionId))) {
-                                allObjectivesComplete = false;
-                                break;
-                            }
-                        }
-
-                        if (allObjectivesComplete) {
-                            // Grant rewards and complete the mission
-                            mission.rewards().forEach(reward -> reward.grant(player));
-                            missions.completeMission(mission);
-                            ReputationService.onMissionCompleted(player, mission);
-                            ModUtils.checkAndApplyRankUp(player);
-                            player.sendSystemMessage(Component.literal("Mission Complete: ").withStyle(ChatFormatting.GOLD).append(mission.title()));
-
-                            // Sync the changes to the client
-                            CompoundTag missionData = new CompoundTag();
-                            missions.saveNBTData(missionData);
-                            ModMessages.sendToPlayer(new PlayerMissionSyncS2CPacket(missionData), player);
-                        }
-                    }
-                });
-            });
-        }
+        // Story missions are ticked by missions.MissionManager.
 
         if (player.tickCount % 4 == 0) {
             if (player.hasEffect(ModEffects.FORCED_SLEEP.get())) return;
@@ -640,6 +558,7 @@ public class ModEvents {
         ToonForceHelper.tickHotPotatoBomb(livingEntity);
         ToonForceHelper.tickFlattened(livingEntity);
         ToonForceHelper.tickToonText(livingEntity);
+        ToonForceHelper.tickRainCloud(livingEntity);
 
         // Poison demon NPCs close to wisteria leaves.
         if (livingEntity.tickCount % 10 != 0) return;
@@ -654,7 +573,8 @@ public class ModEvents {
     }
 
     private static boolean isWisteriaSusceptibleDemon(LivingEntity livingEntity) {
-        if (livingEntity instanceof DemonEntity || livingEntity instanceof HandDemonEntity || livingEntity instanceof NemesisDemonEntity) {
+        if (livingEntity instanceof DemonEntity || livingEntity instanceof HandDemonEntity || livingEntity instanceof NemesisDemonEntity
+                || livingEntity instanceof com.wassuples.demonslayer.entity.custom.CaptiveDemonEntity) {
             return true;
         }
 
@@ -787,54 +707,54 @@ public class ModEvents {
         }
     }
 
+    /**
+     * Server half of Toon Force airwalk. Player movement is client-authoritative, so the actual "keep walking at
+     * the same Y until you look down" logic runs on the owning client (ToonAirwalkClient), which reports
+     * onGround=true while airwalking. The server only:
+     *  - keeps vanilla's anti-fly check from kicking an airwalking player ("Flying is not enabled"),
+     *  - flags the state and plays the run animation/clouds/sound so everyone else sees it.
+     */
     private static void handleToonForceAirwalk(ServerPlayer player, PlayerDemon demon) {
-        if (!demon.isDemon() || demon.getEquippedBda() != BloodDemonArts.TOON_FORCE) {
+        boolean toon = demon.isDemon() && demon.getEquippedBda() == BloodDemonArts.TOON_FORCE;
+        boolean airwalking = toon
+                && player.isOnGround()                       // as reported by the client
+                && !player.getAbilities().flying && !player.isFallFlying()
+                && !player.isInWater() && !player.isPassenger() && !player.onClimbable()
+                && player.level.noCollision(player, player.getBoundingBox().expandTowards(0.0, -0.1, 0.0));
+
+        if (!airwalking) {
             player.getPersistentData().remove(ToonForceHelper.AIRWALK_TAG);
-            player.getPersistentData().remove("ds_toon_airwalk_ground_y");
+            player.getPersistentData().remove("ds_toon_airwalk_ground_y"); // legacy key from the old server-side version
             return;
         }
 
-        if (player.isOnGround()) {
-            player.getPersistentData().putDouble("ds_toon_airwalk_ground_y", player.getY());
-            player.getPersistentData().remove(ToonForceHelper.AIRWALK_TAG);
-            return;
-        }
+        ((com.wassuples.demonslayer.mixin.toon.ServerGamePacketListenerAccessor) player.connection)
+                .setAboveGroundTickCount(0);
+        player.fallDistance = 0.0f;
+        player.getPersistentData().putBoolean(ToonForceHelper.AIRWALK_TAG, true);
 
-        float pitch = player.getXRot();
-        boolean lookingDown = pitch > 50.0f; // Slightly more generous
-        if (lookingDown) {
-            player.getPersistentData().remove(ToonForceHelper.AIRWALK_TAG);
-            player.getPersistentData().remove("ds_toon_airwalk_ground_y");
-            return;
+        // Server-side player velocity isn't meaningful (movement is client-driven), so compare positions per tick.
+        net.minecraft.nbt.CompoundTag data = player.getPersistentData();
+        double dx = player.getX() - data.getDouble("ds_toon_airwalk_last_x");
+        double dz = player.getZ() - data.getDouble("ds_toon_airwalk_last_z");
+        data.putDouble("ds_toon_airwalk_last_x", player.getX());
+        data.putDouble("ds_toon_airwalk_last_z", player.getZ());
+        boolean moving = dx * dx + dz * dz > 1.0E-4;
+        if (moving && player.tickCount % 8 == 0) {
+            FormAnimations.play(player, FormAnimations.TOON_RUN);
+            ((ServerLevel) player.level).sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
+                    player.getX(), player.getY() - 0.05, player.getZ(), 2, 0.2, 0.02, 0.2, 0.0);
         }
-
-        if (player.getPersistentData().contains("ds_toon_airwalk_ground_y")) {
-            double groundY = player.getPersistentData().getDouble("ds_toon_airwalk_ground_y");
-            if (player.getY() >= groundY - 0.65 && player.getY() <= groundY + 0.2) {
-                Vec3 vel = player.getDeltaMovement();
-                player.setDeltaMovement(vel.x, 0.0, vel.z);
-                player.setPos(player.getX(), groundY, player.getZ());
-                player.setOnGround(true);
-                player.fallDistance = 0.0f;
-                player.getPersistentData().putBoolean(ToonForceHelper.AIRWALK_TAG, true);
-                if (player.tickCount % 8 == 0) {
-                    FormAnimations.play(player, FormAnimations.TOON_RUN);
-                    ((ServerLevel) player.level).sendParticles(net.minecraft.core.particles.ParticleTypes.CLOUD,
-                            player.getX(), groundY - 0.05, player.getZ(), 2, 0.2, 0.02, 0.2, 0.0);
-                }
-                if (player.tickCount % 20 == 0) {
-                    player.level.playSound(null, player.blockPosition(), com.wassuples.demonslayer.sound.ModSounds.TOON_RUN.get(),
-                            net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.1f);
-                }
-            } else if (player.getY() < groundY - 0.1) {
-                player.getPersistentData().remove("ds_toon_airwalk_ground_y");
-            }
+        if (moving && player.tickCount % 20 == 0) {
+            player.level.playSound(null, player.blockPosition(), com.wassuples.demonslayer.sound.ModSounds.TOON_RUN.get(),
+                    net.minecraft.sounds.SoundSource.PLAYERS, 0.55f, 1.1f);
         }
     }
 
     @SubscribeEvent
     public static void onCommandsRegister(RegisterCommandsEvent event) {
         DemonSlayerCommands.register(event.getDispatcher());
+        com.wassuples.demonslayer.command.MissionCommands.register(event.getDispatcher());
     }
 
     @SubscribeEvent

@@ -47,6 +47,9 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
     private static final EntityDataAccessor<Integer> ANIMATION_STATE = SynchedEntityData.defineId(BodhisattvaEntity.class, EntityDataSerializers.INT);
 
     private int lifeTicks = 1200;
+    /** Client-only: animation state last seen by BodhisattvaRenderer and the tick it started (drives the poses). */
+    public int clientState = -1;
+    public int clientStateStart = 0;
     public int attackCooldown = 0;
 
     public BodhisattvaEntity(EntityType<? extends Monster> pEntityType, Level pLevel) {
@@ -207,7 +210,8 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
         if (this.hasPassenger(pPassenger)) {
             // This calculates a point on the right shoulder.
             // Adjust the numbers to move the seat exactly where you want it on your model.
-            Vec3 rightShoulderOffset = new Vec3(1.5D, this.getBbHeight() * 0.85D, 0.0D)
+            // On the statue's left shoulder (BodhisattvaRenderer draws the shoulder at x = 1.9, y = 5.5).
+            Vec3 rightShoulderOffset = new Vec3(2.3D, 5.9D, 0.0D)
                     .yRot(-this.getYRot() * ((float)Math.PI / 180F)); // Rotate the offset with the body
 
             // Set the passenger's position to our custom seat location.
@@ -284,7 +288,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
         }
         if (!this.level.isClientSide) {
             ((ServerLevel)this.level).sendParticles(new net.minecraft.core.particles.BlockParticleOption(ParticleTypes.BLOCK, Blocks.ICE.defaultBlockState()),
-                    this.getX(), this.getY(), this.getZ(), 500, this.getBbWidth() / 2.0, this.getBbHeight() / 2.0, this.getBbWidth() / 2.0, 0.5);
+                    this.getX(), this.getY() + 4.0, this.getZ(), 160, 2.5, 3.5, 2.5, 0.5);
         }
         this.level.playSound(null, this.blockPosition(), SoundEvents.WITHER_DEATH, SoundSource.NEUTRAL, 2.0f, 1.0f);
         this.discard();
@@ -313,12 +317,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
             // Attribute damage to the pilot but exclude this summon.
             dealAOEDamageExcluding(pilot, centerOfCone, widthOfCone, 2.0f, 0.2f, this);
 
-            for (int i = 0; i < 15; i++) {
-                Vec3 sideDir = new Vec3(-lookDir.z, 0, lookDir.x).normalize();
-                Vec3 particlePos = centerOfCone.add(sideDir.scale((this.random.nextDouble() - 0.5) * (widthOfCone * 2)));
-                particlePos = particlePos.add(0, (this.random.nextDouble() - 0.5) * 4.0, 0);
-                ((ServerLevel) this.level).sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 1, 0,0,0,0);
-            }
+            // The freezing mist is drawn by BodhisattvaRenderer (was 15 snowflake particles per block, 360 per tick).
         }
     }
 
@@ -328,24 +327,7 @@ public class BodhisattvaEntity extends Monster implements IAnimatable {
         this.level.playSound(null, this.blockPosition(), SoundEvents.GENERIC_EXPLODE, SoundSource.HOSTILE, 2.0f, 0.5f);
         this.level.playSound(null, this.blockPosition(), SoundEvents.WITHER_HURT, SoundSource.HOSTILE, 2.0f, 0.8f);
 
-        // --- NEW: Added Particle Effect for the Swipe ---
-        if (this.level instanceof ServerLevel serverLevel) {
-            Vec3 arcOrigin = this.getEyePosition().add(0, -this.getBbHeight() * 0.25, 0); // Start the arc from the statue's chest area
-            float startYaw = this.getYRot() - 75; // Center a 150-degree arc in front
-
-            // Loop through the angle of the arc
-            for (int i = 0; i <= 150; i += 4) {
-                float currentYaw = startYaw + i;
-                double angleRad = Math.toRadians(-currentYaw); // Negative to match Minecraft's yaw system
-                Vec3 direction = new Vec3(Math.sin(angleRad), 0, Math.cos(angleRad));
-
-                // Spawn particles along the length of the swipe
-                Vec3 particlePos = arcOrigin.add(direction.scale(8.0));
-                serverLevel.sendParticles(ParticleTypes.SWEEP_ATTACK, particlePos.x, particlePos.y, particlePos.z, 2, 0.5, 0.5, 0.5, 0.0);
-                serverLevel.sendParticles(ParticleTypes.SNOWFLAKE, particlePos.x, particlePos.y, particlePos.z, 5, 1.0, 1.0, 1.0, 0.1);
-            }
-        }
-
+        // The swing and its frost crescent are drawn by BodhisattvaRenderer.
         // Damage logic remains the same
         Vec3 centerOfSwipe = this.getEyePosition().add(this.getLookAngle().scale(8.0));
         // Attribute damage to the pilot but exclude this summon.
