@@ -17,6 +17,11 @@ public final class ClientMissionHandler {
     @Nullable
     static volatile MissionTracker tracker;
 
+    /** The live tracker of the player's active mission (null when none), for screens outside this package. */
+    public static MissionTracker currentTracker() {
+        return tracker;
+    }
+
     private ClientMissionHandler() {
     }
 

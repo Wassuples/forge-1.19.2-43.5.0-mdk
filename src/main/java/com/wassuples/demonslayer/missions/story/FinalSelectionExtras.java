@@ -44,7 +44,7 @@ import org.jetbrains.annotations.Nullable;
  * <ul>
  *   <li><b>Cornered</b> (nights 2-6): one of the other candidates is surrounded by demons; reach them and clear them
  *       out before they are killed.</li>
- *   <li><b>Inosuke's challenge</b>: kill 12 demons before dawn.</li>
+ *   <li><b>Genya's challenge</b>: kill 12 demons before dawn (he means to out-kill everyone).</li>
  *   <li><b>Zenitsu's plea</b>: clear 8 demons out of the trees around his hiding place.</li>
  *   <li><b>The horned demon</b> (Tanjiro, from night 3): hunt a demon that has eaten more than the others, near the
  *       ruined hut.</li>
@@ -67,7 +67,7 @@ final class FinalSelectionExtras {
     private static final String CORNER = "corner", RACE = "race", ZEN = "zenitsu", HORN = "horned", SWORD = "sword", COIN = "coinDay";
     /** Quest status values. */
     private static final int OPEN = 0, ACTIVE = 1, DONE = 2, FAILED = 3;
-    private static final String CORNER_TAG = "demonslayer.fs_corner", SWORD_TAG = "demonslayer.fs_sword";
+    private static final String CORNER_TAG = com.wassuples.demonslayer.worldgen.fujikasane.FujikasaneDemons.CORNER_TAG, SWORD_TAG = "demonslayer.fs_sword";
     private static final int RACE_GOAL = 12, ZEN_GOAL = 8;
 
     private FinalSelectionExtras() {
@@ -117,11 +117,12 @@ final class FinalSelectionExtras {
         ctx.state().put(CANDS, cands);
     }
 
-    /** Every second: direct the candidates and run the side quests. */
+    /** Every second: direct the candidates, run the side quests and show who has an errand for the player. */
     static void tick(MissionContext ctx, FujikasaneLayout layout) {
         CompoundTag s = ctx.state();
         String phase = s.getString(FinalSelectionMission.PHASE);
         if (ctx.player().tickCount % 100 < 20) directCandidates(ctx, layout, phase);
+        sendMarkers(ctx, phase);
         if (!FinalSelectionMission.TRIAL.equals(phase)) return;
         if (status(quest(ctx, SWORD), ACTIVE)) {
             // the dropped sword glints in the dark by the den
@@ -191,6 +192,64 @@ final class FinalSelectionExtras {
         ctx.markDirty();
     }
 
+    // ================================================================== quests: in-world markers
+
+    /**
+     * Talismans over the heads of those with an errand for this player (see QuestMarkerRenderer): offered, under way,
+     * or ready to hand in. The same conditions as the dialogue offers below.
+     */
+    private static void sendMarkers(MissionContext ctx, String phase) {
+        java.util.Map<Integer, Byte> out = new java.util.HashMap<>();
+        net.minecraft.server.MinecraftServer server = ctx.player().server;
+        CompoundTag s = ctx.state();
+        if (FinalSelectionMission.RETURN.equals(phase)) {
+            for (StoryCharacter twin : new StoryCharacter[]{StoryCharacter.KANATA, StoryCharacter.KIRIYA}) {
+                StoryNpcEntity npc = FujikasaneResidents.loaded(server, twin);
+                if (npc != null) out.put(npc.getId(), com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.READY);
+            }
+        } else if (FinalSelectionMission.TRIAL.equals(phase)) {
+            CompoundTag quests = s.getCompound(QUESTS);
+            boolean night = s.getBoolean(FinalSelectionMission.IN_NIGHT);
+            int nightNo = s.getInt(FinalSelectionMission.SURVIVED) + 1;
+            mark(out, server, StoryCharacter.GENYA, quests.getCompound(RACE), night);
+            mark(out, server, StoryCharacter.ZENITSU, quests.getCompound(ZEN), true);
+            mark(out, server, StoryCharacter.TANJIRO, quests.getCompound(HORN), nightNo >= 3);
+            StoryNpcEntity kanao = FujikasaneResidents.loaded(server, StoryCharacter.KANAO);
+            long day = ctx.level().getDayTime() / FinalSelectionMission.DAY;
+            if (kanao != null && s.getLong(COIN) != day + 1) out.put(kanao.getId(), com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.OFFER);
+            CompoundTag sword = quests.getCompound(SWORD);
+            if (sword.contains("who") && (status(sword, OPEN) || status(sword, ACTIVE)) && ctx.scoped(sword.getString("who")) instanceof StoryNpcEntity owner) {
+                byte kind = status(sword, OPEN) ? com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.OFFER
+                        : findSword(ctx.player()) >= 0 ? com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.READY
+                        : com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.ACTIVE;
+                out.put(owner.getId(), kind);
+            }
+        }
+        // only when something changed (and again every 10 s, in case the client lost track: relog, dimension change)
+        java.util.Map<Integer, Byte> last = LAST_MARKERS.get(ctx.player().getUUID());
+        if (out.equals(last) && ctx.player().tickCount % 200 >= 20) return;
+        LAST_MARKERS.put(ctx.player().getUUID(), out);
+        com.wassuples.demonslayer.networking.ModMessages.sendToPlayer(new com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket(out), ctx.player());
+    }
+
+    private static final java.util.Map<java.util.UUID, java.util.Map<Integer, Byte>> LAST_MARKERS = new java.util.HashMap<>();
+
+    private static void mark(java.util.Map<Integer, Byte> out, net.minecraft.server.MinecraftServer server, StoryCharacter who, CompoundTag quest, boolean offered) {
+        StoryNpcEntity npc = FujikasaneResidents.loaded(server, who);
+        if (npc == null) return;
+        if (!quest.contains("status")) {
+            if (offered) out.put(npc.getId(), com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.OFFER);
+        } else if (status(quest, ACTIVE)) {
+            out.put(npc.getId(), com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.ACTIVE);
+        }
+    }
+
+    /** The mission is over: no more talismans. */
+    static void clearMarkers(ServerPlayer player) {
+        LAST_MARKERS.remove(player.getUUID());
+        com.wassuples.demonslayer.networking.ModMessages.sendToPlayer(new com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket(new java.util.HashMap<>()), player);
+    }
+
     // ================================================================== quests: hooks
 
     static void onTrialBegin(MissionContext ctx, FujikasaneLayout layout) {
@@ -212,17 +271,17 @@ final class FinalSelectionExtras {
         if (status(race, ACTIVE)) {
             int n = race.getInt("kills") + 1;
             race.putInt("kills", n);
-            StoryNpcEntity shouter = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.INOSUKE);
+            StoryNpcEntity shouter = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.GENYA);
             if (n < RACE_GOAL && n % 3 == 0 && shouter != null) {
                 shouter.say(t("quest.race.progress", n, Math.min(RACE_GOAL - 1, n + 1 + ctx.level().getRandom().nextInt(3))));
             }
             if (n >= RACE_GOAL) {
                 race.putInt("status", DONE);
-                ctx.data().setFlag("final_selection.beat_inosuke");
+                ctx.data().setFlag("final_selection.beat_genya");
                 mastery(ctx.player(), 60);
                 give(ctx.player(), new ItemStack(ModItems.WISTERIA_INCENSE.get()));
-                StoryNpcEntity inosuke = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.INOSUKE);
-                if (inosuke != null) inosuke.say(t("quest.race.inosuke_lost"));
+                StoryNpcEntity genya = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.GENYA);
+                if (genya != null) genya.say(t("quest.race.genya_lost"));
             }
         }
         CompoundTag zen = quest(ctx, ZEN);
@@ -244,8 +303,8 @@ final class FinalSelectionExtras {
         CompoundTag race = quest(ctx, RACE);
         if (status(race, ACTIVE)) {
             race.putInt("status", FAILED);
-            StoryNpcEntity inosuke = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.INOSUKE);
-            if (inosuke != null) inosuke.say(t("quest.race.inosuke_won"));
+            StoryNpcEntity genya = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.GENYA);
+            if (genya != null) genya.say(t("quest.race.genya_won"));
         }
         CompoundTag corner = quest(ctx, CORNER);
         if (status(corner, ACTIVE)) {
@@ -378,7 +437,7 @@ final class FinalSelectionExtras {
 
         DialogueNode first = DialogueNode.of(who, Component.translatable(base + "trial"));
         switch (who) {
-            case INOSUKE -> {
+            case GENYA -> {
                 CompoundTag race = quests.getCompound(RACE);
                 if (!race.contains("status") && night) {
                     first.primary(t("quest.race.ask"), x -> {
@@ -388,7 +447,7 @@ final class FinalSelectionExtras {
                             q.putInt("kills", 0);
                             c.markDirty();
                         });
-                        return DialogueNode.of(StoryCharacter.INOSUKE, t("quest.race.offer")).end(t("quest.race.accept"));
+                        return DialogueNode.of(StoryCharacter.GENYA, t("quest.race.offer")).end(t("quest.race.accept"));
                     });
                 }
             }
@@ -526,8 +585,10 @@ final class FinalSelectionExtras {
 
     private static void mastery(ServerPlayer player, int amount) {
         BreathingStyles style = player.getCapability(PlayerStyleProvider.PLAYER_STYLE).map(st -> st.getCurrentStyles()).orElse(null);
-        if (style == null || style == BreathingStyles.NONE) return;
-        player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(p -> p.addStyleMastery(style, amount));
+        player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(p -> {
+            if (style != null && style != BreathingStyles.NONE && p.isStyleUnlocked(style)) p.addStyleMastery(style, amount);
+            else p.addBankedMastery(amount);   // no style learned yet: kept for the first one
+        });
         com.wassuples.demonslayer.util.ModUtils.syncProgression(player);
     }
 }

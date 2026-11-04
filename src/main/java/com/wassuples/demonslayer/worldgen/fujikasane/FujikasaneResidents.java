@@ -47,8 +47,12 @@ import java.util.UUID;
 @Mod.EventBusSubscriber(modid = DemonSlayer.MOD_ID, bus = Mod.EventBusSubscriber.Bus.FORGE)
 public final class FujikasaneResidents {
     public static final String RESIDENT_TAG = "demonslayer.fujikasane_resident";
+    /**
+     * Who is on the mountain for the Final Selection, as in the story at this point: the twins and Tanjiro, Zenitsu,
+     * Kanao and Genya. (Other characters, Inosuke among them, are kept in {@link StoryCharacter} for later missions.)
+     */
     private static final StoryCharacter[] RESIDENTS = {StoryCharacter.KIRIYA, StoryCharacter.KANATA, StoryCharacter.TANJIRO,
-            StoryCharacter.ZENITSU, StoryCharacter.INOSUKE, StoryCharacter.KANAO, StoryCharacter.GENYA};
+            StoryCharacter.ZENITSU, StoryCharacter.KANAO, StoryCharacter.GENYA};
     private static final Map<StoryCharacter, Integer> MISSING = new EnumMap<>(StoryCharacter.class);
     private static long nextBark;
 
@@ -102,6 +106,12 @@ public final class FujikasaneResidents {
         int r = FujikasaneLayout.R + 48;
         AABB area = new AABB(layout.centerX - r, level.getMinBuildHeight(), layout.centerZ - r, layout.centerX + r, level.getMaxBuildHeight(), layout.centerZ + r);
         List<StoryNpcEntity> all = level.getEntitiesOfClass(StoryNpcEntity.class, area, e -> e.getPersistentData().getBoolean(RESIDENT_TAG));
+        // residents who don't belong on the mountain any more (worlds from before the roster changed) leave
+        all.removeIf(e -> {
+            if (java.util.Arrays.asList(RESIDENTS).contains(e.character())) return false;
+            e.discard();
+            return true;
+        });
         List<ServerPlayer> trials = FinalSelectionMission.trialPlayers(level.getServer());
         trials.removeIf(p -> p.level != level);
 

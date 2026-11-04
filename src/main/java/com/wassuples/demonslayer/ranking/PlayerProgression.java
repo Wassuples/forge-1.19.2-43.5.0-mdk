@@ -51,6 +51,14 @@ public class PlayerProgression {
     private int demonKills = 0;
     private int demonKillsThisRank = 0;
     private boolean killedKizuki = false;
+    /**
+     * Breathing training earned before any style was learned (e.g. the Final Selection taken by someone who hasn't
+     * trained under a master): it goes into the first style they unlock.
+     */
+    private int bankedMastery = 0;
+
+    public int getBankedMastery() { return bankedMastery; }
+    public void addBankedMastery(int amount) { bankedMastery = Math.min(1000, bankedMastery + Math.max(0, amount)); }
 
     public int getDemonKills() { return demonKills; }
     public int getDemonKillsThisRank() { return demonKillsThisRank; }
@@ -98,15 +106,22 @@ public class PlayerProgression {
     public Set<BreathingForms> getUnlockedForms() { return this.unlockedForms; }
 
     public void unlockStyle(BreathingStyles style) {
+        boolean first = unlockedStyles.stream().noneMatch(st -> st != BreathingStyles.NONE);
         unlockedStyles.add(style);
         styleMastery.putIfAbsent(style, 0);
+        if (first && bankedMastery > 0 && style != BreathingStyles.NONE) {
+            addStyleMastery(style, bankedMastery);
+            bankedMastery = 0;
+        }
     }
     public void unlockForm(BreathingForms form) {
         unlockedForms.add(form);
         formMastery.putIfAbsent(form, 0);
     }
 
+    /** Mastery only grows in a style the player has actually learned (never in the default/selected-but-locked one). */
     public void addStyleMastery(BreathingStyles style, int amount) {
+        if (style == null || style == BreathingStyles.NONE || !unlockedStyles.contains(style)) return;
         int currentMastery = getStyleMastery(style);
         int newMastery = Math.min(currentMastery + amount, 1000);
         styleMastery.put(style, newMastery);
@@ -178,6 +193,7 @@ public class PlayerProgression {
         this.demonKills = source.demonKills;
         this.demonKillsThisRank = source.demonKillsThisRank;
         this.killedKizuki = source.killedKizuki;
+        this.bankedMastery = source.bankedMastery;
     }
 
     public void saveNBTData(CompoundTag nbt) {
@@ -210,6 +226,7 @@ public class PlayerProgression {
         nbt.putInt("demonKills", demonKills);
         nbt.putInt("demonKillsThisRank", demonKillsThisRank);
         nbt.putBoolean("killedKizuki", killedKizuki);
+        nbt.putInt("bankedMastery", bankedMastery);
     }
 
     public void loadNBTData(CompoundTag nbt) {
@@ -275,5 +292,6 @@ public class PlayerProgression {
         demonKills = nbt.getInt("demonKills");
         demonKillsThisRank = nbt.getInt("demonKillsThisRank");
         killedKizuki = nbt.getBoolean("killedKizuki");
+        bankedMastery = nbt.getInt("bankedMastery");
     }
 }

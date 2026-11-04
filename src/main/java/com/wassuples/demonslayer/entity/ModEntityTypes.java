@@ -312,6 +312,26 @@ public class ModEntityTypes {
                             .fireImmune()
                             .build("sound_blast"));
 
+    public static final RegistryObject<EntityType<com.wassuples.demonslayer.entity.custom.OreOfferingEntity>> ORE_OFFERING =
+            ENTITY_TYPES.register("ore_offering",
+                    () -> EntityType.Builder.<com.wassuples.demonslayer.entity.custom.OreOfferingEntity>of(com.wassuples.demonslayer.entity.custom.OreOfferingEntity::new, MobCategory.MISC)
+                            .sized(0.6f, 0.6f)
+                            .clientTrackingRange(8)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("ore_offering"));
+
+    public static final RegistryObject<EntityType<com.wassuples.demonslayer.entity.custom.BreathSlashEntity>> BREATH_SLASH =
+            ENTITY_TYPES.register("breath_slash",
+                    () -> EntityType.Builder.<com.wassuples.demonslayer.entity.custom.BreathSlashEntity>of(com.wassuples.demonslayer.entity.custom.BreathSlashEntity::new, MobCategory.MISC)
+                            .sized(0.5f, 0.5f)
+                            .clientTrackingRange(6)
+                            .updateInterval(20)
+                            .noSave()
+                            .fireImmune()
+                            .build("breath_slash"));
+
     public static final RegistryObject<EntityType<AkazaArtEntity>> AKAZA_ART =
             ENTITY_TYPES.register("akaza_art",
                     () -> EntityType.Builder.<AkazaArtEntity>of(AkazaArtEntity::new, MobCategory.MISC)
@@ -387,7 +407,7 @@ public class ModEntityTypes {
     public static final RegistryObject<EntityType<HandDemonEntity>> HAND_DEMON =
             ENTITY_TYPES.register("hand_demon",
                     () -> EntityType.Builder.of(HandDemonEntity::new, MobCategory.MONSTER)
-                            .sized(3.0f, 3.0f) // a crawling mass of arms (model drawn at 1.6x)
+                            .sized(2.8f, 4.6f) // an enormous round mass bound in its own arms (model drawn at 1.15x)
                             .build("hand_demon"));
 
     //##########################################################

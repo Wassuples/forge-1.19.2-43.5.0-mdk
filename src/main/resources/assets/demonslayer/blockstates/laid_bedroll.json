@@ -1,19 +1,19 @@
 {
   "variants": {
     "facing=north": {
-      "model": "demonslayer:block/laid_bedroll",
+      "model": "demonslayer:block/laid_bedroll_long",
       "y": 0
     },
     "facing=east": {
-      "model": "demonslayer:block/laid_bedroll",
+      "model": "demonslayer:block/laid_bedroll_long",
       "y": 90
     },
     "facing=south": {
-      "model": "demonslayer:block/laid_bedroll",
+      "model": "demonslayer:block/laid_bedroll_long",
       "y": 180
     },
     "facing=west": {
-      "model": "demonslayer:block/laid_bedroll",
+      "model": "demonslayer:block/laid_bedroll_long",
       "y": 270
     }
   }

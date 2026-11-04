@@ -44,7 +44,21 @@ public final class ClientDialogueHandler {
     public static void speech(NpcSpeechS2CPacket packet) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.level == null) return;
-        SPEECH.put(packet.entityId, new Speech(packet.text, mc.level.getGameTime(), Math.max(20, packet.ticks)));
+        long now = mc.level.getGameTime();
+        // someone standing right next to the new speaker who is still talking finishes quickly, so the bubbles never
+        // sit on top of each other (the server already makes neighbours take turns; this covers the rest)
+        net.minecraft.world.entity.Entity speaker = mc.level.getEntity(packet.entityId);
+        if (speaker != null) {
+            for (Map.Entry<Integer, Speech> e : SPEECH.entrySet()) {
+                if (e.getKey() == packet.entityId) continue;
+                net.minecraft.world.entity.Entity other = mc.level.getEntity(e.getKey());
+                Speech s = e.getValue();
+                if (other != null && other.distanceToSqr(speaker) < 5 * 5 && now - s.start < s.ticks - 12) {
+                    e.setValue(new Speech(s.text, s.start, (int) (now - s.start) + 12));
+                }
+            }
+        }
+        SPEECH.put(packet.entityId, new Speech(packet.text, now, Math.max(20, packet.ticks)));
         if (SPEECH.size() > 64) prune(mc.level.getGameTime());
     }
 

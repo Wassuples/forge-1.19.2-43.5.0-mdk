@@ -5,6 +5,8 @@ import com.wassuples.demonslayer.entity.custom.story.StoryCharacter;
 import com.wassuples.demonslayer.entity.custom.story.StoryNpcEntity;
 import com.wassuples.demonslayer.networking.ModMessages;
 import com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket;
+import com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket;
+import com.wassuples.demonslayer.sound.HandDemonMusic;
 import com.wassuples.demonslayer.particle.ModParticles;
 import com.wassuples.demonslayer.sound.ModSounds;
 import net.minecraft.core.BlockPos;
@@ -44,7 +46,8 @@ import java.util.List;
 
 /**
  * The Hand Demon (手鬼): fifty candidates eaten over forty-seven years on Mt. Fujikasane, Sakonji Urokodaki's thirteen
- * apprentices among them. A bloated mass of olive-green arms that crawls on its hands.
+ * apprentices among them. An enormous, bloated mass bound in coils of its own arms, squatting on hands, with a small head
+ * clutched by more hands.
  *
  * <p>Fights with flesh manipulation, all telegraphed so they can be dodged:
  * <ul>
@@ -79,6 +82,39 @@ public class HandDemonEntity extends Monster {
             SynchedEntityData.defineId(HandDemonEntity.class, EntityDataSerializers.BLOCK_POS),
             SynchedEntityData.defineId(HandDemonEntity.class, EntityDataSerializers.BLOCK_POS),
             SynchedEntityData.defineId(HandDemonEntity.class, EntityDataSerializers.BLOCK_POS)};
+
+    /** Dying: who the outstretched hand reaches for, whether Tanjiro is the one to take it, and the outcome. */
+    private static final EntityDataAccessor<Integer> REACH_TARGET = SynchedEntityData.defineId(HandDemonEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Boolean> TANJIRO_HOLDS = SynchedEntityData.defineId(HandDemonEntity.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<Integer> OUTCOME = SynchedEntityData.defineId(HandDemonEntity.class, EntityDataSerializers.INT);
+    private static final EntityDataAccessor<Integer> OUTCOME_AT = SynchedEntityData.defineId(HandDemonEntity.class, EntityDataSerializers.INT);
+
+    // ---- the death and its reprise, in ticks since the killing blow (they match the music files' lengths)
+    /** The demon half of the theme collapses; the natural reprise starts here. */
+    public static final int REPRISE_AT = 50;
+    /** The reprise has played: the hand reaches out. */
+    public static final int REACH_AT = REPRISE_AT + 250;
+    /** How long the hand waits for someone to take it (five seconds). */
+    public static final int WINDOW = 100;
+    /** Tanjiro, if he is there, takes it this long after it reaches. */
+    public static final int TANJIRO_TAKES = 30;
+    /** Lengths of the two endings; the body is gone when its ending has played. */
+    public static final int END_HELD = 196, END_UNHELD = 166;
+    public static final int OUTCOME_WAITING = 0, OUTCOME_HELD = 1, OUTCOME_UNHELD = 2;
+
+    // ---- the fight's music (server side)
+    /** Ticks without sight of its quarry before it gives up the hunt (the music fades over the same time). */
+    private static final int LOSE_TICKS = 200;
+    /** Regrowing back into an earlier phase needs this much health above the line, held this long, this rarely. */
+    private static final float REGROW_MARGIN = 0.08F;
+    private static final int REGROW_HOLD = 60, REGROW_COOLDOWN = 400;
+    private int musicPhase;           // 0 before the fight, then 1..4
+    private int rewinds;
+    private int regrowHeld;
+    private long lastRewind = -100000L;
+    private int unseen;
+    private long fightStart = -1L;
+    private boolean musicOn;
 
     /** Hits weaker than this glance off its hardened flesh (most of the damage is turned aside). */
     private static final float HARD_FLESH = 7.0F;
@@ -115,6 +151,38 @@ public class HandDemonEntity extends Monster {
         this.entityData.define(ATTACK_TICK, 0);
         for (EntityDataAccessor<Integer> t : TARGETS) this.entityData.define(t, -1);
         for (EntityDataAccessor<BlockPos> p : POINTS) this.entityData.define(p, BlockPos.ZERO);
+        this.entityData.define(REACH_TARGET, -1);
+        this.entityData.define(TANJIRO_HOLDS, false);
+        this.entityData.define(OUTCOME, OUTCOME_WAITING);
+        this.entityData.define(OUTCOME_AT, 0);
+    }
+
+    public int reachTarget() {
+        return this.entityData.get(REACH_TARGET);
+    }
+
+    public boolean tanjiroHolds() {
+        return this.entityData.get(TANJIRO_HOLDS);
+    }
+
+    public int outcome() {
+        return this.entityData.get(OUTCOME);
+    }
+
+    public int outcomeAt() {
+        return this.entityData.get(OUTCOME_AT);
+    }
+
+    /** True while its outstretched hand can still be taken. */
+    public boolean handOpen() {
+        return this.isDeadOrDying() && this.deathTime >= REACH_AT && this.deathTime < REACH_AT + WINDOW && outcome() == OUTCOME_WAITING;
+    }
+
+    /** How long the whole death lasts (known once the outcome is). */
+    public int deathLength() {
+        int o = outcome();
+        if (o == OUTCOME_WAITING) return REACH_AT + WINDOW + END_UNHELD;
+        return outcomeAt() + (o == OUTCOME_HELD ? END_HELD : END_UNHELD);
     }
 
     @Override
@@ -173,18 +241,20 @@ public class HandDemonEntity extends Monster {
             }
             if (attack() == GRAB) grabDamage += amount;
         }
+
         boolean hurt = super.hurt(source, amount);
         if (hurt && !this.level.isClientSide) {
             float frac = this.getHealth() / this.getMaxHealth();
-            if (!saidHalf && frac < 0.5F) {
+            if (!saidHalf && frac < 0.5f) {
                 saidHalf = true;
                 speak("hand.taunt.half");
             }
-            if (!saidFear && frac < 0.2F) {
+            if (!saidFear && frac < 0.2f) {
                 saidFear = true;
                 speak("hand.taunt.fear");
             }
         }
+
         return hurt;
     }
 
@@ -196,37 +266,185 @@ public class HandDemonEntity extends Monster {
         else if (this.tickCount % 20 == 0 && this.getHealth() < this.getMaxHealth()) this.heal(3.0F);   // regrowing arms
         if (speechCooldown > 0) speechCooldown--;
         if (this.tickCount % 140 == 0 && this.getTarget() != null && this.random.nextInt(3) == 0) {
-            this.level.playSound(null, this.blockPosition(), ModSounds.DEMON_GROWL.get(), SoundSource.HOSTILE, 2.0F, 0.6F + this.random.nextFloat() * 0.2F);
+                this.level.playSound(null, this.blockPosition(), ModSounds.DEMON_GROWL.get(), SoundSource.HOSTILE, 2.0F, 0.6F + this.random.nextFloat() * 0.2F);
+            tickMusic();
+            if (this.tickCount % 140 == 0 && this.getTarget() != null && this.random.nextInt(3) == 0) {
+                this.level.playSound(null, this.blockPosition(), ModSounds.DEMON_GROWL.get(), SoundSource.HOSTILE, 2.0F, 0.6F + this.random.nextFloat() * 0.2F);
+            }
+         }
+    }
+
+    // ------------------------------------------------------------------ its theme (server side)
+
+    /** Health phase: 1 (100-75%), 2 (75-50%), 3 (50-20%), 4 (below 20%). */
+    private static int phaseFor(float frac) {
+        return frac >= 0.75F ? 1 : frac >= 0.5F ? 2 : frac >= 0.2F ? 3 : 4;
+    }
+
+    /** The health line a phase starts below (sliding back above it means regrowing into the previous phase). */
+    private static float lineAbove(int phase) {
+        return phase == 2 ? 0.75F : phase == 3 ? 0.5F : 0.2F;
+    }
+
+    private void tickMusic() {
+        if (!(this.level instanceof ServerLevel server)) return;
+        LivingEntity quarry = this.getTarget();
+        if (quarry != null && quarry.isAlive()) {
+            if (fightStart < 0) fightStart = server.getGameTime();
+            // it hunts by sight: out of sight long enough and it gives up (the music fades as it does)
+            if (this.hasLineOfSight(quarry)) unseen = 0;
+            else if (++unseen >= LOSE_TICKS) {
+                this.setTarget(null);
+                unseen = 0;
+            }
+        } else {
+            unseen = 0;
+        }
+        boolean fighting = this.getTarget() != null;
+
+        // phase from health: dropping is immediate; regrowing back needs a margin, held, and not too often
+        float frac = this.getHealth() / this.getMaxHealth();
+        int want = phaseFor(frac);
+        if (musicPhase == 0 || want > musicPhase) {
+            musicPhase = Math.max(musicPhase, want);
+            regrowHeld = 0;
+        } else if (want < musicPhase && frac >= lineAbove(musicPhase) + REGROW_MARGIN) {
+            if (++regrowHeld >= REGROW_HOLD && server.getGameTime() - lastRewind >= REGROW_COOLDOWN) {
+                musicPhase--;
+                rewinds++;
+                regrowHeld = 0;
+                lastRewind = server.getGameTime();
+                sendMusic(server);
+            }
+        } else {
+            regrowHeld = 0;
+        }
+
+        if (fighting) {
+            HandDemonMusic.markActive(server);
+            if (!musicOn || this.tickCount % 10 == 0) sendMusic(server);
+            musicOn = true;
+        } else if (musicOn) {
+            musicOn = false;
+            HandDemonMusic.broadcast(server, this.blockPosition(), HandDemonMusicS2CPacket.idle(this.getId()));
         }
     }
+
+    private void sendMusic(ServerLevel server) {
+        float intensity = 1.0F - Math.min(1.0F, unseen / (float) LOSE_TICKS);
+        int age = fightStart < 0 ? 0 : (int) Math.min(Integer.MAX_VALUE, server.getGameTime() - fightStart);
+        HandDemonMusic.broadcast(server, this.blockPosition(),
+                HandDemonMusicS2CPacket.fight(this.getId(), Math.max(1, musicPhase), rewinds, intensity, tanjiroNear(40.0D) != null, age));
+    }
+
+    @Nullable
+    private StoryNpcEntity tanjiroNear(double range) {
+        List<StoryNpcEntity> near = this.level.getEntitiesOfClass(StoryNpcEntity.class, this.getBoundingBox().inflate(range),
+                n -> n.isAlive() && n.character() == StoryCharacter.TANJIRO);
+        return near.isEmpty() ? null : near.get(0);
+    }
+
+    // ------------------------------------------------------------------ death: the collapse, the reprise, the hand
 
     @Override
     public void die(DamageSource source) {
         super.die(source);
         if (this.level instanceof ServerLevel server) {
             speak("hand.death");
-            server.sendParticles(ModParticles.DEMON_ASH.get(), getX(), getY() + 1.5, getZ(), 220, 1.6, 1.4, 1.6, 0.05);
+            server.sendParticles(ModParticles.DEMON_ASH.get(), getX(), getY() + 2.5, getZ(), 160, 1.4, 2.0, 1.4, 0.05);
             // Tanjiro, if he is there, takes the crumbling hand
             List<StoryNpcEntity> near = server.getEntitiesOfClass(StoryNpcEntity.class, this.getBoundingBox().inflate(24.0D),
-                    n -> n.character() == StoryCharacter.TANJIRO);
+                n -> n.character() == StoryCharacter.TANJIRO);
             if (!near.isEmpty()) near.get(0).say(Component.translatable("mission.demonslayer.final_selection.tanjiro.hand_held"), 200);
+            musicOn = false;
+            setAttack(NONE);
+            HandDemonMusic.markActive(server);
+            HandDemonMusic.broadcast(server, this.blockPosition(), HandDemonMusicS2CPacket.death(this.getId(), 0, OUTCOME_WAITING, 0));
+            // Tanjiro, if he is near, comes to its side
+            StoryNpcEntity tanjiro = tanjiroNear(24.0D);
+            if (tanjiro != null) tanjiro.getNavigation().moveTo(this, 0.8D);
         }
     }
 
+    /**
+     * Beheaded, it does not simply crumble: its music collapses, then the natural reprise plays while the body chars
+     * and sinks. When the reprise reaches its end the hand stretches out and waits five seconds. Tanjiro takes it if he
+     * is there; if not, the player may. Then the body crumbles away while the ending plays.
+     */
     @Override
     protected void tickDeath() {
         // crumble to ash rather than the vanilla death flop
         ++this.deathTime;
         if (this.level instanceof ServerLevel server && this.deathTime % 2 == 0) {
-            server.sendParticles(ModParticles.DEMON_ASH.get(), getX(), getY() + 0.5 + this.deathTime * 0.08, getZ(), 12, 1.3, 0.6, 1.3, 0.03);
+            server.sendParticles(ModParticles.DEMON_ASH.get(), getX(), getY() + 4.5 - this.deathTime * 0.1, getZ(), 10, 1.2, 0.8, 1.2, 0.03);
+        this.setDeltaMovement(this.getDeltaMovement().multiply(0, 1, 0));
+        if (this.level.isClientSide) {
+            int len = deathLength();
+            float k = Mth.clamp(this.deathTime / (float) len, 0.0F, 1.0F);
+            int n = k > 0.85F ? 4 : (this.deathTime % 3 == 0 ? 1 : 0);
+            for (int i = 0; i < n; i++) {
+                this.level.addParticle(ModParticles.DEMON_ASH.get(),
+                        getX() + (this.random.nextDouble() - 0.5) * getBbWidth(), getY() + this.random.nextDouble() * getBbHeight() * (1.0 - 0.6 * k),
+                        getZ() + (this.random.nextDouble() - 0.5) * getBbWidth(),
+                        (this.random.nextDouble() - 0.5) * 0.03, 0.02 + this.random.nextDouble() * 0.03, (this.random.nextDouble() - 0.5) * 0.03);
+            }
+            // while the hand waits (and Tanjiro isn't there to take it), a faint glimmer at its fingertips
+            if (handOpen() && !tanjiroHolds() && this.deathTime - REACH_AT > 20 && this.deathTime % 4 == 0) {
+                Entity t = this.level.getEntity(reachTarget());
+                Vec3 dir = t != null ? t.position().subtract(this.position()).multiply(1, 0, 1).normalize()
+                        : Vec3.directionFromRotation(0, this.yBodyRot);
+                double reachLen = t != null ? Math.min(5.0, Math.max(0.5, t.distanceTo(this) - 1.2)) : 3.5;
+                Vec3 tip = this.position().add(dir.scale(reachLen)).add(0, 1.5, 0);
+                this.level.addParticle(ModParticles.RESOLVE_SPARK.get(), tip.x, tip.y, tip.z, 0, 0.01, 0);
+            }
+            return;
+        }
+        ServerLevel server2 = (ServerLevel) this.level;
+        HandDemonMusic.markActive(server2);
+        if (this.deathTime == REACH_AT) {
+            StoryNpcEntity tanjiro = tanjiroNear(24.0D);
+            if (tanjiro != null) {
+                this.entityData.set(TANJIRO_HOLDS, true);
+                this.entityData.set(REACH_TARGET, tanjiro.getId());
+            } else {
+                Player nearest = this.level.getNearestPlayer(this, 24.0D);
+                if (nearest != null) this.entityData.set(REACH_TARGET, nearest.getId());
+            }
+        }
+        if (outcome() == OUTCOME_WAITING && this.deathTime == REACH_AT + TANJIRO_TAKES && tanjiroHolds()) {
+            Entity t = this.level.getEntity(reachTarget());
+            if (t instanceof StoryNpcEntity tanjiro) tanjiro.say(Component.translatable("mission.demonslayer.final_selection.tanjiro.hand_held"), 200);
+            settle(OUTCOME_HELD);
+        }
+        if (outcome() == OUTCOME_WAITING && this.deathTime >= REACH_AT + WINDOW) settle(OUTCOME_UNHELD);
+        if (this.deathTime % 10 == 0) {
+            HandDemonMusic.broadcast(server, this.blockPosition(), HandDemonMusicS2CPacket.death(this.getId(), this.deathTime, outcome(), outcomeAt()));
+        }
+        if (this.deathTime >= deathLength()) this.remove(RemovalReason.KILLED);
+    }
+    }
+
+    private void settle(int outcome) {
+        this.entityData.set(OUTCOME, outcome);
+        this.entityData.set(OUTCOME_AT, this.deathTime);
+        if (this.level instanceof ServerLevel server) {
+            HandDemonMusic.broadcast(server, this.blockPosition(), HandDemonMusicS2CPacket.death(this.getId(), this.deathTime, outcome, this.deathTime));
         }
         if (this.deathTime >= 40 && !this.level.isClientSide) this.remove(RemovalReason.KILLED);
     }
 
     private void speak(String key) {
         if (speechCooldown > 0 && !key.equals("hand.death")) return;
-        speechCooldown = 100;
-        ModMessages.sendToTrackingAndSelf(new NpcSpeechS2CPacket(this.getId(), Component.translatable("mission.demonslayer.final_selection." + key), 120), this);
+                speechCooldown = 100;
+                ModMessages.sendToTrackingAndSelf(new NpcSpeechS2CPacket(this.getId(), Component.translatable("mission.demonslayer.final_selection." + key), 120), this);
+            }
+
+            /** A player takes the outstretched hand: only while it waits, only if Tanjiro isn't there to, and only up close. */
+    public void takeHand(ServerPlayer player) {
+        if (!handOpen() || tanjiroHolds() || player.isSpectator() || player.distanceToSqr(this) > 8.0D * 8.0D) return;
+        this.entityData.set(REACH_TARGET, player.getId());
+        player.swing(net.minecraft.world.InteractionHand.MAIN_HAND, true);
+        settle(OUTCOME_HELD);
     }
 
     @Override
@@ -239,6 +457,16 @@ public class HandDemonEntity extends Monster {
         return ModSounds.DEMON_GROWL.get();
     }
 
+    /** A low growl now and then when struck (rarely: its theme carries the fight). */
+    @Override
+    protected void playHurtSound(DamageSource source) {
+        if (this.tickCount - lastHurtSound < 120) return;
+        lastHurtSound = this.tickCount;
+        super.playHurtSound(source);
+    }
+
+    private int lastHurtSound = -100;
+
     @Override
     protected SoundEvent getDeathSound() {
         return ModSounds.DEMON_GROWL.get();
@@ -246,7 +474,7 @@ public class HandDemonEntity extends Monster {
 
     @Override
     protected float getSoundVolume() {
-        return 1.6F;
+        return 0.45F;
     }
 
     @Override
@@ -260,6 +488,8 @@ public class HandDemonEntity extends Monster {
         tag.putBoolean("SaidNeck", saidNeck);
         tag.putBoolean("SaidHalf", saidHalf);
         tag.putBoolean("SaidFear", saidFear);
+        tag.putInt("MusicPhase", musicPhase);
+        tag.putInt("Rewinds", rewinds);
     }
 
     @Override
@@ -268,6 +498,8 @@ public class HandDemonEntity extends Monster {
         saidNeck = tag.getBoolean("SaidNeck");
         saidHalf = tag.getBoolean("SaidHalf");
         saidFear = tag.getBoolean("SaidFear");
+        musicPhase = tag.getInt("MusicPhase");
+        rewinds = tag.getInt("Rewinds");
     }
 
     // ------------------------------------------------------------------ the fight
@@ -283,7 +515,7 @@ public class HandDemonEntity extends Monster {
     }
 
     private Vec3 shoulder() {
-        return this.position().add(0, 2.6, 0).add(Vec3.directionFromRotation(0, this.yBodyRot).scale(1.2));
+        return this.position().add(0, 3.3, 0).add(Vec3.directionFromRotation(0, this.yBodyRot).scale(0.5));
     }
 
     private void strike(LivingEntity victim, float damage, double knock, double lift) {
@@ -376,7 +608,7 @@ public class HandDemonEntity extends Monster {
 
         private void start(int attack) {
             demon.setAttack(attack);
-            demon.playSound(ModSounds.DEMON_GROWL.get(), 1.4F, attack == FIST ? 0.5F : 0.8F);
+            demon.playSound(ModSounds.DEMON_GROWL.get(), 0.45F, attack == FIST ? 0.5F : 0.8F);
         }
 
         private List<LivingEntity> pick(List<LivingEntity> reach, LivingEntity first, int max) {
@@ -440,7 +672,7 @@ public class HandDemonEntity extends Monster {
             }
             if (grabbed != null) {
                 if (!grabbed.isAlive() || demon.grabDamage >= 18.0F) {
-                    if (demon.grabDamage >= 18.0F) demon.speak("hand.taunt.release");
+                    if (demon.grabDamage >= 18.0f) demon.speak("hand.taunt.release");
                     release();
                     demon.setAttack(NONE);
                     return;
@@ -460,7 +692,7 @@ public class HandDemonEntity extends Monster {
                 if (tick % 10 == 5 && tick < 55) grabbed.hurt(DamageSource.mobAttack(demon), 2.0F);
                 if (tick >= 60) {
                     demon.strike(grabbed, 14.0F, 1.6, 0.5);   // the bite, then it throws what's left
-                    demon.playSound(ModSounds.DEMON_GROWL.get(), 1.6F, 0.7F);
+                    demon.playSound(ModSounds.DEMON_GROWL.get(), 0.6F, 0.7F);
                     release();
                     demon.setAttack(NONE);
                 }
@@ -487,7 +719,7 @@ public class HandDemonEntity extends Monster {
                     AABB zone = new AABB(ground).inflate(1.8, 2.0, 1.8);
                     for (LivingEntity e : s.getEntitiesOfClass(LivingEntity.class, zone, x -> x != demon && isFoe(x))) demon.strike(e, 11.0F, 0.2, 0.95);
                     s.sendParticles(ModParticles.DEMON_ASH.get(), ground.getX() + 0.5, ground.getY() + 0.5, ground.getZ() + 0.5, 30, 0.6, 0.8, 0.6, 0.08);
-                    s.playSound(null, ground, ModSounds.DEMON_GROWL.get(), SoundSource.HOSTILE, 1.0F, 1.3F);
+                    s.playSound(null, ground, ModSounds.DEMON_GROWL.get(), SoundSource.HOSTILE, 0.35F, 1.3F);
                 }
             }
             if (tick >= 46) demon.setAttack(NONE);
@@ -508,7 +740,7 @@ public class HandDemonEntity extends Monster {
                     Vec3 p = from.add(fwd.scale(i));
                     s.sendParticles(ModParticles.DEMON_ASH.get(), p.x, p.y + 0.2, p.z, 6, 0.8, 0.1, 0.8, 0.05);
                 }
-                s.playSound(null, demon.blockPosition(), ModSounds.NIGHT_DRUM.get(), SoundSource.HOSTILE, 1.5F, 0.5F);
+                s.playSound(null, demon.blockPosition(), ModSounds.NIGHT_DRUM.get(), SoundSource.HOSTILE, 0.7F, 0.5F);
             }
             if (tick >= 36) demon.setAttack(NONE);
         }

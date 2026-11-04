@@ -1,0 +1,283 @@
+{
+  "parent": "minecraft:block/block",
+  "textures": {
+    "mat": "demonslayer:block/laid_bedroll_mat",
+    "particle": "demonslayer:block/laid_bedroll_mat"
+  },
+  "elements": [
+    {
+      "from": [
+        1,
+        0,
+        -8
+      ],
+      "to": [
+        15,
+        1,
+        8
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            0,
+            7,
+            8
+          ],
+          "texture": "#mat"
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            7,
+            8
+          ],
+          "texture": "#mat",
+          "cullface": "down"
+        },
+        "east": {
+          "uv": [
+            14,
+            0,
+            14.5,
+            8
+          ],
+          "texture": "#mat"
+        },
+        "west": {
+          "uv": [
+            14,
+            0,
+            14.5,
+            8
+          ],
+          "texture": "#mat"
+        },
+        "north": {
+          "uv": [
+            14,
+            0,
+            16,
+            0.5
+          ],
+          "texture": "#mat"
+        },
+        "south": {
+          "uv": [
+            14,
+            0,
+            16,
+            0.5
+          ],
+          "texture": "#mat"
+        }
+      }
+    },
+    {
+      "from": [
+        1,
+        0,
+        8
+      ],
+      "to": [
+        15,
+        1,
+        24
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            7,
+            0,
+            14,
+            8
+          ],
+          "texture": "#mat"
+        },
+        "down": {
+          "uv": [
+            7,
+            0,
+            14,
+            8
+          ],
+          "texture": "#mat",
+          "cullface": "down"
+        },
+        "east": {
+          "uv": [
+            14,
+            0,
+            14.5,
+            8
+          ],
+          "texture": "#mat"
+        },
+        "west": {
+          "uv": [
+            14,
+            0,
+            14.5,
+            8
+          ],
+          "texture": "#mat"
+        },
+        "north": {
+          "uv": [
+            14,
+            0,
+            16,
+            0.5
+          ],
+          "texture": "#mat"
+        },
+        "south": {
+          "uv": [
+            14,
+            0,
+            16,
+            0.5
+          ],
+          "texture": "#mat"
+        }
+      }
+    },
+    {
+      "from": [
+        3,
+        1,
+        -7
+      ],
+      "to": [
+        13,
+        3.5,
+        -2
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            8,
+            5,
+            12
+          ],
+          "texture": "#mat"
+        },
+        "down": {
+          "uv": [
+            0,
+            8,
+            5,
+            12
+          ],
+          "texture": "#mat"
+        },
+        "north": {
+          "uv": [
+            11,
+            8,
+            16,
+            9.25
+          ],
+          "texture": "#mat"
+        },
+        "south": {
+          "uv": [
+            11,
+            8,
+            16,
+            9.25
+          ],
+          "texture": "#mat"
+        },
+        "east": {
+          "uv": [
+            11,
+            8,
+            13.5,
+            9.25
+          ],
+          "texture": "#mat"
+        },
+        "west": {
+          "uv": [
+            11,
+            8,
+            13.5,
+            9.25
+          ],
+          "texture": "#mat"
+        }
+      }
+    },
+    {
+      "from": [
+        2,
+        1,
+        15
+      ],
+      "to": [
+        14,
+        3,
+        23
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            5,
+            8,
+            11,
+            15
+          ],
+          "texture": "#mat"
+        },
+        "down": {
+          "uv": [
+            5,
+            8,
+            11,
+            15
+          ],
+          "texture": "#mat"
+        },
+        "north": {
+          "uv": [
+            11,
+            10,
+            16,
+            11
+          ],
+          "texture": "#mat"
+        },
+        "south": {
+          "uv": [
+            11,
+            10,
+            16,
+            11
+          ],
+          "texture": "#mat"
+        },
+        "east": {
+          "uv": [
+            11,
+            10,
+            15,
+            11
+          ],
+          "texture": "#mat"
+        },
+        "west": {
+          "uv": [
+            11,
+            10,
+            15,
+            11
+          ],
+          "texture": "#mat"
+        }
+      }
+    }
+  ]
+}

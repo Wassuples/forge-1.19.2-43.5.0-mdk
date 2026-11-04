@@ -29,6 +29,17 @@ public class ModSounds {
     public static final RegistryObject<SoundEvent> NOTICE = registerSoundEvent("notice");
     public static final RegistryObject<SoundEvent> DEMON_HISS = registerSoundEvent("demon_hiss");
     public static final RegistryObject<SoundEvent> DEMON_CRUMBLE = registerSoundEvent("demon_crumble");
+    /** Total Concentration Breathing: the sharp intake before a breathing form. */
+    public static final RegistryObject<SoundEvent> BREATH_INTAKE = registerSoundEvent("breath_intake");
+    /** The Hand Demon's theme (music/hand_demon/): fight loops and transitions, the death reprise, the night 3-6 hints. */
+    public static final java.util.Map<String, RegistryObject<SoundEvent>> HAND_DEMON_MUSIC = new java.util.HashMap<>();
+    static {
+        for (String n : new String[]{"intro", "crawl", "grudge", "thirteen", "thirteen_fourteen", "fear", "rewind", "collapse",
+            "fill_up", "fill_fear", "reprise", "reach_start", "reach_hold", "ending_held", "ending_unheld", "night3", "night4", "night5", "night6"}) {
+            HAND_DEMON_MUSIC.put(n, registerSoundEvent("music.hand_demon." + n));
+        }
+    }
+
     private static RegistryObject<SoundEvent> registerSoundEvent(String name) {
         return SOUND_EVENTS.register(name, () -> new SoundEvent(new ResourceLocation(DemonSlayer.MOD_ID, name)));
     }

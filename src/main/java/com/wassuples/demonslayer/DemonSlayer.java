@@ -160,6 +160,14 @@ public class DemonSlayer {
         // The sleep QTE is drawn by EnmuDreamOverlay (registered in ClientEvents); the old SleepQTEOverlay was
         // registered here too, which drew the key sequence twice.
 
+        /** A Nichirin blade takes the colour of the ore it was forged from (tint 0 is the blade itself). */
+        @SubscribeEvent
+        public static void registerItemColors(net.minecraftforge.client.event.RegisterColorHandlersEvent.Item event) {
+            event.register((stack, tint) -> tint == 0 && stack.hasTag() && stack.getTag().contains(com.wassuples.demonslayer.missions.story.FinalSelectionMission.BLADE_COLOR)
+                    ? 0xFF000000 | stack.getTag().getInt(com.wassuples.demonslayer.missions.story.FinalSelectionMission.BLADE_COLOR) : -1,
+                    com.wassuples.demonslayer.item.ModItems.NICHIRIN_BLADE.get());
+        }
+
         /** Skin-tight model used to draw Killer Fish Scales onto humanoid skin. */
         @SubscribeEvent
         public static void registerLayerDefinitions(EntityRenderersEvent.RegisterLayerDefinitions event) {
@@ -169,6 +177,13 @@ public class DemonSlayer {
             event.registerLayerDefinition(ScaleSkinLayer.SLIM, () -> ScaleSkinLayer.createLayer(true));
             event.registerLayerDefinition(com.wassuples.demonslayer.entity.renderers.hand.HandDemonModel.LAYER,
                     com.wassuples.demonslayer.entity.renderers.hand.HandDemonModel::createBodyLayer);
+            event.registerLayerDefinition(com.wassuples.demonslayer.entity.renderers.StoryAccessoryLayer.LAYER,
+                    com.wassuples.demonslayer.entity.renderers.StoryAccessoryLayer::createLayer);
+            for (int build = 0; build < 3; build++) {
+                final int b = build;
+                event.registerLayerDefinition(com.wassuples.demonslayer.entity.renderers.CaptiveDemonModel.LAYERS[b],
+                        () -> com.wassuples.demonslayer.entity.renderers.CaptiveDemonModel.create(b));
+            }
         }
 
         /** Adds the fish-scale skin layer to both player skins and to every humanoid entity renderer. */
@@ -230,6 +245,8 @@ public class DemonSlayer {
             event.registerEntityRenderer(ModEntityTypes.THUNDER_DRAGONS.get(), ThunderDragonsRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.SOUND_BLAST.get(), SoundBlastRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.AKAZA_ART.get(), AkazaArtRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.BREATH_SLASH.get(), com.wassuples.demonslayer.entity.renderers.BreathSlashRenderer::new);
+            event.registerEntityRenderer(ModEntityTypes.ORE_OFFERING.get(), com.wassuples.demonslayer.entity.renderers.OreOfferingRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.DOMA_ART.get(), DomaArtRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.BLOOD_ARC_DOME.get(), BloodArcDomeRenderer::new);
             event.registerEntityRenderer(ModEntityTypes.BLOOD_RING_WAVE.get(), BloodRingWaveRenderer::new);

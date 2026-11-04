@@ -22,8 +22,9 @@ import java.util.List;
 
 /**
  * What the Kasugai crow carries: the demon rankings and the mission list. The window grows with the screen; the
- * mission list and the mission details each scroll on their own (mouse wheel over either, or drag their bars), and the
- * details pane shows the full summary, notes and every objective.
+ * mission list and the mission details each scroll on their own (mouse wheel over either, drag their bars, Page
+ * Up/Down, Home/End, arrow keys); the rankings scroll with the wheel and Page Up/Down. For the mission under way the details lead with its live objectives (ticked off as
+ * they are done) and its current status line, then the summary, notes and the full outline.
  */
 public class CrowDispatchScreen extends Screen {
     private static final ResourceLocation BACKGROUND = new ResourceLocation(DemonSlayer.MOD_ID, "textures/gui/crow_dispatch.png");
@@ -40,7 +41,8 @@ public class CrowDispatchScreen extends Screen {
 
     private MissionView selectedMission;
     private int selectedMissionIndex = -1;
-    private double missionListScroll = 0.0, detailScroll = 0.0;
+    private double missionListScroll = 0.0, detailScroll = 0.0, rankScroll = 0.0;
+    private int rankContentH;
     private int detailContentH;
     /** 1: dragging the list bar, 2: dragging the details bar. */
     private int dragging;
@@ -68,16 +70,17 @@ public class CrowDispatchScreen extends Screen {
         left = (this.width - panelW) / 2;
         top = (this.height - panelH) / 2;
         listX = left + 10;
-        listY = top + 35;
+        listY = top + 44;
         listW = Mth.clamp(panelW / 3, 112, 150);
-        listH = panelH - 35 - 36;
+        listH = panelH - 44 - 36;
         detailX = listX + listW + 8;
         detailY = listY;
         detailW = left + panelW - 10 - detailX;
         detailH = listH;
 
-        this.addRenderableWidget(new KnyUi.KnyButton(left + 10, top + 10, 60, 20, Component.literal("Rankings"), b -> this.currentTab = Tab.RANKINGS));
-        this.addRenderableWidget(new KnyUi.KnyButton(left + 75, top + 10, 60, 20, Component.literal("Missions"), b -> this.currentTab = Tab.MISSIONS));
+        // tabs sit under the title (they used to overlap it on narrow windows)
+        this.addRenderableWidget(new KnyUi.KnyButton(left + 10, top + 18, 64, 18, Component.literal("Rankings"), b -> this.currentTab = Tab.RANKINGS));
+        this.addRenderableWidget(new KnyUi.KnyButton(left + 78, top + 18, 64, 18, Component.literal("Missions"), b -> this.currentTab = Tab.MISSIONS));
 
         this.acceptButton = this.addRenderableWidget(new KnyUi.KnyButton(left + panelW - 130, top + panelH - 28, 60, 20, Component.translatable("gui.demonslayer.mission.begin"), b -> {
             if (selectedMission != null) {
@@ -151,10 +154,13 @@ public class CrowDispatchScreen extends Screen {
         this.renderBackground(poseStack);
         KnyUi.panel(poseStack, left, top, panelW, panelH);
 
-        drawCenteredString(poseStack, this.font, this.title, this.width / 2, top + 6, 0xFFFFFF);
+        drawCenteredString(poseStack, this.font, this.title, this.width / 2, top + 6, KnyUi.GOLD_LIGHT);
+        // the open tab is underlined in gold
+        int tabX = currentTab == Tab.RANKINGS ? left + 10 : left + 78;
+        fill(poseStack, tabX + 2, top + 37, tabX + 62, top + 39, KnyUi.GOLD);
 
         if (currentTab == Tab.RANKINGS) {
-            renderRankingTab(poseStack, left + 10, top + 35);
+            renderRankingTab(poseStack);
             this.acceptButton.visible = false;
             this.abandonButton.visible = false;
         } else {
@@ -166,36 +172,50 @@ public class CrowDispatchScreen extends Screen {
         super.render(poseStack, mouseX, mouseY, partialTick);
     }
 
-    private void renderRankingTab(PoseStack poseStack, int x, int y) {
-        int startY = y;
-        int startX = x + 5;
-        int columnWidth = (panelW - 30) / 2;
+    private int rankH() {
+        return panelH - 44 - 10;
+    }
 
-        // Kizuki Column
-        this.font.draw(poseStack, Component.literal("The Twelve Kizuki").withStyle(ChatFormatting.GOLD), startX, startY, 0xFFFFFF);
-        startY += 12;
-        for (DemonDisplayData data : this.kizuki) {
-            String line = String.format("%-14s | %s %s", data.rank(), data.name(), data.title());
-            this.font.draw(poseStack, this.font.plainSubstrByWidth(line, columnWidth - 4), startX, startY, 0xFFFFFF);
-            startY += 10;
-        }
+    private int maxRankScroll() {
+        return Math.max(0, rankContentH + 6 - rankH());
+    }
 
-        // Fodder Column
-        startY = y;
-        startX = x + columnWidth + 15;
-        this.font.draw(poseStack, Component.literal("Top Fodder").withStyle(ChatFormatting.GRAY), startX, startY, 0xCCCCCC);
-        startY += 12;
-        for (DemonDisplayData data : this.fodder) {
-            String line = String.format("%s %s (BP: %d)", data.name(), data.title(), data.bloodPoints());
-            this.font.draw(poseStack, this.font.plainSubstrByWidth(line, columnWidth - 4), startX, startY, 0xDDDDDD);
-            startY += 10;
+    /** Two columns in an inset pane that scrolls: rank in gold, then name and title (the old fixed-width text columns misaligned). */
+    private void renderRankingTab(PoseStack poseStack) {
+        int x = left + 10, y = listY, w = panelW - 20, h = rankH();
+        KnyUi.inset(poseStack, x, y, w, h);
+        int col = (w - 16 - BAR) / 2;
+        scissor(x, y + 1, w, h - 2);
+        int y0 = y + 5 - (int) rankScroll;
+        int ly = y0, ry = y0;
+        this.font.draw(poseStack, Component.literal("The Twelve Kizuki"), x + 6, ly, KnyUi.GOLD);
+        ly += 13;
+        for (DemonDisplayData d : this.kizuki) {
+            this.font.draw(poseStack, this.font.plainSubstrByWidth(String.valueOf(d.rank()), col - 4), x + 6, ly, KnyUi.GOLD_LIGHT);
+            ly += 10;
+            this.font.draw(poseStack, this.font.plainSubstrByWidth(d.name() + " " + d.title(), col - 10), x + 12, ly, KnyUi.TEXT);
+            ly += 12;
         }
+        int cx = x + 10 + col;
+        this.font.draw(poseStack, Component.literal("Top Fodder"), cx, ry, KnyUi.DIM);
+        ry += 13;
+        for (DemonDisplayData d : this.fodder) {
+            this.font.draw(poseStack, this.font.plainSubstrByWidth(d.name() + " " + d.title(), col - 4), cx, ry, KnyUi.TEXT);
+            ry += 10;
+            this.font.draw(poseStack, "BP " + d.bloodPoints(), cx + 6, ry, KnyUi.DIM);
+            ry += 12;
+        }
+        RenderSystem.disableScissor();
+        rankContentH = Math.max(ly, ry) - y0;
+        rankScroll = Mth.clamp(rankScroll, 0, maxRankScroll());
+        scrollBar(poseStack, x + w - BAR - 1, y + 1, h - 2, rankScroll, maxRankScroll(), rankContentH + 6);
     }
 
     private void scissor(int x, int y, int w, int h) {
         if (this.minecraft == null) return;
         double scale = minecraft.getWindow().getGuiScale();
-        RenderSystem.enableScissor((int) (x * scale), (int) ((this.height - (y + h)) * scale), Math.max(0, (int) (w * scale)), Math.max(0, (int) (h * scale)));
+        int windowH = minecraft.getWindow().getHeight();   // framebuffer pixels (GUI height * scale can be off by rounding)
+        RenderSystem.enableScissor((int) (x * scale), Math.max(0, (int) (windowH - (y + h) * scale)), Math.max(0, (int) (w * scale)), Math.max(0, (int) (h * scale)));
     }
 
     /** A thin scroll bar down the right edge of a pane (nothing when everything fits). */
@@ -246,10 +266,10 @@ public class CrowDispatchScreen extends Screen {
             this.font.drawShadow(poseStack, line, x, yy, KnyUi.GOLD_LIGHT);
             yy += 11;
         }
-        this.font.draw(poseStack, m.arc().label(), x, yy, KnyUi.DIM);
-        yy += 10;
-        for (FormattedCharSequence line : this.font.split(m.location(), textW)) {
-            this.font.draw(poseStack, line, x, yy, KnyUi.DIM);
+        // one line of where and how it stands, one short summary: no walls of text
+        Component where = Component.empty().append(m.location()).append(" \u00b7 ").append(m.note());
+        for (FormattedCharSequence line : this.font.split(where, textW)) {
+            this.font.draw(poseStack, line, x, yy, statusColour(m.status()));
             yy += 10;
         }
         yy += 3;
@@ -259,12 +279,32 @@ public class CrowDispatchScreen extends Screen {
             this.font.draw(poseStack, line, x, yy, KnyUi.TEXT);
             yy += 10;
         }
-        yy += 4;
-        for (FormattedCharSequence line : this.font.split(m.note(), textW)) {
-            this.font.draw(poseStack, line, x, yy, statusColour(m.status()));
-            yy += 10;
+        // the mission under way: its live objectives, ticked off as they are done, and where things stand right now
+        com.wassuples.demonslayer.missions.MissionTracker live = com.wassuples.demonslayer.client.mission.ClientMissionHandler.currentTracker();
+        if (m.status() == MissionView.Status.ACTIVE && live != null && live.id().equals(m.id())) {
+            yy += 5;
+            this.font.draw(poseStack, Component.literal("Now"), x, yy, KnyUi.GOLD);
+            yy += 11;
+            for (com.wassuples.demonslayer.missions.MissionTracker.Line obj : live.lines()) {
+                int colour = obj.done() ? KnyUi.GOOD : obj.optional() ? KnyUi.DIM : KnyUi.TEXT;
+                fill(poseStack, x + 1, yy + 1, x + 8, yy + 8, KnyUi.GOLD_DARK);
+                fill(poseStack, x + 2, yy + 2, x + 7, yy + 7, 0xFF120A0C);
+                if (obj.done()) fill(poseStack, x + 3, yy + 3, x + 6, yy + 6, KnyUi.GOOD);
+                for (FormattedCharSequence line : this.font.split(obj.text(), textW - 12)) {
+                    this.font.draw(poseStack, line, x + 12, yy, colour);
+                    yy += 10;
+                }
+                yy += 2;
+            }
+            if (!live.footer().getString().isEmpty()) {
+                for (FormattedCharSequence line : this.font.split(live.footer(), textW)) {
+                    this.font.draw(poseStack, line, x, yy, live.urgent() ? KnyUi.BAD : KnyUi.GOLD_LIGHT);
+                    yy += 10;
+                }
+            }
         }
-        if (!m.briefing().isEmpty()) {
+        boolean live2 = m.status() == MissionView.Status.ACTIVE && live != null && live.id().equals(m.id());
+        if (!m.briefing().isEmpty() && !live2) {   // the outline only until the live objectives replace it
             yy += 5;
             this.font.draw(poseStack, Component.translatable("gui.demonslayer.mission.objectives"), x, yy, KnyUi.GOLD);
             yy += 11;
@@ -341,6 +381,10 @@ public class CrowDispatchScreen extends Screen {
 
     @Override
     public boolean mouseScrolled(double mouseX, double mouseY, double delta) {
+        if (this.currentTab == Tab.RANKINGS) {
+            this.rankScroll = Mth.clamp(this.rankScroll - delta * 12, 0, maxRankScroll());
+            return true;
+        }
         if (this.currentTab == Tab.MISSIONS) {
             if (inDetail(mouseX, mouseY)) {
                 this.detailScroll = Mth.clamp(this.detailScroll - delta * 12, 0, maxDetailScroll());
@@ -363,6 +407,17 @@ public class CrowDispatchScreen extends Screen {
                 detailScroll = Mth.clamp(detailScroll - detailH + 20, 0, maxDetailScroll());
                 return true;
             }
+            if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_HOME || key == org.lwjgl.glfw.GLFW.GLFW_KEY_END) {
+                detailScroll = key == org.lwjgl.glfw.GLFW.GLFW_KEY_HOME ? 0 : maxDetailScroll();
+                return true;
+            }
+            if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_UP || key == org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN) {
+                detailScroll = Mth.clamp(detailScroll + (key == org.lwjgl.glfw.GLFW.GLFW_KEY_DOWN ? 20 : -20), 0, maxDetailScroll());
+                return true;
+            }
+        } else if (key == org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN || key == org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_UP) {
+            rankScroll = Mth.clamp(rankScroll + (key == org.lwjgl.glfw.GLFW.GLFW_KEY_PAGE_DOWN ? 1 : -1) * (rankH() - 20), 0, maxRankScroll());
+            return true;
         }
         return super.keyPressed(key, scan, modifiers);
     }

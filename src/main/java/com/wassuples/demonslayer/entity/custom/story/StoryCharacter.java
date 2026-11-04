@@ -18,7 +18,7 @@ public enum StoryCharacter {
     KANATA("kanata_ubuyashiki", "textures/entity/npc/kanata_ubuyashiki.png", true, 0.72F, false, 0, 0xFFB9A2EC),
     /** One of the ~twenty other candidates: own name and look per entity ({@link StoryNpcEntity#variant()}); can die. */
     CANDIDATE("candidate", "textures/entity/npc/candidate_0.png", false, 1.0F, true, 1, 0xFFB8B0A0),
-    /** A swordsmith from the hidden village, in a hyottoko mask, who brings a new slayer their Nichirin blade. */
+    /** Hotaru Haganezuka, the swordsmith in the hyottoko mask who brings a new slayer their Nichirin blade. */
     SWORDSMITH("swordsmith", "textures/entity/npc/swordsmith.png", false, 1.0F, false, 0, 0xFFC8A060);
 
     /** Number of looks for {@link #CANDIDATE} (even = broad-shouldered, odd = slim). */
@@ -99,6 +99,6 @@ public enum StoryCharacter {
         return id >= 0 && id < all.length ? all[id] : TANJIRO;
     }
 
-    /** The candidates who wait at the shrine and survive the Final Selection alongside the player. */
-    public static final StoryCharacter[] CANDIDATES = {TANJIRO, ZENITSU, INOSUKE, KANAO, GENYA};
+    /** The named candidates who wait at the shrine and survive the Final Selection alongside the player. */
+    public static final StoryCharacter[] CANDIDATES = {TANJIRO, ZENITSU, KANAO, GENYA};
 }

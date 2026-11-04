@@ -481,24 +481,32 @@ public class FujikasaneMountainPiece extends StructurePiece {
                 double n = layout.scatter(dx, dz, 51);
                 boolean summit = layout.inDemonZone(dx, dz);
                 if (summit) {
-                    // the mountaintop is broken up by groves, dead trees, thickets and rocks: no long sightlines
+                    // the mountaintop is a dark, close forest (it is in the anime): stands of old cedar-like spruce,
+                    // dead trees, thickets, fallen trunks, boulders and standing stones, with a few small clearings.
+                    // Nowhere offers a long sightline, so there is no holding one spot and picking demons off.
                     boolean inner = lx >= 3 && lx <= 12 && lz >= 3 && lz <= 12;
                     boolean core = lx >= 4 && lx <= 11 && lz >= 4 && lz <= 11;
-                    boolean grove = layout.grove(dx, dz) > 0.55;
+                    double field = layout.grove(dx, dz);
+                    boolean grove = field > 0.55, clearing = field < 0.22;
                     boolean soil = g.is(BlockTags.DIRT) && layout.slope(dx, dz) < 1.3;
-                    double spruce = grove ? 0.05 : 0.012, dead = grove ? 0.062 : 0.019;
+                    double spruce = grove ? 0.085 : clearing ? 0.0 : 0.03;
+                    double dead = spruce + (grove ? 0.03 : clearing ? 0.006 : 0.014);
+                    double fallen = dead + 0.005, rock = fallen + 0.01, standing = rock + (clearing ? 0.008 : 0.003);
+                    double thick = standing + (grove ? 0.07 : clearing ? 0.02 : 0.05);
                     if (n < spruce && inner && soil) {
-                        if (grove && n < 0.006 && core) TreeFeatures.MEGA_SPRUCE.value().place(level, generator, random, above);
-                        else (n < spruce * 0.4 ? TreeFeatures.PINE : TreeFeatures.SPRUCE).value().place(level, generator, random, above);
+                        if (grove && n < 0.012 && core) TreeFeatures.MEGA_SPRUCE.value().place(level, generator, random, above);
+                        else (n < spruce * 0.35 ? TreeFeatures.PINE : TreeFeatures.SPRUCE).value().place(level, generator, random, above);
                     } else if (n < dead && lx >= 2 && lx <= 13 && lz >= 2 && lz <= 13) {
                         deadTree(level, box, x, top + 1, z, random);
-                    } else if (n < dead + 0.004 && inner) {
+                    } else if (n < fallen && inner) {
                         fallenLog(level, box, x, top + 1, z, random);
-                    } else if (n < dead + 0.012 && inner) {
+                    } else if (n < rock && inner) {
                         boulder(level, box, x, top, z, random);
-                    } else if (n < dead + 0.05) {
+                    } else if (n < standing && inner) {
+                        standingStone(level, box, x, top + 1, z, random);
+                    } else if (n < thick) {
                         thicket(level, box, x, top + 1, z, random);
-                    } else if (n < 0.28 && g.is(Blocks.GRASS_BLOCK)) {
+                    } else if (n < (grove ? 0.42 : 0.28) && g.is(Blocks.GRASS_BLOCK)) {
                         if (n < 0.2) tallPlant(level, box, x, top + 1, z, n < 0.15 ? Blocks.TALL_GRASS : Blocks.LARGE_FERN);
                         else put(level, box, x, top + 1, z, Blocks.FERN.defaultBlockState());
                     } else if (n < 0.3 && (g.is(Blocks.PODZOL) || g.is(Blocks.COARSE_DIRT))) {
@@ -562,6 +570,19 @@ public class FujikasaneMountainPiece extends StructurePiece {
                 net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER));
         put(level, box, x, y + 1, z, plant.defaultBlockState().setValue(net.minecraft.world.level.block.DoublePlantBlock.HALF,
                 net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER));
+    }
+
+    /** A weathered standing stone (or a pair), head high or taller, mossy at the foot. */
+    private static void standingStone(WorldGenLevel level, BoundingBox box, int x, int y, int z, RandomSource random) {
+        if (!level.getBlockState(new BlockPos(x, y - 1, z)).isFaceSturdy(level, new BlockPos(x, y - 1, z), Direction.UP)) return;
+        int h = 3 + random.nextInt(4);
+        boolean wide = random.nextInt(3) == 0;
+        for (int i = 0; i < h; i++) {
+            BlockState st = (i == 0 ? Blocks.MOSSY_COBBLESTONE : random.nextInt(4) == 0 ? Blocks.ANDESITE : Blocks.STONE).defaultBlockState();
+            put(level, box, x, y + i, z, st);
+            if (wide && i < h - 1) put(level, box, x + 1, y + i, z, st);
+        }
+        if (random.nextBoolean()) put(level, box, x, y + h, z, Blocks.STONE_SLAB.defaultBlockState());
     }
 
     private static void boulder(WorldGenLevel level, BoundingBox box, int x, int y, int z, RandomSource random) {

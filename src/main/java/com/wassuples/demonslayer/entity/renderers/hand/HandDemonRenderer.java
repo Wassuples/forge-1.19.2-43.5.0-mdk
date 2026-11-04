@@ -17,13 +17,13 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.phys.Vec3;
 
 /**
- * The Hand Demon: its body ({@link HandDemonModel}, drawn at 1.6x) plus the arms it throws when it attacks, drawn from
+ * The Hand Demon: its body ({@link HandDemonModel}, drawn at {@value #SCALE}x) plus the arms it throws when it attacks, drawn from
  * its synced attack state — barrage arms shooting out at each target, the grasping arm, arms bursting out of the
  * ground, the knotted giant fist, and the flailing sweep.
  */
 public class HandDemonRenderer extends MobRenderer<HandDemonEntity, HandDemonModel> {
-    private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/hand_demon_skin.png");
-    private static final float SCALE = 1.6F;
+    private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/hand_demon_body.png");
+    public static final float SCALE = 1.15F;
 
     public HandDemonRenderer(EntityRendererProvider.Context context) {
         super(context, new HandDemonModel(context.bakeLayer(HandDemonModel.LAYER)), 2.0F);
@@ -46,8 +46,11 @@ public class HandDemonRenderer extends MobRenderer<HandDemonEntity, HandDemonMod
 
     @Override
     public void render(HandDemonEntity e, float yaw, float partialTick, PoseStack pose, MultiBufferSource buffers, int light) {
+        if (e.deathTime > 0 || !e.isAlive()) {
+            renderDying(e, partialTick, pose, buffers, light);
+            return;
+        }
         super.render(e, yaw, partialTick, pose, buffers, light);
-        if (e.deathTime > 0) return;
         int attack = e.attack();
         if (attack == HandDemonEntity.NONE) return;
         VertexConsumer vc = buffers.getBuffer(RenderType.entityCutoutNoCull(TEXTURE));
@@ -55,7 +58,7 @@ public class HandDemonRenderer extends MobRenderer<HandDemonEntity, HandDemonMod
         float bodyYaw = Mth.rotLerp(partialTick, e.yBodyRotO, e.yBodyRot);
         Vec3 forward = Vec3.directionFromRotation(0, bodyYaw);
         Vec3 origin = new Vec3(Mth.lerp(partialTick, e.xo, e.getX()), Mth.lerp(partialTick, e.yo, e.getY()), Mth.lerp(partialTick, e.zo, e.getZ()));
-        Vec3 shoulder = forward.scale(1.4).add(0, 2.2, 0);   // relative to the entity
+        Vec3 shoulder = forward.scale(0.5).add(0, 3.3, 0);   // relative to the entity (the hunched shoulders)
         Vec3 side = new Vec3(-forward.z, 0, forward.x);
         float reach = HandDemonEntity.reach(attack, tick);
 
@@ -126,8 +129,72 @@ public class HandDemonRenderer extends MobRenderer<HandDemonEntity, HandDemonMod
         }
     }
 
+    /**
+     * Beheaded at last: no red flash and no keeling over. The body freezes and chars from the extremities while its
+     * music collapses, then sags and slowly sinks through the whole reprise. When the reprise ends one arm stretches out
+     * toward whoever is near (Tanjiro, if he is there) and waits; taken, it stays; not taken, it sinks back. In the last
+     * seconds everything crumbles into the ash.
+     */
+    private void renderDying(HandDemonEntity e, float partialTick, PoseStack pose, MultiBufferSource buffers, int light) {
+        float time = e.deathTime + partialTick;
+        float len = e.deathLength();
+        float t = Mth.clamp(time / len, 0.0F, 1.0F);
+        float crumbleFrom = len - 120.0F;                       // the last six seconds: it falls apart
+        float fade = Mth.clamp((time - crumbleFrom) / 120.0F, 0.0F, 1.0F);
+        float alpha = 1.0F - fade;
+        if (alpha <= 0.01F) return;
+        float c = Mth.lerp(Mth.clamp(time / 40.0F, 0.0F, 1.0F), 1.0F, 0.55F) - 0.3F * t;   // charring
+        c = Mth.clamp(c, 0.15F, 1.0F);
+        float sink = 0.35F * t + 0.9F * fade * fade;
+        float sag = 0.12F * t + 0.3F * fade * fade;
+
+        float bodyYaw = Mth.rotLerp(partialTick, e.yBodyRotO, e.yBodyRot);
+        pose.pushPose();
+        pose.mulPose(Vector3f.YP.rotationDegrees(180.0F - bodyYaw));
+        pose.scale(SCALE, SCALE, SCALE);
+        pose.scale(-1.0F, -1.0F, 1.0F);
+        pose.translate(0.0D, -1.501D + sink, 0.0D);
+        pose.scale(1.0F + 0.08F * t, 1.0F - sag, 1.0F + 0.08F * t);
+        this.model.setupAnim(e, 0, 0, e.tickCount - e.deathTime, 0, 0);
+        VertexConsumer vc = buffers.getBuffer(RenderType.entityTranslucent(TEXTURE));
+        this.model.renderToBuffer(pose, vc, light, OverlayTexture.NO_OVERLAY, c, c, c, alpha);
+        pose.popPose();
+
+        // the outstretched hand
+        if (time < HandDemonEntity.REACH_AT) return;
+        Entity target = e.level.getEntity(e.reachTarget());
+        Vec3 origin = new Vec3(Mth.lerp(partialTick, e.xo, e.getX()), Mth.lerp(partialTick, e.yo, e.getY()), Mth.lerp(partialTick, e.zo, e.getZ()));
+        Vec3 forward = Vec3.directionFromRotation(0, bodyYaw);
+        Vec3 from = forward.scale(0.9).add(0, 1.6 - sink * 1.2, 0);
+        Vec3 aim;
+        if (target != null) {
+            aim = new Vec3(Mth.lerp(partialTick, target.xo, target.getX()), Mth.lerp(partialTick, target.yo, target.getY()) + target.getBbHeight() * 0.45,
+                    Mth.lerp(partialTick, target.zo, target.getZ())).subtract(origin);
+        } else {
+            aim = forward.scale(4.0).add(0, 1.0, 0);
+        }
+        Vec3 d = aim.subtract(from);
+        double dist = d.length();
+        double maxLen = Math.min(dist - 0.4, 5.0);
+        float out = Mth.clamp((time - HandDemonEntity.REACH_AT) / 30.0F, 0.0F, 1.0F);   // it stretches out, slowly
+        out = out * out * (3 - 2 * out);
+        if (e.outcome() == HandDemonEntity.OUTCOME_UNHELD) {
+            float drop = Mth.clamp((time - e.outcomeAt()) / 60.0F, 0.0F, 1.0F);   // nobody took it: it sinks back
+            d = d.add(0, -dist * 0.8 * drop, 0);
+            out *= 1.0F - 0.5F * drop;
+        }
+        if (maxLen <= 0.3) return;
+        Vec3 to = from.add(d.normalize().scale(maxLen * out));
+        VertexConsumer avc = buffers.getBuffer(RenderType.entityTranslucent(TEXTURE));
+        arm(pose, avc, light, from, to, 1.3F, true, c, alpha);
+    }
+
     /** Draws an arm from {@code from} to {@code to} (both relative to the entity), with a hand at the end. */
     private void arm(PoseStack pose, VertexConsumer vc, int light, Vec3 from, Vec3 to, float thickness, boolean withHand) {
+        arm(pose, vc, light, from, to, thickness, withHand, 1.0F, 1.0F);
+    }
+
+    private void arm(PoseStack pose, VertexConsumer vc, int light, Vec3 from, Vec3 to, float thickness, boolean withHand, float shade, float alpha) {
         Vec3 d = to.subtract(from);
         double len = d.length();
         if (len < 0.05) return;
@@ -139,12 +206,12 @@ public class HandDemonRenderer extends MobRenderer<HandDemonEntity, HandDemonMod
         pose.mulPose(Vector3f.XP.rotation(pitch));
         pose.pushPose();
         pose.scale(thickness, thickness, (float) len);
-        this.model.reachArm.render(pose, vc, light, OverlayTexture.NO_OVERLAY);
+        this.model.reachArm.render(pose, vc, light, OverlayTexture.NO_OVERLAY, shade, shade, shade, alpha);
         pose.popPose();
         if (withHand) {
             pose.translate(0, 0, len);
             pose.scale(thickness * 0.8F, thickness * 0.8F, thickness * 0.8F);
-            this.model.reachHand.render(pose, vc, light, OverlayTexture.NO_OVERLAY);
+            this.model.reachHand.render(pose, vc, light, OverlayTexture.NO_OVERLAY, shade, shade, shade, alpha);
         }
         pose.popPose();
     }

@@ -107,14 +107,355 @@
     "category": "hostile",
     "subtitle": "subtitles.demonslayer.demon_hiss",
     "sounds": [
-      "demonslayer:story/demon_hiss"
+      {
+        "name": "demonslayer:story/demon_hiss",
+        "volume": 0.7,
+        "attenuation_distance": 10
+      }
     ]
   },
   "demon_crumble": {
     "category": "hostile",
     "subtitle": "subtitles.demonslayer.demon_crumble",
     "sounds": [
-      "demonslayer:story/demon_crumble"
+      {
+        "name": "demonslayer:story/demon_ash_crumble",
+        "attenuation_distance": 12
+      }
+    ]
+  },
+  "breath_intake": {
+    "category": "neutral",
+    "subtitle": "subtitles.demonslayer.breath_intake",
+    "sounds": [
+      {
+        "name": "demonslayer:story/breath_intake",
+        "attenuation_distance": 14
+      }
+    ]
+  },
+  "music.hand_demon.intro": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/intro",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.crawl": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/crawl",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.grudge": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/grudge",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.thirteen": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/thirteen",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.thirteen_fourteen": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/thirteen_fourteen",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.fear": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/fear",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.rewind": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/rewind",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.collapse": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/collapse",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.reprise": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/reprise",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.reach_start": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/reach_start",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.reach_hold": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/reach_hold",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.ending_held": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/ending_held",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.ending_unheld": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/ending_unheld",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night3": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night3",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night4": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night4",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night5": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night5",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night6": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night6",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.intro": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/intro",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.crawl": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/crawl",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.grudge": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/grudge",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.thirteen": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/thirteen",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.thirteen_fourteen": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/thirteen_fourteen",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.fear": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/fear",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.rewind": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/rewind",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.collapse": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/collapse",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.reprise": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/reprise",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.reach_start": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/reach_start",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.reach_hold": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/reach_hold",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.ending_held": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/ending_held",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.ending_unheld": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/ending_unheld",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night3": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night3",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night4": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night4",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night5": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night5",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.night6": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/night6",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.fill_up": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/fill_up",
+        "stream": true
+      }
+    ]
+  },
+  "music.hand_demon.fill_fear": {
+    "category": "music",
+    "sounds": [
+      {
+        "name": "demonslayer:music/hand_demon/fill_fear",
+        "stream": true
+      }
     ]
   }
 }

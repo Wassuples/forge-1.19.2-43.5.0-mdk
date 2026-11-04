@@ -45,7 +45,8 @@ public final class RestManager {
     private static final int SETTLE_TICKS = 60;
     private static final Map<UUID, Rest> RESTING = new HashMap<>();
 
-    private record Rest(Vec3 pos, long start, @Nullable BlockPos mat) {
+    /** {@code replaced}: what stood where the mat was unrolled (grass, snow...), put back when it is rolled up. */
+    private record Rest(Vec3 pos, long start, @Nullable BlockPos mat, int headDir, @Nullable net.minecraft.world.level.block.state.BlockState replaced) {
     }
 
     private RestManager() {
@@ -70,22 +71,28 @@ public final class RestManager {
             MissionManager.notify(player, refusal, true);
             return;
         }
-        // unroll the mat where they stand
+        // unroll the mat where they stand, pillow ahead of them (like setting down a bed); they lie back along it
         BlockPos at = player.blockPosition();
         BlockPos mat = null;
-        net.minecraft.core.Direction facing = player.getDirection();
-        if (level.getBlockState(at).isAir() && level.getBlockState(at.below()).isFaceSturdy(level, at.below(), net.minecraft.core.Direction.UP)) {
-            // a player drawn lying down without a bed lies across their facing, head to their right: the pillow goes there
-            level.setBlock(at, ModBlocks.LAID_BEDROLL.get().defaultBlockState().setValue(LaidBedrollBlock.FACING, facing.getClockWise()), 3);
+        net.minecraft.world.level.block.state.BlockState replaced = null;
+        net.minecraft.core.Direction head = player.getDirection();
+        net.minecraft.world.level.block.state.BlockState here = level.getBlockState(at);
+        // (not half of a tall plant: rolling the mat up again could only put one half back)
+        boolean free = here.isAir() || (here.getMaterial().isReplaceable() && here.getFluidState().isEmpty() && !here.hasBlockEntity()
+                && !here.hasProperty(net.minecraft.world.level.block.state.properties.BlockStateProperties.DOUBLE_BLOCK_HALF));
+        if (free && level.getBlockState(at.below()).isFaceSturdy(level, at.below(), net.minecraft.core.Direction.UP)) {
+            replaced = here.isAir() ? null : here;
+            level.setBlock(at, ModBlocks.LAID_BEDROLL.get().defaultBlockState().setValue(LaidBedrollBlock.FACING, head), 3);
             mat = at;
-            // settle onto the middle of the mat, squared up with it
-            player.connection.teleport(at.getX() + 0.5D, player.getY(), at.getZ() + 0.5D, facing.toYRot(), player.getXRot());
-            player.setYBodyRot(facing.toYRot());
-            player.setYHeadRot(facing.toYRot());
+            // settle onto the middle of the mat (on the ground, not on the grass that was there), squared up with it
+            player.connection.teleport(at.getX() + 0.5D, at.getY(), at.getZ() + 0.5D, head.toYRot(), player.getXRot());
+            player.setYBodyRot(head.toYRot());
+            player.setYHeadRot(head.toYRot());
         }
-        RESTING.put(player.getUUID(), new Rest(player.position(), level.getGameTime(), mat));
+        int headDir = mat != null ? head.get2DDataValue() : -1;
+        RESTING.put(player.getUUID(), new Rest(player.position(), level.getGameTime(), mat, headDir, replaced));
         player.setDeltaMovement(Vec3.ZERO);
-        ModMessages.sendToTrackingAndSelf(new RestStateS2CPacket(player.getId(), true), player);
+        ModMessages.sendToTrackingAndSelf(new RestStateS2CPacket(player.getId(), true, headDir), player);
         ModMessages.sendToPlayer(new MissionNoticeS2CPacket(MissionNoticeS2CPacket.REST, Component.translatable("rest.demonslayer.resting"),
                 Component.empty(), 0xD8CEC8, 24000), player);
     }
@@ -103,11 +110,8 @@ public final class RestManager {
     private static void stop(ServerPlayer player, @Nullable Component why) {
         Rest rest = RESTING.remove(player.getUUID());
         if (rest == null) return;
-        ServerLevel overworld = player.server.overworld();   // the mat is always in the overworld (rests are overworld-only)
-        if (rest.mat() != null && overworld.getBlockState(rest.mat()).is(ModBlocks.LAID_BEDROLL.get())) {
-            overworld.removeBlock(rest.mat(), false);
-        }
-        ModMessages.sendToTrackingAndSelf(new RestStateS2CPacket(player.getId(), false), player);
+        rollUp(player.server.overworld(), rest);   // the mat is always in the overworld (rests are overworld-only)
+        ModMessages.sendToTrackingAndSelf(new RestStateS2CPacket(player.getId(), false, -1), player);
         ModMessages.sendToPlayer(new MissionNoticeS2CPacket(MissionNoticeS2CPacket.REST, Component.empty(), Component.empty(), 0, 0), player);
         if (why != null) MissionManager.notify(player, why, false);
     }
@@ -125,8 +129,7 @@ public final class RestManager {
             Map.Entry<UUID, Rest> e = it.next();
             ServerPlayer p = server.getPlayerList().getPlayer(e.getKey());
             if (p == null) {
-                Rest r = e.getValue();
-                if (r.mat() != null && overworld.getBlockState(r.mat()).is(ModBlocks.LAID_BEDROLL.get())) overworld.removeBlock(r.mat(), false);
+                rollUp(overworld, e.getValue());
                 it.remove();
                 continue;
             }
@@ -174,12 +177,21 @@ public final class RestManager {
         RESTING.clear();
     }
 
+    /** Rolls the mat back up, putting back whatever grew there. */
+    private static void rollUp(ServerLevel overworld, Rest rest) {
+        if (rest.mat() != null && overworld.getBlockState(rest.mat()).is(ModBlocks.LAID_BEDROLL.get())) {
+            if (rest.replaced() != null && rest.replaced().canSurvive(overworld, rest.mat())) overworld.setBlock(rest.mat(), rest.replaced(), 3);
+            else overworld.removeBlock(rest.mat(), false);
+        }
+    }
+
     /** Someone who walks up later sees a resting player lying down (and nobody else). */
     @SubscribeEvent
     public static void onStartTracking(PlayerEvent.StartTracking event) {
         // always the current state: a watcher who was away (another dimension) may still remember an old rest
         if (event.getTarget() instanceof ServerPlayer rester && event.getEntity() instanceof ServerPlayer watcher) {
-            ModMessages.sendToPlayer(new RestStateS2CPacket(rester.getId(), RESTING.containsKey(rester.getUUID())), watcher);
+            Rest rest = RESTING.get(rester.getUUID());
+            ModMessages.sendToPlayer(new RestStateS2CPacket(rester.getId(), rest != null, rest == null ? -1 : rest.headDir()), watcher);
         }
     }
 

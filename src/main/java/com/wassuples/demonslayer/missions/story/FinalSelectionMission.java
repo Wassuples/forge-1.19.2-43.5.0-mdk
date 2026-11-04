@@ -62,11 +62,10 @@ import java.util.List;
  *   <li><b>Briefing</b>: at nightfall, with the player at the shrine, the twins explain the rules out loud: the
  *       wisteria that blooms from the foot of the mountain to its slope keeps the captured demons penned on the
  *       mountaintop; survive seven days up there.</li>
- *   <li><b>Trial</b>: up the north stairs, through the last torii, into the wisteria-free summit. That first night is
- *       Night 1. Only nights actually <i>lived</i> on the summit count (a night skipped by /time or cut short by a time
- *       jump doesn't); beds are refused. Leaving the summit for 30 seconds fails the selection, as does dying. Named
- *       demons hunt the candidates each night; Tanjiro keeps near the player and the others fight across the summit.
- *       On Night 7 the Hand Demon emerges; Tanjiro runs over and offers to fight beside the player (a dialogue).</li>
+ *   <li><b>Trial</b>: up the north stairs, through the last torii, onto the summit. Only nights actually <i>lived</i>
+ *       there count (beds are refused). Sheltering in the wisteria around the summit is allowed but costs you (see
+ *       {@code reactToHiding} / {@code endNight}); leaving the mountain for 30 seconds, or dying, fails the selection.
+ *       On Night 7 the Hand Demon emerges; Tanjiro runs over and offers to fight beside the player.</li>
  *   <li><b>Return</b>: at the eighth dawn the survivors gather at the shrine. The twins measure them for their
  *       uniforms, engrave the rank Mizunoto, have them choose the ore for their Nichirin sword (delivered about two
  *       weeks later) and assign their Kasugai crow. That conversation completes the mission.</li>
@@ -94,24 +93,33 @@ public final class FinalSelectionMission extends StoryMission {
     public static final String SMITH_AT = "final_selection.smith_at", CROW_INTRO = "final_selection.crow_intro";
     public static final String BLADE_DUE = "final_selection.blade_due", BLADE_SEEN = "final_selection.blade_seen";
     static final int ORES = 5;
+    /** NBT key of a Nichirin blade's colour (RGB), set from the ore chosen at the ceremony. */
+    public static final String BLADE_COLOR = "BladeColor";
+    /** Blade colour per ore: black iron, ringing (white) steel, scarlet-veined, cold (blue) iron, sunlit (yellow). */
+    public static final int[] ORE_COLORS = {0x2A2A32, 0xF2F4FA, 0xC8323C, 0x3C6CD8, 0xE6B830};
 
     static final String PHASE = "phase", SEEN = "seen", IN_NIGHT = "inNight", SURVIVED = "survived", KILLS = "kills",
             HAND = "hand", HAND_PLAYER_DMG = "handPlayerDmg", HAND_TOTAL_DMG = "handTotalDmg", HAND_BY_PLAYER = "handByPlayer",
             OFFER = "offer", OFFER_AT = "offerAt", OUTSIDE = "outside", ENTERED = "entered",
             BRIEF_STEP = "briefStep", BRIEF_NEXT = "briefNext", ORE = "ore", WELCOMED = "welcomed",
             BUDGET = "spawnBudget", LINGER_X = "lingerX", LINGER_Z = "lingerZ", LINGER_T = "lingerT", LINGERING = "lingering",
-            HIDE_T = "hideT", SCENE = "scene", SCENE_NEXT = "sceneNext";
-    /** Demons the mountain sends after one candidate in a night: 14 on the first, 38 on the seventh. */
+            HIDE_T = "hideT", HIDE_FRENZY = "hideFrenzy", HID_NIGHTS = "hidNights", NIGHT_HIDDEN = "nightHidden", NIGHT_TICKS = "nightTicks",
+            HAND_HINT = "handHint", HAND_AT = "handAt",
+            ORE_LAID = "oreLaid", ORE_CHOSEN = "oreChosen", PACK_NIGHT = "packNight", SCENE = "scene", SCENE_NEXT = "sceneNext";
+    /**
+     * Demons that may appear on the summit on one candidate's account in a night: 15 on the first, 33 on the seventh.
+     * (The summit holds fewer at once, see FujikasaneDemons; this caps the night's total.)
+     */
     static int nightBudget(int night) {
-        return 10 + 4 * night;
+        return 12 + 3 * night;
     }
     /** Staying within this many blocks of one spot for {@link #LINGER_LIMIT} ticks at night draws a pack. */
     private static final int LINGER_RADIUS = 12, LINGER_LIMIT = 1200;
-    /** Cowering by the wisteria at the summit's edge for this long voids the night. */
-    private static final int HIDE_WARN = 600, HIDE_LIMIT = 1200, HIDE_MARGIN = 9;
     private static final long MAX_NATURAL_STEP = 100L;
     static final String GATHER = "gather", BRIEFING = "briefing", TRIAL = "trial", RETURN = "return";
-    private static final int HAND_NONE = 0, HAND_ALIVE = 1, HAND_DEAD = 2;
+    private static final int HAND_NONE = 0, HAND_ALIVE = 1, HAND_DEAD = 2, HAND_COMING = 3;
+    /** The theme's intro (the children's taunt, its slams coming closer) plays this long before the Hand Demon appears. */
+    private static final int PRELUDE_TICKS = 256;
     private static final int OFFER_NONE = 0, OFFER_PENDING = 1, OFFER_ACCEPTED = 2, OFFER_DECLINED = 3;
 
     private static final int GOLD = 0xF0D080, WISTERIA = 0xB9A2EC, BLOOD = 0xD8263A, PURPLE = 0x9A7AE0;
@@ -244,9 +252,9 @@ public final class FinalSelectionMission extends StoryMission {
             return;
         }
         boolean kanata = step % 2 == 0;
-        twinSay(player.server, kanata, key("briefing." + (step + 1)));
+        int read = twinSay(player.server, kanata, key("briefing." + (step + 1)));
         s.putInt(BRIEF_STEP, step + 1);
-        s.putLong(BRIEF_NEXT, now + BRIEF_INTERVAL);
+        s.putLong(BRIEF_NEXT, now + Math.max(BRIEF_INTERVAL, read + 15));   // the next line once this one has been read
         ctx.markDirty();
     }
 
@@ -280,16 +288,17 @@ public final class FinalSelectionMission extends StoryMission {
         CompoundTag s = ctx.state();
         long gameTime = ctx.level().getGameTime();
 
-        // ---- staying on the mountaintop
+        // ---- staying on the mountain (the summit, or sheltering in the wisteria above the shrine; not below it)
         boolean inSummit = inSummit(layout, player);
-        if (inSummit) {
-            if (!s.getBoolean(ENTERED)) {
-                s.putBoolean(ENTERED, true);
-                ctx.notice(Component.translatable(key("entered")));
-                ctx.sound(ModSounds.NIGHT_DRUM.get(), 0.6F, 1.3F);
-            } else if (s.contains(OUTSIDE)) {
-                ctx.notice(Component.translatable(key("leave.returned")));
-            }
+        boolean onMountain = onMountain(layout, player);
+        if (inSummit && !s.getBoolean(ENTERED)) {
+            s.putBoolean(ENTERED, true);
+            ctx.notice(Component.translatable(key("entered")));
+            ctx.sound(ModSounds.NIGHT_DRUM.get(), 0.6F, 1.3F);
+            s.remove(OUTSIDE);
+        }
+        if (s.getBoolean(ENTERED) ? onMountain : inSummit) {
+            if (s.contains(OUTSIDE)) ctx.notice(Component.translatable(key("leave.returned")));
             s.remove(OUTSIDE);
         } else {
             int grace = s.getBoolean(ENTERED) ? LEAVE_GRACE_TICKS : FIRST_CLIMB_TICKS;
@@ -316,7 +325,7 @@ public final class FinalSelectionMission extends StoryMission {
         boolean inNight = s.getBoolean(IN_NIGHT);
         int night = s.getInt(SURVIVED) + 1;
 
-        // ---- keep moving: lingering draws a pack; cowering by the wisteria voids the night
+        // ---- keep moving: lingering in one spot draws the mountain's demons to you
         if (inNight && inSummit) {
             BlockPos at = player.blockPosition();
             int lx = s.getInt(LINGER_X), lz = s.getInt(LINGER_Z);
@@ -328,32 +337,67 @@ public final class FinalSelectionMission extends StoryMission {
             } else {
                 int t = s.getInt(LINGER_T) + 20;
                 s.putInt(LINGER_T, t);
-                if (t >= LINGER_LIMIT && !s.getBoolean(LINGERING)) {
-                    s.putBoolean(LINGERING, true);
-                }
-            }
-            double r = FujikasaneLayout.dist(layout.dx(at), layout.dz(at));
-            if (r > FujikasaneLayout.DEMON_R - HIDE_MARGIN) {
-                int t = s.getInt(HIDE_T) + 20;
-                s.putInt(HIDE_T, t);
-                if (t == HIDE_WARN) ctx.warn(Component.translatable(key("hide.warn")));
-                if (t >= HIDE_LIMIT) {
-                    s.putBoolean(IN_NIGHT, false);
-                    s.putInt(HIDE_T, 0);
-                    ctx.banner(Component.translatable(key("hide.void.title")), Component.translatable(key("hide.void.sub")), BLOOD, 110);
-                    ctx.sound(ModSounds.MISSION_FAILED.get(), 1.0F, 0.8F);
-                    if (s.getInt(HAND) == HAND_ALIVE) withdrawHandDemon(ctx, false);
-                    ctx.markDirty();
-                    return;
-                }
-            } else if (r <= FujikasaneLayout.DEMON_R - HIDE_MARGIN - 4 && s.getInt(HIDE_T) > 0) {
-                s.putInt(HIDE_T, Math.max(0, s.getInt(HIDE_T) - 40));   // back out among the demons: it wears off
+                if (t >= LINGER_LIMIT && !s.getBoolean(LINGERING)) s.putBoolean(LINGERING, true);
             }
         }
 
+        // ---- sheltering in the wisteria is allowed (the demons can't follow). It has a price: a night spent mostly
+        // hiding is noticed (the Corps hears of it, the twins remark on it, and the breathing training it would have
+        // given is lost), and on the last night the Hand Demon finds someone else to fight.
+        if (inNight) {
+            s.putInt(NIGHT_TICKS, s.getInt(NIGHT_TICKS) + 20);
+            if (inWisteria(layout, player)) {
+                // by Zenitsu's hiding place (his errand takes you there) it counts half
+                int t = s.getInt(NIGHT_HIDDEN) + (player.blockPosition().distSqr(layout.zenitsuHideout()) < 8 * 8 ? 10 : 20);
+                s.putInt(NIGHT_HIDDEN, t);
+                if (t >= 200 && !s.getBoolean(HIDE_FRENZY)) {   // a few seconds in, once a night: someone notices
+                    s.putBoolean(HIDE_FRENZY, true);
+                    reactToHiding(ctx, layout);
+                }
+            }
+        }
+
+        // ---- night 6: the starving ones band together into a pack
+        if (inNight && night == 6 && inSummit && tod >= DUSK + 2500 && s.getInt(PACK_NIGHT) != night) {
+            s.putInt(PACK_NIGHT, night);
+            com.wassuples.demonslayer.worldgen.fujikasane.FujikasaneDemons.sendPack(ctx.level(), player, 4);
+            StoryNpcEntity tanjiro = FujikasaneResidents.loaded(player.server, StoryCharacter.TANJIRO);
+            if (tanjiro != null && tanjiro.distanceToSqr(player) < 40 * 40) tanjiro.say(Component.translatable(key("tanjiro.pack")), 100);
+            ctx.markDirty();
+        }
+
+        // ---- nights 3-6: something on the mountain is waiting. Once a night, its theme drifts up from the den.
+        if (inNight && night >= 3 && night < NIGHTS && inSummit && tod >= DUSK + 3000 + 400L * night && s.getInt(HAND_HINT) != night) {
+            s.putInt(HAND_HINT, night);
+            com.wassuples.demonslayer.networking.ModMessages.sendToPlayer(
+                    com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket.hint(night, layout.den()), player);
+            ctx.markDirty();
+        }
+
         // ---- the Hand Demon emerges in full dark on Night 7
-        if (inNight && night >= NIGHTS && s.getInt(HAND) == HAND_NONE && tod >= DUSK + HAND_DELAY && inSummit) {
-            spawnHandDemon(ctx, layout);
+        boolean hidingTonight = s.getInt(NIGHT_TICKS) > 0 && s.getInt(NIGHT_HIDDEN) * 2 > s.getInt(NIGHT_TICKS);
+        if (inNight && night >= NIGHTS && s.getInt(HAND) == HAND_NONE && tod >= DUSK + HAND_DELAY && inSummit && !hidingTonight) {
+            // first its theme: the mountain hears the children's taunt and something huge coming closer
+            s.putInt(HAND, HAND_COMING);
+            s.putLong(HAND_AT, gameTime);
+            com.wassuples.demonslayer.sound.HandDemonMusic.broadcast(ctx.level(), player.blockPosition(),
+                    com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket.prelude(0));
+            ctx.markDirty();
+        }
+        if (s.getInt(HAND) == HAND_COMING) {
+            long age = gameTime - s.getLong(HAND_AT);
+            com.wassuples.demonslayer.sound.HandDemonMusic.broadcast(ctx.level(), player.blockPosition(),
+                    com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket.prelude((int) Math.min(age, 100000)));
+            // it appears as the intro lands (this ticks once a second, so up to a second early; the music waits for the bar)
+            if (age >= PRELUDE_TICKS - 20) spawnHandDemon(ctx, layout);
+        }
+        // ...unless you have spent the night in the wisteria: then Tanjiro meets it alone, and cuts its neck
+        if (inNight && night >= NIGHTS && s.getInt(HAND) == HAND_NONE && tod >= DUSK + HAND_DELAY + 2400 && hidingTonight) {
+            s.putInt(HAND, HAND_DEAD);
+            s.putBoolean(HAND_BY_PLAYER, false);
+            ctx.notice(Component.translatable(key("hand.tanjiro_alone")));
+            ctx.level().playSound(null, layout.den(), ModSounds.DEMON_GROWL.get(), net.minecraft.sounds.SoundSource.HOSTILE, 4.0F, 0.4F);
+            ctx.markDirty();
         }
         if (s.getInt(OFFER) == OFFER_PENDING && gameTime - s.getLong(OFFER_AT) > 600) answerOffer(ctx, false);
 
@@ -376,6 +420,9 @@ public final class FinalSelectionMission extends StoryMission {
         int night = s.getInt(SURVIVED) + 1;
         s.putInt(BUDGET, nightBudget(night));
         s.putInt(HIDE_T, 0);
+        s.remove(HIDE_FRENZY);
+        s.putInt(NIGHT_HIDDEN, 0);
+        s.putInt(NIGHT_TICKS, 0);
         s.remove(LINGER_X);
         s.remove(LINGER_Z);
         s.putInt(LINGER_T, 0);
@@ -391,10 +438,14 @@ public final class FinalSelectionMission extends StoryMission {
     private boolean endNight(MissionContext ctx) {
         CompoundTag s = ctx.state();
         s.putBoolean(IN_NIGHT, false);
+        if (s.getInt(NIGHT_TICKS) > 0 && s.getInt(NIGHT_HIDDEN) * 2 > s.getInt(NIGHT_TICKS)) {
+            s.putInt(HID_NIGHTS, s.getInt(HID_NIGHTS) + 1);   // a night spent mostly in the wisteria
+            ReputationService.applyAutoEvent(ctx.level(), ctx.player().getUUID(), RepEventType.PLAYER_FLED_FROM_DEMON);
+        }
         int survived = s.getInt(SURVIVED) + 1;
         s.putInt(SURVIVED, survived);
         if (survived >= NIGHTS) {
-            if (s.getInt(HAND) == HAND_ALIVE) withdrawHandDemon(ctx, true);
+            if (s.getInt(HAND) == HAND_ALIVE || s.getInt(HAND) == HAND_COMING) withdrawHandDemon(ctx, true);
             FinalSelectionExtras.onDawn(ctx);
             s.putString(PHASE, RETURN);
             s.remove(OUTSIDE);
@@ -513,7 +564,10 @@ public final class FinalSelectionMission extends StoryMission {
         s.putInt(HAND, HAND_DEAD);
         s.putBoolean(HAND_BY_PLAYER, byPlayer);
         ctx.forgetScoped("hand");
-        ctx.level().sendParticles(ModParticles.DEMON_ASH.get(), victim.getX(), victim.getY() + 1.5, victim.getZ(), 120, 1.2, 1.6, 1.2, 0.04);
+        // the fifty it ate, Urokodaki's thirteen among them, are free: petals rise from where it fell, and a bell rings
+        ctx.level().sendParticles(ModParticles.WISTERIA_PETAL.get(), victim.getX(), victim.getY() + 1.0, victim.getZ(), 90, 2.2, 0.6, 2.2, 0.0);
+        ctx.level().sendParticles(ModParticles.RESOLVE_SPARK.get(), victim.getX(), victim.getY() + 2.0, victim.getZ(), 26, 1.6, 2.0, 1.6, 0.02);
+        ctx.level().playSound(null, victim.blockPosition(), ModSounds.MISSION_BELL.get(), net.minecraft.sounds.SoundSource.AMBIENT, 1.2F, 0.7F);
         StoryNpcEntity tanjiro = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.TANJIRO);
         if (byPlayer) {
             ctx.banner(Component.translatable(key("hand.slain.title")), Component.translatable(key("hand.slain.sub")), GOLD, 100);
@@ -535,6 +589,9 @@ public final class FinalSelectionMission extends StoryMission {
         }
         StoryNpcEntity tanjiro = FujikasaneResidents.loaded(ctx.player().server, StoryCharacter.TANJIRO);
         if (tanjiro != null) tanjiro.setFightsHandDemon(false);
+        // the bedroll belongs to the Corps: a candidate who fails or withdraws hands it back too
+        if (!success) returnBedrolls(ctx.player());
+        FinalSelectionExtras.clearMarkers(ctx.player());
     }
 
     // ================================================================== the Hand Demon
@@ -558,7 +615,7 @@ public final class FinalSelectionMission extends StoryMission {
         level.playSound(null, at, ModSounds.DEMON_GROWL.get(), net.minecraft.sounds.SoundSource.HOSTILE, 2.0F, 0.8F);
         level.sendParticles(ModParticles.DEMON_ASH.get(), at.getX() + 0.5, at.getY() + 1.0, at.getZ() + 0.5, 60, 1.5, 0.5, 1.5, 0.02);
         com.wassuples.demonslayer.networking.ModMessages.sendToTrackingAndSelf(
-                new com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket(hand.getId(), Component.translatable(key("hand.speech")), 160), hand);
+            new com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket(hand.getId(), Component.translatable(key("hand.speech")), 160), hand);
 
         // Tanjiro hurries over and offers to fight alongside (not forced: the Hand Demon is not a Kizuki)
         StoryNpcEntity tanjiro = FujikasaneResidents.loaded(player.server, StoryCharacter.TANJIRO);
@@ -643,13 +700,23 @@ public final class FinalSelectionMission extends StoryMission {
         CompoundTag s = ctx.state();
         int kills = s.getInt(KILLS);
         int minorPulse = Math.min(150, kills * 15);
-        int pulse = slain ? 300 + minorPulse : minorPulse;
+        int hid = Math.min(NIGHTS, s.getInt(HID_NIGHTS));
+        // the training of a night spent hiding is lost
+        int pulse = (slain ? 300 + minorPulse : minorPulse) * (NIGHTS - hid) / NIGHTS;
         BreathingStyles style = player.getCapability(PlayerStyleProvider.PLAYER_STYLE).map(st -> st.getCurrentStyles()).orElse(null);
 
+        boolean[] banked = {false};
         player.getCapability(PlayerProgressionProvider.PLAYER_PROGRESSION).ifPresent(prog -> {
             if (prog.getRank().ordinal() < Rank.MIZUNOTO.ordinal()) prog.setRank(Rank.MIZUNOTO);
             if (slain) prog.addKillRecordBonus(20);
-            if (style != null && style != BreathingStyles.NONE && pulse > 0) prog.addStyleMastery(style, pulse);
+            // breathing training goes to a style the player has learned; with none yet, it waits for the first one
+            if (pulse > 0) {
+                if (style != null && style != BreathingStyles.NONE && prog.isStyleUnlocked(style)) prog.addStyleMastery(style, pulse);
+                else {
+                    prog.addBankedMastery(pulse);
+                    banked[0] = true;
+                }
+            }
             ModUtils.applyRankStatBonuses(player, prog.getRank());
         });
         ModUtils.syncProgression(player);
@@ -661,6 +728,7 @@ public final class FinalSelectionMission extends StoryMission {
             data.addPerk(MissionPerks.UNYIELDING);
         }
         if (s.getInt(OFFER) == OFFER_ACCEPTED) data.setFlag("final_selection.fought_beside_tanjiro");
+        if (hid >= 3) data.setFlag("final_selection.hid_in_wisteria");   // remembered (later missions may bring it up)
 
         ReputationService.applyAutoEvent(ctx.level(), player.getUUID(),
                 slain ? RepEventType.FINAL_SELECTION_HAND_DEMON_SLAIN : RepEventType.FINAL_SELECTION_PASSED);
@@ -682,8 +750,9 @@ public final class FinalSelectionMission extends StoryMission {
 
         ctx.banner(Component.translatable(key("passed.title")), Component.translatable(key("passed.sub"), Rank.MIZUNOTO.getDisplayName()), GOLD, 120);
         ctx.sound(ModSounds.MISSION_BELL.get(), 1.0F, 1.0F);
-        if (pulse > 0 && style != null && style != BreathingStyles.NONE) {
-            ctx.notice(Component.translatable(key("passed.rewards.mastery"), pulse, style.getDisplayName()));
+        if (pulse > 0) {
+            ctx.notice(banked[0] ? Component.translatable(key("passed.rewards.banked"), pulse)
+                    : Component.translatable(key("passed.rewards.mastery"), pulse, style.getDisplayName()));
         }
         if (slain) {
             ctx.notice(Component.translatable(key("passed.rewards.kills"), 20));
@@ -752,6 +821,16 @@ public final class FinalSelectionMission extends StoryMission {
         data.removeTimer(BLADE_SEEN);
         data.removeTimer(SMITH_AT);
         ItemStack blade = new ItemStack(ModItems.NICHIRIN_BLADE.get());
+        // the ore the candidate chose at the ceremony decides the colour of the steel
+        for (int i = 0; i < ORES; i++) {
+            if (!data.hasFlag("final_selection.ore." + i)) continue;
+            blade.getOrCreateTag().putInt(BLADE_COLOR, ORE_COLORS[i]);
+            ListTag lore = new ListTag();
+            lore.add(net.minecraft.nbt.StringTag.valueOf(Component.Serializer.toJson(Component.translatable("item.demonslayer.nichirin_blade.forged_from",
+                    Component.translatable("item.demonslayer.selection_ore_" + i)).withStyle(net.minecraft.ChatFormatting.GRAY))));
+            blade.getOrCreateTagElement("display").put("Lore", lore);
+            break;
+        }
         if (!player.getInventory().add(blade)) player.drop(blade, false);
         player.playNotifySound(ModSounds.MISSION_BELL.get(), net.minecraft.sounds.SoundSource.MASTER, 0.8F, 1.3F);
         return true;
@@ -919,28 +998,23 @@ public final class FinalSelectionMission extends StoryMission {
                 .end(t("twins.withdraw.no"));
     }
 
-    /** The survivors' ceremony: uniform, rank, ore, crow. Completing it completes the mission. */
+    /**
+     * The survivors' ceremony: bedroll back, uniform, rank, then the ore, chosen in the world (the twins lay five ores
+     * out on lacquered trays in front of them; see {@link #layOres}), then blade and crow. Completing it completes the
+     * mission. Talking to the twins again picks up where it stopped.
+     */
     private DialogueNode ceremony(DialogueSession session) {
-        DialogueNode crow = DialogueNode.of(StoryCharacter.KIRIYA, t("twins.ceremony.crow"))
-                .primary(t("twins.ceremony.thanks"), x -> {
-                    MissionManager.withActive(x.player, ID, c -> {
-                        CompoundTag s = c.state();
-                        c.complete(s.getInt(HAND) == HAND_DEAD && s.getBoolean(HAND_BY_PLAYER) ? "hand_demon_slain" : "survived");
-                    });
-                    return DialogueNode.of(StoryCharacter.KANATA, t("twins.ceremony.farewell")).end(t("twins.farewell"));
-                });
-        DialogueNode blade = DialogueNode.of(StoryCharacter.KANATA, t("twins.ceremony.blade")).then(t("twins.continue"), crow);
-        DialogueNode ore = DialogueNode.of(StoryCharacter.KIRIYA, t("twins.ceremony.ore")).picker("ore");
-        for (int i = 0; i < ORES; i++) {
-            final int choice = i;
-            ore.option(t("twins.ceremony.ore." + i), x -> {
-                MissionManager.withActive(x.player, ID, c -> {
-                    c.state().putInt(ORE, choice);
-                    c.markDirty();
-                });
-                return blade;
-            });
+        CompoundTag s = session.player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).map(PlayerMissions::getActiveState).orElse(new CompoundTag());
+        if (s.getBoolean(ORE_CHOSEN)) return afterOre();
+        if (s.getBoolean(ORE_LAID)) {
+            MissionManager.withActive(session.player, ID, this::layOres);   // the trays are put out again if they were cleared
+            return DialogueNode.of(StoryCharacter.KIRIYA, t("twins.ceremony.ore.waiting")).end(t("twins.ok"));
         }
+        DialogueNode ore = DialogueNode.of(StoryCharacter.KIRIYA, t("twins.ceremony.ore"))
+                .primary(t("twins.ceremony.ore.look"), x -> {
+                    MissionManager.withActive(x.player, ID, this::layOres);
+                    return null;
+                });
         DialogueNode rank = DialogueNode.of(StoryCharacter.KANATA, t("twins.ceremony.rank")).then(t("twins.continue"), ore);
         DialogueNode uniform = DialogueNode.of(StoryCharacter.KIRIYA, t("twins.ceremony.uniform")).then(t("twins.continue"), rank);
         // the bedroll belongs to the Corps: it goes back to headquarters with the twins
@@ -949,8 +1023,71 @@ public final class FinalSelectionMission extends StoryMission {
                     returnBedrolls(x.player);
                     return uniform;
                 });
+        DialogueNode first = bedroll;
+        int hid = s.getInt(HID_NIGHTS);
+        if (hid > 0) first = DialogueNode.of(StoryCharacter.KANATA, Component.translatable(key("twins.ceremony.hid"), hid)).then(t("twins.continue"), bedroll);
         return DialogueNode.of(StoryCharacter.KANATA, Component.translatable("mission.demonslayer.final_selection.twins.ceremony.welcome",
-                FinalSelectionExtras.survivors(session))).then(t("twins.continue"), bedroll);
+                FinalSelectionExtras.survivors(session))).then(t("twins.continue"), first);
+    }
+
+    /** Blade and crow, after the ore is chosen. */
+    private DialogueNode afterOre() {
+        DialogueNode crow = DialogueNode.of(StoryCharacter.KIRIYA, t("twins.ceremony.crow"))
+                .primary(t("twins.ceremony.thanks"), x -> {
+                    MissionManager.withActive(x.player, ID, c -> {
+                        CompoundTag st = c.state();
+                        c.complete(st.getInt(HAND) == HAND_DEAD && st.getBoolean(HAND_BY_PLAYER) ? "hand_demon_slain" : "survived");
+                    });
+                    return DialogueNode.of(StoryCharacter.KANATA, t("twins.ceremony.farewell")).end(t("twins.farewell"));
+                });
+        return DialogueNode.of(StoryCharacter.KANATA, t("twins.ceremony.blade")).then(t("twins.continue"), crow);
+    }
+
+    /** Five ores on lacquered trays on the plaza, in a row in front of the twins, for this candidate to choose from. */
+    private void layOres(MissionContext ctx) {
+        FujikasaneLayout layout = FujikasaneSites.known(ctx.player().server);
+        if (layout == null) return;
+        ServerLevel level = ctx.level();
+        CompoundTag s = ctx.state();
+        s.putBoolean(ORE_LAID, true);
+        ctx.markDirty();
+        if (!offerings(ctx.player()).isEmpty()) return;
+        BlockPos plaza = layout.plazaCenter();
+        for (int i = 0; i < ORES; i++) {
+            double x = layout.centerX + 0.5, z = plaza.getZ() + 0.5 + (i - 2) * 1.0;
+            level.addFreshEntity(new com.wassuples.demonslayer.entity.custom.OreOfferingEntity(level, ctx.player(), i, x, plaza.getY(), z));
+        }
+        level.playSound(null, plaza, ModSounds.DIALOGUE_OPEN.get(), net.minecraft.sounds.SoundSource.NEUTRAL, 0.8F, 0.8F);
+        twinSay(ctx.player().server, false, key("twins.ceremony.ore.laid"));
+    }
+
+    private static List<com.wassuples.demonslayer.entity.custom.OreOfferingEntity> offerings(ServerPlayer player) {
+        FujikasaneLayout layout = FujikasaneSites.known(player.server);
+        if (layout == null) return List.of();
+        return player.server.overworld().getEntitiesOfClass(com.wassuples.demonslayer.entity.custom.OreOfferingEntity.class,
+                new net.minecraft.world.phys.AABB(layout.plazaCenter()).inflate(16.0D), o -> o.isFor(player));
+    }
+
+    /** Whether {@code player} is at the ore choice of the ceremony (the trays stay out while this holds). */
+    public static boolean isChoosingOre(ServerPlayer player) {
+        return player.getCapability(PlayerMissionsProvider.PLAYER_MISSIONS).map(d -> d.isActive(ID)
+                && RETURN.equals(d.getActiveState().getString(PHASE)) && d.getActiveState().getBoolean(ORE_LAID)).orElse(false);
+    }
+
+    /** The candidate picked up an ore from its tray: that steel it is. The ceremony goes on. */
+    public static void chooseOre(ServerPlayer player, int ore) {
+        if (!isChoosingOre(player)) return;
+        MissionManager.withActive(player, ID, c -> {
+            CompoundTag s = c.state();
+            s.putInt(ORE, Math.max(0, Math.min(ORES - 1, ore)));
+            s.remove(ORE_LAID);
+            s.putBoolean(ORE_CHOSEN, true);
+            c.markDirty();
+        });
+        for (com.wassuples.demonslayer.entity.custom.OreOfferingEntity o : offerings(player)) o.discard();
+        player.getLevel().playSound(null, player.blockPosition(), ModSounds.MISSION_BELL.get(), net.minecraft.sounds.SoundSource.NEUTRAL, 0.7F, 1.3F);
+        StoryNpcEntity kanata = FujikasaneResidents.loaded(player.server, StoryCharacter.KANATA);
+        if (kanata != null) DialogueManager.openRemote(player, kanata, session -> INSTANCE.afterOre());
     }
 
     // ================================================================== dialogue: the other candidates
@@ -1034,9 +1171,12 @@ public final class FinalSelectionMission extends StoryMission {
         return Component.translatable("mission.demonslayer.final_selection." + suffix);
     }
 
-    private static void twinSay(MinecraftServer server, boolean kanata, String translationKey) {
+    /** One twin says a line (in turn with the other); returns how long it stays up. */
+    private static int twinSay(MinecraftServer server, boolean kanata, String translationKey) {
         StoryNpcEntity twin = FujikasaneResidents.loaded(server, kanata ? StoryCharacter.KANATA : StoryCharacter.KIRIYA);
-        if (twin != null) twin.say(Component.translatable(translationKey));
+        Component line = Component.translatable(translationKey);
+        if (twin != null) twin.say(line);
+        return StoryNpcEntity.readingTicks(line);
     }
 
     static boolean isDemon(ServerPlayer player) {
@@ -1059,6 +1199,41 @@ public final class FinalSelectionMission extends StoryMission {
         if (player.level.dimension() != Level.OVERWORLD) return false;
         int dx = layout.dx(player.blockPosition()), dz = layout.dz(player.blockPosition());
         return FujikasaneLayout.dist(dx, dz) < FujikasaneLayout.DEMON_R + 3 && !layout.inPlaza(dx, dz) && player.getY() > layout.baseY;
+    }
+
+    /**
+     * Still taking the selection: on the summit or sheltering in the wisteria band around it, down to the level of the
+     * shrine. Going down past that, or back to the shrine itself, is leaving.
+     */
+    static boolean onMountain(FujikasaneLayout layout, ServerPlayer player) {
+        if (player.level.dimension() != Level.OVERWORLD || player.getY() <= layout.baseY) return false;
+        if (inSummit(layout, player)) return true;
+        int dx = layout.dx(player.blockPosition()), dz = layout.dz(player.blockPosition());
+        if (layout.inPlaza(dx, dz)) return false;
+        return FujikasaneLayout.dist(dx, dz) < FujikasaneLayout.PLAZA_DIST + FujikasaneLayout.PLAZA_R;
+    }
+
+    /** In the wisteria around the summit (where demons can't follow). */
+    static boolean inWisteria(FujikasaneLayout layout, ServerPlayer player) {
+        return onMountain(layout, player) && !inSummit(layout, player);
+    }
+
+    /** Someone sees you take shelter: Zenitsu is overjoyed to have company; anyone else, less so. */
+    private void reactToHiding(MissionContext ctx, FujikasaneLayout layout) {
+        ServerPlayer player = ctx.player();
+        ctx.notice(Component.translatable(key("hide.notice")));
+        StoryNpcEntity zenitsu = FujikasaneResidents.loaded(player.server, StoryCharacter.ZENITSU);
+        if (zenitsu != null && zenitsu.distanceToSqr(player) < 24 * 24) {
+            zenitsu.say(Component.translatable(key("hide.zenitsu")));
+            return;
+        }
+        for (StoryCharacter c : new StoryCharacter[]{StoryCharacter.GENYA, StoryCharacter.KANAO, StoryCharacter.TANJIRO}) {
+            StoryNpcEntity npc = FujikasaneResidents.loaded(player.server, c);
+            if (npc != null && npc.distanceToSqr(player) < 28 * 28) {
+                npc.say(Component.translatable(key("hide." + c.key())));
+                return;
+            }
+        }
     }
 
     static boolean isNight(long dayTime) {

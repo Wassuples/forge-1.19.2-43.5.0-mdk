@@ -9,7 +9,7 @@ import net.minecraft.resources.ResourceLocation;
 
 /** Draws the Kasugai crow ({@link KasugaiCrowModel}). */
 public class CrowRenderer extends MobRenderer<CrowEntity, KasugaiCrowModel> {
-    private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/kasugai_crow.png");
+    private static final ResourceLocation TEXTURE = new ResourceLocation(DemonSlayer.MOD_ID, "textures/entity/kasugai_crow_v2.png");
 
     public CrowRenderer(EntityRendererProvider.Context ctx) {
         super(ctx, new KasugaiCrowModel(ctx.bakeLayer(KasugaiCrowModel.LAYER)), 0.25F);

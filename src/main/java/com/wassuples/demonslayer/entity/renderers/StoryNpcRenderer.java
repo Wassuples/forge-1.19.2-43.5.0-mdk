@@ -23,6 +23,7 @@ public class StoryNpcRenderer extends HumanoidMobRenderer<StoryNpcEntity, Player
         super(context, new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER), false), 0.5f);
         this.wide = this.model;
         this.slim = new PlayerModel<>(context.bakeLayer(ModelLayers.PLAYER_SLIM), true);
+        this.addLayer(new StoryAccessoryLayer(this, context.getModelSet()));
     }
 
     @Override

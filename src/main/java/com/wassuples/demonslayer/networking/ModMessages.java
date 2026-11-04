@@ -183,6 +183,18 @@ public class ModMessages {
                 .consumerMainThread(com.wassuples.demonslayer.networking.packet.NpcSpeechS2CPacket::handle)
                 .add();
 
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.HandDemonMusicS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.TakeHandC2SPacket.class, id(), NetworkDirection.PLAY_TO_SERVER)
+                .decoder(com.wassuples.demonslayer.networking.packet.TakeHandC2SPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.TakeHandC2SPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.TakeHandC2SPacket::handle)
+                .add();
+
         net.messageBuilder(com.wassuples.demonslayer.networking.packet.MissionNoticeS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
                 .decoder(com.wassuples.demonslayer.networking.packet.MissionNoticeS2CPacket::new)
                 .encoder(com.wassuples.demonslayer.networking.packet.MissionNoticeS2CPacket::toBytes)
@@ -193,6 +205,12 @@ public class ModMessages {
                 .decoder(com.wassuples.demonslayer.networking.packet.RestStateS2CPacket::new)
                 .encoder(com.wassuples.demonslayer.networking.packet.RestStateS2CPacket::toBytes)
                 .consumerMainThread(com.wassuples.demonslayer.networking.packet.RestStateS2CPacket::handle)
+                .add();
+
+        net.messageBuilder(com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
+                .decoder(com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket::new)
+                .encoder(com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket::toBytes)
+                .consumerMainThread(com.wassuples.demonslayer.networking.packet.QuestMarkersS2CPacket::handle)
                 .add();
 
         net.messageBuilder(PlayerDemonSyncS2CPacket.class, id(), NetworkDirection.PLAY_TO_CLIENT)
